@@ -71,6 +71,7 @@
   var DISPOSER = Symbol('generator'),
       GENERATOR = Symbol('generator'),
       ITERATOR = Symbol.iterator,
+      defineProperty = Object.defineProperty,
       floor = Math.floor,
       identity = function identity(value) {
     return value;
@@ -111,11 +112,14 @@
   };
 
   var Aeroflow = (function () {
-    function Aeroflow(generator) {
+    function Aeroflow(generator, disposer) {
       _classCallCheck(this, Aeroflow);
 
-      Object.defineProperty(this, GENERATOR, {
+      defineProperty(this, GENERATOR, {
         value: generator
+      });
+      if (disposer) defineProperty(this, DISPOSER, {
+        value: disposer
       });
     }
 
@@ -638,39 +642,46 @@
   })();
 
   function aeroflow(source) {
-    if (isObject(source)) {
-      if (source instanceof Aeroflow) return source;
-      if (isArray(source)) return new Aeroflow(function () {
-        var index = -1;
-        return function (next, done) {
-          return ++index < source.length ? next(source[index]) : done();
-        };
-      });
-      if (isFunction(source)) return new Aeroflow(function () {
-        return function (next, done) {
-          var result = source();
-          if (isPromise(result)) return result.then(function (value) {
-            next(value);
-            done();
-          });
-          next(result);
-        };
-      });
-      if (ITERATOR in source) return new Aeroflow(function () {
-        var iterator = source[ITERATOR]();
-        return function (next, done) {
-          var result = iterator.next();
-          if (result.done) done();else next(result.value);
-        };
-      });
-    }
-
-    return new Aeroflow(function () {
+    if (source instanceof Aeroflow) return source;
+    if (isArray(source)) return new Aeroflow(function () {
+      var index = -1;
       return function (next, done) {
-        next(source);
+        return ++index < source.length ? next(source[index]) : done();
+      };
+    });
+    if (isFunction(source)) return new Aeroflow(function () {
+      return function (next, done) {
+        var result = source();
+        if (isPromise(result)) return result.then(function (value) {
+          next(value);
+          done();
+        }, function (error) {
+          done();
+          throw error;
+        });
+        next(result);
         done();
       };
     });
+    if (isPromise(source)) return new Aeroflow(function () {
+      return function (next, done) {
+        return source.then(function (value) {
+          next(value);
+          done();
+        }, function (error) {
+          done();
+          throw error;
+        });
+      };
+    });
+    if (isObject(source) && ITERATOR in source) return new Aeroflow(function () {
+      var iterator = source[ITERATOR]();
+      return function (next, done) {
+        var result = iterator.next();
+        if (result.done) done();else next(result.value);
+      };
+    });
+    return aeroflow.just(source);
   }
 
   aeroflow.empty = new Aeroflow(function () {
@@ -685,6 +696,15 @@
       var value = seed;
       return function (next, done) {
         return next(value = expander(value));
+      };
+    });
+  };
+
+  aeroflow.just = function (value) {
+    return new Aeroflow(function () {
+      return function (next, done) {
+        next(value);
+        done();
       };
     });
   };

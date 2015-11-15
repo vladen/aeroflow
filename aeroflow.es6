@@ -482,41 +482,53 @@ class Aeroflow {
   aeroflow(1).dump().run();
   aeroflow(aeroflow(1)).dump().run();
   aeroflow([1, 2]).dump().run();
-  aeroflow(new Set(['a', 'b'])).dump().run();
   aeroflow(new Map([['a', 1], ['b', 2]])).dump().run();
+  aeroflow(new Set(['a', 'b'])).dump().run();
   aeroflow(() => 1).dump().run();
   aeroflow(() => new Promise(resolve => setTimeout(() => resolve(new Date), 100))).dump().run();
 */
 function aeroflow(source) {
-  if (isObject(source)) {
-    if (source instanceof Aeroflow) return source;
-    if (isArray(source)) return new Aeroflow(() => {
-      let index = -1;
-      return (next, done) => ++index < source.length
-        ? next(source[index])
-        : done();
-    });
-    if (isFunction(source)) return new Aeroflow(() => (next, done) => {
-      let result = source();
-      if (isPromise(result)) return result.then(value => {
+  if (source instanceof Aeroflow) return source;
+  if (isArray(source)) return new Aeroflow(() => {
+    let index = -1;
+    return (next, done) => ++index < source.length 
+      ? next(source[index])
+      : done();
+  });
+  if (isFunction(source)) return new Aeroflow(() => (next, done) => {
+    let result = source();
+    if (isPromise(result)) return result.then(
+      value => {
         next(value);
         done();
+      },
+      error => {
+        done();
+        throw error;
       });
-      next(result);
-    });
-    if (ITERATOR in source) return new Aeroflow(() => {
-      let iterator = source[ITERATOR]();
-      return (next, done) => {
-        let result = iterator.next();
-        if (result.done) done();
-        else next(result.value);
-      }
-    });
-  }
-  return new Aeroflow(() => (next, done) => {
-    next(source);
+    next(result);
     done();
   });
+  if (isPromise(source)) return new Aeroflow(() => (next, done) => {
+    return source.then(
+      value => {
+        next(value);
+        done();
+      },
+      error => {
+        done();
+        throw error;
+      });
+  });
+  if (isObject(source) && ITERATOR in source) return new Aeroflow(() => {
+    let iterator = source[ITERATOR]();
+    return (next, done) => {
+      let result = iterator.next();
+      if (result.done) done();
+      else next(result.value);
+    }
+  });
+  return aeroflow.just(source);
 }
 /*
   aeroflow.empty.dump().run();
@@ -534,6 +546,13 @@ aeroflow.expand = (expander, seed) => {
     return (next, done) => next(value = expander(value));
   });
 };
+/*
+  aeroflow.just(1).dump().run();
+*/
+aeroflow.just = value => new Aeroflow(() => (next, done) => {
+  next(value);
+  done();
+});
 /*
   aeroflow.random().take(3).dump().run();
   aeroflow.random(0.1).take(3).dump().run();
@@ -590,7 +609,7 @@ aeroflow.range = (start, end, step) => {
 aeroflow.repeat = (repeater) => {
   if (isNothing(repeater)) return new Aeroflow(() => {
     let index = 0;
-    return (next, done) => next(index++)
+    return (next, done) => next(index++);
   });
   if (isFunction(repeater)) return new Aeroflow(() => (next, done) => {
     let value = repeater();
