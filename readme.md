@@ -1,14 +1,14 @@
-# Aeroflow ~
+# ~ Aeroflow ~
 
 Truly lazily computed reactive data flows with rich set of pure functional operators and async support.
 Inspired by [Reactive Extensions](http://reactivex.io/) but much more simplier, compact and ES6 based.
 
 ## Contents
-- [Installation](#installation)
-- [Usage](#usage)
-- [Examples](#examples)
--- [creation](#creation)
--- [aggregation](#aggregation)
+  + [Installation](#installation)
+  + [Usage](#usage)
+  + [Examples](#examples)
+    - [creation](#creation)
+    - [aggregation](#aggregation)
 
 ## Installation
 ```
