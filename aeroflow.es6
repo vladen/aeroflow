@@ -27,9 +27,10 @@
 
 'use strict';
 
-const DISPOSER = Symbol('generator')
+const BUSY = Symbol('busy')
     , GENERATOR = Symbol('generator')
     , ITERATOR = Symbol.iterator
+    , PARAMETERS = Symbol('parameters')
     , defineProperty = Object.defineProperty
     , floor = Math.floor
     , identity = value => value
@@ -49,30 +50,39 @@ const DISPOSER = Symbol('generator')
     , typeError = message => new TypeError(message)
     ;
 
+class Context {
+  constructor(parameters) {
+    this[BUSY] = true;
+    this[PARAMETERS] = parameters;
+  }
+  get busy() {
+    return this[BUSY];
+  }
+  stop() {
+    this[BUSY] = false;
+  }
+}
+
 class Aeroflow {
-  constructor(generator, disposer) {
+  constructor(generator) {
     defineProperty(this, GENERATOR, {value: generator});
-    if (disposer) defineProperty(this, DISPOSER, {value: disposer});
   }
   /*
     aeroflow.repeat().take(3).concat(3).dump().run();
     aeroflow.repeat().take(3).concat(aeroflow.range(10, 12)).dump().run();
   */
-  concat(that) {
-    that = aeroflow(that);
-    return new Aeroflow(() => {
-      let end = false, iterator = this[GENERATOR]();
-      return (next, done) => iterator(
-        value => {
-          next(value);
-        },
-        () => {
-          if (end) done();
-          else {
-            end = true;
-            iterator = that[GENERATOR]();
-          }
-        });
+  concat(...flows) {
+    flows = flows.map(aeroflow);
+    return new Aeroflow((next, done, context) => {
+      this[GENERATOR](
+        next,
+        proceed,
+        context);
+      function proceed() {
+        flows.length
+          ? flows.shift()[GENERATOR](next, proceed, context)
+          : done();
+      }
     });
   }
   /*
@@ -85,24 +95,12 @@ class Aeroflow {
     aeroflow([1, 2, 3]).delay(500).dump().run();
   */
   delay(interval) {
-    return new Aeroflow(() => {
-      let end = false, iterator = this[GENERATOR]();
-      return (next, done) => new Promise(
-        resolve => {
-          if (!end) iterator(
-            value => setTimeout(() => {
-                next(value);
-                resolve();
-              }, interval),
-            () => {
-              end = true;
-              setTimeout(() => {
-                done();
-                resolve();
-              }, interval);
-            });
-        });
-    });
+    if (isNothing(interval)) interval = 0;
+    else if(isNaN(interval = +interval) || interval < 0) throw typeError('Argument "interval" must be non-negative number.');
+    return new Aeroflow((next, done, context) => this[GENERATOR](
+      value => setTimeout(() => next(value), interval),
+      done,
+      context));
   }
   /*
   Dumps 'next' and 'done' events of the current aeroflow
@@ -121,95 +119,84 @@ class Aeroflow {
       else if (!isFunction(logger)) throw typeError('Argument "logger" must be a function.');
       prefix = isNothing(prefix) ? '' : prefix + ' ';
     }
-    return new Aeroflow(() => {
-      let iterator = this[GENERATOR]();
-      return (next, done) => iterator(
-        value => {
-          logger(prefix + 'next', value);
-          next(value);
-        },
-        () => {
-          logger(prefix + 'done');
-          done();
-        });
-    });
+    return new Aeroflow((next, done, context) => this[GENERATOR](
+      value => {
+        logger(prefix + 'next', value);
+        next(value);
+      },
+      () => {
+        logger(prefix + 'done');
+        done();
+      },
+      context));
   }
   every(predicate) {
     if (!isFunction(predicate)) predicate = isSomething;
-    return new Aeroflow(() => {
-      let end = false, iterator = this[GENERATOR]();
-      return (next, done) => {
-        if (!end) iterator(
-          value => {
-            if (!predicate(value)) {
-              end = true;
-              next(false);
-              done();
-            }
-          },
-          () => {
-            if (!end) {
-              next(true);
-              done();
-            }
-          });
-      }
+    return new Aeroflow((next, done, context) => {
+      let empty = true, result = true;
+      this[GENERATOR](
+        value => {
+          empty = false;
+          if (!predicate(value)) {
+            result = false;
+            context.stop();
+          }
+        },
+        () => {
+          next(result && !empty);
+          done();
+        },
+        context);
     });
   }
   filter(predicate) {
     if (!isFunction(predicate)) predicate = isSomething;
-    return new Aeroflow(() => {
-      let index = 0, iterator = this[GENERATOR]();
-      return (next, done) => iterator(
-        value => {
-          if (predicate(value, index++)) next(value);
-        },
-        done);
+    return new Aeroflow((next, done, context) => {
+      let index = 0;
+      this[GENERATOR](
+        value => predicate(value, index++) ? next(value) : false,
+        done,
+        context);
     });
   }
   first() {
-    return new Aeroflow(() => {
-      let end = false, iterator = this[GENERATOR]();
-      return (next, done) => iterator(
-        value => {
-          if (!end) {
-            end = true;
-            next(value);
-            done();
-          }
-        },
-        () => {
-          if (!end) done();
-        });
-    });
+    return new Aeroflow((next, done, context) => this[GENERATOR](
+      value => {
+        next(value);
+        context.stop();
+      },
+      done,
+      context));
   }
   join(separator) {
-    if (!isString(separator)) separator = ',';
-    return this.reduce(
-      (result, value) => result.length ? result + separator + value : value,
-      '');
+    if (isNothing(separator)) separator = ',';
+    else if (!isString(separator)) separator = '' + separator;
+    return this.reduce((result, value) => result.length ? result + separator + value : value, '');
   }
   last() {
-    return new Aeroflow(() => {
-      let iterator = this[GENERATOR](), last;
-      return (next, done) => iterator(
+    return new Aeroflow((next, done, context) => {
+      let empty = true, last;
+      this[GENERATOR](
         value => {
+          empty = false;
           last = value;
         },
         () => {
-          next(last);
+          if (!empty) next(last);
           done();
-        });
+        },
+        context);
     });
   }
   map(transform) {
     if (isNothing(transform)) transform = identity;
     else if (!isFunction(transform)) throw typeError('Argument "transform" must be a function.');
-    return new Aeroflow(() => {
-      let index = 0, iterator = this[GENERATOR]();
-      return (next, done) => iterator(
+    return new Aeroflow((next, done, context) => {
+      let index = 0;
+      this[GENERATOR](
         value => next(transform(value, index++)),
-        done);
+        done,
+        context);
     });
   }
   /*
@@ -227,24 +214,20 @@ class Aeroflow {
     else if (isDate(expires)) expires = expires.valueOf();
     else if (isNaN(expires = +expires) || expires < 0) throw typeError('Argument "expires" must be a date or a positive number.');
     let cache;
-    return new Aeroflow(() => {
-      let iterator = this[GENERATOR](), values;
+    return new Aeroflow((next, done, context) => {
       if (cache) {
-        values = cache;
-        let index = -1;
-        return (next, done) => ++index < values.length
-          ? next(values[index])
-          : done();
-      }
-      else {
-        values = cache = [];
+        cache.forEach(next);
+        done();
+      } else {
+        cache = [];
         setTimeout(() => cache = null, expires);
-        return (next, done) => iterator(
+        this[GENERATOR](
           value => {
-            values.push(value);
+            cache.push(value);
             next(value);
           },
-          done);
+          done,
+          context);
       }
     });
   }
@@ -253,18 +236,15 @@ class Aeroflow {
   */
   mean() {
     let array = this.toArray();
-    return new Aeroflow(() => {
-      let iterator = array[GENERATOR]();
-      return (next, done) => iterator(
-        values => {
-          if (values.length) {
-            values.sort();
-            next(values[floor(values.length / 2)]);
-          }
-          else done();
-        },
-        done);
-    });
+    return new Aeroflow((next, done, context) => array[GENERATOR](
+      values => {
+        if (values.length) {
+          values.sort();
+          next(values[floor(values.length / 2)]);
+        }
+      },
+      done,
+      context));
   }
   /*
     aeroflow([3, 1, 5]).min().dump().run();
@@ -279,14 +259,14 @@ class Aeroflow {
   reduce(reducer, seed) {
     if (!isFunction(reducer)) reducer = noop;
     let seeded = arguments.length > 1;
-    return new Aeroflow(() => {
-      let index = 0, inited = false, iterator = this[GENERATOR](), result;
+    return new Aeroflow((next, done, context) => {
+      let index = 0, inited = false, result;
       if (seeded) {
         result = seed;
         inited = true;
       }
       else index = 1;
-      return (next, done) => iterator(
+      this[GENERATOR](
         value => {
           if (inited) result = reducer(result, value, index++);
           else {
@@ -297,7 +277,8 @@ class Aeroflow {
         () => {
           if (inited) next(result);
           done();
-        });
+        },
+        context);
     });
   }
   /*
@@ -310,59 +291,42 @@ class Aeroflow {
     Example:
       aeroflow(1).run(v => console.log('next', v), () => console.log('done'));
   */
-  run(onNext, onDone) {
+  run(onNext, onDone, ...parameters) {
     if (isNothing(onNext)) onNext = noop;
     else if (!isFunction(onNext)) throw typeError('Argument "onNext" must be a function.');
     if (isNothing(onDone)) onDone = noop;
     else if (!isFunction(onDone)) throw typeError('Argument "onDone" must be a function.');
-    let end = false, iterator = this[GENERATOR]();
-    setTimeout(proceed, 0);
+    setTimeout(() => this[GENERATOR](onDone, onNext, new Context(parameters)), 0);
     return this;
-    function proceed() {
-      while (!end) {
-        let result = iterator(
-          onNext,
-          () => {
-            end = true;
-            onDone();
-          });
-        if (isPromise(result)) {
-          result.then(proceed);
-          break;
-        }
-      }
-    }
   }
   skip(count) {
-    return new Aeroflow(() => {
-      let counter = +count, iterator = this[GENERATOR]();
-      return (next, done) => iterator(
+    if (isNaN(count = +count)) throw typeError('Argument "count" must be a number.');
+    return new Aeroflow((next, done, context) => {
+      let counter = count;
+      this[GENERATOR](
         value => {
           if (--counter < 0) next(value);
         },
-        done);
+        done,
+        context);
     });
   }
   some(predicate) {
     if (!isFunction(predicate)) predicate = isSomething;
-    return new Aeroflow(() => {
-      let end = false, iterator = this[GENERATOR]();
-      return (next, done) => {
-        if (!end) iterator(
-          value => {
-            if (predicate(value)) {
-              end = true;
-              next(true);
-              done();
-            }
-          },
-          () => {
-            if (!end) {
-              next(false);
-              done();
-            }
-          });
-      }
+    return new Aeroflow((next, done, context) => {
+      let result = false;
+      this[GENERATOR](
+        value => {
+          if (predicate(value)) {
+            result = true;
+            context.stop();
+          }
+        },
+        () => {
+          next(result);
+          done();
+        },
+        context);
     });
   }
   /*
@@ -372,67 +336,68 @@ class Aeroflow {
     return this.reduce((sum, value) => sum + value, 0);
   }
   take(count) {
-    return new Aeroflow(() => {
-      let counter = +count, iterator = this[GENERATOR]();
-      return (next, done) => counter > 0
-        ? iterator(
-          value => counter-- > 0
-            ? next(value)
-            : done(),
-          done)
-        : done();
+    if (isNaN(count = +count)) throw typeError('Argument "count" must be a number.');
+    return new Aeroflow((next, done, context) => {
+      let counter = count;
+      counter > 0
+        ? this[GENERATOR](
+          value => counter-- > 0 ? next(value) : context.stop(),
+          done,
+          context)
+        : context.stop();
     });
   }
   tap(callback) {
     if (!isFunction(callback)) callback = noop;
-    return new Aeroflow(() => {
-      let index = 0, iterator = this[GENERATOR]();
-      return (next, done) => iterator(
+    return new Aeroflow((next, done, context) => {
+      let index = 0;
+      this[GENERATOR](
         value => {
           callback(value, index++);
           next(value);
         },
-        done);
+        done,
+        context);
     });
   }
   /*
     aeroflow.repeat().take(3).delay(10).timedelta().dump().run();
   */
   timedelta() {
-    return new Aeroflow(() => {
-      let iterator = this[GENERATOR](), past = now();
-      return (next, done) => iterator(
+    return new Aeroflow((next, done, context) => {
+      let past = now();
+      this[GENERATOR](
         value => {
           let current = now();
-          next({timedelta: current - past, value});
+          next({ timedelta: current - past, value });
           past = current;
         },
-        done);
+        done,
+        context);
     });
   }
   /*
     aeroflow.repeat().take(3).delay(10).timestamp().dump().run();
   */
   timestamp() {
-    return new Aeroflow(() => {
-      let iterator = this[GENERATOR]();
-      return (next, done) => iterator(
-        value => next({timestamp: now(), value}),
-        done);
-    });
+    return new Aeroflow((next, done, context) => this[GENERATOR](
+      value => next({ timestamp: now(), value }),
+      done,
+      context));
   }
   /*
     aeroflow.repeat().take(3).toArray().dump().run();
   */
   toArray() {
-    return new Aeroflow(() => {
-      let array = [], iterator = this[GENERATOR]();
-      return (next, done) => iterator(
+    return new Aeroflow((next, done, context) => {
+      let array = [];
+      this[GENERATOR](
         value => array.push(value),
         () => {
           next(array);
           done();
-        });
+        },
+        context);
     });
   }
   /*
@@ -441,14 +406,15 @@ class Aeroflow {
   toSet(keySelector) {
     if (isNothing(keySelector)) keySelector = identity;
     else if (!isFunction(keySelector)) throw typeError('Argument "keySelector" must be a function.');
-    return new Aeroflow(() => {
-      let iterator = this[GENERATOR](), set = new Set;
-      return (next, done) => iterator(
+    return new Aeroflow((next, done, context) => {
+      let set = new Set;
+      this[GENERATOR](
         value => set.add(keySelector(value)),
         () => {
           next(set);
           done();
-        });
+        },
+        context);
     });
   }
   /*
@@ -459,14 +425,15 @@ class Aeroflow {
     else if (!isFunction(keySelector)) throw typeError('Argument "keySelector" must be a function.');
     if (isNothing(valueSelector)) valueSelector = identity;
     else if (!isFunction(valueSelector)) throw typeError('Argument "valueSelector" must be a function.');
-    return new Aeroflow(() => {
-      let iterator = this[GENERATOR](), map = new Map;
-      return (next, done) => iterator(
+    return new Aeroflow((next, done, context) => {
+      let map = new Map;
+      this[GENERATOR](
         value => map.set(keySelector(value), valueSelector(value)),
         () => {
           next(map);
           done();
-        });
+        },
+        context);
     });
   }
   /*
@@ -474,15 +441,16 @@ class Aeroflow {
     todo: custom comparer support
   */
   unique() {
-    return new Aeroflow(() => {
-      let iterator = this[GENERATOR](), values = new Set;
-      return (next, done) => iterator(
+    return new Aeroflow((next, done, context) => {
+      let values = new Set;
+      this[GENERATOR](
         value => {
           let size = values.size;
           values.add(value);
           if (size < values.size) next(value);
         },
-        done);
+        done,
+        new Context);
     });
   }
 }
@@ -498,28 +466,14 @@ class Aeroflow {
 */
 function aeroflow(source) {
   if (source instanceof Aeroflow) return source;
-  if (isArray(source)) return new Aeroflow(() => {
+  if (isArray(source)) return new Aeroflow((next, done, context) => {
     let index = -1;
-    return (next, done) => ++index < source.length 
-      ? next(source[index])
-      : done();
-  });
-  if (isFunction(source)) return new Aeroflow(() => (next, done) => {
-    let result = source();
-    if (isPromise(result)) return result.then(
-      value => {
-        next(value);
-        done();
-      },
-      error => {
-        done();
-        throw error;
-      });
-    next(result);
+    while (context.busy && ++index < source.length) next(source[index]);
     done();
   });
-  if (isPromise(source)) return new Aeroflow(() => (next, done) => {
-    return source.then(
+  if (isFunction(source)) return new Aeroflow((next, done, context) => {
+    let result = source();
+    if (isPromise(result)) result.then(
       value => {
         next(value);
         done();
@@ -528,21 +482,35 @@ function aeroflow(source) {
         done();
         throw error;
       });
+    else {
+      next(result);
+      done();
+    }
   });
-  if (isObject(source) && ITERATOR in source) return new Aeroflow(() => {
+  if (isPromise(source)) return new Aeroflow((next, done, context) => source.then(
+    value => {
+      next(value);
+      done();
+    },
+    error => {
+      done();
+      throw error;
+    }));
+  if (isObject(source) && ITERATOR in source) return new Aeroflow((next, done, context) => {
     let iterator = source[ITERATOR]();
-    return (next, done) => {
+    while (context.busy) {
       let result = iterator.next();
-      if (result.done) done();
+      if (result.done) break;
       else next(result.value);
     }
+    done();
   });
   return aeroflow.just(source);
 }
 /*
   aeroflow.empty.dump().run();
 */
-aeroflow.empty = new Aeroflow(() => (next, done) => done());
+aeroflow.empty = new Aeroflow((next, done, context) => done());
 /*
   aeroflow.expand(value => value * 2, 1).take(3).dump().run();
   aeroflow.expand(value => new Date(+value + 1000 * 60), new Date).take(3).dump().run();
@@ -550,16 +518,17 @@ aeroflow.empty = new Aeroflow(() => (next, done) => done());
 aeroflow.expand = (expander, seed) => {
   if (isNothing(expander)) expander = identity;
   else if (!isFunction(expander)) throw typeError('Argument "expander" must be a function.')
-  return new Aeroflow(() => {
+  return new Aeroflow((next, done, context) => {
     let value = seed;
-    return (next, done) => next(value = expander(value));
+    while (context.busy) next(value = expander(value));
+    done();
   });
 };
 /*
   aeroflow.just([1, 2]).dump().run();
   aeroflow.just(() => 'test').dump().run();
 */
-aeroflow.just = value => new Aeroflow(() => (next, done) => {
+aeroflow.just = value => new Aeroflow((next, done, context) => {
   next(value);
   done();
 });
@@ -571,17 +540,21 @@ aeroflow.just = value => new Aeroflow(() => (next, done) => {
 */
 aeroflow.random = (min, max) => {
   if (isNothing(min)) {
-    if (isNothing(max)) return new Aeroflow(() => (next, done) => next(Math.random()));
+    if (isNothing(max)) return new Aeroflow((next, done, context) => {
+      while(context.busy) next(Math.random());
+      done();
+    });
     else if (isNaN(max = +max)) throw typeError('Argument "max" must be a number');
     min = 0;
   }
   if (isNothing(max)) max = maxInteger;
   if (min >= max) throw new RangeError('Argument "min" must be greater then "max".');
   max -= min;
-  let round = isInteger(min) && isInteger(max)
-    ? floor
-    : identity;
-  return new Aeroflow(() => (next, done) => next(round(min + max * Math.random())));
+  let round = isInteger(min) && isInteger(max) ? floor : identity;
+  return new Aeroflow((next, done, context) => {
+    while(context.busy) next(round(min + max * Math.random()));
+    done();
+  });
 };
 /*
   aeroflow.range().dump().run();
@@ -596,36 +569,45 @@ aeroflow.range = (start, end, step) => {
   else if (isNaN(start = +start)) throw typeError('Argument "start" must be a number.');
   if (isNothing(end)) end = 0;
   else if (isNaN(end = +end)) throw typeError('Argument "end" must be a number.');
-  if (start <= end) return new Aeroflow(() => {
+  if (start <= end) return new Aeroflow((next, done, context) => {
     let i = start - step;
-    end -= step;
-    return (next, done) => i <= end
-      ? next(i += step)
-      : done();
+    while (context.busy && (i += step) <= end) next(i);
+    done();
   });
-  if (start >= end) return new Aeroflow(() => {
+  return new Aeroflow((next, done, context) => {
     let i = start + step;
-    end += step;
-    return (next, done) => i >= end
-      ? next(i -= step)
-      : done();
+    while (context.busy && (i -= step) >= end) next(i);
+    done();
   });
-  return aeroflow.empty;
 };
 /*
   aeroflow.repeat().take(3).dump().run();
   aeroflow.repeat(() => new Date).delay(1000).take(3).dump().run();
 */
 aeroflow.repeat = (repeater) => {
-  if (isNothing(repeater)) return new Aeroflow(() => {
+  if (isNothing(repeater)) return new Aeroflow((next, done, context) => {
     let index = 0;
-    return (next, done) => next(index++);
+    while(context.busy) next(index++);
+    done();
   });
-  if (isFunction(repeater)) return new Aeroflow(() => (next, done) => {
-    let value = repeater();
-    if (value === false) done();
-    else if (isPromise(value)) value.then(next, done);
-    else next(value);
+  if (isFunction(repeater)) return new Aeroflow((next, done, context) => {
+    !function repeat() {
+      while(context.busy) {
+        let result = repeater();
+        if (result === false) break;
+        else if (isPromise(result)) return result.then(
+          value => {
+            next(value);
+            repeat();
+          },
+          error => {
+            done();
+            throw error;
+          });
+        else next(result);
+      }
+      done();
+    }();
   });
   throw typeError('Argument "repeater" must be a function.');
 };
