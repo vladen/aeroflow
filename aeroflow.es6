@@ -76,7 +76,7 @@ class Aeroflow {
     });
   }
   /*
-    aeroflow([1, 2, 3]).count().dump().run();
+    aeroflow(['a', 'b', 'c']).count().dump().run();
   */
   count() {
     return this.reduce(count => count + 1, 0);
@@ -213,6 +213,12 @@ class Aeroflow {
     });
   }
   /*
+    aeroflow(['a', 'b', 'c']).max().dump().run();
+  */
+  max(valueSelector) {
+    return this.reduce((max, value) => value > max ? value : max);
+  }
+  /*
     var f = aeroflow.repeat(() => new Date).take(3).memoize(5000).delay(1000).dump();
     f.run(null, () => f.run(null, () => f.run())); 
   */
@@ -243,15 +249,9 @@ class Aeroflow {
     });
   }
   /*
-    aeroflow([3, 5, 1]).max().dump().run();
+    aeroflow([1, 1, 2, 3, 5, 7, 9]).mean().dump().run();
   */
-  max() {
-    return this.reduce((max, value) => value > max ? value : max);
-  }
-  /*
-    aeroflow([1, 1, 2, 3, 5, 7, 9]).median().dump().run();
-  */
-  median() {
+  mean() {
     let array = this.toArray();
     return new Aeroflow(() => {
       let iterator = array[GENERATOR]();
@@ -267,23 +267,28 @@ class Aeroflow {
     });
   }
   /*
-    aeroflow([3, 5, 1]).min().dump().run();
+    aeroflow([3, 1, 5]).min().dump().run();
   */
-  min() {
+  min(valueSelector) {
     return this.reduce((min, value) => value < min ? value : min);
   }
+  /*
+    aeroflow([2, 4, 8]).reduce((product, value) => product * value, 1).dump().run();
+    aeroflow(['a', 'b', 'c']).reduce((product, value, index) => product + value + index, '').dump().run();
+  */
   reduce(reducer, seed) {
     if (!isFunction(reducer)) reducer = noop;
     let seeded = arguments.length > 1;
     return new Aeroflow(() => {
-      let iterator = this[GENERATOR](), inited = false, result;
+      let index = 0, inited = false, iterator = this[GENERATOR](), result;
       if (seeded) {
         result = seed;
         inited = true;
       }
+      else index = 1;
       return (next, done) => iterator(
         value => {
-          if (inited) result = reducer(result, value);
+          if (inited) result = reducer(result, value, index++);
           else {
             result = value;
             inited = true;
@@ -360,7 +365,10 @@ class Aeroflow {
       }
     });
   }
-  sum() {
+  /*
+    aeroflow([1, 2, 3]).sum().dump().run();
+  */
+  sum(valueSelector) {
     return this.reduce((sum, value) => sum + value, 0);
   }
   take(count) {

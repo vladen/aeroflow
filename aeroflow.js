@@ -316,6 +316,13 @@
         });
       }
     }, {
+      key: 'max',
+      value: function max(valueSelector) {
+        return this.reduce(function (max, value) {
+          return value > max ? value : max;
+        });
+      }
+    }, {
       key: 'memoize',
       value: function memoize(expires) {
         var _this9 = this;
@@ -353,15 +360,8 @@
         });
       }
     }, {
-      key: 'max',
-      value: function max() {
-        return this.reduce(function (max, value) {
-          return value > max ? value : max;
-        });
-      }
-    }, {
-      key: 'median',
-      value: function median() {
+      key: 'mean',
+      value: function mean() {
         var array = this.toArray();
         return new Aeroflow(function () {
           var iterator = array[GENERATOR]();
@@ -377,7 +377,7 @@
       }
     }, {
       key: 'min',
-      value: function min() {
+      value: function min(valueSelector) {
         return this.reduce(function (min, value) {
           return value < min ? value : min;
         });
@@ -390,18 +390,19 @@
         if (!isFunction(reducer)) reducer = noop;
         var seeded = arguments.length > 1;
         return new Aeroflow(function () {
-          var iterator = _this10[GENERATOR](),
+          var index = 0,
               inited = false,
+              iterator = _this10[GENERATOR](),
               result = undefined;
 
           if (seeded) {
             result = seed;
             inited = true;
-          }
+          } else index = 1;
 
           return function (next, done) {
             return iterator(function (value) {
-              if (inited) result = reducer(result, value);else {
+              if (inited) result = reducer(result, value, index++);else {
                 result = value;
                 inited = true;
               }
@@ -480,7 +481,7 @@
       }
     }, {
       key: 'sum',
-      value: function sum() {
+      value: function sum(valueSelector) {
         return this.reduce(function (sum, value) {
           return sum + value;
         }, 0);
