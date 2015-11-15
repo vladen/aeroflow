@@ -1,0 +1,33 @@
+{
+  "name": "aeroflow",
+  "version": "0.1.0",
+  "description": "Truly lazily computed reactive data flows with rich set of pure functional operators and async support.",
+  "keywords": "ES6, fluent, async, reactive, LINQ",
+  "homepage": "https://bitbucket.org/vladen/aeroflow",
+  "author": "Denis Vlassenko <denis_vlassenko@epam.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://bitbucket.org/vladen/aeroflow.git"
+  },
+  "main": "aeroflow.js",
+  "scripts": {
+    "browserify": "node_modules/.bin/browserify aeroflow.js -o aeroflow.browser.js",
+    "build": "npm run transpile",
+    "lint": "node_modules/.bin/eslint aeroflow.es6",
+    "minify": "node_modules/.bin/uglifyjs aeroflow.browser.js -o aeroflow.min.js -c -m",
+    "test": "node_modules/.bin/mocha -c --prof --harmony aeroflow.test.es6",
+    "transpile": "node_modules/.bin/babel aeroflow.es6 --out-file aeroflow.js --presets es2015 --plugins transform-es2015-modules-umd"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.1.18",
+    "babel-plugin-transform-es2015-modules-umd": "^6.1.18",
+    "babel-preset-es2015": "^6.1.18",
+    "browserify": "^12.0.1",
+    "chai": "^3.4.1",
+    "core-js": "^1.2.6",
+    "eslint": "^1.9.0",
+    "mocha": "^2.3.3",
+    "uglify-js": "^2.6.0"
+  }
+}
