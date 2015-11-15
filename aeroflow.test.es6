@@ -213,7 +213,7 @@ describe('aeroflow', () => {
           next => assert.strictEqual(next, count++),
           done);
     });
-    it('creates flow from values returned by repeater function until repeater returns false',
+    it('creates flow enumerating values returned by repeater function until repeater returns false',
       done => {
         let count = 0, limit = 5;
         aeroflow.repeat(() => count < limit ? count : false).run(

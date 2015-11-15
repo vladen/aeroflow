@@ -479,13 +479,14 @@ class Aeroflow {
   }
 }
 /*
-  aeroflow(1).dump().run();
-  aeroflow(aeroflow(1)).dump().run();
+  aeroflow('test').dump().run();
+  aeroflow(aeroflow('test')).dump().run();
   aeroflow([1, 2]).dump().run();
   aeroflow(new Map([['a', 1], ['b', 2]])).dump().run();
   aeroflow(new Set(['a', 'b'])).dump().run();
-  aeroflow(() => 1).dump().run();
-  aeroflow(() => new Promise(resolve => setTimeout(() => resolve(new Date), 100))).dump().run();
+  aeroflow(() => 'test').dump().run();
+  aeroflow(Promise.resolve('test')).dump().run();
+  aeroflow(() => new Promise(resolve => setTimeout(() => resolve('test'), 100))).dump().run();
 */
 function aeroflow(source) {
   if (source instanceof Aeroflow) return source;
@@ -535,8 +536,8 @@ function aeroflow(source) {
 */
 aeroflow.empty = new Aeroflow(() => (next, done) => done());
 /*
-  aeroflow.expand(v => v * 2, 1).take(5).dump().run();
-  aeroflow.expand(v => new Date(+v + 1000 * 60), new Date).take(5).dump().run();
+  aeroflow.expand(value => value * 2, 1).take(3).dump().run();
+  aeroflow.expand(value => new Date(+value + 1000 * 60), new Date).take(3).dump().run();
 */
 aeroflow.expand = (expander, seed) => {
   if (isNothing(expander)) expander = identity;
@@ -547,7 +548,8 @@ aeroflow.expand = (expander, seed) => {
   });
 };
 /*
-  aeroflow.just(1).dump().run();
+  aeroflow.just([1, 2]).dump().run();
+  aeroflow.just(() => 'test').dump().run();
 */
 aeroflow.just = value => new Aeroflow(() => (next, done) => {
   next(value);
