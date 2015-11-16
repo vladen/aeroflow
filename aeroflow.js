@@ -87,7 +87,7 @@
     return typeof value === 'string' || toStringTag.call(value) === '[object String]';
   },
       noop = function noop() {},
-      GENERATOR = 'generator',
+      GENERATOR = (typeof Symbol === 'function' ? Symbol.for : identity)('generator'),
       ITERATOR = typeof Symbol === 'function' ? Symbol.iterator : 'iterator';
 
   function makeCallback(callback) {
@@ -658,8 +658,12 @@
     return Aeroflow;
   })();
 
+  var empty = new Aeroflow(function (next, done) {
+    return done();
+  });
+
   function aeroflow(source) {
-    if (source instanceof Aeroflow) return source;
+    if (isObject(source) && GENERATOR in source) return source;
     if (isArray(source)) return new Aeroflow(function (next, done, context) {
       var index = -1;
 
@@ -694,13 +698,11 @@
   }
 
   function create(generator) {
-    return new Aeroflow(isFunction(generator) ? generator : function (next, done) {
-      return done();
-    });
+    return isFunction(generator) ? new Aeroflow(generator) : empty;
   }
 
-  function expand(generator, seed) {
-    var expander = isFunction(generator) ? generator : identity;
+  function expand(callback, seed) {
+    var expander = isFunction(callback) ? callback : identity;
     return new Aeroflow(function (next, done, context) {
       var index = 0,
           value = seed;
@@ -721,24 +723,18 @@
   }
 
   function random(min, max) {
-    if (isNothing(min)) {
-      if (isNothing(max)) return new Aeroflow(function (next, done, context) {
-        while (context()) {
-          next(Math.random());
-        }
-
-        done();
-      });else if (isNaN(max = +max)) throwError('Argument "max" must be a number');
-      min = 0;
-    }
-
-    if (isNothing(max)) max = maxInteger;
-    if (min >= max) throwError('Argument "min" must be greater then "max".');
+    min = +min || 0;
+    max = +max || 1;
     max -= min;
-    var round = isInteger(min) && isInteger(max) ? floor : identity;
-    return new Aeroflow(function (next, done, context) {
+    return isInteger(min) && isInteger(max) ? new Aeroflow(function (next, done, context) {
       while (context()) {
-        next(round(min + max * Math.random()));
+        next(floor(min + max * Math.random()));
+      }
+
+      done();
+    }) : new Aeroflow(function (next, done, context) {
+      while (context()) {
+        next(min + max * Math.random());
       }
 
       done();
@@ -746,11 +742,10 @@
   }
 
   function range(start, end, step) {
-    if (isNaN(end = +end)) end = maxInteger;
-    if (isNaN(start = +start)) start = 0;
-    if (isNaN(step = +step)) step = start < end ? 1 : -1;
-    if (start === end) return just(start);
-    return new Aeroflow(function (next, done, context) {
+    end = +end || maxInteger;
+    start = +start || 0;
+    step = +step || (start < end ? 1 : -1);
+    return start === end ? just(start) : new Aeroflow(function (next, done, context) {
       var i = start - step;
       if (start < end) while (context() && (i += step) <= end) {
         next(i);
@@ -762,7 +757,7 @@
   }
 
   function repeat(repeater) {
-    if (isFunction(repeater)) return new Aeroflow(function (next, done, context) {
+    return isFunction(repeater) ? new Aeroflow(function (next, done, context) {
       !(function proceed() {
         var result = context() && repeater(context.data);
         if (result === false) done();else aeroflow(result)[GENERATOR](next, function (error) {
@@ -772,8 +767,7 @@
           } else if (context()) setTimeout(proceed, 0);else done();
         }, context);
       })();
-    });
-    return new Aeroflow(function (next, done, context) {
+    }) : new Aeroflow(function (next, done, context) {
       while (context()) {
         next(repeater);
       }
@@ -787,9 +781,7 @@
       value: create
     },
     empty: {
-      value: new Aeroflow(function (next, done) {
-        return done();
-      })
+      value: empty
     },
     expand: {
       value: expand
