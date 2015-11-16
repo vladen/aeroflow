@@ -1,30 +1,3 @@
-/*
-  aeroflow([1, 2, 3]).sum().dump().run()
-  aeroflow.range(1, 10).skip(1).take(2).delay(500).dump().run()
-  aeroflow.range(1, 10).delay(100).count().dump().run()
-  aeroflow([1, 2, 3]).concat(aeroflow.repeat().delay(100).take(5)).dump().run()
-  operators pending implementation:
-    * buffer(count)
-    * zip(thatFlow)
-    * groupBy(keySelector, valueSelector)
-    * scan(scanner, seed)
-    * window(interval)
-    * debounce(interval, mode)
-    * throttle(interval)
-    * at(index)
-    * skip(-index) -> skipLast
-    * skip(condition) -> skipWhile
-    * take(-index) -> takeLast
-    * take(condition) -> takeWhile
-    * fork(selector, leftCallback, rightCallback)
-    * merge(thatFlow)
-    * after(interval/condition)
-    * pause/resume
-    * materialize
-    * amb
-    * avg, min, max
-*/
-
 'use strict';
 
 (function (global, factory) {
@@ -68,72 +41,129 @@
     return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj;
   }
 
-  var BUSY = Symbol('busy'),
-      GENERATOR = Symbol('generator'),
-      ITERATOR = Symbol.iterator,
-      PARAMETERS = Symbol('parameters'),
-      defineProperty = Object.defineProperty,
+  var defineProperty = Object.defineProperty,
+      defineProperties = Object.defineProperties,
       floor = Math.floor,
+      maxInteger = Number.MAX_SAFE_INTEGER || Math.pow(2, 53) - 1,
+      now = Date.now,
+      toStringTag = Object.prototype.toString,
       identity = function identity(value) {
     return value;
   },
-      isArray = function isArray(value) {
-    return Array.isArray(value);
+      isArray = typeof Array.isArray === 'function' ? Array.isArray : function (value) {
+    return toStringTag.call(value) === '[object Array]';
   },
       isDate = function isDate(value) {
-    return value instanceof Date;
+    return toStringTag.call(value) === '[object Date]';
+  },
+      isError = function isError(value) {
+    return toStringTag.call(value) === '[object Error]';
   },
       isFunction = function isFunction(value) {
     return typeof value === 'function';
   },
-      isInteger = Number.isInteger,
+      isInteger = typeof Number.isInteger === 'function' ? Number.isInteger : function (value) {
+    return typeof value === 'number' && isFinite(value) && floor(value) === value;
+  },
       isNothing = function isNothing(value) {
     return value == null;
   },
       isNumber = function isNumber(value) {
-    return typeof value === 'number' || value instanceof Number;
+    return typeof value === 'number' || toStringTag.call(value) === '[object Number]';
   },
       isObject = function isObject(value) {
-    return (typeof value === 'undefined' ? 'undefined' : _typeof(value)) === 'object' && value !== null;
+    return value !== null && (typeof value === 'undefined' ? 'undefined' : _typeof(value)) === 'object';
   },
       isPromise = function isPromise(value) {
-    return value instanceof Promise;
+    return toStringTag.call(value) === '[object Promise]';
+  },
+      isRegExp = function isRegExp(value) {
+    return toStringTag.call(value) === '[object RegExp]';
   },
       isSomething = function isSomething(value) {
     return value != null;
   },
       isString = function isString(value) {
-    return typeof value === 'string' || value instanceof String;
+    return typeof value === 'string' || toStringTag.call(value) === '[object String]';
   },
-      maxInteger = Number.MAX_SAFE_INTEGER,
       noop = function noop() {},
-      now = Date.now,
-      typeError = function typeError(message) {
-    return new TypeError(message);
-  };
+      GENERATOR = 'generator',
+      ITERATOR = typeof Symbol === 'function' ? Symbol.iterator : 'iterator';
 
-  var Context = (function () {
-    function Context(parameters) {
-      _classCallCheck(this, Context);
+  function makeCallback(callback) {
+    return isFunction(callback) ? callback : noop;
+  }
 
-      this[BUSY] = true;
-      this[PARAMETERS] = parameters;
-    }
+  function makeContext(data) {
+    var active = true,
+        callbacks = [],
+        context = function context(value) {
+      if (value !== undefined) if (value === false) {
+        active = false;
+        callbacks.forEach(function (callback) {
+          return callback();
+        });
+      } else if (isFunction(value)) active ? callbacks.push(value) : value();
+      return active;
+    };
 
-    _createClass(Context, [{
-      key: 'stop',
-      value: function stop() {
-        this[BUSY] = false;
+    return defineProperties(context, {
+      data: {
+        value: data
+      },
+      spawn: {
+        value: function value() {
+          var child = makeContext(data);
+          context(child);
+          return child;
+        }
       }
-    }, {
-      key: 'busy',
-      get: function get() {
-        return this[BUSY];
-      }
-    }]);
+    });
+  }
 
-    return Context;
-  })();
+  function makeDelayer(condition) {
+    return isFunction(condition) ? condition : function () {
+      return condition;
+    };
+  }
+
+  function makeExpirator(condition) {
+    return isFunction(condition) ? condition : isNumber(condition) ? function () {
+      return condition;
+    } : function () {
+      return maxInteger;
+    };
+  }
+
+  function makeJoiner(separator) {
+    return isNothing(separator) ? ',' : isFunction(separator) ? separator : '' + separator;
+  }
+
+  function makeLimiter(condition) {
+    return isNumber(condition) ? function (value, index) {
+      return index < condition;
+    } : isFunction(condition) ? condition : function () {
+      return true;
+    };
+  }
+
+  function makeMapper(mapping) {
+    return isNothing(mapping) ? identity : isFunction(mapping) ? mapping : function () {
+      return mapping;
+    };
+  }
+
+  function makePredicate(condition) {
+    return isNothing(condition) ? isSomething : isFunction(condition) ? condition : isRegExp(condition) ? function (value) {
+      return condition.test(value);
+    } : function (value) {
+      return value === condition;
+    };
+  }
+
+  function throwError(error) {
+    throw isError(error) ? error : new Error(error);
+  }
 
   var Aeroflow = (function () {
     function Aeroflow(generator) {
@@ -145,42 +175,84 @@
     }
 
     _createClass(Aeroflow, [{
-      key: 'concat',
-      value: function concat() {
+      key: 'after',
+      value: function after(flow) {
         var _this = this;
 
+        flow = aeroflow(flow);
+        return new Aeroflow(function (next, done, context) {
+          var completed = false,
+              happened = false,
+              values = [];
+          flow[GENERATOR](noop, happen, makeContext());
+
+          _this[GENERATOR](function (value) {
+            return happened ? next(value) : values.push(value);
+          }, function (error) {
+            if (happened || !context()) done(error);else {
+              completed = true;
+              values.error = error;
+            }
+          }, context);
+
+          function happen() {
+            if (!context()) return;
+            happened = true;
+            values.forEach(next);
+            if (completed) done(values.error);
+          }
+        });
+      }
+    }, {
+      key: 'concat',
+      value: function concat() {
         for (var _len = arguments.length, flows = Array(_len), _key = 0; _key < _len; _key++) {
           flows[_key] = arguments[_key];
         }
 
-        flows = flows.map(aeroflow);
+        var queue = [this].concat(flows);
         return new Aeroflow(function (next, done, context) {
-          _this[GENERATOR](next, proceed, context);
-
-          function proceed() {
-            flows.length ? flows.shift()[GENERATOR](next, proceed, context) : done();
-          }
+          !(function proceed() {
+            queue.length ? aeroflow(queue.shift())[GENERATOR](next, proceed, context) : done();
+          })();
         });
       }
     }, {
       key: 'count',
       value: function count() {
-        return this.reduce(function (count) {
-          return count + 1;
+        return this.reduce(function (result) {
+          return result + 1;
         }, 0);
       }
     }, {
       key: 'delay',
-      value: function delay(interval) {
+      value: function delay(condition) {
         var _this2 = this;
 
-        if (isNothing(interval)) interval = 0;else if (isNaN(interval = +interval) || interval < 0) throw typeError('Argument "interval" must be non-negative number.');
+        var delayer = makeDelayer(condition);
         return new Aeroflow(function (next, done, context) {
-          return _this2[GENERATOR](function (value) {
-            return setTimeout(function () {
+          var completition = now(),
+              index = 0;
+
+          _this2[GENERATOR](function (value) {
+            var delay = delayer(value, index++, context.data),
+                estimation = undefined;
+
+            if (isDate(delay)) {
+              estimation = delay;
+              delay = delay - now();
+            } else estimation = now() + delay;
+
+            if (completition < estimation) completition = estimation;
+            setTimeout(function () {
               return next(value);
-            }, interval);
-          }, done, context);
+            }, delay < 0 ? 0 : delay);
+          }, function (error) {
+            completition -= now();
+            setTimeout(function () {
+              return done(error);
+            }, completition < 0 ? 0 : completition);
+          }, context);
         });
       }
     }, {
@@ -192,7 +264,7 @@
           logger = prefix;
           prefix = '';
         } else {
-          if (isNothing(logger)) logger = console.log.bind(console);else if (!isFunction(logger)) throw typeError('Argument "logger" must be a function.');
+          if (!isFunction(logger)) logger = console.log.bind(console);
           prefix = isNothing(prefix) ? '' : prefix + ' ';
         }
 
@@ -200,46 +272,47 @@
           return _this3[GENERATOR](function (value) {
             logger(prefix + 'next', value);
             next(value);
-          }, function () {
-            logger(prefix + 'done');
-            done();
+          }, function (error) {
+            error ? logger(prefix + 'done', error) : logger(prefix + 'done');
+            done(error);
           }, context);
         });
       }
     }, {
       key: 'every',
-      value: function every(predicate) {
+      value: function every(condition) {
         var _this4 = this;
 
-        if (!isFunction(predicate)) predicate = isSomething;
+        var predicate = makePredicate(condition);
         return new Aeroflow(function (next, done, context) {
           var empty = true,
               result = true;
+          context = context.spawn();
 
           _this4[GENERATOR](function (value) {
             empty = false;
 
             if (!predicate(value)) {
               result = false;
-              context.stop();
+              context(false);
             }
-          }, function () {
+          }, function (error) {
             next(result && !empty);
-            done();
+            done(error);
           }, context);
         });
       }
     }, {
       key: 'filter',
-      value: function filter(predicate) {
+      value: function filter(condition) {
         var _this5 = this;
 
-        if (!isFunction(predicate)) predicate = isSomething;
+        var predicate = makePredicate(predicate);
         return new Aeroflow(function (next, done, context) {
           var index = 0;
 
           _this5[GENERATOR](function (value) {
-            return predicate(value, index++) ? next(value) : false;
+            return predicate(value, index++, context.data) ? next(value) : false;
           }, done, context);
         });
       }
@@ -249,18 +322,20 @@
         var _this6 = this;
 
         return new Aeroflow(function (next, done, context) {
-          return _this6[GENERATOR](function (value) {
+          context = context.spawn();
+
+          _this6[GENERATOR](function (value) {
             next(value);
-            context.stop();
+            context(false);
           }, done, context);
         });
       }
     }, {
       key: 'join',
       value: function join(separator) {
-        if (isNothing(separator)) separator = ',';else if (!isString(separator)) separator = '' + separator;
+        var joiner = makeJoiner(separator);
         return this.reduce(function (result, value) {
-          return result.length ? result + separator + value : value;
+          return result.length ? result + joiner() + value : value;
         }, '');
       }
     }, {
@@ -270,60 +345,63 @@
 
         return new Aeroflow(function (next, done, context) {
           var empty = true,
-              last = undefined;
+              result = undefined;
 
           _this7[GENERATOR](function (value) {
             empty = false;
-            last = value;
-          }, function () {
-            if (!empty) next(last);
-            done();
+            result = value;
+          }, function (error) {
+            if (!empty) next(result);
+            done(error);
           }, context);
         });
       }
     }, {
       key: 'map',
-      value: function map(transform) {
+      value: function map(mapping) {
         var _this8 = this;
 
-        if (isNothing(transform)) transform = identity;else if (!isFunction(transform)) throw typeError('Argument "transform" must be a function.');
+        var mapper = makeMapper(mapping);
         return new Aeroflow(function (next, done, context) {
           var index = 0;
 
           _this8[GENERATOR](function (value) {
-            return next(transform(value, index++));
+            return next(mapper(value, index++, context.data));
           }, done, context);
         });
       }
     }, {
       key: 'max',
-      value: function max(valueSelector) {
+      value: function max() {
         return this.reduce(function (max, value) {
           return value > max ? value : max;
         });
       }
     }, {
       key: 'memoize',
-      value: function memoize(expires) {
+      value: function memoize(expiration) {
         var _this9 = this;
 
-        if (isNothing(expires)) expires = 9e9;else if (isDate(expires)) expires = expires.valueOf();else if (isNaN(expires = +expires) || expires < 0) throw typeError('Argument "expires" must be a date or a positive number.');
-        var cache = undefined;
+        var cache = undefined,
+            expirator = makeExpirator(expiration);
         return new Aeroflow(function (next, done, context) {
           if (cache) {
             cache.forEach(next);
             done();
-          } else {
-            cache = [];
-            setTimeout(function () {
-              return cache = null;
-            }, expires);
-
-            _this9[GENERATOR](function (value) {
-              cache.push(value);
-              next(value);
-            }, done, context);
+            return;
           }
+
+          cache = [];
+
+          _this9[GENERATOR](function (value) {
+            cache.push(value);
+            next(value);
+          }, function (error) {
+            setTimeout(function () {
+              cache = null;
+            }, expirator(context.data));
+            done(error);
+          }, context);
         });
       }
     }, {
@@ -348,59 +426,61 @@
       }
     }, {
       key: 'reduce',
-      value: function reduce(reducer, seed) {
+      value: function reduce(mapping, seed) {
         var _this10 = this;
 
-        if (!isFunction(reducer)) reducer = noop;
-        var seeded = arguments.length > 1;
+        var reducer = makeMapper(mapping);
         return new Aeroflow(function (next, done, context) {
-          var index = 0,
-              inited = false,
+          var empty = true,
+              index = 0,
               result = undefined;
 
-          if (seeded) {
+          if (isSomething(seed)) {
+            empty = false;
             result = seed;
-            inited = true;
-          } else index = 1;
+          }
 
           _this10[GENERATOR](function (value) {
-            if (inited) result = reducer(result, value, index++);else {
+            if (empty) {
+              empty = false;
+              index++;
               result = value;
-              inited = true;
-            }
-          }, function () {
-            if (inited) next(result);
-            done();
+            } else result = reducer(result, value, index++, context.data);
+          }, function (error) {
+            if (!empty) next(result);
+            done(error);
           }, context);
         });
       }
     }, {
       key: 'run',
-      value: function run(onNext, onDone) {
-        for (var _len2 = arguments.length, parameters = Array(_len2 > 2 ? _len2 - 2 : 0), _key2 = 2; _key2 < _len2; _key2++) {
-          parameters[_key2 - 2] = arguments[_key2];
-        }
-
+      value: function run(next, done, data) {
         var _this11 = this;
 
-        if (isNothing(onNext)) onNext = noop;else if (!isFunction(onNext)) throw typeError('Argument "onNext" must be a function.');
-        if (isNothing(onDone)) onDone = noop;else if (!isFunction(onDone)) throw typeError('Argument "onDone" must be a function.');
+        var context = makeContext(data),
+            nextCallback = makeCallback(next),
+            doneCallback = makeCallback(done);
         setTimeout(function () {
-          return _this11[GENERATOR](onDone, onNext, new Context(parameters));
+          return _this11[GENERATOR](nextCallback, function (error) {
+            context(false);
+            error ? doneCallback(error) : doneCallback();
+          }, context);
         }, 0);
         return this;
       }
     }, {
       key: 'skip',
-      value: function skip(count) {
+      value: function skip(condition) {
         var _this12 = this;
 
-        if (isNaN(count = +count)) throw typeError('Argument "count" must be a number.');
+        var limiter = makeLimiter(condition);
         return new Aeroflow(function (next, done, context) {
-          var counter = count;
+          var index = 0,
+              limited = true;
 
           _this12[GENERATOR](function (value) {
-            if (--counter < 0) next(value);
+            if (limited && !limiter(value, index++, context.data)) limited = false;
+            if (!limited) next(value);
           }, done, context);
         });
       }
@@ -409,39 +489,52 @@
       value: function some(predicate) {
         var _this13 = this;
 
-        if (!isFunction(predicate)) predicate = isSomething;
+        predicate = makePredicate(predicate);
         return new Aeroflow(function (next, done, context) {
           var result = false;
+          context = context.spawn();
 
           _this13[GENERATOR](function (value) {
             if (predicate(value)) {
               result = true;
-              context.stop();
+              context(false);
             }
-          }, function () {
+          }, function (error) {
             next(result);
-            done();
+            done(error);
           }, context);
         });
       }
     }, {
+      key: 'sort',
+      value: function sort(comparer) {
+        var array = this.toArray();
+        return new Aeroflow(function (next, done, context) {
+          return array[GENERATOR](function (values) {
+            return values.length ? values.sort(comparer).forEach(next) : false;
+          }, done, context);
+        });
+      }
+    }, {
       key: 'sum',
-      value: function sum(valueSelector) {
-        return this.reduce(function (sum, value) {
-          return sum + value;
+      value: function sum() {
+        return this.reduce(function (result, value) {
+          return result + value;
         }, 0);
       }
     }, {
       key: 'take',
-      value: function take(count) {
+      value: function take(condition) {
         var _this14 = this;
 
-        if (isNaN(count = +count)) throw typeError('Argument "count" must be a number.');
+        var limiter = makeLimiter(condition);
         return new Aeroflow(function (next, done, context) {
-          var counter = count;
-          counter > 0 ? _this14[GENERATOR](function (value) {
-            return counter-- > 0 ? next(value) : context.stop();
-          }, done, context) : context.stop();
+          var index = 0;
+          context = context.spawn();
+
+          _this14[GENERATOR](function (value) {
+            return limiter(value, index++, context.data) ? next(value) : context(false);
+          }, done, context);
         });
       }
     }, {
@@ -449,15 +542,14 @@
       value: function tap(callback) {
         var _this15 = this;
 
-        if (!isFunction(callback)) callback = noop;
-        return new Aeroflow(function (next, done, context) {
+        return isFunction(callback) ? new Aeroflow(function (next, done, context) {
           var index = 0;
 
           _this15[GENERATOR](function (value) {
-            callback(value, index++);
+            callback(value, index++, context.data);
             next(value);
           }, done, context);
-        });
+        }) : this;
       }
     }, {
       key: 'timedelta',
@@ -493,52 +585,56 @@
       }
     }, {
       key: 'toArray',
-      value: function toArray() {
+      value: function toArray(mapping) {
         var _this18 = this;
 
+        var mapper = makeMapper(mapping);
         return new Aeroflow(function (next, done, context) {
-          var array = [];
+          var index = 0,
+              result = [];
 
           _this18[GENERATOR](function (value) {
-            return array.push(value);
-          }, function () {
-            next(array);
-            done();
+            return result.push(mapper(value, index++, context.data));
+          }, function (error) {
+            next(result);
+            done(error);
           }, context);
         });
       }
     }, {
       key: 'toSet',
-      value: function toSet(keySelector) {
+      value: function toSet(mapping) {
         var _this19 = this;
 
-        if (isNothing(keySelector)) keySelector = identity;else if (!isFunction(keySelector)) throw typeError('Argument "keySelector" must be a function.');
+        var mapper = makeMapper(mapping);
         return new Aeroflow(function (next, done, context) {
-          var set = new Set();
+          var index = 0,
+              result = new Set();
 
           _this19[GENERATOR](function (value) {
-            return set.add(keySelector(value));
-          }, function () {
-            next(set);
-            done();
+            return result.add(mapper(value, index++, context.data));
+          }, function (error) {
+            next(result);
+            done(error);
           }, context);
         });
       }
     }, {
       key: 'toMap',
-      value: function toMap(keySelector, valueSelector) {
+      value: function toMap(keyMapping, valueMapping) {
         var _this20 = this;
 
-        if (isNothing(keySelector)) keySelector = identity;else if (!isFunction(keySelector)) throw typeError('Argument "keySelector" must be a function.');
-        if (isNothing(valueSelector)) valueSelector = identity;else if (!isFunction(valueSelector)) throw typeError('Argument "valueSelector" must be a function.');
+        var keyMapper = makeMapper(keyMapping),
+            valueMapper = makeMapper(valueMapping);
         return new Aeroflow(function (next, done, context) {
-          var map = new Map();
+          var index = 0,
+              result = new Map();
 
           _this20[GENERATOR](function (value) {
-            return map.set(keySelector(value), valueSelector(value));
-          }, function () {
-            next(map);
-            done();
+            return result.set(keyMapper(value, index, context.data), valueMapper(value, index++, context.data));
+          }, function (error) {
+            next(result);
+            done(error);
           }, context);
         });
       }
@@ -554,7 +650,7 @@
             var size = values.size;
             values.add(value);
             if (size < values.size) next(value);
-          }, done, new Context());
+          }, done, context);
         });
       }
     }]);
@@ -567,38 +663,27 @@
     if (isArray(source)) return new Aeroflow(function (next, done, context) {
       var index = -1;
 
-      while (context.busy && ++index < source.length) {
+      while (context() && ++index < source.length) {
         next(source[index]);
       }
 
       done();
     });
     if (isFunction(source)) return new Aeroflow(function (next, done, context) {
-      var result = source();
-      if (isPromise(result)) result.then(function (value) {
-        next(value);
-        done();
-      }, function (error) {
-        done();
-        throw error;
-      });else {
-        next(result);
-        done();
-      }
+      return aeroflow(source())[GENERATOR](next, done, context);
     });
     if (isPromise(source)) return new Aeroflow(function (next, done, context) {
       return source.then(function (value) {
-        next(value);
-        done();
+        return aeroflow(value)[GENERATOR](next, done, context);
       }, function (error) {
-        done();
-        throw error;
+        done(error);
+        throwError(error);
       });
     });
     if (isObject(source) && ITERATOR in source) return new Aeroflow(function (next, done, context) {
       var iterator = source[ITERATOR]();
 
-      while (context.busy) {
+      while (context()) {
         var result = iterator.next();
         if (result.done) break;else next(result.value);
       }
@@ -608,107 +693,118 @@
     return aeroflow.just(source);
   }
 
-  aeroflow.empty = new Aeroflow(function (next, done, context) {
-    return done();
-  });
+  function create(generator) {
+    return new Aeroflow(isFunction(generator) ? generator : function (next, done) {
+      return done();
+    });
+  }
 
-  aeroflow.expand = function (expander, seed) {
-    if (isNothing(expander)) expander = identity;else if (!isFunction(expander)) throw typeError('Argument "expander" must be a function.');
+  function expand(generator, seed) {
+    var expander = isFunction(generator) ? generator : identity;
     return new Aeroflow(function (next, done, context) {
-      var value = seed;
+      var index = 0,
+          value = seed;
 
-      while (context.busy) {
-        next(value = expander(value));
+      while (context()) {
+        next(value = expander(value, index++, context.data));
       }
 
       done();
     });
-  };
+  }
 
-  aeroflow.just = function (value) {
-    return new Aeroflow(function (next, done, context) {
+  function just(value) {
+    return new Aeroflow(function (next, done) {
       next(value);
       done();
     });
-  };
+  }
 
-  aeroflow.random = function (min, max) {
+  function random(min, max) {
     if (isNothing(min)) {
       if (isNothing(max)) return new Aeroflow(function (next, done, context) {
-        while (context.busy) {
+        while (context()) {
           next(Math.random());
         }
 
         done();
-      });else if (isNaN(max = +max)) throw typeError('Argument "max" must be a number');
+      });else if (isNaN(max = +max)) throwError('Argument "max" must be a number');
       min = 0;
     }
 
     if (isNothing(max)) max = maxInteger;
-    if (min >= max) throw new RangeError('Argument "min" must be greater then "max".');
+    if (min >= max) throwError('Argument "min" must be greater then "max".');
     max -= min;
     var round = isInteger(min) && isInteger(max) ? floor : identity;
     return new Aeroflow(function (next, done, context) {
-      while (context.busy) {
+      while (context()) {
         next(round(min + max * Math.random()));
       }
 
       done();
     });
-  };
+  }
 
-  aeroflow.range = function (start, end, step) {
-    if (isNothing(step)) step = 1;else if (isNaN(step = +step) || step < 1) throw typeError('Argument "step" must be a positive number.');
-    if (isNothing(start)) start = 0;else if (isNaN(start = +start)) throw typeError('Argument "start" must be a number.');
-    if (isNothing(end)) end = 0;else if (isNaN(end = +end)) throw typeError('Argument "end" must be a number.');
-    if (start <= end) return new Aeroflow(function (next, done, context) {
-      var i = start - step;
-
-      while (context.busy && (i += step) <= end) {
-        next(i);
-      }
-
-      done();
-    });
+  function range(start, end, step) {
+    if (isNaN(end = +end)) end = maxInteger;
+    if (isNaN(start = +start)) start = 0;
+    if (isNaN(step = +step)) step = start < end ? 1 : -1;
+    if (start === end) return just(start);
     return new Aeroflow(function (next, done, context) {
-      var i = start + step;
-
-      while (context.busy && (i -= step) >= end) {
+      var i = start - step;
+      if (start < end) while (context() && (i += step) <= end) {
+        next(i);
+      } else while (context() && (i += step) >= end) {
         next(i);
       }
-
       done();
     });
-  };
+  }
 
-  aeroflow.repeat = function (repeater) {
-    if (isNothing(repeater)) return new Aeroflow(function (next, done, context) {
-      var index = 0;
-
-      while (context.busy) {
-        next(index++);
-      }
-
-      done();
-    });
+  function repeat(repeater) {
     if (isFunction(repeater)) return new Aeroflow(function (next, done, context) {
-      !(function repeat() {
-        while (context.busy) {
-          var result = repeater();
-          if (result === false) break;else if (isPromise(result)) return result.then(function (value) {
-            next(value);
-            repeat();
-          }, function (error) {
+      !(function proceed() {
+        var result = context() && repeater(context.data);
+        if (result === false) done();else aeroflow(result)[GENERATOR](next, function (error) {
+          if (error) {
             done();
-            throw error;
-          });else next(result);
-        }
-
-        done();
+            throwError(error);
+          } else if (context()) setTimeout(proceed, 0);else done();
+        }, context);
       })();
     });
-    throw typeError('Argument "repeater" must be a function.');
-  };
+    return new Aeroflow(function (next, done, context) {
+      while (context()) {
+        next(repeater);
+      }
 
-  module.exports = aeroflow;
+      done();
+    });
+  }
+
+  module.exports = defineProperties(aeroflow, {
+    create: {
+      value: create
+    },
+    empty: {
+      value: new Aeroflow(function (next, done) {
+        return done();
+      })
+    },
+    expand: {
+      value: expand
+    },
+    just: {
+      value: just
+    },
+    random: {
+      value: random
+    },
+    range: {
+      value: range
+    },
+    repeat: {
+      value: repeat
+    }
+  });
 });
