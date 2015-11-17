@@ -1,7 +1,5 @@
 'use strict';
 
-const noop = () => {};
-
 if (typeof require === 'function') {
   global.aeroflow = require('./aeroflow.js');
   global.assert = require('chai').assert;
@@ -290,7 +288,7 @@ describe('aeroflow', () => {
     it('creates flow of single function value',
       done => {
         let count = 0
-          , value = noop
+          , value = () => {}
           , onDone = () => {
               assert.strictEqual(count, 1);
               done();
@@ -586,7 +584,7 @@ describe('aeroflow', () => {
         let count = 0
           , callback = value => assert.strictEqual(value, count++)
           ;
-        aeroflow.range().take(3).tap(callback).run(noop, done);
+        aeroflow.range().take(3).tap(callback).run(() => {}, done);
       });
   });
 

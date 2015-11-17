@@ -49,7 +49,7 @@ function makeContext(data) {
 
 function makeLimiter(limiter) {
   return isNumber(limiter)
-    ? (_, index) => index < limiter
+    ? (value, index) => index < limiter
     : isFunction(limiter)
       ? limiter
       : () => true;
@@ -727,7 +727,7 @@ function repeat(repeater, limit) {
       });
 }
 
-export default defineProperties(aeroflow, {
+module.exports = defineProperties(aeroflow, {
   concat: {value: concat}
 , create: {value: create}
 , empty: {value: empty}
