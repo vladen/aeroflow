@@ -1,3 +1,3 @@
 require('core-js');
 
-require('./aeroflow.js');
+require('./lib/aeroflow.js');

@@ -1,9 +1,11 @@
 'use strict';
-require('core-js');
 
-const aeroflow = require('./aeroflow.es6')
-    , assert = require('chai').assert
-    , noop = () => {};
+const noop = () => {};
+
+if (typeof require === 'function') {
+  global.aeroflow = require('./aeroflow.js');
+  global.assert = require('chai').assert;
+}
 
 describe('aeroflow', () => {
   it('is a function',

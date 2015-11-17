@@ -3,11 +3,23 @@
   <head>
     <meta charset="utf-8">
     <title>aeroflow</title>
+    <link href="node_modules/mocha/mocha.css" rel="stylesheet" />
   </head>
-  <body></body>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/core-js/1.2.6/core.min.js"></script>
-  <script src="aeroflow.js"></script>
-  <script>
-  document.body.innerText = 'Ready to play.';
-  </script>
+  <body>
+    <div id="mocha"></div>
+    <script src="node_modules/core-js/client/core.js"></script>
+    <script src="node_modules/mocha/mocha.js"></script>
+    <script src="node_modules/chai/chai.js"></script>
+    <script>
+      var assert = chai.assert;
+      mocha.setup({
+        ui: 'bdd'
+      });
+    </script>
+    <script src="lib/aeroflow.js"></script>
+    <script src="lib/aeroflow.test.js"></script>
+    <script>
+      mocha.run();
+    </script>
+  </body>
 </html>

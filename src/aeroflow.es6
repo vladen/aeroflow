@@ -5,7 +5,6 @@ const
 , EMITTER = Symbol('emitter')
 
 , classof = Object.classof
-, defineProperty = Object.defineProperty
 , defineProperties = Object.defineProperties
 , floor = Math.floor
 , now = Date.now
@@ -25,7 +24,6 @@ const
 , isPromise = value => 'Promise' === classof(value)
 , isRegExp = value => 'RegExp' === classof(value)
 , isSomething = value => null != value
-, isString = value => 'String' === classof(value)
 , noop = () => {}
 ;
 
@@ -117,11 +115,15 @@ class Aeroflow {
           }
           else estimation = now() + delay;
           if (completition < estimation) completition = estimation;
-          setTimeout(() => next(value), delay < 0 ? 0 : delay);
+          delay < 0
+            ? setImmediate(() => next(value)) 
+            : setTimeout(() => next(value), delay);
         },
         error => {
           completition -= now();
-          setTimeout(() => done(error), completition < 0 ? 0 : completition);
+          completition < 0
+            ? setImmediate(() => done(error))
+            : setTimeout(() => done(error), completition);
         },
         context);
     });
@@ -299,15 +301,14 @@ class Aeroflow {
     let context = makeContext(data);
     if (!isFunction(done)) done = noop;
     if (!isFunction(next)) next = noop;
-    setTimeout(
+    setImmediate(
       () => this[EMITTER](
         next,
         error => {
           context(false);
           error ? done(error) : done();
         },
-        context),
-      0);
+        context));
     return this;
   }
   /*
@@ -707,7 +708,7 @@ function repeat(repeater, limit) {
             done();
             throwError(error);
           }
-          else if (counter && context()) setTimeout(proceed, 0);
+          else if (counter && context()) setImmediate(proceed);
           else done();
         }
         function proceed() {
@@ -726,7 +727,7 @@ function repeat(repeater, limit) {
       });
 }
 
-module.exports = defineProperties(aeroflow, {
+export default defineProperties(aeroflow, {
   concat: {value: concat}
 , create: {value: create}
 , empty: {value: empty}
