@@ -14,13 +14,15 @@
   "scripts": {
     "all": "npm run build && npm run lint && npm run test",
     "build": "npm run compile && npm run minify",
-    "compile": "npm run compile-flow && npm run compile-test",
-    "compile-flow": "node_modules/.bin/babel src/aeroflow.js --out-file lib/aeroflow.js --presets es2015 --plugins transform-es2015-modules-umd",
-    "compile-test": "node_modules/.bin/babel src/aeroflow.test.js --out-file lib/aeroflow.test.js --presets es2015",
+    "compile": "npm run compile-flow && npm run compile-flow-compat && npm run compile-test && npm run compile-test-compat",
+    "compile-flow": "node_modules/.bin/babel src/aeroflow.js --out-file lib/aeroflow.js --plugins transform-es2015-modules-umd",
+    "compile-flow-compat": "node_modules/.bin/babel src/aeroflow.js --out-file lib/aeroflow.compat.js --presets es2015 --plugins transform-es2015-modules-umd",
+    "compile-test": "node_modules/.bin/babel src/aeroflow.test.js --out-file lib/aeroflow.test.js",
+    "compile-test-compat": "node_modules/.bin/babel src/aeroflow.test.js --out-file lib/aeroflow.test.compat.js --presets es2015",
     "lint": "npm run lint-flow && npm run lint-test",
     "lint-flow": "node_modules/.bin/eslint src/aeroflow.js",
     "lint-test": "node_modules/.bin/eslint src/aeroflow.test.js --global aeroflow,assert,describe,it",
-    "minify": "node_modules/.bin/uglifyjs lib/aeroflow.js -o lib/aeroflow.min.js -c -m",
+    "minify": "node_modules/.bin/uglifyjs lib/aeroflow.compat.js -o lib/aeroflow.compat.min.js -c -m",
     "test": "node_modules/.bin/mocha src/aeroflow.test.js -c --harmony --prof -r chai -r core-js"
   },
   "devDependencies": {

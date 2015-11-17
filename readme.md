@@ -2,22 +2,67 @@
 
 Truly lazily computed reactive data flows with rich set of pure functional operators and async support.
 Inspired by [Reactive Extensions](http://reactivex.io/) but much more simplier, compact and ES6 based.
+Since existing browsers still do not support ES6 completely, this library requires core-js package to work.
 
 ## Contents
   + [Installation](#installation)
   + [Usage](#usage)
+  + [Building](#building)
+  + [Linting](#linting)
+  + [Testing](#testing)
   + [Examples](#examples)
     - [creation](#creation)
     - [aggregation](#aggregation)
 
 ## Installation
 ```
+$ npm i core-js
 $ npm i aeroflow
 ```
 ## Usage
 ```js
+require('core-js');
 var aeroflow = require('aeroflow');
 ```
+
+## Building
+```
+$ npm install
+$ npm run build
+```
+Produces set of files on the 'lib' folder:
+
+  * aeroflow.js - ES6 version of library for both modern browser and nodejs environments
+  * aeroflow.compat.js - ES5 version of library for legacy browser or nodejs
+  * aeroflow.compat.min.js - minified ES5 version of library for any browser
+  * aeroflow.test.js - ES6 version of tests for both modern browser and nodejs environments
+  * aeroflow.test.compat.js - ES5 version of tests legacy browser or nodejs
+
+Other options:
+```
+$ npm run compile               # without minification
+$ npm run compile-flow          # ES6 library only
+$ npm run compile-flow-compat   # ES5 library compatible only
+$ npm run compile-test          # ES6 tests only
+$ npm run compile-test-compat   # ES5 tests only
+```
+
+## Linting
+```
+$ npm run lint                  # lint both library and tests
+$ npm run lint-flow             # lint library only
+$ npm run lint-test             # lint tests only
+```
+
+## Testing
+```
+$ npm run test
+```
+Additional options:
+  - open index.html page in any modern browser
+  - open index.compat.html page in any legacy browser
+_Be sure to serve this pages from web server, not file system!_
+
 
 ## Examples
 ### Creation

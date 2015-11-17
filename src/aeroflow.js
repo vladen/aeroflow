@@ -380,12 +380,8 @@ class Aeroflow {
   /*
     aeroflow([4, 2, 5, 3, 1]).sort().dump().run();
   */
-  sort(comparer) {
-    let array = this.toArray();
-    return new Aeroflow((next, done, context) => array[EMITTER](
-      values => values.length ? values.sort(comparer).forEach(next) : false,
-      done,
-      context));
+  sort(...comparers) {
+    return sort(this, ...comparers);
   }
   /*
     aeroflow([1, 2, 3]).sum().dump().run();
@@ -727,6 +723,44 @@ function repeat(repeater, limit) {
       });
 }
 
+function sort(flow, ...comparers) {
+  comparers = comparers.filter(isFunction);
+  switch(comparers.length) {
+    case 0: return sortWithoutComparer(flow);
+    case 1: return sortWithComparer(flow, comparers[0]);
+    default: return sortWithComparers(flow, comparers);
+  }
+}
+
+function sortWithComparer(flow, comparer) {
+  let array = flow.toArray();
+  return new Aeroflow((next, done, context) => array[EMITTER](
+    values => values.length ? values.sort(comparer).forEach(next) : false,
+    done,
+    context));
+}
+
+function sortWithComparers(flow, ...comparers) {
+  let array = flow.toArray()
+    , comparer = comparers.reduce(
+      (previous, current) => (left, right) => {
+        let result = previous(left, right);
+        return result ? result : current(left, right);
+      });
+  return new Aeroflow((next, done, context) => array[EMITTER](
+    values => values.length ? values.sort(comparer).forEach(next) : false,
+    done,
+    context));
+}
+
+function sortWithoutComparer(flow) {
+  let array = flow.toArray();
+  return new Aeroflow((next, done, context) => array[EMITTER](
+    values => values.length ? values.sort().forEach(next) : false,
+    done,
+    context));
+}
+
 module.exports = defineProperties(aeroflow, {
   concat: {value: concat}
 , create: {value: create}
@@ -736,4 +770,5 @@ module.exports = defineProperties(aeroflow, {
 , random: {value: random}
 , range: {value: range}
 , repeat: {value: repeat}
+, sort: {value: sort}
 });

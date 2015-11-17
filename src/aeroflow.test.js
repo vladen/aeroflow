@@ -8,7 +8,7 @@ if (typeof require === 'function') {
 describe('aeroflow', () => {
   it('is a function',
     () => assert.isFunction(aeroflow));
-  it('returns an object of proper type',
+  it('returns instance of Aeroflow class',
     () => assert.typeOf(aeroflow(), 'Aeroflow'));
   it('creates flow from scalar value',
     done => {
@@ -108,7 +108,7 @@ describe('aeroflow', () => {
         ;
       aeroflow(Promise.resolve(value)).run(onNext, onDone);
     });
-  it('creates flow from function returning promise immediately resolving to scalar value',
+  it('creates flow from function returning promise resolving to scalar value immediately',
     done => {
       let count = 0
         , value = 'test'
@@ -123,7 +123,7 @@ describe('aeroflow', () => {
         ;
       aeroflow(() => Promise.resolve(value)).run(onNext, onDone);
     });
-  it('creates flow from function returning promise immediately resolving to array',
+  it('creates flow from function returning promise resolving to array immediately',
     done => {
       let count = 0
         , values = ['a', 'b']
@@ -137,7 +137,7 @@ describe('aeroflow', () => {
         ;
       aeroflow(generator).run(onNext, onDone);
     });
-  it('creates flow from function returning promise eventually resolving to scalar value',
+  it('creates flow from function returning promise resolving to scalar value eventually',
     done => {
       let count = 0
         , value = 'test'
@@ -154,7 +154,7 @@ describe('aeroflow', () => {
         ;
       aeroflow(generator).run(onNext, onDone);
     });
-  it('creates flow from function returning promise eventually resolving to array',
+  it('creates flow from function returning promise resolving to array eventually',
     done => {
       let count = 0
         , values = ['a', 'b']
@@ -170,19 +170,34 @@ describe('aeroflow', () => {
     });
 
   describe('concat', () => {
+    it('is static method',
+      () => assert.isFunction(aeroflow.concat));
     it('is instance method',
       () => assert.isFunction(aeroflow.empty.concat));
-    it('concatenates several flows into one',
+    it('concatenates several values into one flow',
       done => {
         let count = 0
-          , values = [1, 2]
+          , values = [1, 2, 3]
           , onDone = () => {
-              assert.strictEqual(count, values.length * 3);
+              assert.strictEqual(count, values.length);
               done();
             }
           , onNext = next => count++
           ;
-        aeroflow(values).concat(values, values).run(onNext, onDone);
+        aeroflow.concat(...[1, 2, 3]).run(onNext, onDone);
+      });
+    it('concatenates several arrays into one flow',
+      done => {
+        let count = 0
+          , times = 3
+          , values = [1, 2]
+          , onDone = () => {
+              assert.strictEqual(count, values.length * times);
+              done();
+            }
+          , onNext = next => count++
+          ;
+        aeroflow.concat(...Array(times).fill(values)).run(onNext, onDone);
       });
   });
 
