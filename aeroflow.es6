@@ -82,12 +82,10 @@ function makeLimiter(condition) {
       : () => true;
 }
 
-function makeMapper(mapping) {
-  return isNothing(mapping)
-    ? identity
-    : isFunction(mapping)
-      ? mapping
-      : () => mapping;
+function makeMapper() {
+  return isFunction(mapper)
+    ? mapper
+    : identity;
 }
 
 function makePredicate(condition) {
@@ -247,8 +245,8 @@ class Aeroflow {
         context);
     });
   }
-  map(mapping) {
-    let mapper = makeMapper(mapping);
+  map(mapper) {
+    mapper = makeMapper(mapper);
     return new Aeroflow((next, done, context) => {
       let index = 0;
       this[GENERATOR](
@@ -262,39 +260,6 @@ class Aeroflow {
   */
   max() {
     return this.reduce((max, value) => value > max ? value : max);
-  }
-  /*
-    var f = aeroflow.repeat(() => new Date).take(3).memoize(5000).delay(1000).dump();
-    f.run(null, () => f.run(null, () => f.run())); 
-  */
-  memoize(expiration) {
-    let cache
-      , expirator = isFunction(expiration)
-        ? expiration
-        : isNumber(expiration)
-          ? () => expiration
-          : () => maxInteger
-      ;
-    return new Aeroflow((next, done, context) => {
-      if (cache) {
-        cache.forEach(next);
-        done();
-        return;
-      }
-      cache = [];
-      this[GENERATOR](
-        value => {
-          cache.push(value);
-          next(value);
-        },
-        error => {
-          setTimeout(() => {
-            cache = null;
-          }, expirator(context.data));
-          done(error);
-        },
-        context);
-    });
   }
   /*
     aeroflow([1, 1, 2, 3, 5, 7, 9]).mean().dump().run();
@@ -321,8 +286,8 @@ class Aeroflow {
     aeroflow([2, 4, 8]).reduce((product, value) => product * value, 1).dump().run();
     aeroflow(['a', 'b', 'c']).reduce((product, value, index) => product + value + index, '').dump().run();
   */
-  reduce(mapping, seed) {
-    let reducer = makeMapper(mapping);
+  reduce(reducer, seed) {
+    mapper = makeMapper(mapper);
     return new Aeroflow((next, done, context) => {
       let empty = true, index = 0, result;
       if (isSomething(seed)) {
@@ -369,6 +334,39 @@ class Aeroflow {
         context),
       0);
     return this;
+  }
+  /*
+    var f = aeroflow.repeat(() => new Date).take(3).share(5000).delay(1000).dump();
+    f.run(null, () => f.run(null, () => f.run())); 
+  */
+  share(expiration) {
+    let cache
+      , expirator = isFunction(expiration)
+        ? expiration
+        : isNumber(expiration)
+          ? () => expiration
+          : () => maxInteger
+      ;
+    return new Aeroflow((next, done, context) => {
+      if (cache) {
+        cache.forEach(next);
+        done();
+        return;
+      }
+      cache = [];
+      this[GENERATOR](
+        value => {
+          cache.push(value);
+          next(value);
+        },
+        error => {
+          setTimeout(() => {
+            cache = null;
+          }, expirator(context.data));
+          done(error);
+        },
+        context);
+    });
   }
   skip(condition) {
     if (isNothing(condition)) return new Aeroflow((next, done, context) => this[GENERATOR](value => {}, done, context));
@@ -476,7 +474,7 @@ class Aeroflow {
     aeroflow.repeat().take(3).toArray().dump().run();
   */
   toArray(mapping) {
-    let mapper = makeMapper(mapping);
+    mapper = makeMapper(mapper);
     return new Aeroflow((next, done, context) => {
       let index = 0, result = [];
       this[GENERATOR](
@@ -491,8 +489,8 @@ class Aeroflow {
   /*
     aeroflow.repeat().take(3).toSet(v => 'key#' + v).dump().run();
   */
-  toSet(mapping) {
-    let mapper = makeMapper(mapping);
+  toSet(mapper) {
+    mapper = makeMapper(mapper);
     return new Aeroflow((next, done, context) => {
       let index = 0, result = new Set;
       this[GENERATOR](
@@ -507,8 +505,17 @@ class Aeroflow {
   /*
     aeroflow.repeat().take(3).toMap(v => 'key#' + v, v => v * 10).dump().run();
   */
-  toMap(keyMapping, valueMapping) {
-    let keyMapper = makeMapper(keyMapping), valueMapper = makeMapper(valueMapping);
+  toMap(keyMapper, valueMapper) {
+    keyMapper = isFunction(keyMapper)
+      ? keyMapper
+      : value => isArray(value) && 2 === value.length
+        ? value[0]
+        : value;
+    valueMapper = isFunction(valueMapper)
+      ? valueMapper
+      : value => isArray(value) && 2 === value.length
+        ? value[1]
+        : value;
     return new Aeroflow((next, done, context) => {
       let index = 0, result = new Map;
       this[GENERATOR](
@@ -582,7 +589,20 @@ function concat(...flows) {
 */
 function create(generator) {
   return isFunction(generator)
-    ? new Aeroflow(generator)
+    ? new Aeroflow((next, done, context) => {
+        generator(
+          let completed = false;
+          value => {
+            if (context()) next()
+          },
+          error => {
+            if (!completed) {
+              completed = true;
+              done();
+              context(false);
+            }
+          });
+      })
     : empty;
 }
 
@@ -732,7 +752,8 @@ function repeat(repeater, limit) {
 }
 
 module.exports = defineProperties(aeroflow, {
-  create: {value: create}
+  concat: {value: concat}
+, create: {value: create}
 , empty: {value: empty}
 , expand: {value: expand}
 , just: {value: just}

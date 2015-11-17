@@ -617,11 +617,19 @@
       }
     }, {
       key: 'toMap',
-      value: function toMap(keyMapping, valueMapping) {
+      value: function toMap(keyMapper, valueMapper) {
         var _this19 = this;
 
-        var keyMapper = makeMapper(keyMapping),
-            valueMapper = makeMapper(valueMapping);
+        keyMapper = isNothing(keyMapper) ? function (value) {
+          return isArray(value) && 2 === value.length ? value[0] : value;
+        } : isFunction(keyMapper) ? keyMapper : function () {
+          return keyMapper;
+        };
+        valueMapper = isNothing(valueMapper) ? function (value) {
+          return isArray(value) && 2 === value.length ? value[1] : value;
+        } : isFunction(valueMapper) ? valueMapper : function () {
+          return valueMapper;
+        };
         return new Aeroflow(function (next, done, context) {
           var index = 0,
               result = new Map();
@@ -819,6 +827,9 @@
   }
 
   module.exports = defineProperties(aeroflow, {
+    concat: {
+      value: _concat
+    },
     create: {
       value: create
     },
