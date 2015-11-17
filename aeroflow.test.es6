@@ -7,8 +7,8 @@ const aeroflow = require('./aeroflow.es6')
 describe('aeroflow', () => {
   it('is a function',
     () => assert.isFunction(aeroflow));
-  it('returns an object',
-    () => assert.isObject(aeroflow()));
+  it('returns an object of proper type',
+    () => assert.typeOf(aeroflow(), 'Aeroflow'));
   it('creates flow from scalar value',
     done => {
       let count = 0
@@ -168,36 +168,6 @@ describe('aeroflow', () => {
       aeroflow(generator).run(onNext, onDone);
     });
 
-  describe('after', () => {
-    it('is instance method',
-      () => assert.isFunction(aeroflow.empty.after));
-    it('runs flow only after referenced flow completes',
-      done => {
-        let completed = false
-          , referenced = aeroflow(1).tap(
-              () => completed = true)
-          , onDone = () => {
-              assert.isTrue(completed);
-              done();
-            }
-          , onNext = noop
-          ;
-        aeroflow.empty.after(referenced).run(onNext, onDone);
-      });
-    it('runs flow only after referenced promise resolves',
-      done => {
-        let completed = false
-          , referenced = new Promise(
-              resolve => setTimeout(() => resolve(completed = true), 0))
-          , onDone = () => {
-              assert.isTrue(completed);
-              done();
-            }
-          , onNext = noop;
-        aeroflow.empty.after(referenced).run(onNext, onDone);
-      });
-  });
-
   describe('concat', () => {
     it('is instance method',
       () => assert.isFunction(aeroflow.empty.concat));
@@ -244,8 +214,8 @@ describe('aeroflow', () => {
   });
 
   describe('empty', () => {
-    it('is static object',
-      () => assert.isObject(aeroflow.empty));
+    it('is static property',
+      () => assert.typeOf(aeroflow.empty, 'Aeroflow'));
     it('returns empty flow',
       done => {
         let count = 0
@@ -362,8 +332,7 @@ describe('aeroflow', () => {
       () => assert.isFunction(aeroflow.random));
     it('creates flow of random integers within a range',
       done => {
-        let count = 0
-          , max = 10
+        let max = 10
           , min = 1
           , onNext = next => assert.isTrue(Number.isInteger(next) && next >= min && next < max)
           ;
@@ -371,8 +340,7 @@ describe('aeroflow', () => {
     });
     it('creates flow of random decimals within a range',
       done => {
-        let count = 0
-          , max = 10.1
+        let max = 10.1
           , min = 1.1
           , onNext = next => assert.isTrue(!Number.isInteger(next) && next >= min && next < max)
           ;
@@ -395,9 +363,16 @@ describe('aeroflow', () => {
         let count = 0
           , start = 1
           , end = 9
-          , onNext = next => assert.isTrue(next >= start && next <= end)
+          , onDone = () => {
+              assert.strictEqual(count, end - start + 1);
+              done();
+            }
+          , onNext = next => {
+            count++;
+              assert.isTrue(next >= start && next <= end);
+            }
           ;
-        aeroflow.range(start, end).run(onNext, done);
+        aeroflow.range(start, end).run(onNext, onDone);
     });
     it('creates flow of ascending sequential integers within a stepped range',
       done => {
@@ -405,18 +380,32 @@ describe('aeroflow', () => {
           , start = 1
           , end = 9
           , step = 2
-          , onNext = next => assert.isTrue(next >= start && next <= end && next % step === 1)
+          , onDone = () => {
+              assert.strictEqual(count, Math.round((end - start + 1) / step));
+              done();
+            }
+          , onNext = next => {
+              count++;
+              assert.isTrue(next >= start && next <= end && next % step === 1);
+            }
           ;
-        aeroflow.range(start, end, step).run(onNext, done);
+        aeroflow.range(start, end, step).run(onNext, onDone);
     });
     it('creates flow of descending sequential integers within a range',
       done => {
         let count = 0
           , start = 9
           , end = 1
-          , onNext = next => assert.isTrue(next <= start && next >= end)
+          , onDone = () => {
+              assert.strictEqual(count, start - end + 1);
+              done();
+            }
+          , onNext = next => {
+              count++;
+              assert.isTrue(next <= start && next >= end);
+            }
           ;
-        aeroflow.range(start, end).run(onNext, done);
+        aeroflow.range(start, end).run(onNext, onDone);
     });
     it('creates flow of descending sequential integers within a stepped range',
       done => {
@@ -424,9 +413,16 @@ describe('aeroflow', () => {
           , start = 9
           , end = 1
           , step = -2
-          , onNext = next => assert.isTrue(next <= start && next >= end && next % step === 1)
+          , onDone = () => {
+              assert.strictEqual(count, Math.round((start - end + 1) / -step));
+              done();
+            }
+          , onNext = next => {
+              count++;
+              assert.isTrue(next <= start && next >= end && next % step === 1);
+            }
           ;
-        aeroflow.range(start, end, step).run(onNext, done);
+        aeroflow.range(start, end, step).run(onNext, onDone);
     });
   });
 
@@ -448,6 +444,116 @@ describe('aeroflow', () => {
           ;
         aeroflow.repeat(repeater).run(onNext, onDone);
     });
+  });
+
+  describe('skip', () => {
+    it('is instance method',
+      () => assert.isFunction(aeroflow.empty.skip));
+    it('skips all values if no parameter specified',
+      done => {
+        let empty = true
+          , values = [1, 2, 3, 4]
+          , onDone = () => {
+              assert.isTrue(empty);
+              done();
+            }
+          , onNext = () => {
+              empty = false;
+            }
+          ;
+        aeroflow(values).skip().run(onNext, onDone);
+      });
+    it('skips specified number of first values',
+      done => {
+        let count = 0
+          , values = [1, 2, 3, 4]
+          , skip = 2
+          , results = []
+          , onDone = () => {
+              assert.strictEqual(count, values.length - skip);
+              assert.includeMembers(results, values.slice(skip));
+              done();
+            }
+          , onNext = value => {
+              count++;
+              results.push(value);
+            }
+          ;
+        aeroflow(values).skip(skip).run(onNext, onDone);
+      });
+    it('skips first values while specified function returns true',
+      done => {
+        let count = 0
+          , values = [1, 2, 3, 4]
+          , skip = 2
+          , results = []
+          , limiter = (value, index) => index < skip
+          , onDone = () => {
+              assert.strictEqual(count, values.length - skip);
+              assert.includeMembers(results, values.slice(skip));
+              done();
+            }
+          , onNext = value => {
+              count++;
+              results.push(value);
+            }
+          ;
+        aeroflow(values).skip(limiter).run(onNext, onDone);
+      });
+  });
+
+  describe('take', () => {
+    it('is instance method',
+      () => assert.isFunction(aeroflow.empty.take));
+    it('takes all values if no parameters specified',
+      done => {
+        let count = 0
+          , values = [1, 2, 3, 4]
+          , onDone = () => {
+              assert.strictEqual(count, values.length);
+              done();
+            }
+          , onNext = () => count++
+          ;
+        aeroflow(values).take().run(onNext, onDone);
+      });
+    it('takes specified number of first values',
+      done => {
+        let count = 0
+          , values = [1, 2, 3, 4]
+          , take = 2
+          , results = []
+          , onDone = () => {
+              assert.strictEqual(count, take);
+              assert.includeMembers(results, values.slice(0, take));
+              done();
+            }
+          , onNext = value => {
+              count++;
+              results.push(value);
+            }
+          ;
+        aeroflow(values).take(take).run(onNext, onDone);
+      });
+    it('takes first values while specified function returns true',
+      done => {
+        let count = 0
+          , values = [1, 2, 3, 4]
+          , take = 2
+          , results = []
+          , limiter = (value, index) => index < take
+          , onDone = () => {
+              assert.strictEqual(count, take);
+              assert.includeMembers(results, values.slice(0, take));
+              done();
+            }
+          , onNext = value => {
+              count++;
+              results.push(value);
+            }
+          ;
+        aeroflow(values).take(limiter).run(onNext, onDone);
+      });
   });
 
   describe('tap', () => {

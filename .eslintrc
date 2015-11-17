@@ -10,7 +10,9 @@
     "defaultParams": true,
     "destructuring": true,
     "modules": true,
-    "restParams": true
+    "objectLiteralComputedProperties": true,
+    "restParams": true,
+    "templateStrings": true
   },
   "env": {
     "browser": true,

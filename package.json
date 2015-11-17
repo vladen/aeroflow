@@ -14,7 +14,7 @@
   "scripts": {
     "browserify": "node_modules/.bin/browserify aeroflow.js -o aeroflow.browser.js",
     "build": "npm run transpile",
-    "lint": "node_modules/.bin/eslint aeroflow.es6",
+    "lint": "node_modules/.bin/eslint aeroflow.es6 aeroflow.test.es6 --global describe,it",
     "minify": "node_modules/.bin/uglifyjs aeroflow.browser.js -o aeroflow.min.js -c -m",
     "test": "node_modules/.bin/mocha -c --prof --harmony aeroflow.test.es6",
     "transpile": "node_modules/.bin/babel aeroflow.es6 --out-file aeroflow.js --presets es2015 --plugins transform-es2015-modules-umd"
