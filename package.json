@@ -10,7 +10,7 @@
     "type": "git",
     "url": "git+https://bitbucket.org/vladen/aeroflow.git"
   },
-  "main": "aeroflow.js",
+  "main": "index.js",
   "scripts": {
     "browserify": "node_modules/.bin/browserify aeroflow.js -o aeroflow.browser.js",
     "build": "npm run transpile",

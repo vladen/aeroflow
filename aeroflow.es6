@@ -2,56 +2,31 @@
 
 const
   AEROFLOW = 'Aeroflow'
+, EMITTER = Symbol('emitter')
 
-, FUNCTION_TYPE = 'function'
-, NUMBER_TYPE = 'number'
-, OBJECT_TYPE = 'object'
-, STRING_TYPE = 'object'
-
-, classTag = className => `[object ${className}]`
-, ARRAY_TAG = classTag('Array')
-, DATE_TAG = classTag('Date')
-, ERROR_TAG = classTag('Error')
-, NUMBER_TAG = classTag('Number')
-, PROMISE_TAG = classTag('Promise')
-, REGEXP_TAG = classTag('RegExp')
-, STRING_TAG = classTag('String')
-
+, classof = Object.classof
 , defineProperty = Object.defineProperty
 , defineProperties = Object.defineProperties
 , floor = Math.floor
 , now = Date.now
 
-, hasSymbols = FUNCTION_TYPE === typeof Symbol
-, maxInteger = Number.MAX_SAFE_INTEGER || Math.pow(2, 53) - 1
+, maxInteger = Number.MAX_SAFE_INTEGER
 
 , identity = value => value
-, noop = () => {}
-, toStringTag = Object.prototype.toString
-
-, GENERATOR = (hasSymbols ? Symbol : identity)('generator')
-, ITERATOR = hasSymbols ? Symbol.iterator : 'iterator'
-, TO_STRING_TAG = hasSymbols ? Symbol.toStringTag : 'toStringTag'
-
-, isArray = typeof Array.isArray === 'function'
-  ? Array.isArray
-  : (value => ARRAY_TAG === toStringTag.call(value))
-, isDate = value => DATE_TAG === toStringTag.call(value)
-, isError = value => ERROR_TAG === toStringTag.call(value)
-, isFunction = value => FUNCTION_TYPE === typeof value
-, isInteger = FUNCTION_TYPE === typeof Number.isInteger
-  ? Number.isInteger
-  : value => NUMBER_TYPE === typeof value && isFinite(value) && value === floor(value)
+, isAeroflow = value => AEROFLOW === classof(value)
+, isArray = value => 'Array' === classof(value)
+, isDate = value => 'Date' === classof(value)
+, isError = value => 'Error' === classof(value)
+, isFunction = value => 'Function' === classof(value)
+, isInteger = Number.isInteger
+, isIterable = value => Object.isObject(value) && Symbol.iterator in value
 , isNothing = value => value == null
-, isNumber = value => NUMBER_TAG === toStringTag.call(value)
-, isObject = value => OBJECT_TYPE === typeof value && null !== value
-, isPromise = value => PROMISE_TAG === toStringTag.call(value)
-, isRegExp = value => REGEXP_TAG === toStringTag.call(value)
+, isNumber = value => 'Number' === classof(value)
+, isPromise = value => 'Promise' === classof(value)
+, isRegExp = value => 'RegExp' === classof(value)
 , isSomething = value => null != value
-, isString = value => STRING_TAG === toStringTag.call(value)
-
-, isAeroflow = value => isObject(value) && AEROFLOW === value[TO_STRING_TAG]
-, isIterable = value => isObject(value) && ITERATOR in value
+, isString = value => 'String' === classof(value)
+, noop = () => {}
 ;
 
 function makeContext(data) {
@@ -74,28 +49,28 @@ function makeContext(data) {
   });
 }
 
-function makeLimiter(condition) {
-  return isNumber(condition)
-    ? (value, index) => index < condition
-    : isFunction(condition)
-      ? condition
+function makeLimiter(limiter) {
+  return isNumber(limiter)
+    ? (_, index) => index < limiter
+    : isFunction(limiter)
+      ? limiter
       : () => true;
 }
 
-function makeMapper() {
+function makeMapper(mapper) {
   return isFunction(mapper)
     ? mapper
     : identity;
 }
 
-function makePredicate(condition) {
-  return isNothing(condition)
+function makePredicate(predicate) {
+  return isNothing(predicate)
     ? isSomething
-    : isFunction(condition)
-      ? condition
-      : isRegExp(condition)
-        ? value => condition.test(value)
-        : value => value === condition;
+    : isFunction(predicate)
+      ? predicate
+      : isRegExp(predicate)
+        ? value => predicate.test(value)
+        : value => value === predicate;
 }
 
 function throwError(error) {
@@ -103,10 +78,10 @@ function throwError(error) {
 }
 
 class Aeroflow {
-  constructor(generator) {
+  constructor(emitter) {
     defineProperties(this, {
-      [GENERATOR]: {value: generator}
-    , [TO_STRING_TAG]: {value: AEROFLOW}
+      [EMITTER]: {value: emitter}
+    , [Symbol.toStringTag]: {value: AEROFLOW}
     });
   }
   /*
@@ -133,7 +108,7 @@ class Aeroflow {
       : () => condition;
     return new Aeroflow((next, done, context) => {
       let completition = now(), index = 0;
-      this[GENERATOR](
+      this[EMITTER](
         value => {
           let delay = delayer(value, index++, context.data), estimation;
           if (isDate(delay)) {
@@ -167,7 +142,7 @@ class Aeroflow {
       if (!isFunction(logger)) logger = console.log.bind(console);
       prefix = isNothing(prefix) ? '' : prefix + ' ';
     }
-    return new Aeroflow((next, done, context) => this[GENERATOR](
+    return new Aeroflow((next, done, context) => this[EMITTER](
       value => {
         logger(prefix + 'next', value);
         next(value);
@@ -183,7 +158,7 @@ class Aeroflow {
     return new Aeroflow((next, done, context) => {
       let empty = true, result = true;
       context = context.spawn();
-      this[GENERATOR](
+      this[EMITTER](
         value => {
           empty = false;
           if (!predicate(value)) {
@@ -202,7 +177,7 @@ class Aeroflow {
     let predicate = makePredicate(predicate);
     return new Aeroflow((next, done, context) => {
       let index = 0;
-      this[GENERATOR](
+      this[EMITTER](
         value => predicate(value, index++, context.data)
           ? next(value)
           : false,
@@ -213,7 +188,7 @@ class Aeroflow {
   first() {
     return new Aeroflow((next, done, context) => {
       context = context.spawn();
-      this[GENERATOR](
+      this[EMITTER](
         value => {
           next(value);
           context(false);
@@ -233,7 +208,7 @@ class Aeroflow {
   last() {
     return new Aeroflow((next, done, context) => {
       let empty = true, result;
-      this[GENERATOR](
+      this[EMITTER](
         value => {
           empty = false;
           result = value;
@@ -249,7 +224,7 @@ class Aeroflow {
     mapper = makeMapper(mapper);
     return new Aeroflow((next, done, context) => {
       let index = 0;
-      this[GENERATOR](
+      this[EMITTER](
         value => next(mapper(value, index++, context.data)),
         done,
         context);
@@ -266,7 +241,7 @@ class Aeroflow {
   */
   mean() {
     let array = this.toArray();
-    return new Aeroflow((next, done, context) => array[GENERATOR](
+    return new Aeroflow((next, done, context) => array[EMITTER](
       values => {
         if (values.length) {
           values.sort();
@@ -287,14 +262,14 @@ class Aeroflow {
     aeroflow(['a', 'b', 'c']).reduce((product, value, index) => product + value + index, '').dump().run();
   */
   reduce(reducer, seed) {
-    mapper = makeMapper(mapper);
+    reducer = makeMapper(reducer);
     return new Aeroflow((next, done, context) => {
       let empty = true, index = 0, result;
       if (isSomething(seed)) {
         empty = false;
         result = seed;
       }
-      this[GENERATOR](
+      this[EMITTER](
         value => {
           if (empty) {
             empty = false;
@@ -312,7 +287,7 @@ class Aeroflow {
   }
   /*
     Asynchronously runs current aeroflow.
-      Initiates source generator to start produce values.
+      Initiates source emitter to start produce values.
       Applies attached operators chain to each value.
       Every produced result is being passed to the optional "onNext" callback.
       After aeroflow completes, optional "onDone" callback is invoked.
@@ -325,7 +300,7 @@ class Aeroflow {
     if (!isFunction(done)) done = noop;
     if (!isFunction(next)) next = noop;
     setTimeout(
-      () => this[GENERATOR](
+      () => this[EMITTER](
         next,
         error => {
           context(false);
@@ -354,7 +329,7 @@ class Aeroflow {
         return;
       }
       cache = [];
-      this[GENERATOR](
+      this[EMITTER](
         value => {
           cache.push(value);
           next(value);
@@ -369,11 +344,11 @@ class Aeroflow {
     });
   }
   skip(condition) {
-    if (isNothing(condition)) return new Aeroflow((next, done, context) => this[GENERATOR](value => {}, done, context));
+    if (isNothing(condition)) return new Aeroflow((next, done, context) => this[EMITTER](value => {}, done, context));
     let limiter = makeLimiter(condition);
     return new Aeroflow((next, done, context) => {
       let index = 0, limited = true;
-      this[GENERATOR](
+      this[EMITTER](
         value => {
           if (limited && !limiter(value, index++, context.data)) limited = false;
           if (!limited) next(value);
@@ -387,7 +362,7 @@ class Aeroflow {
     return new Aeroflow((next, done, context) => {
       let result = false;
       context = context.spawn();
-      this[GENERATOR](
+      this[EMITTER](
         value => {
           if (predicate(value)) {
             result = true;
@@ -406,7 +381,7 @@ class Aeroflow {
   */
   sort(comparer) {
     let array = this.toArray();
-    return new Aeroflow((next, done, context) => array[GENERATOR](
+    return new Aeroflow((next, done, context) => array[EMITTER](
       values => values.length ? values.sort(comparer).forEach(next) : false,
       done,
       context));
@@ -423,7 +398,7 @@ class Aeroflow {
     return new Aeroflow((next, done, context) => {
       let index = 0;
       context = context.spawn();
-      this[GENERATOR](
+      this[EMITTER](
         value => limiter(value, index++, context.data)
           ? next(value)
           : context(false),
@@ -435,7 +410,7 @@ class Aeroflow {
     return isFunction(callback)
       ? new Aeroflow((next, done, context) => {
         let index = 0;
-        this[GENERATOR](
+        this[EMITTER](
           value => {
             callback(value, index++, context.data);
             next(value);
@@ -451,7 +426,7 @@ class Aeroflow {
   timedelta() {
     return new Aeroflow((next, done, context) => {
       let past = now();
-      this[GENERATOR](
+      this[EMITTER](
         value => {
           let current = now();
           next({ timedelta: current - past, value });
@@ -465,7 +440,7 @@ class Aeroflow {
     aeroflow.repeat().take(3).delay(10).timestamp().dump().run();
   */
   timestamp() {
-    return new Aeroflow((next, done, context) => this[GENERATOR](
+    return new Aeroflow((next, done, context) => this[EMITTER](
       value => next({ timestamp: now(), value }),
       done,
       context));
@@ -473,11 +448,11 @@ class Aeroflow {
   /*
     aeroflow.repeat().take(3).toArray().dump().run();
   */
-  toArray(mapping) {
+  toArray(mapper) {
     mapper = makeMapper(mapper);
     return new Aeroflow((next, done, context) => {
       let index = 0, result = [];
-      this[GENERATOR](
+      this[EMITTER](
         value => result.push(mapper(value, index++, context.data)),
         error => {
           next(result);
@@ -493,7 +468,7 @@ class Aeroflow {
     mapper = makeMapper(mapper);
     return new Aeroflow((next, done, context) => {
       let index = 0, result = new Set;
-      this[GENERATOR](
+      this[EMITTER](
         value => result.add(mapper(value, index++, context.data)),
         error => {
           next(result);
@@ -518,7 +493,7 @@ class Aeroflow {
         : value;
     return new Aeroflow((next, done, context) => {
       let index = 0, result = new Map;
-      this[GENERATOR](
+      this[EMITTER](
         value => result.set(
           keyMapper(value, index, context.data),
           valueMapper(value, index++, context.data)),
@@ -536,7 +511,7 @@ class Aeroflow {
   unique() {
     return new Aeroflow((next, done, context) => {
       let values = new Set;
-      this[GENERATOR](
+      this[EMITTER](
         value => {
           let size = values.size;
           values.add(value);
@@ -579,7 +554,7 @@ function concat(...flows) {
   return new Aeroflow((next, done, context) => {
     !function proceed() {
       queue.length
-        ? aeroflow(queue.shift())[GENERATOR](next, proceed, context)
+        ? aeroflow(queue.shift())[EMITTER](next, proceed, context)
         : done();
     }();
   });
@@ -587,11 +562,11 @@ function concat(...flows) {
 /*
   
 */
-function create(generator) {
-  return isFunction(generator)
+function create(emitter) {
+  return isFunction(emitter)
     ? new Aeroflow((next, done, context) => {
-        generator(
-          let completed = false;
+        let completed = false;
+        emitter(
           value => {
             if (context()) next()
           },
@@ -635,7 +610,7 @@ function fromArray(source) {
 */
 function fromFunction(source) {
   return new Aeroflow(
-    (next, done, context) => aeroflow(source())[GENERATOR](next, done, context));
+    (next, done, context) => aeroflow(source())[EMITTER](next, done, context));
 }
 /*
   For internal use. Creates new aeroflow from iterable object.
@@ -643,7 +618,7 @@ function fromFunction(source) {
 function fromIterable(source) {
   return new Aeroflow(
     (next, done, context) => {
-      let iterator = source[ITERATOR]();
+      let iterator = source[Symbol.iterator]();
       while (context()) {
         let result = iterator.next();
         if (result.done) break;
@@ -658,7 +633,7 @@ function fromIterable(source) {
 function fromPromise(source) {
   return new Aeroflow(
     (next, done, context) => source.then(
-      value => aeroflow(value)[GENERATOR](next, done, context),
+      value => aeroflow(value)[EMITTER](next, done, context),
       error => {
         done(error);
         throwError(error);
@@ -739,7 +714,7 @@ function repeat(repeater, limit) {
           if (0 < counter--) {
             let result = context() && repeater(context.data);
             if (result === false) done();
-            else aeroflow(result)[GENERATOR](next, onDone, context);
+            else aeroflow(result)[EMITTER](next, onDone, context);
           }
           else done();
         }

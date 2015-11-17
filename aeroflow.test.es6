@@ -1,4 +1,5 @@
 'use strict';
+require('core-js');
 
 const aeroflow = require('./aeroflow.es6')
     , assert = require('chai').assert
@@ -600,6 +601,7 @@ describe('aeroflow', () => {
               assert.typeOf(map, 'Map');
               assert.includeMembers(Array.from(map.keys()), values);
               assert.includeMembers(Array.from(map.values()), values);
+              done();
             }
           , onNext = value => results.push(value)
           ;
