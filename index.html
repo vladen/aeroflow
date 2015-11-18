@@ -6,7 +6,9 @@
     <link href="node_modules/mocha/mocha.css" rel="stylesheet" />
   </head>
   <body>
-    <div id="mocha"></div>
+    <div id="mocha">
+      <a href="index.es6.html">Modern (ES6) version</a>
+    </div>
     <script src="node_modules/core-js/client/core.js"></script>
     <script src="node_modules/mocha/mocha.js"></script>
     <script src="node_modules/chai/chai.js"></script>
@@ -17,7 +19,7 @@
       });
     </script>
     <script src="lib/aeroflow.js"></script>
-    <script src="lib/aeroflow.test.js"></script>
+    <script src="lib/tests.js"></script>
     <script>
       mocha.run();
     </script>
