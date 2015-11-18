@@ -86,8 +86,9 @@ Additional options:
 
 #### aeroflow
 
-__static root method__
-> _Create flow emitting scalar value_
+[static root method]
+
+__Create flow emitting scalar value__
 
 ```js
 aeroflow('test').dump().run();
@@ -95,7 +96,7 @@ aeroflow('test').dump().run();
 // done
 ```
 
-> _Safe double wrap a flow_
+__Safe double wrap a flow__
 
 ```js
 aeroflow(aeroflow('test')).dump().run();
@@ -103,7 +104,7 @@ aeroflow(aeroflow('test')).dump().run();
 // done
 ```
 
-> _Create flow emitting values of an Array_
+__Create flow emitting values of an Array__
 
 ```js
 aeroflow([1, 2]).dump().run();
@@ -112,7 +113,7 @@ aeroflow([1, 2]).dump().run();
 // done
 ```
 
-> _Create flow emitting entries of ES6 Map_
+__Create flow emitting entries of ES6 Map__
 
 ```js
 aeroflow(new Map([['a', 1], ['b', 2]])).dump().run();
@@ -121,7 +122,7 @@ aeroflow(new Map([['a', 1], ['b', 2]])).dump().run();
 // done
 ```
 
-> _Create flow emitting keys of ES6 Set_
+__Create flow emitting keys of ES6 Set__
 
 ```js
 aeroflow(new Set(['a', 'b'])).dump().run();
@@ -130,7 +131,7 @@ aeroflow(new Set(['a', 'b'])).dump().run();
 // done
 ```
 
-> _Create flow emitting sync function result_
+__Create flow emitting sync function result__
 
 ```js
 aeroflow(() => 'test').dump().run();
@@ -138,7 +139,7 @@ aeroflow(() => 'test').dump().run();
 // done
 ```
 
-> _Create flow emitting promise result_
+__Create flow emitting promise result__
 
 ```js
 aeroflow(Promise.resolve('test')).dump().run();
@@ -146,7 +147,7 @@ aeroflow(Promise.resolve('test')).dump().run();
 // done
 ```
 
-> _Create flow emitting async function result_
+__Create flow emitting async function result__
 
 ```js
 aeroflow(() => new Promise(resolve => setTimeout(() => resolve('test'), 100))).dump().run();
@@ -154,7 +155,7 @@ aeroflow(() => new Promise(resolve => setTimeout(() => resolve('test'), 100))).d
 // done
 ```
 
-> _Also multiple arguments of various types are accepted_
+__Also multiple arguments of various types are accepted__
 
 ```js
 aeroflow(1, [2, 3], new Set([4, 5]), Promise.resolve(7), new Promise(resolve => setTimeout(() => resolve(8), 500))).dump().run();
@@ -170,8 +171,9 @@ aeroflow(1, [2, 3], new Set([4, 5]), Promise.resolve(7), new Promise(resolve => 
 
 #### empty
 
-__static field__
-> _Get empty flow emitting only "done" signal_
+[static field]
+
+__Get empty flow emitting only "done" signal__
 
 ```js
 flow.empty.dump().run();
@@ -180,8 +182,9 @@ flow.empty.dump().run();
 
 #### expand
 
-__static method__
-> _Generate infinite flow emitting sequence from unfolded scalar value_
+[static method]
+
+__Generate infinite flow emitting sequence from unfolded scalar value__
 
 ```js
 aeroflow.expand(value => value * 2, 1).take(3).dump().run();
@@ -198,8 +201,9 @@ aeroflow.expand(value => new Date(+value + 1000 * 60), new Date).take(3).dump().
 
 #### just
 
-__static method__
-> _Create flow emitting the only passed value as is_
+[static method]
+
+__Create flow emitting the only passed value as is__
 
 ```js
 aeroflow.just([1, 2]).dump().run();
@@ -212,8 +216,9 @@ aeroflow.just(() => 'test').dump().run();
 
 #### random
 
-__static method__
-> _Generate infinite flow emitting random decimal numbers_
+[static method]
+
+__Generate infinite flow emitting random decimal numbers__
 
 ```js
 aeroflow.random().take(3).dump().run();
@@ -223,7 +228,8 @@ aeroflow.random().take(3).dump().run();
 // done
 ```
 
-Generate infinite flow emitting random decimal numbers within a range (not including upper boundary)
+__Generate infinite flow emitting random decimal numbers within a range (not including upper boundary)__
+
 ```js
 aeroflow.random(1.1, 9.9).take(3).dump().run();
 // next 5.97583004180342
@@ -232,7 +238,7 @@ aeroflow.random(1.1, 9.9).take(3).dump().run();
 // done
 ```
 
-Generate infinite flow emitting random integer numbers within a range (not including upper boundary)
+__Generate infinite flow emitting random integer numbers within a range (not including upper boundary)__
 
 ```js
 aeroflow.random(1, 9).take(3).dump().run();
@@ -244,8 +250,9 @@ aeroflow.random(1, 9).take(3).dump().run();
 
 #### range
 
-__static method__
-> _Generate flow emitting ascending sequential values within a range (including each boundary)_
+[static method]
+
+__Generate flow emitting ascending sequential values within a range (including each boundary)__
 
 ```js
 aeroflow.range(1, 3).dump().run();
@@ -255,7 +262,7 @@ aeroflow.range(1, 3).dump().run();
 // done
 ```
 
-Generate flow emitting ascending sequential values within a range with step (including lower boundary and possibly upper)
+__Generate flow emitting ascending sequential values within a range with step (including lower boundary and possibly upper)__
 
 ```js
 aeroflow.range(1, 5, 2).dump().run();
@@ -265,7 +272,7 @@ aeroflow.range(1, 5, 2).dump().run();
 // done
 ```
 
-Generate flow emitting descending sequential values within a range (including each boundary)
+__Generate flow emitting descending sequential values within a range (including each boundary)__
 
 ```js
 aeroflow.range(3, 1).dump().run();
@@ -275,7 +282,7 @@ aeroflow.range(3, 1).dump().run();
 // done
 ```
 
-Generate flow emitting stepped descending sequential values within a range with step (including lower boundary and possibly upper)
+__Generate flow emitting stepped descending sequential values within a range with step (including lower boundary and possibly upper)__
 
 ```js
 aeroflow.range(6, 1, 2).dump().run();
@@ -289,8 +296,9 @@ aeroflow.range(6, 1, 2).dump().run();
 
 #### count
 
-__instance method__
-> _Count the number of values emitted by this flow and emit only this value_
+[instance method]
+
+__Count the number of values emitted by this flow and emit only this value__
 
 ```js
 aeroflow(['a', 'b', 'c']).count().dump().run();
@@ -300,8 +308,9 @@ aeroflow(['a', 'b', 'c']).count().dump().run();
 
 #### max
 
-__instance method__
-> _Determine, and emit, the maximum value emitted by this flow_
+[instance method]
+
+__Determine, and emit, the maximum value emitted by this flow__
 
 ```js
 aeroflow(['a', 'b', 'c']).max().dump().run();
@@ -311,8 +320,9 @@ aeroflow(['a', 'b', 'c']).max().dump().run();
 
 #### mean
 
-__instance method__
-> _Find mean value from sequence emitted by this flow and emit the result_
+[instance method]
+
+__Find mean value from sequence emitted by this flow and emit the result__
 
 ```js
 aeroflow([1, 1, 2, 3, 5, 7, 9]).mean().dump().run();
@@ -322,8 +332,9 @@ aeroflow([1, 1, 2, 3, 5, 7, 9]).mean().dump().run();
 
 #### min
 
-__instance method__
-> _Determine, and emit, the minimum value emitted by this flow_
+[instance method]
+
+__Determine, and emit, the minimum value emitted by this flow__
 
 ```js
 aeroflow([3, 1, 5]).min().dump().run();
@@ -332,8 +343,9 @@ aeroflow([3, 1, 5]).min().dump().run();
 ```
 #### reduce
 
-__instance method__
-> _Apply a function to each item emitted by this flow, sequentially, and emit the final result_
+[instance method]
+
+__Apply a function to each item emitted by this flow, sequentially, and emit the final result__
 
 ```js
 aeroflow([2, 4, 8]).reduce((product, value) => product * value, 1).dump().run();
@@ -346,8 +358,9 @@ aeroflow(['a', 'b', 'c']).reduce((product, value, index) => product + value + in
 
 #### sum
 
-__instance method__
-> _Calculate the sum of numbers emitted by this flow and emit the result_
+[instance method]
+
+__Calculate the sum of numbers emitted by this flow and emit the result__
 
 ```js
 aeroflow([1, 2, 3]).sum().dump().run();
@@ -358,8 +371,10 @@ aeroflow([1, 2, 3]).sum().dump().run();
 ### Combination
 
 #### concat
-__instance method__
-> _Emit the emissions from two or more flows without interleaving them_
+
+[instance method]
+
+__Emit the emissions from two or more flows without interleaving them__
 
 ```js
 aeroflow(1).concat(2, 3, 4, 5).dump().run();
@@ -393,8 +408,9 @@ aeroflow(1)
 
 #### sort
 
-__instance method__
-> _Sorts values emitted by this flow and emit the sorted flow_
+[instance method]
+
+__Sorts values emitted by this flow and emit the sorted flow__
 
 ```js
 aeroflow([2, 1, 4, 3]).sort().dump().run(); // or .sort('asc') or .sort(-1) or .sort(false)
@@ -437,9 +453,9 @@ aeroflow([
 
 #### share
 
-__instance method__
-> _Caches values emitted by this flow for specified number of milliseconds_
+[instance method]
 
+__Caches values emitted by this flow for specified number of milliseconds__
 
 ```js
 var i = 0;
