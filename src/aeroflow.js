@@ -12,6 +12,7 @@ const
 , maxInteger = Number.MAX_SAFE_INTEGER
 
 , identity = value => value
+
 , isAeroflow = value => AEROFLOW === classof(value)
 , isArray = value => 'Array' === classof(value)
 , isDate = value => 'Date' === classof(value)
@@ -24,56 +25,9 @@ const
 , isPromise = value => 'Promise' === classof(value)
 , isRegExp = value => 'RegExp' === classof(value)
 , isSomething = value => null != value
+
 , noop = () => {}
 ;
-
-function makeContext(data) {
-  let active = true, callbacks = [], context = (value) => {
-    if (value !== undefined)
-      if (value === false) {
-        active = false;
-        callbacks.forEach(callback => callback());
-      }
-      else if (isFunction(value)) active ? callbacks.push(value) : value();
-    return active;
-  };
-  return defineProperties(context, {
-    data: {value: data},
-    spawn: {value: () => {
-      let child = makeContext(data);
-      context(child);
-      return child;
-    }}
-  });
-}
-
-function makeLimiter(limiter) {
-  return isNumber(limiter)
-    ? (value, index) => index < limiter
-    : isFunction(limiter)
-      ? limiter
-      : () => true;
-}
-
-function makeMapper(mapper) {
-  return isFunction(mapper)
-    ? mapper
-    : identity;
-}
-
-function makePredicate(predicate) {
-  return isNothing(predicate)
-    ? isSomething
-    : isFunction(predicate)
-      ? predicate
-      : isRegExp(predicate)
-        ? value => predicate.test(value)
-        : value => value === predicate;
-}
-
-function throwError(error) {
-  throw isError(error) ? error : new Error(error);
-}
 
 class Aeroflow {
   constructor(emitter) {
@@ -83,12 +37,17 @@ class Aeroflow {
     });
   }
   /*
-    aeroflow.range().take(2).concat(2).dump().run();
-    aeroflow.range().take(2).concat([2, 3]).dump().run();
-    aeroflow.range().take(2).concat(() => [2, 3]).dump().run();
+    aeroflow(1).concat(2, 3, 4, 5).dump().run();
+    aeroflow(1).concat([2, 3], [4, 5]).dump().run();
+    aeroflow(1)
+      .concat(
+        () => new Promise(resolve => setTimeout(() => resolve([2, 3]), 400))
+      , () => new Promise(resolve => setTimeout(() => resolve([4, 5]), 800)))
+      .dump()
+      .run();
   */
   concat(...flows) {
-    return concat(this, ...flows);
+    return aeroflow(this, ...flows);
   }
   /*
     aeroflow(['a', 'b', 'c']).count().dump().run();
@@ -159,13 +118,13 @@ class Aeroflow {
     let predicate = makePredicate(condition);
     return new Aeroflow((next, done, context) => {
       let empty = true, result = true;
-      context = context.spawn();
+      context = context.make();
       this[EMITTER](
         value => {
           empty = false;
           if (!predicate(value)) {
             result = false;
-            context(false);
+            context.stop();
           }
         },
         error => {
@@ -189,11 +148,11 @@ class Aeroflow {
   }
   first() {
     return new Aeroflow((next, done, context) => {
-      context = context.spawn();
+      context = context.make();
       this[EMITTER](
         value => {
           next(value);
-          context(false);
+          context.stop();
         },
         done,
         context);
@@ -298,22 +257,26 @@ class Aeroflow {
       aeroflow(1).run(v => console.log('next', v), () => console.log('done'));
   */
   run(next, done, data) {
-    let context = makeContext(data);
+    let context = makeContext(this, data);
     if (!isFunction(done)) done = noop;
     if (!isFunction(next)) next = noop;
     setImmediate(
       () => this[EMITTER](
-        next,
+        value => next(value, context),
         error => {
-          context(false);
-          error ? done(error) : done();
+          context.stop();
+          done(error, context);
         },
         context));
     return this;
   }
   /*
-    var f = aeroflow.repeat(() => new Date).take(3).share(5000).delay(1000).dump();
-    f.run(null, () => f.run(null, () => f.run())); 
+    var i = 0;
+    aeroflow.repeat(() => ++i).take(3).share(2000).delay(1000).dump().run(
+      null
+      , (error, context) => context.flow.run(
+        null
+        , (error, context) => context.flow.run()));
   */
   share(expiration) {
     let cache
@@ -336,38 +299,49 @@ class Aeroflow {
           next(value);
         },
         error => {
-          setTimeout(() => {
-            cache = null;
-          }, expirator(context.data));
+          setTimeout(() => { cache = null }, expirator(context.data));
           done(error);
         },
         context);
     });
   }
   skip(condition) {
-    if (isNothing(condition)) return new Aeroflow((next, done, context) => this[EMITTER](value => {}, done, context));
-    let limiter = makeLimiter(condition);
-    return new Aeroflow((next, done, context) => {
-      let index = 0, limited = true;
-      this[EMITTER](
-        value => {
-          if (limited && !limiter(value, index++, context.data)) limited = false;
-          if (!limited) next(value);
-        },
-        done,
-        context);
-    });
+    return new Aeroflow(isNothing(condition)
+      ? emitEmpty()
+      : isNumber(condition)
+        ? (next, done, context) => {
+            let index = 1;
+            this[EMITTER](
+              value => condition < index++ ? next(value) : false,
+              done,
+              context);
+          }
+        : isFunction(condition)
+          ? (next, done, context) => {
+              let index = 0, limited = true;
+              this[EMITTER](
+                value => {
+                  if (limited && !condition(value, index++, context.data)) limited = false;
+                  if (!limited) next(value);
+                },
+                done,
+                context);
+            }
+          : condition
+            ? emitEmpty()
+            : this[EMITTER]
+    );
   }
   some(predicate) {
     predicate = makePredicate(predicate);
     return new Aeroflow((next, done, context) => {
       let result = false;
-      context = context.spawn();
+      context = context.make();
       this[EMITTER](
         value => {
           if (predicate(value)) {
             result = true;
-            context(false);
+            context.stop();
           }
         },
         error => {
@@ -380,8 +354,8 @@ class Aeroflow {
   /*
     aeroflow([4, 2, 5, 3, 1]).sort().dump().run();
   */
-  sort(...comparers) {
-    return sort(this, ...comparers);
+  sort(order, ...comparers) {
+    return sort(this, order, ...comparers);
   }
   /*
     aeroflow([1, 2, 3]).sum().dump().run();
@@ -390,18 +364,35 @@ class Aeroflow {
     return this.reduce((result, value) => result + value, 0);
   }
   take(condition) {
-    if (isNothing(condition)) return this;
-    let limiter = makeLimiter(condition);
-    return new Aeroflow((next, done, context) => {
-      let index = 0;
-      context = context.spawn();
-      this[EMITTER](
-        value => limiter(value, index++, context.data)
-          ? next(value)
-          : context(false),
-        done,
-        context);
-    });
+    return new Aeroflow(isNumber(condition)
+      ? condition > 0
+        ? (next, done, context) => {
+            let index = 1;
+            context = context.make();
+            this[EMITTER](
+              value => {
+                next(value);
+                if (condition <= index++) context.stop();
+              },
+              done,
+              context);
+          }
+        : emitEmpty()
+      : isFunction(condition)
+        ? (next, done, context) => {
+            let index = 0;
+            context = context.make();
+            this[EMITTER](
+              value => condition(value, index++, context.data)
+                ? next(value)
+                : context.stop(),
+              done,
+              context);
+          }
+        : isNothing(condition) || condition 
+          ? this[EMITTER]
+          : emitEmpty()
+    );
   }
   tap(callback) {
     return isFunction(callback)
@@ -520,10 +511,6 @@ class Aeroflow {
   }
 }
 /*
-  aeroflow.empty.dump().run();
-*/
-let empty = new Aeroflow((next, done) => done());
-/*
   aeroflow('test').dump().run();
   aeroflow(aeroflow('test')).dump().run();
   aeroflow([1, 2]).dump().run();
@@ -532,50 +519,121 @@ let empty = new Aeroflow((next, done) => done());
   aeroflow(() => 'test').dump().run();
   aeroflow(Promise.resolve('test')).dump().run();
   aeroflow(() => new Promise(resolve => setTimeout(() => resolve('test'), 100))).dump().run();
+
+  aeroflow(1, [2, 3], new Set([4, 5]), Promise.resolve(7), new Promise(resolve => setTimeout(() => resolve(8), 500))).dump().run();
 */
-function aeroflow(source) {
-  if (isAeroflow(source)) return source;
-  if (isArray(source)) return fromArray(source);
-  if (isFunction(source)) return fromFunction(source);
-  if (isPromise(source)) return fromPromise(source);
-  if (isIterable(source)) return fromIterable(source);
-  return aeroflow.just(source);
+function aeroflow(...sources) {
+  return new Aeroflow(emit(...sources));
 }
 /*
-  aeroflow.concat(1, 2, 3).dump().run();
-  aeroflow.concat(1, [2, 3]).dump().run();
-  aeroflow.concat(1, () => [2, 3]).dump().run();
+  For internal use. Default value comparer.
 */
-function concat(...flows) {
-  let queue = [...flows];
-  return new Aeroflow((next, done, context) => {
-    !function proceed() {
-      queue.length
-        ? aeroflow(queue.shift())[EMITTER](next, proceed, context)
-        : done();
-    }();
-  });
+function compare(left, right) {
+  return left < right ? -1 : left > right ? 1 : 0;
 }
 /*
-  
+  aeroflow.create((next, done, context) => {
+    next(1);
+    next(new Promise(resolve => setTimeout(() => resolve(2), 500)));
+    setTimeout(done, 1000);
+  }).dump().run();
 */
-function create(emitter) {
-  return isFunction(emitter)
-    ? new Aeroflow((next, done, context) => {
+function create(emitter, disposer) {
+  return new Aeroflow(isFunction(emitter)
+    ? (next, done, context) => {
         let completed = false;
         emitter(
-          value => {
-            if (context()) next()
-          },
+          value => context() ? next() : false,
           error => {
-            if (!completed) {
-              completed = true;
-              done();
-              context(false);
-            }
-          });
-      })
-    : empty;
+            if (completed) return;
+            completed = true;
+            done();
+            context.stop();
+            if (isFunction(disposer)) disposer();
+          },
+          context);
+      }
+    : emitEmpty());
+}
+
+/*
+  For internal use. Wraps sources with emitter function.
+*/
+function emit(...sources) {
+  switch (sources.length) {
+    case 0:
+      return emitEmpty(); // todo: Aeroplan
+    case 1:
+      let source = sources[0];
+      if (isAeroflow(source)) return source[EMITTER];
+      if (isArray(source)) return emitArray(source);
+      if (isFunction(source)) return emitFunction(source);
+      if (isPromise(source)) return emitPromise(source);
+      if (isIterable(source)) return emitIterable(source);
+      return emitValue(source);
+    default:
+      return (next, done, context) => {
+        let count = sources.length, index = -1;
+        !function proceed() {
+          ++index < count
+            ? emit(sources[index])(next, proceed, context)
+            : done();
+        }();
+      };
+  }
+}
+/*
+  For internal use. Wraps array with emitter function.
+*/
+function emitArray(source) {
+  return (next, done, context) => {
+    let index = -1;
+    while (context() && ++index < source.length) next(source[index]);
+    done();
+  };
+}
+function emitEmpty() {
+  return (next, done) => done();
+}
+/*
+  For internal use. Wraps function with emitter function.
+*/
+function emitFunction(source) {
+  return (next, done, context) => emit(source())(next, done, context);
+}
+/*
+  For internal use. Wraps iterable object with emitter function.
+*/
+function emitIterable(source) {
+  return (next, done, context) => {
+    let iterator = source[Symbol.iterator]();
+    while (context()) {
+      let result = iterator.next();
+      if (result.done) break;
+      else next(result.value);
+    }
+    done();
+  };
+}
+/*
+  For internal use. Wraps promise with emitter function.
+*/
+function emitPromise(source) {
+  return (next, done, context) => source.then(
+    value => emit(value)(next, done, context),
+    error => {
+      done(error);
+      throwError(error);
+    });
+}
+/*
+  For internal use. Wraps scalar value with emitter function.
+*/
+function emitValue(value) {
+  return (next, done) => {
+    next(value);
+    done();
+  };
 }
 
 /*
@@ -585,67 +643,68 @@ function create(emitter) {
 function expand(callback, seed, limit) {
   limit = limit || maxInteger;
   let expander = isFunction(callback) ? callback : identity;
-  return new Aeroflow((next, done, context) => {
-    let counter = limit, index = 0, value = seed;
-    while (0 < counter-- && context()) next(value = expander(value, index++, context.data));
-    done();
-  });
-}
-/*
-  For internal use. Creates new aeroflow from array.
-*/
-function fromArray(source) {
-  return new Aeroflow(
-    (next, done, context) => {
-      let index = -1;
-      while (context() && ++index < source.length) next(source[index]);
-      done();
-    });
-}
-/*
-  For internal use. Creates new aeroflow from function.
-*/
-function fromFunction(source) {
-  return new Aeroflow(
-    (next, done, context) => aeroflow(source())[EMITTER](next, done, context));
-}
-/*
-  For internal use. Creates new aeroflow from iterable object.
-*/
-function fromIterable(source) {
-  return new Aeroflow(
-    (next, done, context) => {
-      let iterator = source[Symbol.iterator]();
-      while (context()) {
-        let result = iterator.next();
-        if (result.done) break;
-        else next(result.value);
+  return new Aeroflow(isFunction(callback)
+    ? (next, done, context) => {
+        let counter = limit, index = 0, value = seed;
+        while (0 < counter-- && context()) next(value = expander(value, index++, context.data));
+        done();
       }
-      done();
-    });
-}
-/*
-  For internal use. Creates new aeroflow from promise.
-*/
-function fromPromise(source) {
-  return new Aeroflow(
-    (next, done, context) => source.then(
-      value => aeroflow(value)[EMITTER](next, done, context),
-      error => {
-        done(error);
-        throwError(error);
-      }));
+    : (next, done, context) => {
+        let counter = limit;
+        while (0 < counter-- && context()) next(seed);
+        done();
+      });
 }
 /*
   aeroflow.just([1, 2]).dump().run();
   aeroflow.just(() => 'test').dump().run();
 */
 function just(value) {
-  return new Aeroflow((next, done) => {
-    next(value);
-    done();
+  return new Aeroflow(emitValue(value));
+}
+
+function makeContext(flow, data) {
+  let active = true
+    , callbacks = []
+    , care = callback => {
+        if (isFunction(callback)) active ? callbacks.push(callback) : callback();
+        return callback;
+      }
+    , context = () => active
+    , make = () => care(makeContext(flow, data))
+    , stop = () => {
+        if (active) {
+          active = false;
+          callbacks.forEach(callback => callback());
+        }
+        return false;
+      }
+    ;
+  return defineProperties(context, {
+    care: {value: care}
+  , data: {value: data}
+  , flow: {value: flow}
+  , make: {value: make}
+  , stop: {value: stop}
   });
 }
+
+function makeMapper(mapper) {
+  return isFunction(mapper)
+    ? mapper
+    : identity;
+}
+
+function makePredicate(predicate) {
+  return isNothing(predicate)
+    ? isSomething
+    : isFunction(predicate)
+      ? predicate
+      : isRegExp(predicate)
+        ? value => predicate.test(value)
+        : value => value === predicate;
+}
+
 /*
   aeroflow.random().take(3).dump().run();
   aeroflow.random(0.1).take(3).dump().run();
@@ -680,9 +739,9 @@ function range(start, end, step) {
   end = +end || maxInteger;
   start = +start || 0;
   step = +step || (start < end ? 1 : -1);
-  return start === end
-    ? just(start)
-    : new Aeroflow((next, done, context) => {
+  return new Aeroflow(start === end
+    ? emitValue(start)
+    : (next, done, context) => {
         let i = start - step;
         if (start < end) while (context() && (i += step) <= end) next(i);
         else while (context() && (i += step) >= end) next(i);
@@ -695,8 +754,8 @@ function range(start, end, step) {
 */
 function repeat(repeater, limit) {
   limit = limit || maxInteger;
-  return isFunction(repeater)
-    ? new Aeroflow((next, done, context) => {
+  return new Aeroflow(isFunction(repeater)
+    ? (next, done, context) => {
         let counter = limit;
         proceed();
         function onDone(error) {
@@ -711,64 +770,93 @@ function repeat(repeater, limit) {
           if (0 < counter--) {
             let result = context() && repeater(context.data);
             if (result === false) done();
-            else aeroflow(result)[EMITTER](next, onDone, context);
+            else emit(result)(next, onDone, context);
           }
           else done();
         }
-      })
-    : new Aeroflow((next, done, context) => {
+      }
+    : (next, done, context) => {
         let counter = limit;
         while(0 < counter-- && context()) next(repeater);
         done();
       });
 }
-
-function sort(flow, ...comparers) {
-  comparers = comparers.filter(isFunction);
-  switch(comparers.length) {
-    case 0: return sortWithoutComparer(flow);
-    case 1: return sortWithComparer(flow, comparers[0]);
-    default: return sortWithComparers(flow, comparers);
+/*
+  aeroflow([3, 2, 1]).sort().dump().run();
+*/
+function sort(flow, order, ...selectors) {
+  if (isFunction(order)) {
+    selectors.unshift(order);
+    order = 1;
+  }
+  if(!selectors.every(isFunction)) throwError('Selector function expected.');
+  switch (order) {
+    case 'asc': case 1: case undefined: case null:
+      order = 1;
+      break;
+    case 'desc': case -1:
+      order = -1;
+      break;
+    default:
+      order = order ? 1 : -1;
+      break;
+  }
+  switch(selectors.length) {
+    case 0: return sortWithoutComparer(flow, order);
+    case 1: return sortWithComparer(flow, order, selectors[0]);
+    default: return sortWithComparers(flow, order, ...selectors);
   }
 }
 
-function sortWithComparer(flow, comparer) {
-  let array = flow.toArray();
-  return new Aeroflow((next, done, context) => array[EMITTER](
-    values => values.length ? values.sort(comparer).forEach(next) : false,
-    done,
-    context));
-}
-
-function sortWithComparers(flow, ...comparers) {
+function sortWithComparer(flow, order, selector) {
   let array = flow.toArray()
-    , comparer = comparers.reduce(
-      (previous, current) => (left, right) => {
-        let result = previous(left, right);
-        return result ? result : current(left, right);
-      });
+    , comparer = (left, right) => order * compare(selector(left), selector(right))
+    ;
   return new Aeroflow((next, done, context) => array[EMITTER](
-    values => values.length ? values.sort(comparer).forEach(next) : false,
+    values => values.sort(comparer).forEach(next),
     done,
     context));
 }
 
-function sortWithoutComparer(flow) {
-  let array = flow.toArray();
+function sortWithComparers(flow, order, ...selectors) {
+  let array = flow.toArray()
+    , count = selectors.length
+    , comparer = (left, right) => {
+        let index = -1;
+        while (++index < count) {
+          let selector = selectors[index]
+            , result = order * compare(selector(left), selector(right));
+          if (result) return result;
+        }
+        return 0;
+      }
+    ;
   return new Aeroflow((next, done, context) => array[EMITTER](
-    values => values.length ? values.sort().forEach(next) : false,
+    values => values.sort(comparer).forEach(next),
     done,
     context));
+}
+
+function sortWithoutComparer(flow, order) {
+  let array = flow.toArray();
+  return new Aeroflow((next, done, context) => array[EMITTER](
+    values => order === 1
+      ? values.sort().forEach(next)
+      : values.sort().reverse().forEach(next),
+    done,
+    context));
+}
+
+function throwError(error) {
+  throw isError(error) ? error : new Error(error);
 }
 
 module.exports = defineProperties(aeroflow, {
-  concat: {value: concat}
-, create: {value: create}
-, empty: {value: empty}
+  create: {value: create}
+, empty: {value: new Aeroflow(emitEmpty())}
 , expand: {value: expand}
 , just: {value: just}
 , random: {value: random}
 , range: {value: range}
 , repeat: {value: repeat}
-, sort: {value: sort}
 });

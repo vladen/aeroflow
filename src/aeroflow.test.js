@@ -26,9 +26,19 @@ describe('aeroflow', () => {
       aeroflow(value).run(onNext, onDone);
     });
   it('does not wrap flow twice',
-    () => {
-      let flow = aeroflow('test');
-      assert.strictEqual(aeroflow(flow), flow);
+    done => {
+      let count = 0
+        , value = 'test'
+        , onDone = () => {
+            assert.strictEqual(count, 1);
+            done();
+          }
+        , onNext = next => {
+            count++;
+            assert.strictEqual(next, value);
+          }
+        ;
+      aeroflow(aeroflow(value)).run(onNext, onDone);
     });
   it('creates flow from array',
     done => {
@@ -170,8 +180,6 @@ describe('aeroflow', () => {
     });
 
   describe('concat', () => {
-    it('is static method',
-      () => assert.isFunction(aeroflow.concat));
     it('is instance method',
       () => assert.isFunction(aeroflow.empty.concat));
     it('concatenates several values into one flow',
@@ -184,7 +192,7 @@ describe('aeroflow', () => {
             }
           , onNext = next => count++
           ;
-        aeroflow.concat(...[1, 2, 3]).run(onNext, onDone);
+        aeroflow(1).concat(2, 3).run(onNext, onDone);
       });
     it('concatenates several arrays into one flow',
       done => {
@@ -197,7 +205,7 @@ describe('aeroflow', () => {
             }
           , onNext = next => count++
           ;
-        aeroflow.concat(...Array(times).fill(values)).run(onNext, onDone);
+        aeroflow(values).concat(...Array(times - 1).fill(values)).run(onNext, onDone);
       });
   });
 
@@ -498,10 +506,42 @@ describe('aeroflow', () => {
     });
   });
 
+  describe('share', () => {
+    it('is instance method',
+      () => assert.isFunction(aeroflow.empty.share));
+    it('invokes emitter only once than shares results to subsequent run',
+      done => {
+        let invocations = 0
+          , emitter = () => invocations++
+          , onDone = () => {
+              assert.strictEqual(invocations, 1);
+              done();
+            }
+          , onNext = () => {}
+          ;
+        aeroflow(emitter).share().run().run(onNext, onDone);
+    });
+    it('invokes emitter only once than shares results to subsequent run until expires',
+      done => {
+        let expiration = 50
+          , invocations = 0
+          , emitter = () => invocations++
+          , onDone1 = () => assert.strictEqual(invocations, 1)
+          , onDone2 = () => {
+              assert.strictEqual(invocations, 2);
+              done();
+            }
+          , onNext = () => {}
+          ;
+        let flow = aeroflow(emitter).share(expiration).run(onNext, onDone1).run(onNext, onDone1);
+        setTimeout(() => flow.run(onNext, onDone2), expiration);
+    });
+  });
+
   describe('skip', () => {
     it('is instance method',
       () => assert.isFunction(aeroflow.empty.skip));
-    it('emits "done" signal only skipping all values if no parameter specified',
+    it('skips all values and emits "done" signal only',
       done => {
         let values = [1, 2, 3, 4]
           , empty = true
@@ -513,7 +553,7 @@ describe('aeroflow', () => {
           ;
         aeroflow(values).skip().run(onNext, onDone);
       });
-    it('emits remaining values skipping specified number of values',
+    it('skips specified number of values emits remaining values',
       done => {
         let values = [1, 2, 3, 4]
           , results = []
@@ -527,7 +567,7 @@ describe('aeroflow', () => {
           ;
         aeroflow(values).skip(skip).run(onNext, onDone);
       });
-    it('emits remaining values skipping while specified function returns true',
+    it('skips while specified function returns true emits remaining values',
       done => {
         let values = [1, 2, 3, 4]
           , results = []
@@ -541,6 +581,75 @@ describe('aeroflow', () => {
           , onNext = value => results.push(value)
           ;
         aeroflow(values).skip(limiter).run(onNext, onDone);
+      });
+  });
+
+  describe('sort', () => {
+    it('is instance method',
+      () => assert.isFunction(aeroflow.empty.sort));
+    it('emits values sorted in ascending order when no parameters specified',
+      done => {
+        let values = [2, 1, 4, 3]
+          , sorted = [...values].sort()
+          , count = 0
+          , onDone = () => {
+              assert.strictEqual(count, values.length);
+              done();
+            }
+          , onNext = value => assert.strictEqual(value, sorted[count++])
+          ;
+        aeroflow(values).sort().run(onNext, onDone);
+      });
+    it('emits values sorted in descending order when order parameter has value "desc"',
+      done => {
+        let values = [2, 1, 4, 3]
+          , sorted = [...values].sort().reverse()
+          , count = 0
+          , onDone = () => {
+              assert.strictEqual(count, values.length);
+              done();
+            }
+          , onNext = value => assert.strictEqual(value, sorted[count++])
+          ;
+        aeroflow(values).sort('desc').run(onNext, onDone);
+      });
+    it('emits objects sorted in ascending order by multiple keys when key selectors specified',
+      done => {
+        let values = [
+              {id: 2, name: 'a'},
+              {id: 2, name: 'b'},
+              {id: 1, name: 'b'},
+              {id: 1, name: 'a'}
+            ]
+          , sorted = [...values].sort((left, right) =>
+              left.id < right.id ? -1 : left.id > right.id ? 1 : left.name < right.name ? -1 : left.name > right.name ? 1 : 0)
+          , count = 0
+          , onDone = () => {
+              assert.strictEqual(count, values.length);
+              done();
+            }
+          , onNext = value => assert.strictEqual(value, sorted[count++])
+          ;
+        aeroflow(values).sort(value => value.id, value => value.name).run(onNext, onDone);
+      });
+    it('emits objects sorted in descending order by multiple keys when key selectors specified',
+      done => {
+        let values = [
+              {id: 2, name: 'a'},
+              {id: 2, name: 'b'},
+              {id: 1, name: 'b'},
+              {id: 1, name: 'a'}
+            ]
+          , sorted = [...values].sort((left, right) =>
+              left.id < right.id ? 1 : left.id > right.id ? -1 : left.name < right.name ? 1 : left.name > right.name ? -1 : 0)
+          , count = 0
+          , onDone = () => {
+              assert.strictEqual(count, values.length);
+              done();
+            }
+          , onNext = value => assert.strictEqual(value, sorted[count++])
+          ;
+        aeroflow(values).sort('desc', value => value.id, value => value.name).run(onNext, onDone);
       });
   });
 
