@@ -179,10 +179,10 @@ describe('aeroflow', () => {
       aeroflow(generator).run(onNext, onDone);
     });
 
-  describe('concat', () => {
+  describe('append', () => {
     it('is instance method',
-      () => assert.isFunction(aeroflow.empty.concat));
-    it('concatenates several values into one flow',
+      () => assert.isFunction(aeroflow.empty.append));
+    it('append several values to the flow',
       done => {
         let count = 0
           , values = [1, 2, 3]
@@ -192,9 +192,9 @@ describe('aeroflow', () => {
             }
           , onNext = next => count++
           ;
-        aeroflow(1).concat(2, 3).run(onNext, onDone);
+        aeroflow(1).append(2, 3).run(onNext, onDone);
       });
-    it('concatenates several arrays into one flow',
+    it('append several arrays to the flow',
       done => {
         let count = 0
           , times = 3
@@ -205,7 +205,7 @@ describe('aeroflow', () => {
             }
           , onNext = next => count++
           ;
-        aeroflow(values).concat(...Array(times - 1).fill(values)).run(onNext, onDone);
+        aeroflow(values).append(...Array(times - 1).fill(values)).run(onNext, onDone);
       });
   });
 
@@ -272,24 +272,6 @@ describe('aeroflow', () => {
     });
   });
 
-  describe('first', () => {
-    it('is instance method',
-      () => assert.isFunction(aeroflow.empty.first));
-    it('emits first value only',
-      done => {
-        let values = [1, 2, 3]
-          , results = []
-          , onDone = () => {
-              assert.strictEqual(results.length, 1);
-              assert.include(results, values[0]);
-              done();
-            }
-          , onNext = value => results.push(value)
-          ;
-        aeroflow(values).first().run(onNext, onDone);
-    });
-  });
-
   describe('just', () => {
     it('is static method',
       () => assert.isFunction(aeroflow.just));
@@ -337,24 +319,6 @@ describe('aeroflow', () => {
             }
           ;
         aeroflow.just(value).run(onNext, onDone);
-    });
-  });
-
-  describe('last', () => {
-    it('is instance method',
-      () => assert.isFunction(aeroflow.empty.last));
-    it('emits last value only',
-      done => {
-        let values = [1, 2, 3]
-          , results = []
-          , onDone = () => {
-              assert.strictEqual(results.length, 1);
-              assert.include(results, values[values.length - 1]);
-              done();
-            }
-          , onNext = value => results.push(value)
-          ;
-        aeroflow(values).last().run(onNext, onDone);
     });
   });
 
@@ -489,8 +453,8 @@ describe('aeroflow', () => {
   describe('repeat', () => {
     it('is static method',
       () => assert.isFunction(aeroflow.repeat));
-    it('creates flow emitting specified limit of undefined values',
-      done => aeroflow.repeat().take(3).run(next => assert.isUndefined(next), done));
+    it('creates flow emitting undefined values',
+      done => aeroflow.repeat().take(1).run(next => assert.isUndefined(next), done));
     it('creates flow emitting values returned by repeater function until repeater returns false',
       done => {
         let count = 0
