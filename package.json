@@ -2,23 +2,23 @@
   "name": "aeroflow",
   "version": "0.1.0",
   "description": "Truly lazily computed reactive data flows with rich set of pure functional operators and async support.",
-  "keywords": "ES6, fluent, async, reactive, LINQ",
-  "homepage": "https://bitbucket.org/vladen/aeroflow",
+  "keywords": "ES6, fluent, async, reactive, functional, FRP, LINQ",
   "author": "Denis Vlassenko <denis_vlassenko@epam.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://bitbucket.org/vladen/aeroflow.git"
+    "url": "https://bitbucket.org/vladen/aeroflow.git"
   },
   "main": "index.js",
   "scripts": {
-    "all": "npm run build && npm run lint && npm run test",
+    "all": "npm run build && npm run lint && npm run test && npm run document",
     "build": "npm run compile && npm run minify",
     "compile": "npm run compile-library && npm run compile-library-es6 && npm run compile-tests && npm run compile-tests-es6",
     "compile-library": "node_modules/.bin/babel src/aeroflow.js --out-file lib/aeroflow.js --presets es2015 --plugins transform-es2015-modules-umd",
     "compile-library-es6": "node_modules/.bin/babel src/aeroflow.js --out-file lib/aeroflow.es6.js --plugins transform-es2015-modules-umd",
     "compile-tests": "node_modules/.bin/babel src/tests.js --out-file lib/tests.js --presets es2015",
     "compile-tests-es6": "node_modules/.bin/babel src/tests.js --out-file lib/tests.es6.js",
+    "document": "node_modules/.bin/jsdoc2md src/aeroflow.js > doc/aeroflow.md --global-index-format dl --member-index-format grouped --module-index-format grouped --name-format code --param-list-format list --property-list-format list --sort-by name",
     "lint": "npm run lint-library && npm run lint-tests",
     "lint-library": "node_modules/.bin/eslint src/aeroflow.js",
     "lint-tests": "node_modules/.bin/eslint src/tests.js --global aeroflow,assert,describe,it",
@@ -32,6 +32,7 @@
     "chai": "^3.4.1",
     "core-js": "^1.2.6",
     "eslint": "^1.9.0",
+    "jsdoc-to-markdown": "^1.2.1",
     "mocha": "^2.3.3",
     "uglify-js": "^2.6.0"
   }
