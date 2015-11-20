@@ -2,7 +2,6 @@
 ## aeroflow
 Lazily computed async reactive data flow.
 
-**Author:** Denis Vlassenko <denis_vlassenko@epam.com>  
 
 * [aeroflow](#module_aeroflow)
   * _inner_

@@ -18,7 +18,7 @@
     "compile-library-es6": "node_modules/.bin/babel src/aeroflow.js --out-file lib/aeroflow.es6.js --plugins transform-es2015-modules-umd",
     "compile-tests": "node_modules/.bin/babel src/tests.js --out-file lib/tests.js --presets es2015",
     "compile-tests-es6": "node_modules/.bin/babel src/tests.js --out-file lib/tests.es6.js",
-    "document": "node_modules/.bin/jsdoc2md src/aeroflow.js > doc/aeroflow.md --global-index-format dl --member-index-format grouped --module-index-format grouped --name-format code --param-list-format list --property-list-format list --sort-by name",
+    "document": "node_modules/.bin/jsdoc2md src/aeroflow.js > doc/readme.md --global-index-format dl --member-index-format grouped --module-index-format grouped --name-format code --param-list-format list --property-list-format list --sort-by name",
     "lint": "npm run lint-library && npm run lint-tests",
     "lint-library": "node_modules/.bin/eslint src/aeroflow.js",
     "lint-tests": "node_modules/.bin/eslint src/tests.js --global aeroflow,assert,describe,it",
