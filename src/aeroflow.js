@@ -1,7 +1,6 @@
 /**
   * Lazily computed async reactive data flow.
   * @module aeroflow
-  * @author Denis Vlassenko <denis_vlassenko@epam.com>
   */
 
 'use strict';
@@ -73,8 +72,7 @@ function createContext(flow, data) {
         if (isFunction(callback)) active ? callbacks.push(callback) : callback();
         return callback;
       }
-    , spawn = () => onend(createContext(flow, data))
-    ;
+    , spawn = () => onend(createContext(flow, data));
   return defineProperties(context, {
     data: {value: data}
   , flow: {value: flow}
