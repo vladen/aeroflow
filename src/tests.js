@@ -15,11 +15,10 @@ describe('aeroflow', () => {
   it('creates flow emitting scalar value', done => {
     let expected = 'test';
     aeroflow(expected).run(
-      value => {
-        assert.strictEqual(value, expected);
-        expected = null;
-      }, () => {
-        assert.isNull(expected);
+      value =>
+        assert.strictEqual(value, expected),
+      (error, count) => {
+        assert.strictEqual(count, 1);
         done();
       });
   });
@@ -27,22 +26,21 @@ describe('aeroflow', () => {
   it('returns existing flow as is, withouth wrapping it', done => {
     let expected = 'test';
     aeroflow(aeroflow(expected)).run(
-      value => {
-        assert.strictEqual(value, expected);
-        expected = null;
-      }, () => {
-        assert.isNull(expected);
+      value =>
+        assert.strictEqual(value, expected),
+      (error, count) => {
+        assert.strictEqual(count, 1);
         done();
       });
   });
 
   it('creates flow emitting array items', done => {
     let expected = ['a', 'b'];
-    aeroflow([...expected]).run(
-      value =>
-        assert.strictEqual(value, expected.shift()),
-      () => {
-        assert.strictEqual(expected.length, 0);
+    aeroflow(expected).run(
+      (value, index) =>
+        assert.strictEqual(value, expected[index]),
+      (error, count) => {
+        assert.strictEqual(count, expected.length);
         done();
       });
   });
@@ -50,10 +48,10 @@ describe('aeroflow', () => {
   it('creates flow emitting map entries', done => {
     let expected = [['a', 1], ['b', 2]];
     aeroflow(new Map(expected)).run(
-      value =>
-        assert.includeMembers(value, expected.shift()),
-      () => {
-        assert.strictEqual(expected.length, 0);
+      (value, index) =>
+        assert.includeMembers(value, expected[index]),
+      (error, count) => {
+        assert.strictEqual(count, expected.length);
         done();
       });
   });
@@ -61,10 +59,10 @@ describe('aeroflow', () => {
   it('creates flow emitting set keys', done => {
     let expected = ['a', 'b'];
     aeroflow(new Set(expected)).run(
-      value =>
-        assert.strictEqual(value, expected.shift()),
-      () => {
-        assert.strictEqual(expected.length, 0);
+      (value, index) =>
+        assert.strictEqual(value, expected[index]),
+      (error, count) => {
+        assert.strictEqual(count, expected.length);
         done();
       });
   });
@@ -72,22 +70,21 @@ describe('aeroflow', () => {
   it('creates flow emitting scalar value returned by function', done => {
     let expected = 'test';
     aeroflow(() => expected).run(
-      value => {
-        assert.strictEqual(value, expected);
-        expected = null;
-      }, () => {
-        assert.isNull(expected);
+      value =>
+        assert.strictEqual(value, expected),
+      (error, count) => {
+        assert.strictEqual(count, 1);
         done();
       });
   });
 
   it('creates flow emitting items of array returned by function', done => {
     let expected = ['a', 'b'];
-    aeroflow(() => [...expected]).run(
-      value =>
-        assert.strictEqual(value, expected.shift()),
-      () => {
-        assert.strictEqual(expected.length, 0);
+    aeroflow(() => expected).run(
+      (value, index) =>
+        assert.strictEqual(value, expected[index]),
+      (error, count) => {
+        assert.strictEqual(count, expected.length);
         done();
       });
   });
@@ -95,22 +92,21 @@ describe('aeroflow', () => {
   it('creates flow emitting scalar value resolved by promise', done => {
     let expected = 'test';
     aeroflow(Promise.resolve(expected)).run(
-      value => {
-        assert.strictEqual(value, expected);
-        expected = null;
-      }, () => {
-        assert.isNull(expected);
+      value =>
+        assert.strictEqual(value, expected),
+      (error, count) => {
+        assert.strictEqual(count, 1);
         done();
       });
   });
 
   it('creates flow emitting items of array resolved by promise', done => {
     let expected = ['a', 'b'];
-    aeroflow(Promise.resolve([...expected])).run(
-      value =>
-        assert.strictEqual(value, expected.shift()),
-      () => {
-        assert.strictEqual(expected.length, 0);
+    aeroflow(Promise.resolve(expected)).run(
+      (value, index) =>
+        assert.strictEqual(value, expected[index]),
+      (error, count) => {
+        assert.strictEqual(count, expected.length);
         done();
       });
   });
@@ -118,22 +114,21 @@ describe('aeroflow', () => {
   it('creates flow emitting scalar value resolved by promise asynchronously', done => {
     let expected = 'test';
     aeroflow(new Promise(resolve => setTimeout(() => resolve(expected)))).run(
-      value => {
-        assert.strictEqual(value, expected);
-        expected = null;
-      }, () => {
-        assert.isNull(expected);
+      value =>
+        assert.strictEqual(value, expected),
+      (error, count) => {
+        assert.strictEqual(count, 1);
         done();
       });
   });
 
   it('creates flow emitting items of array resolved by promise asynchronously', done => {
     let expected = ['a', 'b'];
-    aeroflow(new Promise(resolve => setTimeout(() => resolve([...expected])))).run(
-      value =>
-        assert.strictEqual(value, expected.shift()),
-      () => {
-        assert.strictEqual(expected.length, 0);
+    aeroflow(new Promise(resolve => setTimeout(() => resolve(expected)))).run(
+      (value, index) =>
+        assert.strictEqual(value, expected[index]),
+      (error, count) => {
+        assert.strictEqual(count, expected.length);
         done();
       });
   });
@@ -141,22 +136,21 @@ describe('aeroflow', () => {
   it('creates flow emitting scalar value resolved by promise returned by function', done => {
     let expected = 'test';
     aeroflow(() => Promise.resolve(expected)).run(
-      value => {
-        assert.strictEqual(value, expected);
-        expected = null;
-      }, () => {
-        assert.isNull(expected);
+      value =>
+        assert.strictEqual(value, expected),
+      (error, count) => {
+        assert.strictEqual(count, 1);
         done();
       });
   });
 
   it('creates flow emitting items of array resolved by promise returned by function', done => {
     let expected = ['a', 'b'];
-    aeroflow(() => Promise.resolve([...expected])).run(
-      value =>
-        assert.strictEqual(value, expected.shift()),
-      () => {
-        assert.strictEqual(expected.length, 0);
+    aeroflow(() => Promise.resolve(expected)).run(
+      (value, index) =>
+        assert.strictEqual(value, expected[index]),
+      (error, count) => {
+        assert.strictEqual(count, expected.length);
         done();
       });
   });
@@ -164,67 +158,75 @@ describe('aeroflow', () => {
   it('creates flow emitting scalar value resolved by promise returned by function asynchronously', done => {
     let expected = 'test';
     aeroflow(() => new Promise(resolve => setTimeout(() => resolve(expected)))).run(
-      value => {
-        assert.strictEqual(value, expected);
-        expected = null;
-      }, () => {
-        assert.isNull(expected);
+      value =>
+        assert.strictEqual(value, expected),
+      (error, count) => {
+        assert.strictEqual(count, 1);
         done();
       });
   });
 
   it('creates flow emitting items of array resolved by promise returned by function asynchronously', done => {
     let expected = ['a', 'b'];
-    aeroflow(() => new Promise(resolve => setTimeout(() => resolve([...expected])))).run(
-      value =>
-        assert.strictEqual(value, expected.shift()),
-      () => {
-        assert.strictEqual(expected.length, 0);
+    aeroflow(() => new Promise(resolve => setTimeout(() => resolve(expected)))).run(
+      (value, index) =>
+        assert.strictEqual(value, expected[index]),
+      (error, count) => {
+        assert.strictEqual(count, expected.length);
         done();
       });
   });
 
-  /*
   describe('append', () => {
-    it('is instance method',
-      () => assert.isFunction(aeroflow.empty.append));
-    it('appends several values to the flow',
-      done => {
-        let count = 0
-          , onDone = () => {
-              assert.strictEqual(count, 3);
-              done();
-            }
-          , onNext = next => assert.strictEqual(next, ++count);
-        aeroflow(1).append(2, 3).run(onNext, onDone);
-      });
-    it('appends several arrays to the flow',
-      done => {
-        let count = 0
-          , onDone = () => {
-              assert.strictEqual(count, 6);
-              done();
-            }
-          , onNext = next => assert.strictEqual(next, ++count);
-          ;
-        aeroflow([1, 2]).append([3, 4], [5, 6]).fill(values)).run(onNext, onDone);
-      });
+    it('is instance method', () =>
+      assert.isFunction(aeroflow.empty.append));
+
+    it('appends several values to the flow', done => {
+      let first = 0, second = 1, third = 2, expected = [first, second, third];
+      aeroflow(first).append(second, third).run(
+        (value, index) =>
+          assert.strictEqual(value, expected[index]),
+        (error, count) => {
+          assert.strictEqual(count, expected.length);
+          done();
+        });
+    });
+
+    it('appends several arrays to the flow', done => {
+      let first = [0, 1], second = [2, 3], third = [4, 5], expected = [...first, ...second, ...third];
+      aeroflow(first).append(second, third).run(
+        (value, index) =>
+          assert.strictEqual(value, expected[index]),
+        (error, count) => {
+          assert.strictEqual(count, expected.length);
+          done();
+        });
+    });
   });
 
   describe('count', () => {
     it('is instance method', () => 
       assert.isFunction(aeroflow.empty.count));
 
-    it('returns zero for empty flow', done => aeroflow(1, 2, 3).count().run(next => {
-        assert.strictEqual(next, 0);
-        done();
-      }));
+    it('returns zero for empty flow', done => 
+      aeroflow.empty.count().run(
+        value =>
+          assert.strictEqual(value, 0),
+        (error, count) => {
+          assert.strictEqual(count, 1);
+          done();
+        }));
 
-    it('returns number of emitted values for non-empty flow', done =>
-      aeroflow(1, 2, 3).count().run(next => {
-        assert.strictEqual(next, 3);
-        done();
-      }));
+    it('returns number of emitted values for non-empty flow', done => {
+      let expected = [1, 2, 3];
+      aeroflow(expected).count().run(
+        value =>
+          assert.strictEqual(value, expected.length),
+        (error, count) => {
+          assert.strictEqual(count, 1);
+          done();
+        });
+    });
   });
 
   describe('empty', () => {
@@ -232,22 +234,26 @@ describe('aeroflow', () => {
       assert.typeOf(aeroflow.empty, 'Aeroflow'));
 
     it('returns empty flow emitting done event only', done => 
-      aeroflow.empty.run(() => assert.ok(false), () => {
-        assert.ok(true);
-        done();
-      }));
+      aeroflow.empty.run(
+        value =>
+          assert.ok(false),
+        (error, count) => {
+          assert.strictEqual(count, 0);
+          done();
+        }));
   });
 
   describe('expand', () => {
     it('is static method', () => 
       assert.isFunction(aeroflow.expand));
-    
-    it('creates flow emitting geometrically progressing integers', done => {
-        let expected = [2, 4, 8];
-        aeroflow.expand(value => value * 2, 1).take(3).run(
-          next => assert.strictEqual(next, expected.shift())
-        , () => {
-            assert.strictEqual(expected.length, 0);
+
+    it('creates flow emitting geometric progression', done => {
+        let expander = value => value * 2, seed = 1, expected = [2, 4, 8];
+        aeroflow.expand(expander, seed).take(expected.length).run(
+          (value, index) =>
+            assert.strictEqual(value, expected[index]),
+          (error, count) => {
+            assert.strictEqual(count, expected.length);
             done();
           });
     });
@@ -259,26 +265,22 @@ describe('aeroflow', () => {
 
     it('creates flow emitting single function', done => {
       let expected = () => {};
-      aeroflow
-        .just(value)
-        .run(next => {
-          assert.strictEqual(value, expected);
-          expected = null;
-        }, () => {
-          assert.isNull(expected);
+      aeroflow.just(expected).run(
+        value =>
+          assert.strictEqual(value, expected),
+        (error, count) => {
+          assert.strictEqual(count, 1);
           done();
         });
     });
 
     it('creates flow emitting single promise', done => {
         let expected = Promise.resolve();
-        aeroflow
-          .just(value)
-          .run(next => {
-            assert.strictEqual(value, expected);
-            expected = null;
-          }, () => {
-            assert.isNull(expected);
+        aeroflow.just(expected).run(
+          value =>
+            assert.strictEqual(value, expected),
+          (error, count) => {
+            assert.strictEqual(count, 1);
             done();
           });
     });
@@ -288,149 +290,269 @@ describe('aeroflow', () => {
     it('is instance method', () =>
       assert.isFunction(aeroflow.empty.max));
 
-    it('returns done event only if flow is empty', done =>
+    it('emits done event only if flow is empty', done =>
       aeroflow.empty.max().run(
-        next => assert.ok(false)
-      , () => {
-          assert.ok(true);
+        next =>
+          assert.ok(false),
+        (error, count) => {
+          assert.strictEqual(count, 0);
           done();
-        }
-      )
-    );
+        }));
 
-    it('returns valid result for non-empty flow',
-      done => {
-        let result
-          , max = 9e9
-          , values = [1, max, 2]
-          , onDone = () => {
-              assert.strictEqual(result, max);
-              done();
-            }
-          , onNext = next => result = next
-          ;
-        aeroflow(values).max().run(onNext, onDone);
-      });
+    it('emits valid result for non-empty flow', done => {
+      let values = [1, 9, 2, 8, 3, 7, 4, 6, 5];
+      aeroflow(values).max().run(
+        value =>
+          assert.strictEqual(value, Math.max(...values)),
+        (error, count) => {
+          assert.strictEqual(count, 1);
+          done();
+        });
+    });
   });
 
   describe('random', () => {
-    it('is static method',
-      () => assert.isFunction(aeroflow.random));
-    it('creates flow of random integers within a range',
-      done => {
-        let max = 10
-          , min = 1
-          , onNext = next => assert.isTrue(Number.isInteger(next) && next >= min && next < max)
-          ;
-        aeroflow.random(min, max).take(10).run(onNext, done);
+    it('is static method', () =>
+      assert.isFunction(aeroflow.random));
+
+    it('creates flow of random integers within a range', done => {
+        let limit = 10, max = 10, min = 1;
+        aeroflow.random(min, max).take(limit).run(
+          value =>
+            assert.isTrue(Number.isInteger(value) && value >= min && value < max),
+          (error, count) => {
+            assert.strictEqual(count, limit);
+            done();
+          });
     });
+
     it('creates flow of random decimals within a range',
       done => {
-        let max = 10.1
-          , min = 1.1
-          , onNext = next => assert.isTrue(!Number.isInteger(next) && next >= min && next < max)
-          ;
-        aeroflow.random(min, max).take(10).run(onNext, done);
+        let limit = 10, max = 10.1, min = 1.1;
+        aeroflow.random(min, max).take(10).run(
+          value =>
+            assert.isTrue(!Number.isInteger(value) && value >= min && value < max),
+          (error, count) => {
+            assert.strictEqual(count, limit);
+            done();
+          });
     });
   });
 
   describe('range', () => {
-    it('is static method',
-      () => assert.isFunction(aeroflow.range));
-    it('creates flow of ascending sequential integers starting from 0',
-      done => {
-        let count = 0
-          , onNext = next => assert.strictEqual(next, count++)
-          ;
-        aeroflow.range().take(10).run(onNext, done);
+    it('is static method', () =>
+      assert.isFunction(aeroflow.range));
+
+    it('creates flow of ascending sequential integers starting from 0', done => {
+      let limit = 10;
+      aeroflow.range().take(limit).run(
+        (value, index) =>
+          assert.strictEqual(value, index),
+        (error, count) => {
+          assert.strictEqual(count, limit);
+          done();
+        });
     });
+
     it('creates flow of ascending sequential integers within a range',
       done => {
-        let count = 0
-          , start = 1
-          , end = 9
-          , onDone = () => {
-              assert.strictEqual(count, end - start + 1);
-              done();
-            }
-          , onNext = next => {
-            count++;
-              assert.isTrue(next >= start && next <= end);
-            }
-          ;
-        aeroflow.range(start, end).run(onNext, onDone);
+        let start = 1, end = 9;
+        aeroflow.range(start, end).run(
+          value =>
+            assert.ok(Number.isInteger(value) && value >= start && value <= end),
+          (error, count) => {
+            assert.strictEqual(count, end - start + 1);
+            done();
+          });
     });
-    it('creates flow of ascending sequential integers within a stepped range',
-      done => {
-        let count = 0
-          , start = 1
-          , end = 9
-          , step = 2
-          , onDone = () => {
-              assert.strictEqual(count, Math.round((end - start + 1) / step));
-              done();
-            }
-          , onNext = next => {
-              count++;
-              assert.isTrue(next >= start && next <= end && next % step === 1);
-            }
-          ;
-        aeroflow.range(start, end, step).run(onNext, onDone);
+
+    it('creates flow of ascending sequential integers within a stepped range', done => {
+      let start = 1, end = 9, step = 2;
+      aeroflow.range(start, end, step).run(
+        value =>
+          assert.isTrue(value >= start && value <= end && value % step === 1),
+        (error, count) => {
+          assert.strictEqual(count, Math.round((end - start + 1) / step));
+          done();
+        });
     });
-    it('creates flow of descending sequential integers within a range',
-      done => {
-        let count = 0
-          , start = 9
-          , end = 1
-          , onDone = () => {
-              assert.strictEqual(count, start - end + 1);
-              done();
-            }
-          , onNext = next => {
-              count++;
-              assert.isTrue(next <= start && next >= end);
-            }
-          ;
-        aeroflow.range(start, end).run(onNext, onDone);
+
+    it('creates flow of descending sequential integers within a range', done => {
+      let start = 9, end = 1;
+      aeroflow.range(start, end).run(
+        value =>
+          assert.isTrue(value <= start && value >= end),
+        (error, count) => {
+          assert.strictEqual(count, start - end + 1);
+          done();
+        });
     });
-    it('creates flow of descending sequential integers within a stepped range',
-      done => {
-        let count = 0
-          , start = 9
-          , end = 1
-          , step = -2
-          , onDone = () => {
-              assert.strictEqual(count, Math.round((start - end + 1) / -step));
-              done();
-            }
-          , onNext = next => {
-              count++;
-              assert.isTrue(next <= start && next >= end && next % step === 1);
-            }
-          ;
-        aeroflow.range(start, end, step).run(onNext, onDone);
+
+    it('creates flow of descending sequential integers within a stepped range', done => {
+      let start = 9, end = 1, step = -2;
+      aeroflow.range(start, end, step).run(
+        value =>
+          assert.isTrue(value <= start && value >= end && value % step === 1),
+        (error, count) => {
+          assert.strictEqual(count, Math.round((start - end + 1) / -step));
+          done();
+        });
     });
   });
 
   describe('repeat', () => {
-    it('is static method',
-      () => assert.isFunction(aeroflow.repeat));
-    it('creates flow emitting undefined values',
-      done => aeroflow.repeat().take(1).run(next => assert.isUndefined(next), done));
-    it('creates flow emitting values returned by repeater function until repeater returns false',
-      done => {
-        let count = 0
-          , limit = 5
-          , repeater = () => count < limit ? count : false
-          , onDone = () => {
-              assert.strictEqual(count, limit);
-              done();
-            }
-          , onNext = next => assert.strictEqual(next, count++)
-          ;
-        aeroflow.repeat(repeater).run(onNext, onDone);
+    it('is static method', () =>
+      assert.isFunction(aeroflow.repeat));
+
+    it('creates flow emitting undefined values', done =>
+      aeroflow.repeat().take(1).run(value => {
+        assert.isUndefined(value);
+        done();
+      }));
+
+    it('creates flow emitting values returned by repeater function until repeater returns false', done => {
+      let values = [1, 3, 5], repeater = index => index < values.length && values[index];
+      aeroflow.repeat(repeater).run(
+        (value, index) =>
+          assert.strictEqual(value, values[index]),
+        (error, count) => {
+          assert.strictEqual(count, values.length);
+          done();
+        });
     });
   });
+
+  describe('skip', () => {
+    it('is instance method', () =>
+      assert.isFunction(aeroflow.empty.skip));
+
+    it('creates flow emitting "done" signal only', done =>
+      aeroflow(1, 2, 3, 4).skip().run(
+        () =>
+          assert.ok(false),
+        done));
+
+    it('creates flow skipping provided number of first values and emitting remaining values', done => {
+      let values = [1, 2, 3, 4], skip = Math.floor(values.length / 2);
+      aeroflow(values).skip(skip).run(
+        (value, index) =>
+          assert.strictEqual(value, values[skip + index]),
+        (error, count) => {
+          assert.strictEqual(count, values.length - skip);
+          done();
+        });
+    });
+
+    it('creates flow skipping provided number of last values and emitting remaining values', done => {
+      let values = [1, 2, 3, 4], skip = Math.floor(values.length / 2);
+      aeroflow(values).skip(-skip).run(
+        (value, index) =>
+          assert.strictEqual(value, values[index]),
+        (error, count) => {
+          assert.strictEqual(count, values.length - skip);
+          done();
+        });
+    });
+
+    it('creates flow skipping values while provided function returns true and emitting remaining values', done => {
+      let values = [1, 2, 3, 4], skip = Math.floor(values.length / 2), limiter = (value, index) => index < skip;
+      aeroflow(values).skip(limiter).run(
+        (value, index) =>
+          assert.strictEqual(value, values[skip + index]),
+        (error, count) => {
+          assert.strictEqual(count, values.length - skip);
+          done();
+        });
+    });
+  });
+
+describe('take', () => {
+    it('is instance method', () =>
+      assert.isFunction(aeroflow.empty.take));
+
+    it('creates flow emitting all values if no parameter provided', done => {
+      let values = [1, 2, 3, 4];
+      aeroflow(values).take().run(
+        (value, index) =>
+          assert.strictEqual(value, values[index]),
+        (error, count) => {
+          assert.strictEqual(count, values.length);
+          done();
+        });
+    });
+
+    it('creates flow emitting provided number of first values', done => {
+      let values = [1, 2, 3, 4], take = Math.floor(values.length / 2);
+      aeroflow(values).take(take).run(
+        (value, index) =>
+          assert.strictEqual(value, values[index]),
+        (error, count) => {
+          assert.strictEqual(count, take);
+          done();
+        });
+    });
+
+    it('creates flow emitting values while specified function returns true', done => {
+      let values = [1, 2, 3, 4], take = Math.floor(values.length / 2), limiter = (value, index) => index < take;
+      aeroflow(values).take(limiter).run(
+        (value, index) =>
+          assert.strictEqual(value, values[index]),
+        (error, count) => {
+          assert.strictEqual(count, take);
+          done();
+        });
+    });
+  });
+
+  describe('tap', () => {
+    it('is instance method', () =>
+      assert.isFunction(aeroflow.empty.tap));
+
+    it('intercepts each emitted value', done => {
+      let invocations = 0, limit = 3;
+      aeroflow.range().take(limit).tap((value, index) => {
+        invocations++;
+        assert.strictEqual(value, index);
+      }).run(
+        () => {},
+        () => {
+          assert.strictEqual(invocations, limit);
+          done();
+        });
+    });
+  });
+
+  describe('toArray', () => {
+    it('is instance method', () =>
+      assert.isFunction(aeroflow.empty.toArray));
+
+    it('creates flow emitting single array containing all values', done =>{
+      let values = [1, 2, 3];
+      aeroflow(...values).toArray().run(
+        value => {
+          assert.includeMembers(value, values);
+          done();
+        });
+    });
+  });
+
+  describe('toMap', () => {
+    it('is instance method', () =>
+      assert.isFunction(aeroflow.empty.toMap));
+
+    it('creates flow emiting single map containing all values', done => {
+      let values = [1, 2, 3];
+      aeroflow(values).toMap().run(
+        value => {
+          assert.typeOf(value, 'Map');
+          assert.includeMembers(Array.from(value.keys()), values);
+          assert.includeMembers(Array.from(value.values()), values);
+          done();
+        });
+    });
+  });
+
+/*
 
   describe('share', () => {
     it('is instance method',
@@ -464,51 +586,7 @@ describe('aeroflow', () => {
     });
   });
 
-  describe('skip', () => {
-    it('is instance method',
-      () => assert.isFunction(aeroflow.empty.skip));
-    it('skips all values and emits "done" signal only',
-      done => {
-        let values = [1, 2, 3, 4]
-          , empty = true
-          , onDone = () => {
-              assert.isTrue(empty);
-              done();
-            }
-          , onNext = () => empty = false
-          ;
-        aeroflow(values).skip().run(onNext, onDone);
-      });
-    it('skips specified number of values emits remaining values',
-      done => {
-        let values = [1, 2, 3, 4]
-          , results = []
-          , skip = 2
-          , onDone = () => {
-              assert.strictEqual(results.length, values.length - skip);
-              assert.includeMembers(results, values.slice(skip));
-              done();
-            }
-          , onNext = value => results.push(value)
-          ;
-        aeroflow(values).skip(skip).run(onNext, onDone);
-      });
-    it('skips while specified function returns true emits remaining values',
-      done => {
-        let values = [1, 2, 3, 4]
-          , results = []
-          , skip = 2
-          , limiter = (value, index) => index < skip
-          , onDone = () => {
-              assert.strictEqual(results.length, values.length - skip);
-              assert.includeMembers(results, values.slice(skip));
-              done();
-            }
-          , onNext = value => results.push(value)
-          ;
-        aeroflow(values).skip(limiter).run(onNext, onDone);
-      });
-  });
+  
 
   describe('sort', () => {
     it('is instance method',
@@ -579,86 +657,6 @@ describe('aeroflow', () => {
       });
   });
 
-  describe('take', () => {
-    it('is instance method',
-      () => assert.isFunction(aeroflow.empty.take));
-    it('emits all values if no parameters specified',
-      done => {
-        let values = [1, 2, 3, 4]
-          , results = []
-          , onDone = () => {
-              assert.strictEqual(results.length, values.length);
-              assert.includeMembers(results, values);
-              done();
-            }
-          , onNext = value => results.push(value)
-          ;
-        aeroflow(values).take().run(onNext, onDone);
-      });
-    it('emits specified number of first values',
-      done => {
-        let values = [1, 2, 3, 4]
-          , results = []
-          , take = 2
-          , onDone = () => {
-              assert.strictEqual(results.length, take);
-              assert.includeMembers(results, values.slice(0, take));
-              done();
-            }
-          , onNext = value => results.push(value)
-          ;
-        aeroflow(values).take(take).run(onNext, onDone);
-      });
-    it('emits first values while specified function returns true',
-      done => {
-        let values = [1, 2, 3, 4]
-          , results = []
-          , take = 2
-          , limiter = (value, index) => index < take
-          , onDone = () => {
-              assert.strictEqual(results.length, take);
-              assert.includeMembers(results, values.slice(0, take));
-              done();
-            }
-          , onNext = value => results.push(value)
-          ;
-        aeroflow(values).take(limiter).run(onNext, onDone);
-      });
-  });
-
-  describe('tap', () => {
-    it('is instance method',
-      () => assert.isFunction(aeroflow.empty.tap));
-    it('intercepts each emitted value',
-      done => {
-        let count = 0
-          , callback = value => assert.strictEqual(value, count++)
-          ;
-        aeroflow.range().take(3).tap(callback).run(() => {}, done);
-      });
-  });
-
-  describe('toMap', () => {
-    it('is instance method', () =>
-      assert.isFunction(aeroflow.empty.toMap));
-    it('emits single map object containing flow values as both keys and values if no parameters specified',
-      done => {
-        let values = [1, 2, 3]
-          , results = []
-          , onDone = () => {
-              assert.strictEqual(results.length, 1);
-              let map = results[0];
-              assert.typeOf(map, 'Map');
-              assert.includeMembers(Array.from(map.keys()), values);
-              assert.includeMembers(Array.from(map.values()), values);
-              done();
-            }
-          , onNext = value => results.push(value)
-          ;
-        aeroflow(values).toMap().run(onNext, onDone);
-      });
-  });
-
   describe('unique', () => {
     it('is instance method',
       () => assert.isFunction(aeroflow.empty.unique));
@@ -679,4 +677,5 @@ describe('aeroflow', () => {
   });
 
 */
+
 });

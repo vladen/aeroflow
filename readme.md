@@ -6,8 +6,6 @@ Inspired by [Reactive Extensions](http://reactivex.io/) but much more simplier, 
 
 > _Since ES6 support among existing browsers is not complete yet, this library requires [core-js](https://github.com/zloirock/core-js) standard library to work._
 
-For API documentation 
-
 ## Contents
 
   + [Installation](#installation)
