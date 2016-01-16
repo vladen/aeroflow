@@ -1,3 +1,5 @@
+'use strict';
+
 import { CLASS_DATE, CLASS_ERROR, CLASS_FUNCTION, CLASS_NUMBER, CLASS_PROMISE, CLASS_REG_EXP } from './classes';
 
 const
@@ -21,13 +23,17 @@ const
 , mathFloor = Math.floor
 , mathRandom = Math.random
 , maxInteger = Number.MAX_SAFE_INTEGER
+, mathMax = Math.max
 , noop = () => {}
 , objectDefineProperties = Object.defineProperties
 , objectDefineProperty = Object.defineProperty
 , throwError = error => { throw isError(error) ? error : new Error(error); };
 
 export {
-  classOf, classIs, compare, constant, defineProperties, defineProperty, floor, identity
-, isArray, isDate, isError, isFunction, isInteger, isNothing, isNumber, isObject, isPromise, isRegExp, isSomething
-, maxInteger, noop, now, throwError
+  classOf, classIs, compare, constant, dateNow, identity,
+  isArray, isDate, isError, isFunction, isInteger, isNothing, isNumber, isObject, isPromise, isRegExp, isSomething,
+  mathFloor, mathMax, mathRandom, maxInteger,
+  noop,
+  objectDefineProperties, objectDefineProperty,
+  throwError
 };

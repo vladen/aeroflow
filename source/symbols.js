@@ -2,6 +2,7 @@ const
   SYMBOL_CLASS = Symbol('class')
 , SYMBOL_EMITTER = Symbol('emitter')
 , SYMBOL_ITERATOR = Symbol.iterator
+, SYMBOL_PROTOTYPE = 'prototype'
 , SYMBOL_TO_STRING_TAG = Symbol.toStringTag;
 
-export {  };
+export { SYMBOL_CLASS, SYMBOL_EMITTER, SYMBOL_ITERATOR, SYMBOL_PROTOTYPE, SYMBOL_TO_STRING_TAG };

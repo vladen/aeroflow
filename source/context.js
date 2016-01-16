@@ -1,6 +1,6 @@
 'use strict';
 
-import { isFunction, objectDefineProperties } from './utilities';
+import { isFunction, objectDefineProperties } from './utilites';
 
 // Creates new flow execution context
 function createContext(flow, data) {
@@ -19,7 +19,7 @@ function createContext(flow, data) {
         return callback;
       }
     , spawn = () => onend(createContext(flow, data).end); // test this
-  return defineProperties(context, {
+  return objectDefineProperties(context, {
     data: { value: data }
   , flow: { value: flow }
   , end: { value: end }
@@ -28,4 +28,4 @@ function createContext(flow, data) {
   });
 }
 
-export default createContext; //todo: turn into class and export by name
+export { createContext };

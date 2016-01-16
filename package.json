@@ -20,9 +20,10 @@
     "compile-tests-es6": "node_modules/.bin/babel src/tests.js --out-file lib/tests.es6.js",
     "document": "node_modules/.bin/jsdoc2md src/aeroflow.js > doc/readme.md --global-index-format dl --member-index-format grouped --module-index-format grouped --name-format code --param-list-format list --property-list-format list --sort-by name",
     "lint": "npm run lint-library && npm run lint-tests",
-    "lint-library": "node_modules/.bin/eslint src/aeroflow.js",
+    "lint-library": "node_modules/.bin/eslint source/**",
     "lint-tests": "node_modules/.bin/eslint src/tests.js --global aeroflow,assert,describe,it",
     "minify": "node_modules/.bin/uglifyjs lib/aeroflow.js -o lib/aeroflow.min.js -c -m",
+    "rollup": "node_modules/.bin/rollup --format umd --input source/index.js --name aeroflow --output build/modern/aeroflow.js",
     "test": "node_modules/.bin/mocha src/tests.js -c --harmony --prof -r chai -r core-js"
   },
   "devDependencies": {
@@ -34,6 +35,10 @@
     "eslint": "^1.9.0",
     "jsdoc-to-markdown": "^1.2.1",
     "mocha": "^2.3.3",
+    "rollup": "^0.24.1",
     "uglify-js": "^2.6.0"
+  },
+  "dependencies": {
+    "core-js": "^1.2.6"
   }
 }
