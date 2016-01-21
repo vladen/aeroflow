@@ -1,7 +1,7 @@
 'use strict';
 
 import { Aeroflow } from './aeroflow';
-import { SYMBOL_EMITTER } from './symbols';
+import { EMITTER } from './symbols';
 import { toArrayEmitter } from './toArray';
 import { isFunction, isNumber, noop } from './utilites';
 
@@ -72,19 +72,19 @@ function skip(condition) {
         ? this
         : new Aeroflow(condition > 0
           ? skipFirstEmitter(
-              this[SYMBOL_EMITTER],
+              this[EMITTER],
               condition)
           : skipLastEmitter(
-              this[SYMBOL_EMITTER],
+              this[EMITTER],
               -condition))
       : isFunction(condition)
         ? new Aeroflow(skipWhileEmitter(
-            this[SYMBOL_EMITTER],
+            this[EMITTER],
             condition))
         : condition
-          ? new Aeroflow(skipAllEmitter(this[SYMBOL_EMITTER]))
+          ? new Aeroflow(skipAllEmitter(this[EMITTER]))
           : this
-    : new Aeroflow(skipAllEmitter(this[SYMBOL_EMITTER]));
+    : new Aeroflow(skipAllEmitter(this[EMITTER]));
 }
 
 export { skip, skipAllEmitter, skipFirstEmitter, skipLastEmitter, skipWhileEmitter };

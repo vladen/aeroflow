@@ -2,7 +2,7 @@
 
 import { Aeroflow } from './aeroflow';
 import { reduceEmitter } from './reduce';
-import { SYMBOL_EMITTER } from './symbols';
+import { EMITTER } from './symbols';
 
 const countEmitter = emitter => reduceEmitter(emitter, result => result + 1, 0);
 
@@ -15,7 +15,7 @@ const countEmitter = emitter => reduceEmitter(emitter, result => result + 1, 0);
 * // done
 */
 function count() {
-  return new Aeroflow(countEmitter(this[SYMBOL_EMITTER]));
+  return new Aeroflow(countEmitter(this[EMITTER]));
 }
 
 export { count, countEmitter };

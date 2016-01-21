@@ -1,7 +1,7 @@
 'use strict';
 
 import { Aeroflow } from './aeroflow';
-import { SYMBOL_EMITTER } from './symbols';
+import { EMITTER } from './symbols';
 import { toArrayEmitter } from './toArray';
 import { mathFloor } from './utilites';
 
@@ -23,7 +23,7 @@ const meanEmitter = emitter => (next, done, context) => toArrayEmitter(emitter)(
   * // done
   */
 function mean() {
-  return new Aeroflow(meanEmitter(this[SYMBOL_EMITTER]));
+  return new Aeroflow(meanEmitter(this[EMITTER]));
 }
 
 export { mean, meanEmitter };

@@ -2,7 +2,7 @@
 
 import { Aeroflow } from './aeroflow';
 import { reduceAlongEmitter } from './reduce';
-import { SYMBOL_EMITTER } from './symbols';
+import { EMITTER } from './symbols';
 
 const maxEmitter = emitter => reduceAlongEmitter(emitter, (maximum, value) => value > maximum ? value : maximum);
 
@@ -15,7 +15,7 @@ const maxEmitter = emitter => reduceAlongEmitter(emitter, (maximum, value) => va
   * // done
   */
 function max() {
-  return new Aeroflow(maxEmitter(this[SYMBOL_EMITTER]));
+  return new Aeroflow(maxEmitter(this[EMITTER]));
 }
 
 export { max, maxEmitter };

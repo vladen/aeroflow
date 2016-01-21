@@ -2,7 +2,7 @@
 
 import { Aeroflow } from './aeroflow';
 import { empty } from './empty';
-import { SYMBOL_EMITTER } from './symbols';
+import { EMITTER } from './symbols';
 import { toArrayEmitter } from './toArray';
 import { isFunction, isNumber, mathMax } from './utilites';
 
@@ -46,14 +46,14 @@ function take(condition) {
         ? empty
         : new Aeroflow(condition > 0
           ? takeFirstEmitter(
-              this[SYMBOL_EMITTER],
+              this[EMITTER],
               condition)
           : takeLastEmitter(
-              this[SYMBOL_EMITTER],
+              this[EMITTER],
               condition))
       : isFunction(condition)
         ? new Aeroflow(takeWhileEmitter(
-            this[SYMBOL_EMITTER],
+            this[EMITTER],
             condition))
         : condition
           ? this

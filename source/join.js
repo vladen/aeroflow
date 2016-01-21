@@ -1,7 +1,7 @@
 'use strict';
 
 import { Aeroflow } from './aeroflow';
-import { SYMBOL_EMITTER } from './symbols';
+import { EMITTER } from './symbols';
 import { reduceOptionalEmitter } from './reduce';
 import { isFunction } from './utilites';
 
@@ -14,7 +14,7 @@ const joinEmitter = (emitter, joiner) => reduceOptionalEmitter(
 
 function join(separator) {
   return new Aeroflow(joinEmitter(
-    this[SYMBOL_EMITTER],
+    this[EMITTER],
     arguments.length
     ? isFunction(separator)
       ? separator

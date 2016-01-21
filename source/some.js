@@ -1,7 +1,7 @@
 'use strict';
 
 import { Aeroflow } from './aeroflow';
-import { SYMBOL_EMITTER } from './symbols';
+import { EMITTER } from './symbols';
 import { isFunction, isRegExp } from './utilites';
 
 const someEmitter = (emitter, predicate) => (next, done, context) => {
@@ -42,7 +42,7 @@ const someEmitter = (emitter, predicate) => (next, done, context) => {
   */
 function some(predicate) {
   return new Aeroflow(someEmitter(
-    this[SYMBOL_EMITTER],
+    this[EMITTER],
     arguments.length
       ? isFunction(predicate)
         ? predicate

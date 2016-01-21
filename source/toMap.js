@@ -1,7 +1,7 @@
 'use strict';
 
 import { Aeroflow } from './aeroflow';
-import { SYMBOL_EMITTER } from './symbols';
+import { EMITTER } from './symbols';
 import { constant, identity, isFunction } from './utilites';
 
 const toMapEmitter = emitter => (next, done, context) => {
@@ -47,9 +47,9 @@ const toMapTransformingEmitter = (emitter, keyTransformer, valueTransformer) => 
   */
 function toMap(keyTransformer, valueTransformer) {
   return new Aeroflow(arguments.length === 0
-    ? toMapEmitter(this[SYMBOL_EMITTER])
+    ? toMapEmitter(this[EMITTER])
     : toMapTransformingEmitter(
-        this[SYMBOL_EMITTER],
+        this[EMITTER],
         isFunction(keyTransformer)
           ? keyTransformer
           : constant(keyTransformer),

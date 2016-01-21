@@ -1,7 +1,7 @@
 'use strict';
 
 import { Aeroflow } from './aeroflow';
-import { SYMBOL_EMITTER } from './symbols';
+import { EMITTER } from './symbols';
 import { reduceEmitter } from './reduce';
 
 const sumEmitter = emitter => reduceEmitter(emitter, (result, value) => result + value, 0);
@@ -10,7 +10,7 @@ const sumEmitter = emitter => reduceEmitter(emitter, (result, value) => result +
   aeroflow([1, 2, 3]).sum().dump().run();
 */
 function sum() {
-  return new Aeroflow(sumEmitter(this[SYMBOL_EMITTER]));
+  return new Aeroflow(sumEmitter(this[EMITTER]));
 }
 
 export { sum, sumEmitter };

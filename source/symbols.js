@@ -1,8 +1,14 @@
-const
-  SYMBOL_CLASS = Symbol('class')
-, SYMBOL_EMITTER = Symbol('emitter')
-, SYMBOL_ITERATOR = Symbol.iterator
-, SYMBOL_PROTOTYPE = 'prototype'
-, SYMBOL_TO_STRING_TAG = Symbol.toStringTag;
+'use strict';
 
-export { SYMBOL_CLASS, SYMBOL_EMITTER, SYMBOL_ITERATOR, SYMBOL_PROTOTYPE, SYMBOL_TO_STRING_TAG };
+export const AEROFLOW = 'Aeroflow';
+export const ARRAY = 'Array';
+export const CLASS = Symbol.toStringTag;
+export const DATE = 'Date';
+export const EMITTER = Symbol('emitter');
+export const ERROR = 'Error';
+export const FUNCTION = 'Function';
+export const ITERATOR = Symbol.iterator;
+export const NUMBER = 'Number';
+export const PROMISE = 'Promise';
+export const PROTOTYPE = 'prototype';
+export const REGEXP = 'RegExp';

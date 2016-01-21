@@ -1,7 +1,7 @@
 'use strict';
 
 import { Aeroflow } from './aeroflow';
-import { SYMBOL_EMITTER } from './symbols';
+import { EMITTER } from './symbols';
 import { isFunction, isNothing, isRegExp } from './utilites';
 
 const everyEmitter = (emitter, predicate) => (next, done, context) => {
@@ -42,7 +42,7 @@ const everyEmitter = (emitter, predicate) => (next, done, context) => {
   */
 function every(predicate) {
   return new Aeroflow(everyEmitter(
-    this[SYMBOL_EMITTER],
+    this[EMITTER],
     isNothing(predicate)
       ? value => !!value
       : isFunction(predicate)

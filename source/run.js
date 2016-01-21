@@ -1,7 +1,7 @@
 'use strict';
 
 import { createContext } from './context';
-import { SYMBOL_EMITTER } from './symbols';
+import { EMITTER } from './symbols';
 import { isFunction, noop } from './utilites';
 
 /**
@@ -27,7 +27,7 @@ function run(next, done, data) {
     done = noop;
   if (!isFunction(next)) 
     next = noop;
-  let context = createContext(this, data), emitter = this[SYMBOL_EMITTER];
+  let context = createContext(this, data), emitter = this[EMITTER];
   setImmediate(() => {
     let index = 0;
     emitter(

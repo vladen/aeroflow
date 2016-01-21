@@ -1,7 +1,7 @@
 'use strict';
 
 import { Aeroflow } from './aeroflow';
-import { SYMBOL_EMITTER } from './symbols';
+import { EMITTER } from './symbols';
 import { isFunction, isNothing } from './utilites';
 
 const dumpToConsoleEmitter = (emitter, prefix) => (next, done, context) => emitter(
@@ -48,29 +48,29 @@ const dumpToLoggerEmitter = (emitter, prefix, logger) => (next, done, context) =
 function dump(prefix, logger) {
   return new Aeroflow(arguments.length === 0
     ? dumpToConsoleEmitter(
-        this[SYMBOL_EMITTER],
+        this[EMITTER],
         '')
     : arguments.length === 1
       ? isFunction(prefix)
         ? dumpToLoggerEmitter(
-            this[SYMBOL_EMITTER],
+            this[EMITTER],
             '',
             prefix)
         : dumpToConsoleEmitter(
-            this[SYMBOL_EMITTER],
+            this[EMITTER],
             '')
       : isFunction(logger)
         ? isNothing(prefix)
           ? dumpToLoggerEmitter(
-              this[SYMBOL_EMITTER],
+              this[EMITTER],
               '',
               logger)
           : dumpToLoggerEmitter(
-              this[SYMBOL_EMITTER],
+              this[EMITTER],
               prefix,
               logger)
         : dumpToConsoleEmitter(
-            this[SYMBOL_EMITTER],
+            this[EMITTER],
             prefix));
 }
 

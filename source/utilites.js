@@ -1,39 +1,33 @@
 'use strict';
 
-import { CLASS_DATE, CLASS_ERROR, CLASS_FUNCTION, CLASS_NUMBER, CLASS_PROMISE, CLASS_REG_EXP } from './classes';
+import { DATE, ERROR, FUNCTION, NUMBER, PROMISE, REGEXP } from './symbols';
 
-const
-  classOf = value => Object.prototype.toString.call(value).slice(8, -1)
-, classIs = className => value => classOf(value) === className
-, compare = (left, right) => left < right ? -1 : left > right ? 1 : 0
-, constant = value => () => value
-, dateNow = Date.now
-, identity = value => value
-, isArray = Array.isArray
-, isDate = classIs(CLASS_DATE)
-, isError = classIs(CLASS_ERROR)
-, isFunction = classIs(CLASS_FUNCTION)
-, isInteger = Number.isInteger
-, isNothing = value => value == null
-, isNumber = classIs(CLASS_NUMBER)
-, isObject = Object.isObject
-, isPromise = classIs(CLASS_PROMISE)
-, isRegExp = classIs(CLASS_REG_EXP)
-, isSomething = value => value != null
-, mathFloor = Math.floor
-, mathRandom = Math.random
-, maxInteger = Number.MAX_SAFE_INTEGER
-, mathMax = Math.max
-, noop = () => {}
-, objectDefineProperties = Object.defineProperties
-, objectDefineProperty = Object.defineProperty
-, throwError = error => { throw isError(error) ? error : new Error(error); };
-
-export {
-  classOf, classIs, compare, constant, dateNow, identity,
-  isArray, isDate, isError, isFunction, isInteger, isNothing, isNumber, isObject, isPromise, isRegExp, isSomething,
-  mathFloor, mathMax, mathRandom, maxInteger,
-  noop,
-  objectDefineProperties, objectDefineProperty,
-  throwError
+export const classOf = value => Object.prototype.toString.call(value).slice(8, -1);
+export const classIs = className => value => classOf(value) === className;
+export const compare = (left, right) => left < right ? -1 : left > right ? 1 : 0;
+export const constant = value => () => value;
+export const dateNow = Date.now;
+export const identity = value => value;
+export const isArray = Array.isArray;
+export const isDate = classIs(DATE);
+export const isError = classIs(ERROR);
+export const isFunction = classIs(FUNCTION);
+export const isInteger = Number.isInteger;
+export const isNothing = value => value == null;
+export const isNumber = classIs(NUMBER);
+export const isObject = Object.isObject;
+export const isPromise = classIs(PROMISE);
+export const isRegExp = classIs(REGEXP);
+export const isSomething = value => value != null;
+export const mathFloor = Math.floor;
+export const mathRandom = Math.random;
+export const maxInteger = Number.MAX_SAFE_INTEGER;
+export const mathMax = Math.max;
+export const noop = () => {};
+export const objectDefineProperties = Object.defineProperties;
+export const objectDefineProperty = Object.defineProperty;
+export const throwError = error => {
+  throw isError(error)
+    ? error
+    : new Error(error); 
 };

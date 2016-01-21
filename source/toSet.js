@@ -1,7 +1,7 @@
 'use strict';
 
 import { Aeroflow } from './aeroflow';
-import { SYMBOL_EMITTER } from './symbols';
+import { EMITTER } from './symbols';
 import { constant, isFunction } from './utilites';
 
 const toSetEmitter = emitter => (next, done, context) => {
@@ -45,9 +45,9 @@ const toSetTransformingEmitter = (emitter, transformer) => (next, done, context)
   */
 function toSet(transformer) {
   return new Aeroflow(arguments.length === 0
-    ? toSetEmitter(this[SYMBOL_EMITTER])
+    ? toSetEmitter(this[EMITTER])
     : toSetTransformingEmitter(
-        this[SYMBOL_EMITTER],
+        this[EMITTER],
         isFunction(transformer)
         ? transformer
         : constant(transformer)));

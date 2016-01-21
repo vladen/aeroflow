@@ -3,7 +3,7 @@
 import { Aeroflow } from './aeroflow';
 import { empty } from './empty';
 import { just } from './just';
-import { SYMBOL_EMITTER } from './symbols';
+import { EMITTER } from './symbols';
 import { isFunction } from './utilites';
 
 const reduceEmitter = (emitter, reducer, seed) => (next, done, context) => {
@@ -70,11 +70,11 @@ function reduce(reducer, seed) {
       return empty;
     case 1:
       return isFunction(reducer)
-        ? new Aeroflow(reduceAlongEmitter(this[SYMBOL_EMITTER], reducer))
+        ? new Aeroflow(reduceAlongEmitter(this[EMITTER], reducer))
         : just(reducer)
     default:
       return isFunction(reducer)
-        ? new Aeroflow(reduceEmitter(this[SYMBOL_EMITTER], reducer, seed))
+        ? new Aeroflow(reduceEmitter(this[EMITTER], reducer, seed))
         : just(reducer)
   }
 }
