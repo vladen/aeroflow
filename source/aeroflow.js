@@ -44,7 +44,7 @@ emitters.add(ARRAY, source => (next, done, context) => {
 emitters.add(FUNCTION, source => (next, done, context) => {
   emit(source(context.data))(next, done, context);
 });
-emitters.add(PROMISE, (source) => (next, done, context) => {
+emitters.add(PROMISE, source => (next, done, context) => {
   source.then(
     value => emit(value)(next, done, context),
     error => {
