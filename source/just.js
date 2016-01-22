@@ -1,12 +1,11 @@
 'use strict';
 
-import { Aeroflow } from './aeroflow';
+import { flow } from './flow';
 
 // Returns function emitting single value.
 const justEmitter = value => (next, done) => {
-  const result = next(value);
+  next(value);
   done();
-  return result; // TODO: check this is used
 };
 
 /**
@@ -23,6 +22,6 @@ const justEmitter = value => (next, done) => {
   * // next "test"
   * // done
   */
-const just = value => new Aeroflow(justEmitter(value));
+const just = value => flow(justEmitter(value));
 
 export { just, justEmitter };

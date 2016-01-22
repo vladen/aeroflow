@@ -20,11 +20,13 @@ function append(...sources) {
   return aeroflow(this, ...sources);
 }
 
+const emptyEmitter = () => (next, done) => done();
+const empty = flow(emptyEmitter());
+
 // Returns function emitting single value.
 const justEmitter = value => (next, done) => {
-  const result = next(value);
+  next(value);
   done();
-  return result; // TODO: check this is used
 };
 
 /**
@@ -41,7 +43,7 @@ const justEmitter = value => (next, done) => {
   * // next "test"
   * // done
   */
-const just = value => new Aeroflow(justEmitter(value));
+const just = value => flow(justEmitter(value));
 
 const AEROFLOW = 'Aeroflow';
 const ARRAY = 'Array';
@@ -55,16 +57,17 @@ const PROMISE = 'Promise';
 const PROTOTYPE = 'prototype';
 const REGEXP = 'RegExp';
 
-const classOf$1 = value => Object.prototype.toString.call(value).slice(8, -1);
-const classIs = className => value => classOf$1(value) === className;
+const classOf = value => Object.prototype.toString.call(value).slice(8, -1);
+const classIs = className => value => classOf(value) === className;
 const constant = value => () => value;
 const dateNow = Date.now;
 const identity = value => value;
 const isDate = classIs(DATE);
-const isFunction$1 = classIs(FUNCTION);
+const isFunction = classIs(FUNCTION);
 const isInteger = Number.isInteger;
 const isNothing = value => value == null;
 const isNumber = classIs(NUMBER);
+const isObject = Object.isObject;
 const isRegExp = classIs(REGEXP);
 const mathFloor = Math.floor;
 const mathRandom = Math.random;
@@ -137,12 +140,12 @@ function reduce(reducer, seed) {
     case 0:
       return empty;
     case 1:
-      return isFunction$1(reducer)
-        ? new Aeroflow(reduceAlongEmitter(this[EMITTER], reducer))
+      return isFunction(reducer)
+        ? flow(reduceAlongEmitter(this[EMITTER], reducer))
         : just(reducer)
     default:
-      return isFunction$1(reducer)
-        ? new Aeroflow(reduceEmitter(this[EMITTER], reducer, seed))
+      return isFunction(reducer)
+        ? flow(reduceEmitter(this[EMITTER], reducer, seed))
         : just(reducer)
   }
 }
@@ -158,44 +161,8 @@ const countEmitter = emitter => reduceEmitter(emitter, result => result + 1, 0);
 * // done
 */
 function count() {
-  return new Aeroflow(countEmitter(this[EMITTER]));
+  return flow(countEmitter(this[EMITTER]));
 }
-
-/**
-  * Creates programmatically controlled flow.
-  * @static
-  *
-  * @param {function|any} emitter The emitter function taking three arguments:
-  *   next - the function emitting 'next' event,
-  *   done - the function emitting 'done' event,
-  *   context - current execution context.
-  *
-  * @example
-  * aeroflow.create((next, done, context) => {
-  *   next(1);
-  *   next(new Promise(resolve => setTimeout(() => resolve(2), 500)));
-  *   setTimeout(done, 1000);
-  * }).dump().run();
-  * // next 1 // after 500ms
-  * // next 2 // after 1000ms
-  * // done
-  */
-const create = emitter => arguments.length
-  ? isFunction$1(emitter)
-    ? new Aeroflow((next, done, context) => {
-        let completed = false;
-        context.onend(emitter(
-          value => context() ? next() : false,
-          error => {
-            if (completed) return;
-            completed = true;
-            done();
-            context.end();
-          },
-          context));
-      })
-    : just(emitter)
-  : empty;
 
 const delayEmitter = (emitter, interval) => (next, done, context) => emitter(
   value => new Promise(resolve =>
@@ -260,7 +227,7 @@ const delayDynamicEmitter = (emitter, selector) => (next, done, context) => {
   * // done
   */
 function delay(condition) {
-  return new Aeroflow(isFunction$1(condition)
+  return flow(isFunction(condition)
     ? delayDynamicEmitter(
         this[EMITTER],
         condition)
@@ -315,12 +282,12 @@ const dumpToLoggerEmitter = (emitter, prefix, logger) => (next, done, context) =
   * // test done
   */
 function dump(prefix, logger) {
-  return new Aeroflow(arguments.length === 0
+  return flow(arguments.length === 0
     ? dumpToConsoleEmitter(
         this[EMITTER],
         '')
     : arguments.length === 1
-      ? isFunction$1(prefix)
+      ? isFunction(prefix)
         ? dumpToLoggerEmitter(
             this[EMITTER],
             '',
@@ -328,7 +295,7 @@ function dump(prefix, logger) {
         : dumpToConsoleEmitter(
             this[EMITTER],
             '')
-      : isFunction$1(logger)
+      : isFunction(logger)
         ? isNothing(prefix)
           ? dumpToLoggerEmitter(
               this[EMITTER],
@@ -352,7 +319,7 @@ const everyEmitter = (emitter, predicate) => (next, done, context) => {
       if (!predicate(value))
         return;
       result = false;
-      context.end();
+      context.done();
     },
     error => {
       next(result && !idle);
@@ -380,74 +347,16 @@ const everyEmitter = (emitter, predicate) => (next, done, context) => {
   * // done
   */
 function every(predicate) {
-  return new Aeroflow(everyEmitter(
+  return flow(everyEmitter(
     this[EMITTER],
     isNothing(predicate)
       ? value => !!value
-      : isFunction$1(predicate)
+      : isFunction(predicate)
         ? predicate
         : isRegExp(predicate)
           ? value => predicate.test(value)
           : value => value === predicate));
 }
-
-const repeatEmitter = value => (next, done, context) => {
-  while(context())
-    next(value);
-  done();
-};
-
-const repeatDynamicEmitter = repeater => (next, done, context) => {
-  let index = 0, result;
-  while (context() && false !== (result = repeater(index++, context.data)))
-    next(result);
-  done();
-};
-
-/**
-  * Creates flow of repeting values.
-  * @static
-  *
-  * @param {function|any} repeater Arbitrary scalar value to repeat; or function invoked repeatedly with two arguments: 
-  *   index - index of the value being emitted,
-  *   data - contextual data.
-  * @returns {Aeroflow} new flow.
-  *
-  * @example
-  * aeroflow.repeat(new Date().getSeconds(), 3).dump().run();
-  * // next 1
-  * // next 1
-  * // next 1
-  * // done
-  * aeroflow.repeat(() => new Date().getSeconds(), 3).delay((value, index) => index * 1000).dump().run();
-  * // next 1
-  * // next 2
-  * // next 3
-  * // done
-  * aeroflow.repeat(index => Math.pow(2, index), 3).dump().run();
-  * // next 1
-  * // next 2
-  * // next 4
-  * // done
-  */
-const repeat = value => new Aeroflow(isFunction$1(value)
-  ? repeatDynamicEmitter(value)
-  : repeatEmitter(value));
-
-const expandEmitter = (expander, seed) => (next, done, context) => {
-  let index = 0, value = seed;
-  while (context())
-    next(value = expander(value, index++, context.data));
-  done();
-};
-
-/*
-  aeroflow.expand(value => value * 2, 1).take(3).dump().run();
-  aeroflow.expand(value => new Date(+value + 1000 * 60), new Date).take(3).dump().run();
-*/
-const expand = (expander, seed) => isFunction$1(expander)
-  ? new Aeroflow(expandEmitter(expander, seed))
-  : repeatEmitter(expander);
 
 const filterEmitter = (emitter, predicate) => (next, done, context) => {
   let index = 0;
@@ -478,11 +387,11 @@ const filterEmitter = (emitter, predicate) => (next, done, context) => {
   * // done
   */
 function filter(predicate) {
-  return new Aeroflow(filterEmitter(
+  return flow(filterEmitter(
     this[EMITTER],
     isNothing(predicate)
       ? value => !!value
-      : isFunction$1(predicate)
+      : isFunction(predicate)
         ? predicate
         : isRegExp(predicate)
           ? value => predicate.test(value)
@@ -497,10 +406,10 @@ const joinEmitter = (emitter, joiner) => reduceOptionalEmitter(
   '');
 
 function join(separator) {
-  return new Aeroflow(joinEmitter(
+  return flow(joinEmitter(
     this[EMITTER],
     arguments.length
-    ? isFunction$1(separator)
+    ? isFunction(separator)
       ? separator
       : () => '' + separator
     : () => ','));
@@ -516,15 +425,17 @@ const mapEmitter = (emitter, mapper) => (next, done, context) => {
 
 function map(mapper) {
   return arguments.length
-    ? new Aeroflow(mapEmitter(
+    ? flow(mapEmitter(
         this[EMITTER],
-        isFunction$1(mapper)
+        isFunction(mapper)
           ? mapper
           : constant(mapper)))
     : this;
 }
 
-const maxEmitter = emitter => reduceAlongEmitter(emitter, (maximum, value) => value > maximum ? value : maximum);
+const maxEmitter = emitter => reduceAlongEmitter(
+  emitter,
+  (maximum, value) => value > maximum ? value : maximum);
 
 /**
   * Determines the maximum value emitted by this flow, returns new flow emitting only this value.
@@ -535,10 +446,12 @@ const maxEmitter = emitter => reduceAlongEmitter(emitter, (maximum, value) => va
   * // done
   */
 function max() {
-  return new Aeroflow(maxEmitter(this[EMITTER]));
+  return flow(maxEmitter(this[EMITTER]));
 }
 
-const minEmitter = emitter => reduceAlongEmitter(emitter, (minimum, value) => value < minimum ? value : minimum);
+const minEmitter = emitter => reduceAlongEmitter(
+  emitter,
+  (minimum, value) => value < minimum ? value : minimum);
 
 /**
   * Determine the minimum value emitted by this flow, returns new flow emitting only this value.
@@ -549,7 +462,7 @@ const minEmitter = emitter => reduceAlongEmitter(emitter, (minimum, value) => va
   * // done
   */
 function min() {
-  return new Aeroflow(minEmitter(this[EMITTER]));
+  return flow(minEmitter(this[EMITTER]));
 }
 
 /**
@@ -569,88 +482,39 @@ function prepend(...sources) {
   return aeroflow(...sources, this);
 }
 
-const randomEmitter = (inclusiveMin, exclusiveMax) => (next, done, context) => {
-  while(context())
-    next(inclusiveMin + exclusiveMax * mathRandom());
-  done();
-};
+const CALLBACKS = Symbol('callbacks');
+const COMPLETED = Symbol('completed');
 
-const randomIntegerEmitter = (inclusiveMin, exclusiveMax) => (next, done, context) => {
-  while(context())
-    next(mathFloor(inclusiveMin + exclusiveMax * mathRandom()));
-  done();
-};
-
-/**
-  * Returns new flow emitting random numbers.
-  * @static
-  *
-  * @example
-  * aeroflow.random().take(3).dump().run();
-  * aeroflow.random(0.1).take(3).dump().run();
-  * aeroflow.random(null, 0.1).take(3).dump().run();
-  * aeroflow.random(1, 9).take(3).dump().run();
-  */
-const random = (inclusiveMin, exclusiveMax) => {
-  inclusiveMin = +inclusiveMin || 0;
-  exclusiveMax = +exclusiveMax || 1;
-  exclusiveMax -= inclusiveMin;
-  return new Aeroflow(isInteger(inclusiveMin) && isInteger(exclusiveMax)
-    ? randomIntegerEmitter(inclusiveMin, exclusiveMax)
-    : randomEmitter(inclusiveMin, exclusiveMax));
-};
-
-const rangeEmitter = (inclusiveStart, inclusiveEnd, step) => (next, done, context) => {
-  let i = inclusiveStart - step;
-  if (inclusiveStart < inclusiveEnd)
-    while (context() && (i += step) <= inclusiveEnd)
-      next(i);
-  else
-    while (context() && (i += step) >= inclusiveEnd)
-      next(i);
-  done();
-};
-
-/*
-  aeroflow.range().take(3).dump().run();
-  aeroflow.range(-3).take(3).dump().run();
-  aeroflow.range(1, 1).dump().run();
-  aeroflow.range(0, 5, 2).dump().run();
-  aeroflow.range(5, 0, -2).dump().run();
-*/
-const range = (inclusiveStart, inclusiveEnd, step) => {
-  inclusiveEnd = +inclusiveEnd || maxInteger;
-  inclusiveStart = +inclusiveStart || 0;
-  step = +step || (inclusiveStart < inclusiveEnd ? 1 : -1);
-  return inclusiveStart === inclusiveEnd
-    ? just(inclusiveStart)
-    : new Aeroflow(rangeEmitter(inclusiveStart, inclusiveEnd, step));
-};
-
-// Creates new flow execution context
-function createContext(flow, data) {
-  let active = true
-    , callbacks = []
-    , context = () => active
-    , end = () => {
-        if (active) {
-          active = false;
-          callbacks.forEach(callback => callback());
-        }
-        return false;
-      }
-    , onend = callback => {
-        if (isFunction$1(callback)) active ? callbacks.push(callback) : callback();
-        return callback;
-      }
-    , spawn = () => onend(createContext(flow, data).end); // test this
-  return objectDefineProperties(context, {
-    data: { value: data }
-  , flow: { value: flow }
-  , end: { value: end }
-  , onend: { value: onend }
-  , spawn: { value: spawn }
-  });
+class Context {
+  constructor(flow, data) {
+    objectDefineProperties(this, {
+      [CALLBACKS]: { value: [] },
+      data: { value: data },
+      flow: { value: flow }
+    });
+  }
+  get active() {
+    return !this[COMPLETED];
+  }
+  done() {
+    if (this[COMPLETED]) return false;
+    objectDefineProperty(this[COMPLETED], { value: true});
+    const callbacks = this[CALLBACKS];
+    callbacks.forEach(callback => callback());
+    this[CALLBACKS].length = 0;
+    return true;
+  }
+  spawn() {
+    if (this[COMPLETED]) return;
+    const context = new Context(this.flow, this.data);
+    this[CALLBACKS].push(() => context.done());
+    return context;
+  }
+  track(callback) {
+    if (!isFunction(callback)) return;
+    if (this[COMPLETED]) callback();
+    else this[CALLBACKS].push(callback);
+  }
 }
 
 /**
@@ -672,17 +536,15 @@ function createContext(flow, data) {
  * // done undefined
  */
 function run(next, done, data) {
-  if (!isFunction$1(done)) 
-    done = noop;
-  if (!isFunction$1(next)) 
-    next = noop;
-  let context = createContext(this, data), emitter = this[EMITTER];
+  if (!isFunction(done)) done = noop;
+  if (!isFunction(next)) next = noop;
+  const context = new Context(this, data), emitter = this[EMITTER];
   setImmediate(() => {
     let index = 0;
     emitter(
       value => next(value, index++, context),
       error => {
-        context.end();
+        context.done();
         done(error, index, context);
       },
       context);
@@ -725,8 +587,8 @@ const toArrayTransformingEmitter = (emitter, transformer) => (next, done, contex
   * // done
   */
 function toArray(transformer) {
-  return new Aeroflow(arguments.length
-    ? isFunction$1(transformer)
+  return flow(arguments.length
+    ? isFunction(transformer)
       ? toArrayTransformingEmitter(
           this[EMITTER],
           transformer)
@@ -801,21 +663,21 @@ function skip(condition) {
     ? isNumber(condition)
       ? condition === 0
         ? this
-        : new Aeroflow(condition > 0
+        : flow(condition > 0
           ? skipFirstEmitter(
               this[EMITTER],
               condition)
           : skipLastEmitter(
               this[EMITTER],
               -condition))
-      : isFunction$1(condition)
-        ? new Aeroflow(skipWhileEmitter(
+      : isFunction(condition)
+        ? flow(skipWhileEmitter(
             this[EMITTER],
             condition))
         : condition
-          ? new Aeroflow(skipAllEmitter(this[EMITTER]))
+          ? flow(skipAllEmitter(this[EMITTER]))
           : this
-    : new Aeroflow(skipAllEmitter(this[EMITTER]));
+    : flow(skipAllEmitter(this[EMITTER]));
 }
 
 const someEmitter = (emitter, predicate) => (next, done, context) => {
@@ -826,7 +688,7 @@ const someEmitter = (emitter, predicate) => (next, done, context) => {
       if (!predicate(value))
         return;
       result = true;
-      context.end();
+      context.done();
     },
     error => {
       next(result);
@@ -855,10 +717,10 @@ const someEmitter = (emitter, predicate) => (next, done, context) => {
   * // done
   */
 function some(predicate) {
-  return new Aeroflow(someEmitter(
+  return flow(someEmitter(
     this[EMITTER],
     arguments.length
-      ? isFunction$1(predicate)
+      ? isFunction(predicate)
         ? predicate
         : isRegExp(predicate)
           ? value => predicate.test(value)
@@ -866,13 +728,15 @@ function some(predicate) {
       : value => !!value));
 }
 
-const sumEmitter = emitter => reduceEmitter(emitter, (result, value) => result + value, 0);
+const sumEmitter = emitter => reduceEmitter(
+  emitter,
+  (result, value) => result + value, 0);
 
 /*
   aeroflow([1, 2, 3]).sum().dump().run();
 */
 function sum() {
-  return new Aeroflow(sumEmitter(this[EMITTER]));
+  return flow(sumEmitter(this[EMITTER]));
 }
 
 const takeFirstEmitter = (emitter, count) => (next, done, context) => {
@@ -881,7 +745,7 @@ const takeFirstEmitter = (emitter, count) => (next, done, context) => {
   emitter(
     value => {
       next(value);
-      if (count <= index++) context.end();
+      if (count <= index++) context.done();
     },
     done,
     context);
@@ -903,7 +767,7 @@ const takeWhileEmitter = (emitter, predicate) => (next, done, context) => {
   emitter(
     value => predicate(value, index++, context.data)
       ? next(value)
-      : context.end(),
+      : context.done(),
     done,
     context);
 };
@@ -913,15 +777,15 @@ function take(condition) {
     ? isNumber(condition)
       ? condition === 0
         ? empty
-        : new Aeroflow(condition > 0
+        : flow(condition > 0
           ? takeFirstEmitter(
               this[EMITTER],
               condition)
           : takeLastEmitter(
               this[EMITTER],
               condition))
-      : isFunction$1(condition)
-        ? new Aeroflow(takeWhileEmitter(
+      : isFunction(condition)
+        ? flow(takeWhileEmitter(
             this[EMITTER],
             condition))
         : condition
@@ -957,8 +821,8 @@ const tapEmitter = (emitter, callback) => (next, done, context) => {
   * // value: 3 index: 2
   */
 function tap(callback) {
-  return isFunction$1(callback)
-    ? new Aeroflow(tapEmitter(this[EMITTER], callback))
+  return isFunction(callback)
+    ? flow(tapEmitter(this[EMITTER], callback))
     : this;
 }
 
@@ -982,7 +846,7 @@ const timestampEmitter = emitter => (next, done, context) => {
   aeroflow.repeat().take(3).delay(10).timestamp().dump().run();
 */
 function timestamp() {
-  return new Aeroflow(timestampEmitter(this[EMITTER]));
+  return flow(timestampEmitter(this[EMITTER]));
 }
 
 const toMapEmitter = emitter => (next, done, context) => {
@@ -1027,16 +891,16 @@ const toMapTransformingEmitter = (emitter, keyTransformer, valueTransformer) => 
   * // done
   */
 function toMap(keyTransformer, valueTransformer) {
-  return new Aeroflow(arguments.length === 0
+  return flow(arguments.length === 0
     ? toMapEmitter(this[EMITTER])
     : toMapTransformingEmitter(
         this[EMITTER],
-        isFunction$1(keyTransformer)
+        isFunction(keyTransformer)
           ? keyTransformer
           : constant(keyTransformer),
         arguments.length === 1
           ? identity
-          : isFunction$1(valueTransformer)
+          : isFunction(valueTransformer)
             ? keyTransformer
             : constant(valueTransformer)));
 }
@@ -1081,22 +945,17 @@ const toSetTransformingEmitter = (emitter, transformer) => (next, done, context)
   * // done
   */
 function toSet(transformer) {
-  return new Aeroflow(arguments.length === 0
+  return flow(arguments.length === 0
     ? toSetEmitter(this[EMITTER])
     : toSetTransformingEmitter(
         this[EMITTER],
-        isFunction$1(transformer)
+        isFunction(transformer)
         ? transformer
         : constant(transformer)));
 }
 
 function Aeroflow(emitter) {
   objectDefineProperty(this, EMITTER, { value: emitter });
-  /*
-  return this instanceof Aeroflow
-    ? objectDefineProperty(this, EMITTER, { value: emitter })
-    : new Aeroflow(emitter);
-  */
 }
 objectDefineProperties(Aeroflow[PROTOTYPE], {
   [CLASS]: { value: AEROFLOW },
@@ -1104,7 +963,6 @@ objectDefineProperties(Aeroflow[PROTOTYPE], {
   count: { value: count },
   delay: { value: delay },
   dump: { value: dump },
-  emitters: { value: emitters },
   every: { value: every },
   filter: { value: filter },
   join: { value: join },
@@ -1124,50 +982,199 @@ objectDefineProperties(Aeroflow[PROTOTYPE], {
   toMap: { value: toMap },
   toSet: { value: toSet }
 });
+function flow(emitter) {
+  return new Aeroflow(emitter);
+}
 
-const emitters = new Map;
+/**
+  * Creates programmatically controlled flow.
+  * @static
+  *
+  * @param {function|any} emitter The emitter function taking three arguments:
+  *   next - the function emitting 'next' event,
+  *   done - the function emitting 'done' event,
+  *   context - current execution context.
+  *
+  * @example
+  * aeroflow.create((next, done, context) => {
+  *   next(1);
+  *   next(new Promise(resolve => setTimeout(() => resolve(2), 500)));
+  *   setTimeout(done, 1000);
+  * }).dump().run();
+  * // next 1 // after 500ms
+  * // next 2 // after 1000ms
+  * // done
+  */
+const create = emitter => arguments.length
+  ? isFunction(emitter)
+    ? flow((next, done, context) => {
+        context.track(emitter(
+          value => {
+            if (context.active) next();
+          },
+          error => {
+            if (!context.active) return;
+            done();
+            context.done();
+          },
+          context));
+      })
+    : just(emitter)
+  : empty;
+
+const repeatEmitter = value => (next, done, context) => {
+  while(context.active)
+    next(value);
+  done();
+};
+
+const repeatDynamicEmitter = repeater => (next, done, context) => {
+  let index = 0, result;
+  while (context.active && false !== (result = repeater(index++, context.data)))
+    next(result);
+  done();
+};
+
+/**
+  * Creates flow of repeting values.
+  * @static
+  *
+  * @param {function|any} repeater Arbitrary scalar value to repeat; or function invoked repeatedly with two arguments: 
+  *   index - index of the value being emitted,
+  *   data - contextual data.
+  * @returns {Aeroflow} new flow.
+  *
+  * @example
+  * aeroflow.repeat(new Date().getSeconds(), 3).dump().run();
+  * // next 1
+  * // next 1
+  * // next 1
+  * // done
+  * aeroflow.repeat(() => new Date().getSeconds(), 3).delay((value, index) => index * 1000).dump().run();
+  * // next 1
+  * // next 2
+  * // next 3
+  * // done
+  * aeroflow.repeat(index => Math.pow(2, index), 3).dump().run();
+  * // next 1
+  * // next 2
+  * // next 4
+  * // done
+  */
+const repeat = value => flow(isFunction(value)
+  ? repeatDynamicEmitter(value)
+  : repeatEmitter(value));
+
+const expandEmitter = (expander, seed) => (next, done, context) => {
+  let index = 0, value = seed;
+  while (context.active)
+    next(value = expander(value, index++, context.data));
+  done();
+};
+
+/*
+  aeroflow.expand(value => value * 2, 1).take(3).dump().run();
+  aeroflow.expand(value => new Date(+value + 1000 * 60), new Date).take(3).dump().run();
+*/
+const expand = (expander, seed) => flow(isFunction(expander)
+  ? expandEmitter(expander, seed)
+  : repeatEmitter(expander));
+
+const randomEmitter = (inclusiveMin, exclusiveMax) => (next, done, context) => {
+  while(context.active)
+    next(inclusiveMin + exclusiveMax * mathRandom());
+  done();
+};
+
+const randomIntegerEmitter = (inclusiveMin, exclusiveMax) => (next, done, context) => {
+  while(context.active)
+    next(mathFloor(inclusiveMin + exclusiveMax * mathRandom()));
+  done();
+};
+
+/**
+  * Returns new flow emitting random numbers.
+  * @static
+  *
+  * @example
+  * aeroflow.random().take(3).dump().run();
+  * aeroflow.random(0.1).take(3).dump().run();
+  * aeroflow.random(null, 0.1).take(3).dump().run();
+  * aeroflow.random(1, 9).take(3).dump().run();
+  */
+const random = (inclusiveMin, exclusiveMax) => {
+  inclusiveMin = +inclusiveMin || 0;
+  exclusiveMax = +exclusiveMax || 1;
+  exclusiveMax -= inclusiveMin;
+  return flow(isInteger(inclusiveMin) && isInteger(exclusiveMax)
+    ? randomIntegerEmitter(inclusiveMin, exclusiveMax)
+    : randomEmitter(inclusiveMin, exclusiveMax));
+};
+
+const rangeEmitter = (inclusiveStart, inclusiveEnd, step) => (next, done, context) => {
+  let i = inclusiveStart - step;
+  if (inclusiveStart < inclusiveEnd)
+    while (context.active && (i += step) <= inclusiveEnd)
+      next(i);
+  else
+    while (context.active && (i += step) >= inclusiveEnd)
+      next(i);
+  done();
+};
+
+/*
+  aeroflow.range().take(3).dump().run();
+  aeroflow.range(-3).take(3).dump().run();
+  aeroflow.range(1, 1).dump().run();
+  aeroflow.range(0, 5, 2).dump().run();
+  aeroflow.range(5, 0, -2).dump().run();
+*/
+const range = (inclusiveStart, inclusiveEnd, step) => {
+  inclusiveEnd = +inclusiveEnd || maxInteger;
+  inclusiveStart = +inclusiveStart || 0;
+  step = +step || (inclusiveStart < inclusiveEnd ? 1 : -1);
+  return inclusiveStart === inclusiveEnd
+    ? just(inclusiveStart)
+    : flow(rangeEmitter(inclusiveStart, inclusiveEnd, step));
+};
+
 const aeroflowEmitter = source => source[EMITTER];
-const arrayEmitter = source => (next, done, context) => {
-    let index = -1;
-    while (context() && ++index < source.length)
-      next(source[index]);
-    done();
-  };
-const emptyEmitter = () => (_, done) => done();
-const empty = new Aeroflow(emptyEmitter());
-const functionEmitter = source => (next, done, context) => {
-    emit(source(context.data))(next, done, context);
-  };
-const promiseEmitter = source => (next, done, context) => {
-    source.then(
-      value => emit(value)(next, done, context),
-      error => {
-        done(error);
-        throwError(error);
-      });
-  };
-emitters.set(AEROFLOW, aeroflowEmitter);
-emitters.set(ARRAY, arrayEmitter);
-emitters.set(FUNCTION, functionEmitter);
-emitters.set(PROMISE, promiseEmitter);
-// todo: Aerobus.Channel, Aerobus.Section
 
-// Returns function emitting values from multiple arbitrary sources.
+const arrayEmitter = source => (next, done, context) => {
+  let index = -1;
+  while (context.active && ++index < source.length)
+    next(source[index]);
+  done();
+};
+
+const functionEmitter = source => (next, done, context) => emit(source(context.data))(next, done, context);
+
+const promiseEmitter = source => (next, done, context) => source.then(
+  value => emit(value)(next, done, context),
+  error => done(error));
+
+const emitters = new Map(
+  [AEROFLOW, aeroflowEmitter],
+  [ARRAY, arrayEmitter],
+  [FUNCTION, functionEmitter],
+  [PROMISE, promiseEmitter]
+);
+
 function emit(...sources) {
   switch (sources.length) {
     case 0:
       return emptyEmitter(); // todo: Aeroplan
     case 1:
       const
-        emitter = emitters[classOf(source)],
-        source = sources[0];
+        source = sources[0],
+        emitter = emitters[classOf(source)];
       if (isFunction(emitter))
         return emitter(source);
       if (isObject(source) && ITERATOR in source)
-        return (source) => (next, done, context) => {
+        return (next, done, context) => {
           const iterator = source[ITERATOR]();
           let iteration;
-          while (context() && !(iteration = iterator.next()).done)
+          while (context.active && !(iteration = iterator.next()).done)
             next(iteration.value);
           done();
         };
@@ -1175,28 +1182,27 @@ function emit(...sources) {
     default:
       return (next, done, context) => {
         let index = -1;
-        const limit = sources.length, proceed = () => {
-          ++index < limit
-            ? emit(sources[index])(next, proceed, context)
-            : done();
-        };
+        const limit = sources.length, proceed = () => context.active && ++index < limit
+          ? emit(sources[index])(next, proceed, context)
+          : done();
         proceed();
       };
   }
 }
-
 function aeroflow(...sources) {
-  return new Aeroflow(emit(...sources));
+  return flow(emit(...sources));
 }
+// todo: Aerobus.Channel, Aerobus.Section
 objectDefineProperties(aeroflow, {
-// constructor: { value: Aeroflow },
   create: { value: create },
+  emitters: { value: emitters },
   empty: { value: empty },
   expand: { value: expand },
   just: { value: just },
+  operators: { value: Aeroflow[PROTOTYPE] },
   random: { value: random },
   range: { value: range },
   repeat: { value: repeat }
 });
 
-export { Aeroflow, aeroflow, empty };
+export default aeroflow;

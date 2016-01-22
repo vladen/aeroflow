@@ -1,6 +1,6 @@
 'use strict';
 
-import { Aeroflow } from './aeroflow';
+import { flow } from './flow';
 import { EMITTER } from './symbols';
 import { constant, isFunction } from './utilites';
 
@@ -39,7 +39,7 @@ const toArrayTransformingEmitter = (emitter, transformer) => (next, done, contex
   * // done
   */
 function toArray(transformer) {
-  return new Aeroflow(arguments.length
+  return flow(arguments.length
     ? isFunction(transformer)
       ? toArrayTransformingEmitter(
           this[EMITTER],

@@ -1,6 +1,6 @@
 'use strict';
 
-import { Aeroflow } from './aeroflow';
+import { flow } from './flow';
 import { EMITTER } from './symbols';
 import { isFunction, isRegExp } from './utilites';
 
@@ -12,7 +12,7 @@ const someEmitter = (emitter, predicate) => (next, done, context) => {
       if (!predicate(value))
         return;
       result = true;
-      context.end();
+      context.done();
     },
     error => {
       next(result);
@@ -41,7 +41,7 @@ const someEmitter = (emitter, predicate) => (next, done, context) => {
   * // done
   */
 function some(predicate) {
-  return new Aeroflow(someEmitter(
+  return flow(someEmitter(
     this[EMITTER],
     arguments.length
       ? isFunction(predicate)

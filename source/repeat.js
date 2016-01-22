@@ -1,17 +1,17 @@
 'use strict';
 
-import { Aeroflow } from './aeroflow';
+import { flow } from './flow';
 import { isFunction } from './utilites';
 
 const repeatEmitter = value => (next, done, context) => {
-  while(context())
+  while(context.active)
     next(value);
   done();
 };
 
 const repeatDynamicEmitter = repeater => (next, done, context) => {
   let index = 0, result;
-  while (context() && false !== (result = repeater(index++, context.data)))
+  while (context.active && false !== (result = repeater(index++, context.data)))
     next(result);
   done();
 };
@@ -42,7 +42,7 @@ const repeatDynamicEmitter = repeater => (next, done, context) => {
   * // next 4
   * // done
   */
-const repeat = value => new Aeroflow(isFunction(value)
+const repeat = value => flow(isFunction(value)
   ? repeatDynamicEmitter(value)
   : repeatEmitter(value));
 

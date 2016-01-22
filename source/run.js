@@ -1,6 +1,6 @@
 'use strict';
 
-import { createContext } from './context';
+import { Context } from './context';
 import { EMITTER } from './symbols';
 import { isFunction, noop } from './utilites';
 
@@ -23,17 +23,15 @@ import { isFunction, noop } from './utilites';
  * // done undefined
  */
 function run(next, done, data) {
-  if (!isFunction(done)) 
-    done = noop;
-  if (!isFunction(next)) 
-    next = noop;
-  let context = createContext(this, data), emitter = this[EMITTER];
+  if (!isFunction(done)) done = noop;
+  if (!isFunction(next)) next = noop;
+  const context = new Context(this, data), emitter = this[EMITTER];
   setImmediate(() => {
     let index = 0;
     emitter(
       value => next(value, index++, context),
       error => {
-        context.end();
+        context.done();
         done(error, index, context);
       },
       context);

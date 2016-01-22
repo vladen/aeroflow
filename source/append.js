@@ -1,6 +1,6 @@
 'use strict';
 
-import { aeroflow } from './aeroflow';
+import aeroflow from './aeroflow';
 
 /**
 * Returns new flow emitting values from this flow first and then from all provided sources without interleaving them.

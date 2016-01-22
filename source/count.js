@@ -1,6 +1,6 @@
 'use strict';
 
-import { Aeroflow } from './aeroflow';
+import { flow } from './flow';
 import { reduceEmitter } from './reduce';
 import { EMITTER } from './symbols';
 
@@ -15,7 +15,7 @@ const countEmitter = emitter => reduceEmitter(emitter, result => result + 1, 0);
 * // done
 */
 function count() {
-  return new Aeroflow(countEmitter(this[EMITTER]));
+  return flow(countEmitter(this[EMITTER]));
 }
 
 export { count, countEmitter };

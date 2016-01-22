@@ -1,6 +1,6 @@
 'use strict';
 
-import { Aeroflow } from './aeroflow';
+import { flow } from './flow';
 import { EMITTER } from './symbols';
 import { isFunction, isNothing } from './utilites';
 
@@ -46,7 +46,7 @@ const dumpToLoggerEmitter = (emitter, prefix, logger) => (next, done, context) =
   * // test done
   */
 function dump(prefix, logger) {
-  return new Aeroflow(arguments.length === 0
+  return flow(arguments.length === 0
     ? dumpToConsoleEmitter(
         this[EMITTER],
         '')

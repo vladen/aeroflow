@@ -1,10 +1,12 @@
 'use strict';
 
-import { Aeroflow } from './aeroflow';
+import { flow } from './flow';
 import { reduceAlongEmitter } from './reduce';
 import { EMITTER } from './symbols';
 
-const maxEmitter = emitter => reduceAlongEmitter(emitter, (maximum, value) => value > maximum ? value : maximum);
+const maxEmitter = emitter => reduceAlongEmitter(
+  emitter,
+  (maximum, value) => value > maximum ? value : maximum);
 
 /**
   * Determines the maximum value emitted by this flow, returns new flow emitting only this value.
@@ -15,7 +17,7 @@ const maxEmitter = emitter => reduceAlongEmitter(emitter, (maximum, value) => va
   * // done
   */
 function max() {
-  return new Aeroflow(maxEmitter(this[EMITTER]));
+  return flow(maxEmitter(this[EMITTER]));
 }
 
 export { max, maxEmitter };

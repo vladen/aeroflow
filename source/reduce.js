@@ -1,6 +1,7 @@
 'use strict';
 
-import { Aeroflow, empty } from './aeroflow';
+import { flow } from './flow';
+import { empty } from './empty';
 import { just } from './just';
 import { EMITTER } from './symbols';
 import { isFunction } from './utilites';
@@ -69,11 +70,11 @@ function reduce(reducer, seed) {
       return empty;
     case 1:
       return isFunction(reducer)
-        ? new Aeroflow(reduceAlongEmitter(this[EMITTER], reducer))
+        ? flow(reduceAlongEmitter(this[EMITTER], reducer))
         : just(reducer)
     default:
       return isFunction(reducer)
-        ? new Aeroflow(reduceEmitter(this[EMITTER], reducer, seed))
+        ? flow(reduceEmitter(this[EMITTER], reducer, seed))
         : just(reducer)
   }
 }

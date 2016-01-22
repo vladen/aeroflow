@@ -1,6 +1,6 @@
 'use strict';
 
-import { Aeroflow } from './aeroflow';
+import { flow } from './flow';
 import { EMITTER } from './symbols';
 import { dateNow } from './utilites';
 
@@ -24,7 +24,7 @@ const timestampEmitter = emitter => (next, done, context) => {
   aeroflow.repeat().take(3).delay(10).timestamp().dump().run();
 */
 function timestamp() {
-  return new Aeroflow(timestampEmitter(this[EMITTER]));
+  return flow(timestampEmitter(this[EMITTER]));
 }
 
 export { timestamp, timestampEmitter };

@@ -1,16 +1,16 @@
 'use strict';
 
-import { Aeroflow } from './aeroflow';
+import { flow } from './flow';
 import { isInteger, mathFloor, mathRandom } from './utilites';
 
 const randomEmitter = (inclusiveMin, exclusiveMax) => (next, done, context) => {
-  while(context())
+  while(context.active)
     next(inclusiveMin + exclusiveMax * mathRandom());
   done();
 };
 
 const randomIntegerEmitter = (inclusiveMin, exclusiveMax) => (next, done, context) => {
-  while(context())
+  while(context.active)
     next(mathFloor(inclusiveMin + exclusiveMax * mathRandom()));
   done();
 };
@@ -29,7 +29,7 @@ const random = (inclusiveMin, exclusiveMax) => {
   inclusiveMin = +inclusiveMin || 0;
   exclusiveMax = +exclusiveMax || 1;
   exclusiveMax -= inclusiveMin;
-  return new Aeroflow(isInteger(inclusiveMin) && isInteger(exclusiveMax)
+  return flow(isInteger(inclusiveMin) && isInteger(exclusiveMax)
     ? randomIntegerEmitter(inclusiveMin, exclusiveMax)
     : randomEmitter(inclusiveMin, exclusiveMax));
 };

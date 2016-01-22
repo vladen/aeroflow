@@ -1,10 +1,12 @@
 'use strict';
 
-import { Aeroflow } from './aeroflow';
+import { flow } from './flow';
 import { EMITTER } from './symbols';
 import { reduceAlongEmitter } from './reduce';
 
-const minEmitter = emitter => reduceAlongEmitter(emitter, (minimum, value) => value < minimum ? value : minimum);
+const minEmitter = emitter => reduceAlongEmitter(
+  emitter,
+  (minimum, value) => value < minimum ? value : minimum);
 
 /**
   * Determine the minimum value emitted by this flow, returns new flow emitting only this value.
@@ -15,7 +17,7 @@ const minEmitter = emitter => reduceAlongEmitter(emitter, (minimum, value) => va
   * // done
   */
 function min() {
-  return new Aeroflow(minEmitter(this[EMITTER]));
+  return flow(minEmitter(this[EMITTER]));
 }
 
 export { min, minEmitter };

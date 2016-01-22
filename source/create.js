@@ -1,6 +1,7 @@
 'use strict';
 
-import { Aeroflow, empty } from './aeroflow';
+import { flow } from './flow';
+import { empty } from './empty';
 import { just } from './just';
 import { isFunction } from './utilites';
 
@@ -25,15 +26,15 @@ import { isFunction } from './utilites';
   */
 const create = emitter => arguments.length
   ? isFunction(emitter)
-    ? new Aeroflow((next, done, context) => {
-        let completed = false;
-        context.onend(emitter(
-          value => context() ? next() : false,
+    ? flow((next, done, context) => {
+        context.track(emitter(
+          value => {
+            if (context.active) next();
+          },
           error => {
-            if (completed) return;
-            completed = true;
+            if (!context.active) return;
             done();
-            context.end();
+            context.done();
           },
           context));
       })

@@ -1,16 +1,16 @@
 'use strict';
 
-import { Aeroflow } from './aeroflow';
+import { flow } from './flow';
 import { just } from './just';
 import { maxInteger } from './utilites';
 
 const rangeEmitter = (inclusiveStart, inclusiveEnd, step) => (next, done, context) => {
   let i = inclusiveStart - step;
   if (inclusiveStart < inclusiveEnd)
-    while (context() && (i += step) <= inclusiveEnd)
+    while (context.active && (i += step) <= inclusiveEnd)
       next(i);
   else
-    while (context() && (i += step) >= inclusiveEnd)
+    while (context.active && (i += step) >= inclusiveEnd)
       next(i);
   done();
 };
@@ -28,7 +28,7 @@ const range = (inclusiveStart, inclusiveEnd, step) => {
   step = +step || (inclusiveStart < inclusiveEnd ? 1 : -1);
   return inclusiveStart === inclusiveEnd
     ? just(inclusiveStart)
-    : new Aeroflow(rangeEmitter(inclusiveStart, inclusiveEnd, step));
+    : flow(rangeEmitter(inclusiveStart, inclusiveEnd, step));
 };
 
 export { range, rangeEmitter };

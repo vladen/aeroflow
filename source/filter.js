@@ -1,6 +1,6 @@
 'use strict';
 
-import { Aeroflow } from './aeroflow';
+import { flow } from './flow';
 import { EMITTER } from './symbols';
 import { isFunction, isNothing, isRegExp } from './utilites';
 
@@ -33,7 +33,7 @@ const filterEmitter = (emitter, predicate) => (next, done, context) => {
   * // done
   */
 function filter(predicate) {
-  return new Aeroflow(filterEmitter(
+  return flow(filterEmitter(
     this[EMITTER],
     isNothing(predicate)
       ? value => !!value

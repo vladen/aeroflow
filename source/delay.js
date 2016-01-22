@@ -1,6 +1,6 @@
 'use strict';
 
-import { Aeroflow } from './aeroflow';
+import { flow } from './flow';
 import { EMITTER } from './symbols';
 import { dateNow, isDate, isFunction, mathMax } from './utilites';
 
@@ -67,7 +67,7 @@ const delayDynamicEmitter = (emitter, selector) => (next, done, context) => {
   * // done
   */
 function delay(condition) {
-  return new Aeroflow(isFunction(condition)
+  return flow(isFunction(condition)
     ? delayDynamicEmitter(
         this[EMITTER],
         condition)

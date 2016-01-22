@@ -1,6 +1,6 @@
 'use strict';
 
-import { Aeroflow } from './aeroflow';
+import { flow } from './flow';
 import { EMITTER } from './symbols';
 import { isFunction } from './utilites';
 
@@ -32,7 +32,7 @@ const tapEmitter = (emitter, callback) => (next, done, context) => {
   */
 function tap(callback) {
   return isFunction(callback)
-    ? new Aeroflow(tapEmitter(this[EMITTER], callback))
+    ? flow(tapEmitter(this[EMITTER], callback))
     : this;
 }
 

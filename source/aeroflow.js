@@ -1,117 +1,53 @@
 'use strict';
 
-import { append } from './append';
-import { count } from './count';
+import { Aeroflow, flow } from './flow';
 import { create } from './create';
-import { delay } from './delay';
-import { dump } from './dump';
-import { every } from './every';
+import { empty, emptyEmitter } from './empty';
 import { expand } from './expand';
-import { filter } from './filter';
-import { join } from './join';
 import { just, justEmitter } from './just';
-import { map } from './map';
-import { max } from './max';
-import { min } from './min';
-import { prepend } from './prepend';
 import { random } from './random';
 import { range } from './range';
-import { reduce } from './reduce';
 import { repeat } from './repeat';
-import { run } from './run';
-import { AEROFLOW, ARRAY, CLASS, EMITTER, FUNCTION, ITERATOR, PROMISE, PROTOTYPE } from './symbols';
-import { skip } from './skip';
-import { some } from './some';
-import { sum } from './sum';
-import { take } from './take';
-import { tap } from './tap';
-import { timestamp } from './timestamp';
-import { toArray } from './toArray';
-import { toMap } from './toMap';
-import { toSet } from './toSet';
-import { objectDefineProperties, objectDefineProperty } from './utilites';
+import { AEROFLOW, ARRAY, EMITTER, FUNCTION, ITERATOR, PROMISE, PROTOTYPE } from './symbols';
+import { classOf, isFunction, isObject, objectDefineProperties } from './utilites';
 
-function Aeroflow(emitter) {
-  objectDefineProperty(this, EMITTER, { value: emitter });
-  /*
-  return this instanceof Aeroflow
-    ? objectDefineProperty(this, EMITTER, { value: emitter })
-    : new Aeroflow(emitter);
-  */
-}
-objectDefineProperties(Aeroflow[PROTOTYPE], {
-  [CLASS]: { value: AEROFLOW },
-  append: { value: append },
-  count: { value: count },
-  delay: { value: delay },
-  dump: { value: dump },
-  emitters: { value: emitters },
-  every: { value: every },
-  filter: { value: filter },
-  join: { value: join },
-  map: { value: map },
-  max: { value: max },
-  min: { value: min },
-  prepend: { value: prepend },
-  reduce: { value: reduce },
-  run: { value: run },
-  skip: { value: skip },
-  some: { value: some },
-  sum: { value: sum },
-  take: { value: take },
-  tap: { value: tap },
-  timestamp: { value: timestamp },
-  toArray: { value: toArray },
-  toMap: { value: toMap },
-  toSet: { value: toSet }
-});
+const aeroflowEmitter = source => source[EMITTER];
 
-const
-  emitters = new Map
-, aeroflowEmitter = source => source[EMITTER]
-, arrayEmitter = source => (next, done, context) => {
-    let index = -1;
-    while (context() && ++index < source.length)
-      next(source[index]);
-    done();
-  }
-, emptyEmitter = () => (_, done) => done()
-, empty = new Aeroflow(emptyEmitter())
-, functionEmitter = source => (next, done, context) => {
-    emit(source(context.data))(next, done, context);
-  }
-, promiseEmitter = source => (next, done, context) => {
-    source.then(
-      value => emit(value)(next, done, context),
-      error => {
-        done(error);
-        throwError(error);
-      });
-  }
-;
+const arrayEmitter = source => (next, done, context) => {
+  let index = -1;
+  while (context.active && ++index < source.length)
+    next(source[index]);
+  done();
+};
 
-emitters.set(AEROFLOW, aeroflowEmitter);
-emitters.set(ARRAY, arrayEmitter);
-emitters.set(FUNCTION, functionEmitter);
-emitters.set(PROMISE, promiseEmitter);
-// todo: Aerobus.Channel, Aerobus.Section
+const functionEmitter = source => (next, done, context) => emit(source(context.data))(next, done, context);
 
-// Returns function emitting values from multiple arbitrary sources.
+const promiseEmitter = source => (next, done, context) => source.then(
+  value => emit(value)(next, done, context),
+  error => done(error));
+
+const emitters = new Map(
+  [AEROFLOW, aeroflowEmitter],
+  [ARRAY, arrayEmitter],
+  [FUNCTION, functionEmitter],
+  [PROMISE, promiseEmitter]
+);
+
 function emit(...sources) {
   switch (sources.length) {
     case 0:
       return emptyEmitter(); // todo: Aeroplan
     case 1:
       const
-        emitter = emitters[classOf(source)],
-        source = sources[0];
+        source = sources[0],
+        emitter = emitters[classOf(source)];
       if (isFunction(emitter))
         return emitter(source);
       if (isObject(source) && ITERATOR in source)
-        return (source) => (next, done, context) => {
+        return (next, done, context) => {
           const iterator = source[ITERATOR]();
           let iteration;
-          while (context() && !(iteration = iterator.next()).done)
+          while (context.active && !(iteration = iterator.next()).done)
             next(iteration.value);
           done();
         };
@@ -119,28 +55,27 @@ function emit(...sources) {
     default:
       return (next, done, context) => {
         let index = -1;
-        const limit = sources.length, proceed = () => {
-          ++index < limit
-            ? emit(sources[index])(next, proceed, context)
-            : done();
-        };
+        const limit = sources.length, proceed = () => context.active && ++index < limit
+          ? emit(sources[index])(next, proceed, context)
+          : done();
         proceed();
       };
   }
 }
-
 function aeroflow(...sources) {
-  return new Aeroflow(emit(...sources));
+  return flow(emit(...sources));
 }
+// todo: Aerobus.Channel, Aerobus.Section
 objectDefineProperties(aeroflow, {
-// constructor: { value: Aeroflow },
   create: { value: create },
+  emitters: { value: emitters },
   empty: { value: empty },
   expand: { value: expand },
   just: { value: just },
+  operators: { value: Aeroflow[PROTOTYPE] },
   random: { value: random },
   range: { value: range },
   repeat: { value: repeat }
 });
 
-export { Aeroflow, aeroflow, empty };
+export default aeroflow;

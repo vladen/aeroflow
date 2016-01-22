@@ -1,6 +1,7 @@
 'use strict';
 
-import { Aeroflow, empty } from './aeroflow';
+import { flow } from './flow';
+import { empty } from './empty';
 import { EMITTER } from './symbols';
 import { toArrayEmitter } from './toArray';
 import { isFunction, isNumber, mathMax } from './utilites';
@@ -11,7 +12,7 @@ const takeFirstEmitter = (emitter, count) => (next, done, context) => {
   emitter(
     value => {
       next(value);
-      if (count <= index++) context.end();
+      if (count <= index++) context.done();
     },
     done,
     context);
@@ -33,7 +34,7 @@ const takeWhileEmitter = (emitter, predicate) => (next, done, context) => {
   emitter(
     value => predicate(value, index++, context.data)
       ? next(value)
-      : context.end(),
+      : context.done(),
     done,
     context);
 };
@@ -43,7 +44,7 @@ function take(condition) {
     ? isNumber(condition)
       ? condition === 0
         ? empty
-        : new Aeroflow(condition > 0
+        : flow(condition > 0
           ? takeFirstEmitter(
               this[EMITTER],
               condition)
@@ -51,7 +52,7 @@ function take(condition) {
               this[EMITTER],
               condition))
       : isFunction(condition)
-        ? new Aeroflow(takeWhileEmitter(
+        ? flow(takeWhileEmitter(
             this[EMITTER],
             condition))
         : condition
