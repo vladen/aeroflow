@@ -5,7 +5,6 @@ import { count } from './count';
 import { create } from './create';
 import { delay } from './delay';
 import { dump } from './dump';
-import { empty, emptyEmitter } from './empty';
 import { every } from './every';
 import { expand } from './expand';
 import { filter } from './filter';
@@ -31,27 +30,6 @@ import { toArray } from './toArray';
 import { toMap } from './toMap';
 import { toSet } from './toSet';
 import { objectDefineProperties, objectDefineProperty } from './utilites';
-
-const emitters = new Map;
-// todo: Aerobus.Channel, Aerobus.Section
-emitters.add(AEROFLOW, source => source[EMITTER]);
-emitters.add(ARRAY, source => (next, done, context) => {
-  let index = -1;
-  while (context() && ++index < source.length)
-    next(source[index]);
-  done();
-});
-emitters.add(FUNCTION, source => (next, done, context) => {
-  emit(source(context.data))(next, done, context);
-});
-emitters.add(PROMISE, source => (next, done, context) => {
-  source.then(
-    value => emit(value)(next, done, context),
-    error => {
-      done(error);
-      throwError(error);
-    });
-});
 
 function Aeroflow(emitter) {
   objectDefineProperty(this, EMITTER, { value: emitter });
@@ -87,6 +65,36 @@ objectDefineProperties(Aeroflow[PROTOTYPE], {
   toMap: { value: toMap },
   toSet: { value: toSet }
 });
+
+const
+  emitters = new Map
+, aeroflowEmitter = source => source[EMITTER]
+, arrayEmitter = source => (next, done, context) => {
+    let index = -1;
+    while (context() && ++index < source.length)
+      next(source[index]);
+    done();
+  }
+, emptyEmitter = () => (_, done) => done()
+, empty = new Aeroflow(emptyEmitter())
+, functionEmitter = source => (next, done, context) => {
+    emit(source(context.data))(next, done, context);
+  }
+, promiseEmitter = source => (next, done, context) => {
+    source.then(
+      value => emit(value)(next, done, context),
+      error => {
+        done(error);
+        throwError(error);
+      });
+  }
+;
+
+emitters.set(AEROFLOW, aeroflowEmitter);
+emitters.set(ARRAY, arrayEmitter);
+emitters.set(FUNCTION, functionEmitter);
+emitters.set(PROMISE, promiseEmitter);
+// todo: Aerobus.Channel, Aerobus.Section
 
 // Returns function emitting values from multiple arbitrary sources.
 function emit(...sources) {
@@ -125,7 +133,7 @@ function aeroflow(...sources) {
   return new Aeroflow(emit(...sources));
 }
 objectDefineProperties(aeroflow, {
-  constructor: { value: Aeroflow },
+// constructor: { value: Aeroflow },
   create: { value: create },
   empty: { value: empty },
   expand: { value: expand },
@@ -135,4 +143,4 @@ objectDefineProperties(aeroflow, {
   repeat: { value: repeat }
 });
 
-export { Aeroflow, aeroflow };
+export { Aeroflow, aeroflow, empty };

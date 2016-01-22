@@ -1,0 +1,2867 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for build\legacy\aeroflow.js</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../prettify.css" />
+    <link rel="stylesheet" href="../../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../../index.html">all files</a> / <a href="index.html">build/legacy/</a> aeroflow.js
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">26.95% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>128/475</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">1.98% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>4/202</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">2.93% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>6/205</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">27.83% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>128/460</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line low'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325
+326
+327
+328
+329
+330
+331
+332
+333
+334
+335
+336
+337
+338
+339
+340
+341
+342
+343
+344
+345
+346
+347
+348
+349
+350
+351
+352
+353
+354
+355
+356
+357
+358
+359
+360
+361
+362
+363
+364
+365
+366
+367
+368
+369
+370
+371
+372
+373
+374
+375
+376
+377
+378
+379
+380
+381
+382
+383
+384
+385
+386
+387
+388
+389
+390
+391
+392
+393
+394
+395
+396
+397
+398
+399
+400
+401
+402
+403
+404
+405
+406
+407
+408
+409
+410
+411
+412
+413
+414
+415
+416
+417
+418
+419
+420
+421
+422
+423
+424
+425
+426
+427
+428
+429
+430
+431
+432
+433
+434
+435
+436
+437
+438
+439
+440
+441
+442
+443
+444
+445
+446
+447
+448
+449
+450
+451
+452
+453
+454
+455
+456
+457
+458
+459
+460
+461
+462
+463
+464
+465
+466
+467
+468
+469
+470
+471
+472
+473
+474
+475
+476
+477
+478
+479
+480
+481
+482
+483
+484
+485
+486
+487
+488
+489
+490
+491
+492
+493
+494
+495
+496
+497
+498
+499
+500
+501
+502
+503
+504
+505
+506
+507
+508
+509
+510
+511
+512
+513
+514
+515
+516
+517
+518
+519
+520
+521
+522
+523
+524
+525
+526
+527
+528
+529
+530
+531
+532
+533
+534
+535
+536
+537
+538
+539
+540
+541
+542
+543
+544
+545
+546
+547
+548
+549
+550
+551
+552
+553
+554
+555
+556
+557
+558
+559
+560
+561
+562
+563
+564
+565
+566
+567
+568
+569
+570
+571
+572
+573
+574
+575
+576
+577
+578
+579
+580
+581
+582
+583
+584
+585
+586
+587
+588
+589
+590
+591
+592
+593
+594
+595
+596
+597
+598
+599
+600
+601
+602
+603
+604
+605
+606
+607
+608
+609
+610
+611
+612
+613
+614
+615
+616
+617
+618
+619
+620
+621
+622
+623
+624
+625
+626
+627
+628
+629
+630
+631
+632
+633
+634
+635
+636
+637
+638
+639
+640
+641
+642
+643
+644
+645
+646
+647
+648
+649
+650
+651
+652
+653
+654
+655
+656
+657
+658
+659
+660
+661
+662
+663
+664
+665
+666
+667
+668
+669
+670
+671
+672
+673
+674
+675
+676
+677
+678
+679
+680
+681
+682
+683
+684
+685
+686
+687
+688
+689
+690
+691
+692
+693
+694
+695
+696
+697
+698
+699
+700
+701
+702
+703
+704
+705
+706
+707
+708
+709
+710
+711
+712
+713
+714
+715
+716
+717
+718
+719
+720
+721
+722
+723
+724
+725
+726
+727
+728
+729
+730
+731
+732
+733
+734
+735
+736
+737
+738
+739
+740
+741
+742
+743
+744
+745
+746
+747
+748
+749
+750
+751
+752
+753
+754
+755
+756
+757
+758
+759
+760
+761
+762
+763
+764
+765
+766
+767
+768
+769
+770
+771
+772
+773
+774
+775
+776
+777
+778
+779
+780
+781
+782
+783
+784
+785
+786
+787
+788
+789
+790
+791
+792
+793
+794
+795
+796
+797
+798
+799
+800
+801
+802
+803
+804
+805
+806
+807
+808
+809
+810
+811
+812
+813
+814
+815
+816
+817
+818
+819
+820
+821
+822
+823
+824
+825
+826
+827
+828
+829
+830
+831
+832
+833
+834
+835
+836
+837
+838
+839
+840
+841
+842
+843
+844
+845
+846
+847
+848
+849
+850
+851
+852
+853
+854
+855
+856
+857
+858
+859
+860
+861
+862
+863
+864
+865
+866
+867
+868
+869
+870
+871
+872
+873
+874
+875
+876
+877
+878
+879
+880
+881
+882
+883
+884
+885
+886
+887
+888
+889
+890
+891
+892
+893
+894
+895
+896
+897
+898
+899
+900
+901
+902
+903
+904
+905
+906
+907
+908
+909
+910
+911
+912
+913
+914
+915
+916
+917
+918
+919
+920
+921
+922
+923
+924
+925
+926
+927
+928
+929
+930
+931
+932
+933
+934
+935</td><td class="line-coverage quiet"><span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">24×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">24×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">24×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">(function (global, factory) {
+  <span class="missing-if-branch" title="if path not taken" >I</span>if (typeof define === "function" &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >d</span>efine.amd) {
+<span class="cstat-no" title="statement not covered" >    define(['exports'], factory);</span>
+  } else <span class="missing-if-branch" title="else path not taken" >E</span>if (typeof exports !== "undefined") {
+    factory(exports);
+  } else {
+<span class="cstat-no" title="statement not covered" >    var mod = {</span>
+      exports: {}
+    };
+<span class="cstat-no" title="statement not covered" >    factory(mod.exports);</span>
+<span class="cstat-no" title="statement not covered" >    global.aeroflow = mod.exports;</span>
+  }
+})(this, function (exports) {
+  'use strict';
+&nbsp;
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+&nbsp;
+  function _defineProperty(obj, key, value) {
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (key in obj) {
+<span class="cstat-no" title="statement not covered" >      Object.defineProperty(obj, key, {</span>
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+&nbsp;
+    return obj;
+  }
+&nbsp;
+  var _arguments = arguments,
+      _objectDefineProperti;
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function append() {</span>
+<span class="cstat-no" title="statement not covered" >    f</span>or (var _len = arguments.length, sources = Array(_len), _key = 0; _key &lt; _len; _key++) {
+<span class="cstat-no" title="statement not covered" >      sources[_key] = arguments[_key];</span>
+    }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    return aeroflow.apply(undefined, [this].concat(sources));</span>
+  }
+&nbsp;
+  var justEmitter = <span class="fstat-no" title="function not covered" >function justEmitter(value) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done) {</span></span>
+<span class="cstat-no" title="statement not covered" >      var result = next(value);</span>
+<span class="cstat-no" title="statement not covered" >      done();</span>
+<span class="cstat-no" title="statement not covered" >      return result;</span>
+    };
+  };
+&nbsp;
+  var just = <span class="fstat-no" title="function not covered" >function just(value) {</span>
+<span class="cstat-no" title="statement not covered" >    return new Aeroflow(justEmitter(value));</span>
+  };
+&nbsp;
+  var AEROFLOW = 'Aeroflow';
+  var ARRAY = 'Array';
+  var CLASS = Symbol.toStringTag;
+  var DATE = 'Date';
+  var EMITTER = Symbol('emitter');
+  var FUNCTION = 'Function';
+  var ITERATOR = Symbol.iterator;
+  var NUMBER = 'Number';
+  var PROMISE = 'Promise';
+  var PROTOTYPE = 'prototype';
+  var REGEXP = 'RegExp';
+&nbsp;
+  var classOf$1 = <span class="fstat-no" title="function not covered" >function classOf$1(value) {</span>
+<span class="cstat-no" title="statement not covered" >    return Object.prototype.toString.call(value).slice(8, -1);</span>
+  };
+&nbsp;
+  var classIs = function classIs(className) {
+    return <span class="fstat-no" title="function not covered" >function (value) {</span>
+<span class="cstat-no" title="statement not covered" >      return classOf$1(value) === className;</span>
+    };
+  };
+&nbsp;
+  var constant = <span class="fstat-no" title="function not covered" >function constant(value) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function () {</span></span>
+<span class="cstat-no" title="statement not covered" >      return value;</span>
+    };
+  };
+&nbsp;
+  var dateNow = Date.now;
+&nbsp;
+  var identity = <span class="fstat-no" title="function not covered" >function identity(value) {</span>
+<span class="cstat-no" title="statement not covered" >    return value;</span>
+  };
+&nbsp;
+  var isDate = classIs(DATE);
+  var isFunction$1 = classIs(FUNCTION);
+  var isInteger = Number.isInteger;
+&nbsp;
+  var isNothing = <span class="fstat-no" title="function not covered" >function isNothing(value) {</span>
+<span class="cstat-no" title="statement not covered" >    return value == null;</span>
+  };
+&nbsp;
+  var isNumber = classIs(NUMBER);
+  var isRegExp = classIs(REGEXP);
+  var mathFloor = Math.floor;
+  var mathRandom = Math.random;
+  var maxInteger = Number.MAX_SAFE_INTEGER;
+  var mathMax = Math.max;
+&nbsp;
+  var noop = <span class="fstat-no" title="function not covered" >function noop() {</span>};
+&nbsp;
+  var objectDefineProperties = Object.defineProperties;
+  var objectDefineProperty = Object.defineProperty;
+&nbsp;
+  var reduceEmitter = <span class="fstat-no" title="function not covered" >function reduceEmitter(emitter, reducer, seed) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      var index = 0,</span>
+          result = seed;
+<span class="cstat-no" title="statement not covered" >      emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >        return result = reducer(result, value, index++, context.data);</span>
+      }, <span class="fstat-no" title="function not covered" >function (error) {</span>
+<span class="cstat-no" title="statement not covered" >        next(result);</span>
+<span class="cstat-no" title="statement not covered" >        done(error);</span>
+      }, context);
+    };
+  };
+&nbsp;
+  var reduceAlongEmitter = <span class="fstat-no" title="function not covered" >function reduceAlongEmitter(emitter, reducer) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      var idle = true,</span>
+          index = 1,
+          result = undefined;
+<span class="cstat-no" title="statement not covered" >      emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >        i</span>f (idle) {
+<span class="cstat-no" title="statement not covered" >          idle = false;</span>
+<span class="cstat-no" title="statement not covered" >          result = value;</span>
+        } else <span class="cstat-no" title="statement not covered" >result = reducer(result, value, index++, context.data);</span>
+      }, <span class="fstat-no" title="function not covered" >function (error) {</span>
+<span class="cstat-no" title="statement not covered" >        i</span></span>f (!idle) <span class="cstat-no" title="statement not covered" >next(result);
+<span class="cstat-no" title="statement not covered" >        done(error);</span>
+      }, context);
+    };
+  };
+&nbsp;
+  var reduceOptionalEmitter = <span class="fstat-no" title="function not covered" >function reduceOptionalEmitter(emitter, reducer, seed) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      var idle = true,</span>
+          index = 0,
+          result = seed;
+<span class="cstat-no" title="statement not covered" >      emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >        idle = false;</span>
+<span class="cstat-no" title="statement not covered" >        result = reducer(result, value, index++, context.data);</span>
+      }, <span class="fstat-no" title="function not covered" >function (error) {</span>
+<span class="cstat-no" title="statement not covered" >        i</span></span>f (!idle) <span class="cstat-no" title="statement not covered" >next(result);
+<span class="cstat-no" title="statement not covered" >        done(error);</span>
+      }, context);
+    };
+  };
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function reduce(reducer, seed) {</span>
+<span class="cstat-no" title="statement not covered" >    switch (arguments.length) {</span>
+      case 0:
+<span class="cstat-no" title="statement not covered" >        return empty;</span>
+&nbsp;
+      case 1:
+<span class="cstat-no" title="statement not covered" >        return isFunction$1(reducer) ? new Aeroflow(reduceAlongEmitter(this[EMITTER], reducer)) : just(reducer);</span>
+&nbsp;
+      default:
+<span class="cstat-no" title="statement not covered" >        return isFunction$1(reducer) ? new Aeroflow(reduceEmitter(this[EMITTER], reducer, seed)) : just(reducer);</span>
+    }
+  }
+&nbsp;
+  var countEmitter = <span class="fstat-no" title="function not covered" >function countEmitter(emitter) {</span>
+<span class="cstat-no" title="statement not covered" >    return reduceEmitter(emitter, <span class="fstat-no" title="function not covered" >function (result) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return result + 1;</span>
+    }, 0);
+  };
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function count() {</span>
+<span class="cstat-no" title="statement not covered" >    return new Aeroflow(countEmitter(this[EMITTER]));</span>
+  }
+&nbsp;
+  var create = <span class="fstat-no" title="function not covered" >function create(emitter) {</span>
+<span class="cstat-no" title="statement not covered" >    return _arguments.length ? isFunction$1(emitter) ? new Aeroflow(<span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      var completed = false;</span>
+<span class="cstat-no" title="statement not covered" >      context.onend(emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >        return context() ? next() : false;</span>
+      }, <span class="fstat-no" title="function not covered" >function (error) {</span>
+<span class="cstat-no" title="statement not covered" >        i</span></span>f (completed) <span class="cstat-no" title="statement not covered" >return;
+<span class="cstat-no" title="statement not covered" >        completed = true;</span>
+<span class="cstat-no" title="statement not covered" >        done();</span>
+<span class="cstat-no" title="statement not covered" >        context.end();</span>
+      }, context));
+    }) : just(emitter) : empty;
+  };
+&nbsp;
+  var delayEmitter = <span class="fstat-no" title="function not covered" >function delayEmitter(emitter, interval) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >        return new Promise(<span class="fstat-no" title="function not covered" >function (resolve) {</span></span>
+<span class="cstat-no" title="statement not covered" >          return setTimeout(<span class="fstat-no" title="function not covered" >function () {</span></span>
+<span class="cstat-no" title="statement not covered" >            return resolve(next(value));</span>
+          }, interval);
+        });
+      }, <span class="fstat-no" title="function not covered" >function (error) {</span>
+<span class="cstat-no" title="statement not covered" >        return new Promise(<span class="fstat-no" title="function not covered" >function (resolve) {</span></span>
+<span class="cstat-no" title="statement not covered" >          return setTimeout(<span class="fstat-no" title="function not covered" >function () {</span></span>
+<span class="cstat-no" title="statement not covered" >            return resolve(done(error));</span>
+          }, interval);
+        });
+      }, context);
+    };
+  };
+&nbsp;
+  var delayDynamicEmitter = <span class="fstat-no" title="function not covered" >function delayDynamicEmitter(emitter, selector) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      var completition = dateNow(),</span>
+          index = 0;
+<span class="cstat-no" title="statement not covered" >      emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >        var interval = selector(value, index++, context.data),</span>
+            estimation = undefined;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        i</span>f (isDate(interval)) {
+<span class="cstat-no" title="statement not covered" >          estimation = interval;</span>
+<span class="cstat-no" title="statement not covered" >          interval = interval - dateNow();</span>
+        } else <span class="cstat-no" title="statement not covered" >estimation = dateNow() + interval;</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        i</span></span>f (completition &lt; estimation) <span class="cstat-no" title="statement not covered" >completition = estimation;
+<span class="cstat-no" title="statement not covered" >        return new Promise(<span class="fstat-no" title="function not covered" >function (resolve) {</span></span>
+<span class="cstat-no" title="statement not covered" >          return setTimeout(<span class="fstat-no" title="function not covered" >function () {</span></span>
+<span class="cstat-no" title="statement not covered" >            return resolve(next(value));</span>
+          }, mathMax(interval, 0));
+        });
+      }, <span class="fstat-no" title="function not covered" >function (error) {</span>
+<span class="cstat-no" title="statement not covered" >        completition -= dateNow();</span>
+<span class="cstat-no" title="statement not covered" >        return new Promise(<span class="fstat-no" title="function not covered" >function (resolve) {</span></span>
+<span class="cstat-no" title="statement not covered" >          return setTimeout(<span class="fstat-no" title="function not covered" >function () {</span></span>
+<span class="cstat-no" title="statement not covered" >            return resolve(done(error));</span>
+          }, mathMax(completition, 0));
+        });
+      }, context);
+    };
+  };
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function delay(condition) {</span>
+<span class="cstat-no" title="statement not covered" >    return new Aeroflow(isFunction$1(condition) ? delayDynamicEmitter(this[EMITTER], condition) : isDate(condition) ? delayDynamicEmitter(this[EMITTER], <span class="fstat-no" title="function not covered" >function () {</span></span>
+<span class="cstat-no" title="statement not covered" >      return mathMax(condition - new Date(), 0);</span>
+    }) : delayEmitter(this[EMITTER], mathMax(+condition || 0, 0)));
+  }
+&nbsp;
+  var dumpToConsoleEmitter = <span class="fstat-no" title="function not covered" >function dumpToConsoleEmitter(emitter, prefix) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >        console.log(prefix + 'next', value);</span>
+<span class="cstat-no" title="statement not covered" >        next(value);</span>
+      }, <span class="fstat-no" title="function not covered" >function (error) {</span>
+<span class="cstat-no" title="statement not covered" >        error ? console.error(prefix + 'done', error) : console.log(prefix + 'done');</span>
+<span class="cstat-no" title="statement not covered" >        done(error);</span>
+      }, context);
+    };
+  };
+&nbsp;
+  var dumpToLoggerEmitter = <span class="fstat-no" title="function not covered" >function dumpToLoggerEmitter(emitter, prefix, logger) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >        logger(prefix + 'next', value);</span>
+<span class="cstat-no" title="statement not covered" >        next(value);</span>
+      }, <span class="fstat-no" title="function not covered" >function (error) {</span>
+<span class="cstat-no" title="statement not covered" >        error ? logger(prefix + 'done', error) : logger(prefix + 'done');</span>
+<span class="cstat-no" title="statement not covered" >        done(error);</span>
+      }, context);
+    };
+  };
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function dump(prefix, logger) {</span>
+<span class="cstat-no" title="statement not covered" >    return new Aeroflow(arguments.length === 0 ? dumpToConsoleEmitter(this[EMITTER], '') : arguments.length === 1 ? isFunction$1(prefix) ? dumpToLoggerEmitter(this[EMITTER], '', prefix) : dumpToConsoleEmitter(this[EMITTER], '') : isFunction$1(logger) ? isNothing(prefix) ? dumpToLoggerEmitter(this[EMITTER], '', logger) : dumpToLoggerEmitter(this[EMITTER], prefix, logger) : dumpToConsoleEmitter(this[EMITTER], prefix));</span>
+  }
+&nbsp;
+  var everyEmitter = <span class="fstat-no" title="function not covered" >function everyEmitter(emitter, predicate) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      var idle = true,</span>
+          result = true;
+<span class="cstat-no" title="statement not covered" >      context = context.spawn();</span>
+<span class="cstat-no" title="statement not covered" >      emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >        idle = false;</span>
+<span class="cstat-no" title="statement not covered" >        i</span></span>f (!predicate(value)) <span class="cstat-no" title="statement not covered" >return;
+<span class="cstat-no" title="statement not covered" >        result = false;</span>
+<span class="cstat-no" title="statement not covered" >        context.end();</span>
+      }, <span class="fstat-no" title="function not covered" >function (error) {</span>
+<span class="cstat-no" title="statement not covered" >        next(result &amp;&amp; !idle);</span>
+<span class="cstat-no" title="statement not covered" >        done(error);</span>
+      }, context);
+    };
+  };
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function every(predicate) {</span>
+<span class="cstat-no" title="statement not covered" >    return new Aeroflow(everyEmitter(this[EMITTER], isNothing(predicate) ? <span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return !!value;</span>
+    } : isFunction$1(predicate) ? predicate : isRegExp(predicate) ? <span class="fstat-no" title="function not covered" >function (value) {</span>
+<span class="cstat-no" title="statement not covered" >      return predicate.test(value);</span>
+    } : <span class="fstat-no" title="function not covered" >function (value) {</span>
+<span class="cstat-no" title="statement not covered" >      return value === predicate;</span>
+    }));
+  }
+&nbsp;
+  var repeatEmitter = <span class="fstat-no" title="function not covered" >function repeatEmitter(value) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      w</span>hile (context()) {
+<span class="cstat-no" title="statement not covered" >        next(value);</span>
+      }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      done();</span>
+    };
+  };
+&nbsp;
+  var repeatDynamicEmitter = <span class="fstat-no" title="function not covered" >function repeatDynamicEmitter(repeater) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      var index = 0,</span>
+          result = undefined;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      w</span>hile (context() &amp;&amp; false !== (result = repeater(index++, context.data))) {
+<span class="cstat-no" title="statement not covered" >        next(result);</span>
+      }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      done();</span>
+    };
+  };
+&nbsp;
+  var repeat = <span class="fstat-no" title="function not covered" >function repeat(value) {</span>
+<span class="cstat-no" title="statement not covered" >    return new Aeroflow(isFunction$1(value) ? repeatDynamicEmitter(value) : repeatEmitter(value));</span>
+  };
+&nbsp;
+  var expandEmitter = <span class="fstat-no" title="function not covered" >function expandEmitter(expander, seed) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      var index = 0,</span>
+          value = seed;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      w</span>hile (context()) {
+<span class="cstat-no" title="statement not covered" >        next(value = expander(value, index++, context.data));</span>
+      }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      done();</span>
+    };
+  };
+&nbsp;
+  var expand = <span class="fstat-no" title="function not covered" >function expand(expander, seed) {</span>
+<span class="cstat-no" title="statement not covered" >    return isFunction$1(expander) ? new Aeroflow(expandEmitter(expander, seed)) : repeatEmitter(expander);</span>
+  };
+&nbsp;
+  var filterEmitter = <span class="fstat-no" title="function not covered" >function filterEmitter(emitter, predicate) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      var index = 0;</span>
+<span class="cstat-no" title="statement not covered" >      emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >        return predicate(value, index++, context.data) ? next(value) : true;</span>
+      }, done, context);
+    };
+  };
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function filter(predicate) {</span>
+<span class="cstat-no" title="statement not covered" >    return new Aeroflow(filterEmitter(this[EMITTER], isNothing(predicate) ? <span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return !!value;</span>
+    } : isFunction$1(predicate) ? predicate : isRegExp(predicate) ? <span class="fstat-no" title="function not covered" >function (value) {</span>
+<span class="cstat-no" title="statement not covered" >      return predicate.test(value);</span>
+    } : <span class="fstat-no" title="function not covered" >function (value) {</span>
+<span class="cstat-no" title="statement not covered" >      return value === predicate;</span>
+    }));
+  }
+&nbsp;
+  var joinEmitter = <span class="fstat-no" title="function not covered" >function joinEmitter(emitter, joiner) {</span>
+<span class="cstat-no" title="statement not covered" >    return reduceOptionalEmitter(emitter, <span class="fstat-no" title="function not covered" >function (result, value, index, data) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return result.length ? result + joiner(value, index, data) + value : value;</span>
+    }, '');
+  };
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function join(separator) {</span>
+<span class="cstat-no" title="statement not covered" >    return new Aeroflow(joinEmitter(this[EMITTER], arguments.length ? isFunction$1(separator) ? separator : <span class="fstat-no" title="function not covered" >function () {</span></span>
+<span class="cstat-no" title="statement not covered" >      return '' + separator;</span>
+    } : <span class="fstat-no" title="function not covered" >function () {</span>
+<span class="cstat-no" title="statement not covered" >      return ',';</span>
+    }));
+  }
+&nbsp;
+  var mapEmitter = <span class="fstat-no" title="function not covered" >function mapEmitter(emitter, mapper) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      var index = 0;</span>
+<span class="cstat-no" title="statement not covered" >      emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >        return next(mapper(value, index++, context.data));</span>
+      }, done, context);
+    };
+  };
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function map(mapper) {</span>
+<span class="cstat-no" title="statement not covered" >    return arguments.length ? new Aeroflow(mapEmitter(this[EMITTER], isFunction$1(mapper) ? mapper : constant(mapper))) : this;</span>
+  }
+&nbsp;
+  var maxEmitter = <span class="fstat-no" title="function not covered" >function maxEmitter(emitter) {</span>
+<span class="cstat-no" title="statement not covered" >    return reduceAlongEmitter(emitter, <span class="fstat-no" title="function not covered" >function (maximum, value) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return value &gt; maximum ? value : maximum;</span>
+    });
+  };
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function max() {</span>
+<span class="cstat-no" title="statement not covered" >    return new Aeroflow(maxEmitter(this[EMITTER]));</span>
+  }
+&nbsp;
+  var minEmitter = <span class="fstat-no" title="function not covered" >function minEmitter(emitter) {</span>
+<span class="cstat-no" title="statement not covered" >    return reduceAlongEmitter(emitter, <span class="fstat-no" title="function not covered" >function (minimum, value) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return value &lt; minimum ? value : minimum;</span>
+    });
+  };
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function min() {</span>
+<span class="cstat-no" title="statement not covered" >    return new Aeroflow(minEmitter(this[EMITTER]));</span>
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function prepend() {</span>
+<span class="cstat-no" title="statement not covered" >    f</span>or (var _len2 = arguments.length, sources = Array(_len2), _key2 = 0; _key2 &lt; _len2; _key2++) {
+<span class="cstat-no" title="statement not covered" >      sources[_key2] = arguments[_key2];</span>
+    }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    return aeroflow.apply(undefined, sources.concat([this]));</span>
+  }
+&nbsp;
+  var randomEmitter = <span class="fstat-no" title="function not covered" >function randomEmitter(inclusiveMin, exclusiveMax) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      w</span>hile (context()) {
+<span class="cstat-no" title="statement not covered" >        next(inclusiveMin + exclusiveMax * mathRandom());</span>
+      }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      done();</span>
+    };
+  };
+&nbsp;
+  var randomIntegerEmitter = <span class="fstat-no" title="function not covered" >function randomIntegerEmitter(inclusiveMin, exclusiveMax) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      w</span>hile (context()) {
+<span class="cstat-no" title="statement not covered" >        next(mathFloor(inclusiveMin + exclusiveMax * mathRandom()));</span>
+      }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      done();</span>
+    };
+  };
+&nbsp;
+  var random = <span class="fstat-no" title="function not covered" >function random(inclusiveMin, exclusiveMax) {</span>
+<span class="cstat-no" title="statement not covered" >    inclusiveMin = +inclusiveMin || 0;</span>
+<span class="cstat-no" title="statement not covered" >    exclusiveMax = +exclusiveMax || 1;</span>
+<span class="cstat-no" title="statement not covered" >    exclusiveMax -= inclusiveMin;</span>
+<span class="cstat-no" title="statement not covered" >    return new Aeroflow(isInteger(inclusiveMin) &amp;&amp; isInteger(exclusiveMax) ? randomIntegerEmitter(inclusiveMin, exclusiveMax) : randomEmitter(inclusiveMin, exclusiveMax));</span>
+  };
+&nbsp;
+  var rangeEmitter = <span class="fstat-no" title="function not covered" >function rangeEmitter(inclusiveStart, inclusiveEnd, step) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      var i = inclusiveStart - step;</span>
+<span class="cstat-no" title="statement not covered" >      if (inclusiveStart &lt; inclusiveEnd) <span class="cstat-no" title="statement not covered" >w</span>hile (context() &amp;&amp; (i += step) &lt;= inclusiveEnd) {</span>
+<span class="cstat-no" title="statement not covered" >        next(i);</span>
+      } else <span class="cstat-no" title="statement not covered" >w</span>hile (context() &amp;&amp; (i += step) &gt;= inclusiveEnd) {
+<span class="cstat-no" title="statement not covered" >        next(i);</span>
+      }
+<span class="cstat-no" title="statement not covered" >      done();</span>
+    };
+  };
+&nbsp;
+  var range = <span class="fstat-no" title="function not covered" >function range(inclusiveStart, inclusiveEnd, step) {</span>
+<span class="cstat-no" title="statement not covered" >    inclusiveEnd = +inclusiveEnd || maxInteger;</span>
+<span class="cstat-no" title="statement not covered" >    inclusiveStart = +inclusiveStart || 0;</span>
+<span class="cstat-no" title="statement not covered" >    step = +step || (inclusiveStart &lt; inclusiveEnd ? 1 : -1);</span>
+<span class="cstat-no" title="statement not covered" >    return inclusiveStart === inclusiveEnd ? just(inclusiveStart) : new Aeroflow(rangeEmitter(inclusiveStart, inclusiveEnd, step));</span>
+  };
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function createContext(flow, data) {</span>
+<span class="cstat-no" title="statement not covered" >    var active = true,</span>
+        callbacks = [],
+        context = <span class="fstat-no" title="function not covered" >function context() {</span>
+<span class="cstat-no" title="statement not covered" >      return active;</span>
+    },
+        end = <span class="fstat-no" title="function not covered" >function end() {</span>
+<span class="cstat-no" title="statement not covered" >      i</span>f (active) {
+<span class="cstat-no" title="statement not covered" >        active = false;</span>
+<span class="cstat-no" title="statement not covered" >        callbacks.forEach(<span class="fstat-no" title="function not covered" >function (callback) {</span></span>
+<span class="cstat-no" title="statement not covered" >          return callback();</span>
+        });
+      }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      return false;</span>
+    },
+        onend = <span class="fstat-no" title="function not covered" >function onend(callback) {</span>
+<span class="cstat-no" title="statement not covered" >      i</span></span>f (isFunction$1(callback)) <span class="cstat-no" title="statement not covered" >active ? callbacks.push(callback) : callback();
+<span class="cstat-no" title="statement not covered" >      return callback;</span>
+    },
+        spawn = <span class="fstat-no" title="function not covered" >function spawn() {</span>
+<span class="cstat-no" title="statement not covered" >      return onend(createContext(flow, data).end);</span>
+    };
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    return objectDefineProperties(context, {</span>
+      data: {
+        value: data
+      },
+      flow: {
+        value: flow
+      },
+      end: {
+        value: end
+      },
+      onend: {
+        value: onend
+      },
+      spawn: {
+        value: spawn
+      }
+    });
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function run(next, done, data) {</span>
+<span class="cstat-no" title="statement not covered" >    i</span></span>f (!isFunction$1(done)) <span class="cstat-no" title="statement not covered" >done = noop;
+<span class="cstat-no" title="statement not covered" >    i</span></span>f (!isFunction$1(next)) <span class="cstat-no" title="statement not covered" >next = noop;
+<span class="cstat-no" title="statement not covered" >    var context = createContext(this, data),</span>
+        emitter = this[EMITTER];
+<span class="cstat-no" title="statement not covered" >    setImmediate(<span class="fstat-no" title="function not covered" >function () {</span></span>
+<span class="cstat-no" title="statement not covered" >      var index = 0;</span>
+<span class="cstat-no" title="statement not covered" >      emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >        return next(value, index++, context);</span>
+      }, <span class="fstat-no" title="function not covered" >function (error) {</span>
+<span class="cstat-no" title="statement not covered" >        context.end();</span>
+<span class="cstat-no" title="statement not covered" >        done(error, index, context);</span>
+      }, context);
+    });
+<span class="cstat-no" title="statement not covered" >    return this;</span>
+  }
+&nbsp;
+  var toArrayEmitter = <span class="fstat-no" title="function not covered" >function toArrayEmitter(emitter) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      var result = [];</span>
+<span class="cstat-no" title="statement not covered" >      emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >        return result.push(value);</span>
+      }, <span class="fstat-no" title="function not covered" >function (error) {</span>
+<span class="cstat-no" title="statement not covered" >        next(result);</span>
+<span class="cstat-no" title="statement not covered" >        done(error);</span>
+      }, context);
+    };
+  };
+&nbsp;
+  var toArrayTransformingEmitter = <span class="fstat-no" title="function not covered" >function toArrayTransformingEmitter(emitter, transformer) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      var index = 0,</span>
+          result = [];
+<span class="cstat-no" title="statement not covered" >      emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >        return result.push(transformer(value, index++, context.data));</span>
+      }, <span class="fstat-no" title="function not covered" >function (error) {</span>
+<span class="cstat-no" title="statement not covered" >        next(result);</span>
+<span class="cstat-no" title="statement not covered" >        done(error);</span>
+      }, context);
+    };
+  };
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function toArray(transformer) {</span>
+<span class="cstat-no" title="statement not covered" >    return new Aeroflow(arguments.length ? isFunction$1(transformer) ? toArrayTransformingEmitter(this[EMITTER], transformer) : toArrayTransformingEmitter(this[EMITTER], constant(transformer)) : toArrayEmitter(this[EMITTER]));</span>
+  }
+&nbsp;
+  var skipAllEmitter = <span class="fstat-no" title="function not covered" >function skipAllEmitter(emitter) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return emitter(noop, done, context);</span>
+    };
+  };
+&nbsp;
+  var skipFirstEmitter = <span class="fstat-no" title="function not covered" >function skipFirstEmitter(emitter, count) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      var index = -1;</span>
+<span class="cstat-no" title="statement not covered" >      emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >        return ++index &lt; count ? false : next(value);</span>
+      }, done, context);
+    };
+  };
+&nbsp;
+  var skipLastEmitter = <span class="fstat-no" title="function not covered" >function skipLastEmitter(emitter, count) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return toArrayEmitter(emitter)(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >        f</span>or (var index = -1, limit = value.length - count; ++index &lt; limit;) {
+<span class="cstat-no" title="statement not covered" >          next(value[index]);</span>
+        }
+      }, done, context);
+    };
+  };
+&nbsp;
+  var skipWhileEmitter = <span class="fstat-no" title="function not covered" >function skipWhileEmitter(emitter, predicate) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      var index = 0,</span>
+          skipping = true;
+<span class="cstat-no" title="statement not covered" >      emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >        i</span></span>f (skipping &amp;&amp; !predicate(value, index++, context.data)) <span class="cstat-no" title="statement not covered" >skipping = false;
+<span class="cstat-no" title="statement not covered" >        i</span></span>f (!skipping) <span class="cstat-no" title="statement not covered" >next(value);
+      }, done, context);
+    };
+  };
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function skip(condition) {</span>
+<span class="cstat-no" title="statement not covered" >    return arguments.length ? isNumber(condition) ? condition === 0 ? this : new Aeroflow(condition &gt; 0 ? skipFirstEmitter(this[EMITTER], condition) : skipLastEmitter(this[EMITTER], -condition)) : isFunction$1(condition) ? new Aeroflow(skipWhileEmitter(this[EMITTER], condition)) : condition ? new Aeroflow(skipAllEmitter(this[EMITTER])) : this : new Aeroflow(skipAllEmitter(this[EMITTER]));</span>
+  }
+&nbsp;
+  var someEmitter = <span class="fstat-no" title="function not covered" >function someEmitter(emitter, predicate) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      var result = false;</span>
+<span class="cstat-no" title="statement not covered" >      context = context.spawn();</span>
+<span class="cstat-no" title="statement not covered" >      emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >        i</span></span>f (!predicate(value)) <span class="cstat-no" title="statement not covered" >return;
+<span class="cstat-no" title="statement not covered" >        result = true;</span>
+<span class="cstat-no" title="statement not covered" >        context.end();</span>
+      }, <span class="fstat-no" title="function not covered" >function (error) {</span>
+<span class="cstat-no" title="statement not covered" >        next(result);</span>
+<span class="cstat-no" title="statement not covered" >        done(error);</span>
+      }, context);
+    };
+  };
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function some(predicate) {</span>
+<span class="cstat-no" title="statement not covered" >    return new Aeroflow(someEmitter(this[EMITTER], arguments.length ? isFunction$1(predicate) ? predicate : isRegExp(predicate) ? <span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return predicate.test(value);</span>
+    } : <span class="fstat-no" title="function not covered" >function (value) {</span>
+<span class="cstat-no" title="statement not covered" >      return value === predicate;</span>
+    } : <span class="fstat-no" title="function not covered" >function (value) {</span>
+<span class="cstat-no" title="statement not covered" >      return !!value;</span>
+    }));
+  }
+&nbsp;
+  var sumEmitter = <span class="fstat-no" title="function not covered" >function sumEmitter(emitter) {</span>
+<span class="cstat-no" title="statement not covered" >    return reduceEmitter(emitter, <span class="fstat-no" title="function not covered" >function (result, value) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return result + value;</span>
+    }, 0);
+  };
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function sum() {</span>
+<span class="cstat-no" title="statement not covered" >    return new Aeroflow(sumEmitter(this[EMITTER]));</span>
+  }
+&nbsp;
+  var takeFirstEmitter = <span class="fstat-no" title="function not covered" >function takeFirstEmitter(emitter, count) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      var index = 1;</span>
+<span class="cstat-no" title="statement not covered" >      context = context.spawn();</span>
+<span class="cstat-no" title="statement not covered" >      emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >        next(value);</span>
+<span class="cstat-no" title="statement not covered" >        i</span></span>f (count &lt;= index++) <span class="cstat-no" title="statement not covered" >context.end();
+      }, done, context);
+    };
+  };
+&nbsp;
+  var takeLastEmitter = <span class="fstat-no" title="function not covered" >function takeLastEmitter(emitter, count) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return toArrayEmitter(emitter)(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >        var limit = value.length;</span>
+<span class="cstat-no" title="statement not covered" >        var index = mathMax(limit - 1 - count, 0);</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        w</span>hile (index &lt; limit) {
+<span class="cstat-no" title="statement not covered" >          next(value[index++]);</span>
+        }
+      }, done, context);
+    };
+  };
+&nbsp;
+  var takeWhileEmitter = <span class="fstat-no" title="function not covered" >function takeWhileEmitter(emitter, predicate) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      var index = 0;</span>
+<span class="cstat-no" title="statement not covered" >      context = context.spawn();</span>
+<span class="cstat-no" title="statement not covered" >      emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >        return predicate(value, index++, context.data) ? next(value) : context.end();</span>
+      }, done, context);
+    };
+  };
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function take(condition) {</span>
+<span class="cstat-no" title="statement not covered" >    return arguments.length ? isNumber(condition) ? condition === 0 ? empty : new Aeroflow(condition &gt; 0 ? takeFirstEmitter(this[EMITTER], condition) : takeLastEmitter(this[EMITTER], condition)) : isFunction$1(condition) ? new Aeroflow(takeWhileEmitter(this[EMITTER], condition)) : condition ? this : empty : this;</span>
+  }
+&nbsp;
+  var tapEmitter = <span class="fstat-no" title="function not covered" >function tapEmitter(emitter, callback) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      var index = 0;</span>
+<span class="cstat-no" title="statement not covered" >      emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >        callback(value, index++, context.data);</span>
+<span class="cstat-no" title="statement not covered" >        return next(value);</span>
+      }, done, context);
+    };
+  };
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function tap(callback) {</span>
+<span class="cstat-no" title="statement not covered" >    return isFunction$1(callback) ? new Aeroflow(tapEmitter(this[EMITTER], callback)) : this;</span>
+  }
+&nbsp;
+  var timestampEmitter = <span class="fstat-no" title="function not covered" >function timestampEmitter(emitter) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      var past = dateNow();</span>
+<span class="cstat-no" title="statement not covered" >      emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >        var current = dateNow();</span>
+<span class="cstat-no" title="statement not covered" >        next({</span>
+          timedelta: current - past,
+          timestamp: dateNow,
+          value: value
+        });
+<span class="cstat-no" title="statement not covered" >        past = current;</span>
+      }, done, context);
+    };
+  };
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function timestamp() {</span>
+<span class="cstat-no" title="statement not covered" >    return new Aeroflow(timestampEmitter(this[EMITTER]));</span>
+  }
+&nbsp;
+  var toMapEmitter = <span class="fstat-no" title="function not covered" >function toMapEmitter(emitter) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      var result = new Map();</span>
+<span class="cstat-no" title="statement not covered" >      emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >        return result.set(value, value);</span>
+      }, <span class="fstat-no" title="function not covered" >function (error) {</span>
+<span class="cstat-no" title="statement not covered" >        next(result);</span>
+<span class="cstat-no" title="statement not covered" >        done(error);</span>
+      }, context);
+    };
+  };
+&nbsp;
+  var toMapTransformingEmitter = <span class="fstat-no" title="function not covered" >function toMapTransformingEmitter(emitter, keyTransformer, valueTransformer) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      var index = 0,</span>
+          result = new Map();
+<span class="cstat-no" title="statement not covered" >      emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >        return result.set(keyTransformer(value, index++, context.data), valueTransformer(value, index++, context.data));</span>
+      }, <span class="fstat-no" title="function not covered" >function (error) {</span>
+<span class="cstat-no" title="statement not covered" >        next(result);</span>
+<span class="cstat-no" title="statement not covered" >        done(error);</span>
+      }, context);
+    };
+  };
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function toMap(keyTransformer, valueTransformer) {</span>
+<span class="cstat-no" title="statement not covered" >    return new Aeroflow(arguments.length === 0 ? toMapEmitter(this[EMITTER]) : toMapTransformingEmitter(this[EMITTER], isFunction$1(keyTransformer) ? keyTransformer : constant(keyTransformer), arguments.length === 1 ? identity : isFunction$1(valueTransformer) ? keyTransformer : constant(valueTransformer)));</span>
+  }
+&nbsp;
+  var toSetEmitter = <span class="fstat-no" title="function not covered" >function toSetEmitter(emitter) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      var result = new Set();</span>
+<span class="cstat-no" title="statement not covered" >      emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >        return result.add(value);</span>
+      }, <span class="fstat-no" title="function not covered" >function (error) {</span>
+<span class="cstat-no" title="statement not covered" >        next(result);</span>
+<span class="cstat-no" title="statement not covered" >        done(error);</span>
+      }, context);
+    };
+  };
+&nbsp;
+  var toSetTransformingEmitter = <span class="fstat-no" title="function not covered" >function toSetTransformingEmitter(emitter, transformer) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      var index = 0,</span>
+          result = new Set();
+<span class="cstat-no" title="statement not covered" >      emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >        return result.add(transformer(value, index++, context.data));</span>
+      }, <span class="fstat-no" title="function not covered" >function (error) {</span>
+<span class="cstat-no" title="statement not covered" >        next(result);</span>
+<span class="cstat-no" title="statement not covered" >        done(error);</span>
+      }, context);
+    };
+  };
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function toSet(transformer) {</span>
+<span class="cstat-no" title="statement not covered" >    return new Aeroflow(arguments.length === 0 ? toSetEmitter(this[EMITTER]) : toSetTransformingEmitter(this[EMITTER], isFunction$1(transformer) ? transformer : constant(transformer)));</span>
+  }
+&nbsp;
+  function Aeroflow(emitter) {
+    objectDefineProperty(this, EMITTER, {
+      value: emitter
+    });
+  }
+&nbsp;
+  objectDefineProperties(Aeroflow[PROTOTYPE], (_objectDefineProperti = {}, _defineProperty(_objectDefineProperti, CLASS, {
+    value: AEROFLOW
+  }), _defineProperty(_objectDefineProperti, 'append', {
+    value: append
+  }), _defineProperty(_objectDefineProperti, 'count', {
+    value: count
+  }), _defineProperty(_objectDefineProperti, 'delay', {
+    value: delay
+  }), _defineProperty(_objectDefineProperti, 'dump', {
+    value: dump
+  }), _defineProperty(_objectDefineProperti, 'emitters', {
+    value: emitters
+  }), _defineProperty(_objectDefineProperti, 'every', {
+    value: every
+  }), _defineProperty(_objectDefineProperti, 'filter', {
+    value: filter
+  }), _defineProperty(_objectDefineProperti, 'join', {
+    value: join
+  }), _defineProperty(_objectDefineProperti, 'map', {
+    value: map
+  }), _defineProperty(_objectDefineProperti, 'max', {
+    value: max
+  }), _defineProperty(_objectDefineProperti, 'min', {
+    value: min
+  }), _defineProperty(_objectDefineProperti, 'prepend', {
+    value: prepend
+  }), _defineProperty(_objectDefineProperti, 'reduce', {
+    value: reduce
+  }), _defineProperty(_objectDefineProperti, 'run', {
+    value: run
+  }), _defineProperty(_objectDefineProperti, 'skip', {
+    value: skip
+  }), _defineProperty(_objectDefineProperti, 'some', {
+    value: some
+  }), _defineProperty(_objectDefineProperti, 'sum', {
+    value: sum
+  }), _defineProperty(_objectDefineProperti, 'take', {
+    value: take
+  }), _defineProperty(_objectDefineProperti, 'tap', {
+    value: tap
+  }), _defineProperty(_objectDefineProperti, 'timestamp', {
+    value: timestamp
+  }), _defineProperty(_objectDefineProperti, 'toArray', {
+    value: toArray
+  }), _defineProperty(_objectDefineProperti, 'toMap', {
+    value: toMap
+  }), _defineProperty(_objectDefineProperti, 'toSet', {
+    value: toSet
+  }), _objectDefineProperti));
+  var emitters = new Map();
+&nbsp;
+  var aeroflowEmitter = <span class="fstat-no" title="function not covered" >function aeroflowEmitter(source) {</span>
+<span class="cstat-no" title="statement not covered" >    return source[EMITTER];</span>
+  };
+&nbsp;
+  var arrayEmitter = <span class="fstat-no" title="function not covered" >function arrayEmitter(source) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      var index = -1;</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      w</span>hile (context() &amp;&amp; ++index &lt; source.length) {
+<span class="cstat-no" title="statement not covered" >        next(source[index]);</span>
+      }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      done();</span>
+    };
+  };
+&nbsp;
+  var emptyEmitter = function emptyEmitter() {
+    return <span class="fstat-no" title="function not covered" >function (_, done) {</span>
+<span class="cstat-no" title="statement not covered" >      return done();</span>
+    };
+  };
+&nbsp;
+  var empty = new Aeroflow(emptyEmitter());
+&nbsp;
+  var functionEmitter = <span class="fstat-no" title="function not covered" >function functionEmitter(source) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      emit(source(context.data))(next, done, context);</span>
+    };
+  };
+&nbsp;
+  var promiseEmitter = <span class="fstat-no" title="function not covered" >function promiseEmitter(source) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      source.then(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >        return emit(value)(next, done, context);</span>
+      }, <span class="fstat-no" title="function not covered" >function (error) {</span>
+<span class="cstat-no" title="statement not covered" >        done(error);</span>
+<span class="cstat-no" title="statement not covered" >        throwError(error);</span>
+      });
+    };
+  };
+&nbsp;
+  emitters.set(AEROFLOW, aeroflowEmitter);
+  emitters.set(ARRAY, arrayEmitter);
+  emitters.set(FUNCTION, functionEmitter);
+  emitters.set(PROMISE, promiseEmitter);
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function emit() {</span>
+<span class="cstat-no" title="statement not covered" >    f</span>or (var _len3 = arguments.length, sources = Array(_len3), _key3 = 0; _key3 &lt; _len3; _key3++) {
+<span class="cstat-no" title="statement not covered" >      sources[_key3] = arguments[_key3];</span>
+    }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    switch (sources.length) {</span>
+      case 0:
+<span class="cstat-no" title="statement not covered" >        return emptyEmitter();</span>
+&nbsp;
+      case 1:
+<span class="cstat-no" title="statement not covered" >        var emitter = emitters[classOf(source)],</span>
+            source = sources[0];
+<span class="cstat-no" title="statement not covered" >        i</span></span>f (isFunction(emitter)) <span class="cstat-no" title="statement not covered" >return emitter(source);
+<span class="cstat-no" title="statement not covered" >        i</span></span>f (isObject(source) &amp;&amp; ITERATOR in source) <span class="cstat-no" title="statement not covered" >return <span class="fstat-no" title="function not covered" >function (source) {</span>
+<span class="cstat-no" title="statement not covered" >          return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >            var iterator = source[ITERATOR]();</span>
+<span class="cstat-no" title="statement not covered" >            var iteration = undefined;</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >            w</span>hile (context() &amp;&amp; !(iteration = iterator.next()).done) {
+<span class="cstat-no" title="statement not covered" >              next(iteration.value);</span>
+            }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >            done();</span>
+          };
+        };
+<span class="cstat-no" title="statement not covered" >        return justEmitter(source);</span>
+&nbsp;
+      default:
+<span class="cstat-no" title="statement not covered" >        return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >          var index = -1;</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >          var limit = sources.length,</span>
+              proceed = <span class="fstat-no" title="function not covered" >function proceed() {</span>
+<span class="cstat-no" title="statement not covered" >            ++index &lt; limit ? emit(sources[index])(next, proceed, context) : done();</span>
+          };
+&nbsp;
+<span class="cstat-no" title="statement not covered" >          proceed();</span>
+        };
+    }
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function aeroflow() {</span>
+<span class="cstat-no" title="statement not covered" >    return new Aeroflow(emit.apply(undefined, arguments));</span>
+  }
+&nbsp;
+  objectDefineProperties(aeroflow, {
+    create: {
+      value: create
+    },
+    empty: {
+      value: empty
+    },
+    expand: {
+      value: expand
+    },
+    just: {
+      value: just
+    },
+    random: {
+      value: random
+    },
+    range: {
+      value: range
+    },
+    repeat: {
+      value: repeat
+    }
+  });
+  exports.Aeroflow = Aeroflow;
+  exports.aeroflow = aeroflow;
+  exports.empty = empty;
+});
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Fri Jan 22 2016 16:45:06 GMT+0300 (Belarus Standard Time)
+</div>
+</div>
+<script src="../../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../../sorter.js"></script>
+</body>
+</html>
