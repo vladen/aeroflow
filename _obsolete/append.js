@@ -20,8 +20,6 @@ import aeroflow from './aeroflow';
 * // next 6 // after 500ms
 * // done
 */
-function append(...sources) {
+export default function append(...sources) {
   return aeroflow(this, ...sources);
 }
-
-export { append };

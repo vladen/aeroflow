@@ -1,9 +1,7 @@
 'use strict';
 
-import { flow } from './flow';
-import { empty } from './empty';
-import { just } from './just';
-import { isFunction } from './utilites';
+import { create as createEmitter } from './emitters';
+import flow from './flow';
 
 /**
   * Creates programmatically controlled flow.
@@ -24,21 +22,6 @@ import { isFunction } from './utilites';
   * // next 2 // after 1000ms
   * // done
   */
-const create = emitter => arguments.length
-  ? isFunction(emitter)
-    ? flow((next, done, context) => {
-        context.track(emitter(
-          value => {
-            if (context.active) next();
-          },
-          error => {
-            if (!context.active) return;
-            done();
-            context.done();
-          },
-          context));
-      })
-    : just(emitter)
-  : empty;
-
-export { create };
+export default function create(emitter) {
+  return flow(createEmitter(emitter));
+}

@@ -2,9 +2,10 @@
 
 import { isFunction, objectDefineProperties, objectDefineProperty } from './utilites';
 
-const CALLBACKS = Symbol('callbacks'), COMPLETED = Symbol('completed');
+const CALLBACKS = Symbol('callbacks');
+const COMPLETED = Symbol('completed');
 
-export class Context {
+class Context {
   constructor(flow, data) {
     objectDefineProperties(this, {
       [CALLBACKS]: { value: [] },
@@ -35,3 +36,5 @@ export class Context {
     else this[CALLBACKS].push(callback);
   }
 }
+
+export { Context };

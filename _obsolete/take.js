@@ -1,7 +1,7 @@
 'use strict';
 
+import { empty } from './aeroflow';
 import { flow } from './flow';
-import { empty } from './empty';
 import { EMITTER } from './symbols';
 import { toArrayEmitter } from './toArray';
 import { isFunction, isNumber, mathMax } from './utilites';

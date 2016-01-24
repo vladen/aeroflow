@@ -24,6 +24,7 @@ export const mathRandom = Math.random;
 export const maxInteger = Number.MAX_SAFE_INTEGER;
 export const mathMax = Math.max;
 export const noop = () => {};
+export const objectCreate = Object.create;
 export const objectDefineProperties = Object.defineProperties;
 export const objectDefineProperty = Object.defineProperty;
 export const throwError = error => {

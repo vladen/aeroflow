@@ -1,7 +1,6 @@
 'use strict';
 
-import { flow } from './flow';
-import { empty } from './empty';
+import { empty } from './aeroflow';
 import { just } from './just';
 import { EMITTER } from './symbols';
 import { isFunction } from './utilites';
