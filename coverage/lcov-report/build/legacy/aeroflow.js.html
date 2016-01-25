@@ -20,24 +20,24 @@
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">33.33% </span>
+        <span class="strong">27.83% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>106/318</span>
+        <span class='fraction'>155/557</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">9.82% </span>
+        <span class="strong">5.42% </span>
         <span class="quiet">Branches</span>
-        <span class='fraction'>11/112</span>
+        <span class='fraction'>11/203</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">9.65% </span>
+        <span class="strong">4.72% </span>
         <span class="quiet">Functions</span>
-        <span class='fraction'>11/114</span>
+        <span class='fraction'>11/233</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">34.9% </span>
+        <span class="strong">29.2% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>104/298</span>
+        <span class='fraction'>153/524</span>
       </div>
     </div>
   </div>
@@ -677,7 +677,497 @@
 632
 633
 634
-635</td><td class="line-coverage quiet"><span class="cline-any cline-yes">1×</span>
+635
+636
+637
+638
+639
+640
+641
+642
+643
+644
+645
+646
+647
+648
+649
+650
+651
+652
+653
+654
+655
+656
+657
+658
+659
+660
+661
+662
+663
+664
+665
+666
+667
+668
+669
+670
+671
+672
+673
+674
+675
+676
+677
+678
+679
+680
+681
+682
+683
+684
+685
+686
+687
+688
+689
+690
+691
+692
+693
+694
+695
+696
+697
+698
+699
+700
+701
+702
+703
+704
+705
+706
+707
+708
+709
+710
+711
+712
+713
+714
+715
+716
+717
+718
+719
+720
+721
+722
+723
+724
+725
+726
+727
+728
+729
+730
+731
+732
+733
+734
+735
+736
+737
+738
+739
+740
+741
+742
+743
+744
+745
+746
+747
+748
+749
+750
+751
+752
+753
+754
+755
+756
+757
+758
+759
+760
+761
+762
+763
+764
+765
+766
+767
+768
+769
+770
+771
+772
+773
+774
+775
+776
+777
+778
+779
+780
+781
+782
+783
+784
+785
+786
+787
+788
+789
+790
+791
+792
+793
+794
+795
+796
+797
+798
+799
+800
+801
+802
+803
+804
+805
+806
+807
+808
+809
+810
+811
+812
+813
+814
+815
+816
+817
+818
+819
+820
+821
+822
+823
+824
+825
+826
+827
+828
+829
+830
+831
+832
+833
+834
+835
+836
+837
+838
+839
+840
+841
+842
+843
+844
+845
+846
+847
+848
+849
+850
+851
+852
+853
+854
+855
+856
+857
+858
+859
+860
+861
+862
+863
+864
+865
+866
+867
+868
+869
+870
+871
+872
+873
+874
+875
+876
+877
+878
+879
+880
+881
+882
+883
+884
+885
+886
+887
+888
+889
+890
+891
+892
+893
+894
+895
+896
+897
+898
+899
+900
+901
+902
+903
+904
+905
+906
+907
+908
+909
+910
+911
+912
+913
+914
+915
+916
+917
+918
+919
+920
+921
+922
+923
+924
+925
+926
+927
+928
+929
+930
+931
+932
+933
+934
+935
+936
+937
+938
+939
+940
+941
+942
+943
+944
+945
+946
+947
+948
+949
+950
+951
+952
+953
+954
+955
+956
+957
+958
+959
+960
+961
+962
+963
+964
+965
+966
+967
+968
+969
+970
+971
+972
+973
+974
+975
+976
+977
+978
+979
+980
+981
+982
+983
+984
+985
+986
+987
+988
+989
+990
+991
+992
+993
+994
+995
+996
+997
+998
+999
+1000
+1001
+1002
+1003
+1004
+1005
+1006
+1007
+1008
+1009
+1010
+1011
+1012
+1013
+1014
+1015
+1016
+1017
+1018
+1019
+1020
+1021
+1022
+1023
+1024
+1025
+1026
+1027
+1028
+1029
+1030
+1031
+1032
+1033
+1034
+1035
+1036
+1037
+1038
+1039
+1040
+1041
+1042
+1043
+1044
+1045
+1046
+1047
+1048
+1049
+1050
+1051
+1052
+1053
+1054
+1055
+1056
+1057
+1058
+1059
+1060
+1061
+1062
+1063
+1064
+1065
+1066
+1067
+1068
+1069
+1070
+1071
+1072
+1073
+1074
+1075
+1076
+1077
+1078
+1079
+1080
+1081
+1082
+1083
+1084
+1085
+1086
+1087
+1088
+1089
+1090
+1091
+1092
+1093
+1094
+1095
+1096
+1097
+1098
+1099
+1100
+1101
+1102
+1103
+1104
+1105
+1106
+1107
+1108
+1109
+1110
+1111
+1112
+1113
+1114
+1115
+1116
+1117
+1118
+1119
+1120
+1121
+1122
+1123
+1124
+1125</td><td class="line-coverage quiet"><span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
@@ -699,7 +1189,7 @@
 <span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-yes">13×</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -707,10 +1197,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-yes">13×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-yes">13×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
@@ -746,18 +1236,32 @@
 <span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">4×</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-yes">1×</span>
@@ -766,9 +1270,11 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -802,54 +1308,112 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
@@ -858,13 +1422,26 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -872,24 +1449,48 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
@@ -921,27 +1522,55 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -950,50 +1579,102 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1002,68 +1683,193 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1080,10 +1886,14 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1092,39 +1902,84 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1157,24 +2012,92 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1201,7 +2124,46 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1215,39 +2177,56 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1279,6 +2258,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1313,17 +2293,17 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">(function (global, factory) {
   <span class="missing-if-branch" title="if path not taken" >I</span>if (typeof define === "function" &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >d</span>efine.amd) {
-<span class="cstat-no" title="statement not covered" >    define(['exports'], factory);</span>
+<span class="cstat-no" title="statement not covered" >    define(['module', 'exports'], factory);</span>
   } else <span class="missing-if-branch" title="else path not taken" >E</span>if (typeof exports !== "undefined") {
-    factory(exports);
+    factory(module, exports);
   } else {
 <span class="cstat-no" title="statement not covered" >    var mod = {</span>
       exports: {}
     };
-<span class="cstat-no" title="statement not covered" >    factory(mod.exports);</span>
+<span class="cstat-no" title="statement not covered" >    factory(mod, mod.exports);</span>
 <span class="cstat-no" title="statement not covered" >    global.aeroflow = mod.exports;</span>
   }
-})(this, function (exports) {
+})(this, function (module, exports) {
   'use strict';
 &nbsp;
   Object.defineProperty(exports, "__esModule", {
@@ -1373,13 +2353,16 @@
 &nbsp;
   var AEROFLOW = 'Aeroflow';
   var ARRAY = 'Array';
+  var BOOLEAN = 'Boolean';
   var CLASS = Symbol.toStringTag;
   var DATE = 'Date';
-  var EMITTER = Symbol('emitter');
   var FUNCTION = 'Function';
   var ITERATOR = Symbol.iterator;
+  var NUMBER = 'Number';
   var PROMISE = 'Promise';
   var PROTOTYPE = 'prototype';
+  var REGEXP = 'RegExp';
+  var SYMBOL = 'Symbol';
 &nbsp;
   var classOf = <span class="fstat-no" title="function not covered" >function classOf(value) {</span>
 <span class="cstat-no" title="statement not covered" >    return Object.prototype.toString.call(value).slice(8, -1);</span>
@@ -1391,15 +2374,28 @@
     };
   };
 &nbsp;
+  var constant = <span class="fstat-no" title="function not covered" >function constant(value) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function () {</span></span>
+<span class="cstat-no" title="statement not covered" >      return value;</span>
+    };
+  };
+&nbsp;
   var dateNow = Date.now;
+&nbsp;
+  var identity$1 = <span class="fstat-no" title="function not covered" >function identity$1(value) {</span>
+<span class="cstat-no" title="statement not covered" >    return value;</span>
+  };
+&nbsp;
   var isDate = classIs(DATE);
   var isFunction$1 = classIs(FUNCTION);
   var isInteger = Number.isInteger;
 &nbsp;
-  var isNothing = <span class="fstat-no" title="function not covered" >function isNothing(value) {</span>
+  var isNothing$1 = <span class="fstat-no" title="function not covered" >function isNothing$1(value) {</span>
 <span class="cstat-no" title="statement not covered" >    return value == null;</span>
   };
 &nbsp;
+  var isNumber = classIs(NUMBER);
+  var isRegExp = classIs(REGEXP);
   var mathFloor = Math.floor;
   var mathRandom = Math.random;
   var mathMax = Math.max;
@@ -1428,11 +2424,120 @@
     };
   }
 &nbsp;
+<span class="fstat-no" title="function not covered" >  function functionEmitter(source) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      next(source(context.data));</span>
+<span class="cstat-no" title="statement not covered" >      done();</span>
+    };
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function promiseEmitter(source) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return source.then(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >        return next(value);</span>
+      }, <span class="fstat-no" title="function not covered" >function (error) {</span>
+<span class="cstat-no" title="statement not covered" >        return done(error);</span>
+      });
+    };
+  }
+&nbsp;
 <span class="fstat-no" title="function not covered" >  function valueEmitter(value) {</span>
 <span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done) {</span></span>
 <span class="cstat-no" title="statement not covered" >      next(value);</span>
 <span class="cstat-no" title="statement not covered" >      done();</span>
     };
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function customEmitter(emitter) {</span>
+<span class="cstat-no" title="statement not covered" >    return arguments.length ? isFunction$1(emitter) ? <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return context.track(emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >        i</span></span>f (context.active) <span class="cstat-no" title="statement not covered" >next();
+      }, <span class="fstat-no" title="function not covered" >function (error) {</span>
+<span class="cstat-no" title="statement not covered" >        i</span></span>f (!context.active) <span class="cstat-no" title="statement not covered" >return;
+<span class="cstat-no" title="statement not covered" >        done();</span>
+<span class="cstat-no" title="statement not covered" >        context.done();</span>
+      }, context));
+    } : valueEmitter(emitter) : emptyEmitter();
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function expandEmitter(expanding, seed) {</span>
+<span class="cstat-no" title="statement not covered" >    var expander = isFunction$1(expanding) ? expanding : constant(expanding);</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      var index = 0,</span>
+          value = seed;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      w</span>hile (context.active) {
+<span class="cstat-no" title="statement not covered" >        next(value = expander(value, index++, context.data));</span>
+      }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      done();</span>
+    };
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function randomDecimalEmitter(inclusiveMin, exclusiveMax) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      w</span>hile (context.active) {
+<span class="cstat-no" title="statement not covered" >        next(inclusiveMin + exclusiveMax * mathRandom());</span>
+      }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      done();</span>
+    };
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function randomIntegerEmitter(inclusiveMin, exclusiveMax) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      w</span>hile (context.active) {
+<span class="cstat-no" title="statement not covered" >        next(mathFloor(inclusiveMin + exclusiveMax * mathRandom()));</span>
+      }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      done();</span>
+    };
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function randomEmitter(inclusiveMin, exclusiveMax) {</span>
+<span class="cstat-no" title="statement not covered" >    inclusiveMin = +inclusiveMin || 0;</span>
+<span class="cstat-no" title="statement not covered" >    exclusiveMax = +exclusiveMax || 1;</span>
+<span class="cstat-no" title="statement not covered" >    exclusiveMax -= inclusiveMin;</span>
+<span class="cstat-no" title="statement not covered" >    return isInteger(inclusiveMin) &amp;&amp; isInteger(exclusiveMax) ? randomIntegerEmitter(inclusiveMin, exclusiveMax) : randomDecimalEmitter(inclusiveMin, exclusiveMax);</span>
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function rangeEmitter(inclusiveStart, inclusiveEnd, step) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      var i = inclusiveStart - step;</span>
+<span class="cstat-no" title="statement not covered" >      if (inclusiveStart &lt; inclusiveEnd) <span class="cstat-no" title="statement not covered" >w</span>hile (context.active &amp;&amp; (i += step) &lt;= inclusiveEnd) {</span>
+<span class="cstat-no" title="statement not covered" >        next(i);</span>
+      } else <span class="cstat-no" title="statement not covered" >w</span>hile (context.active &amp;&amp; (i += step) &gt;= inclusiveEnd) {
+<span class="cstat-no" title="statement not covered" >        next(i);</span>
+      }
+<span class="cstat-no" title="statement not covered" >      done();</span>
+    };
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function repeatDynamicEmitter(repeater) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      var index = 0,</span>
+          result = undefined;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      w</span>hile (context.active &amp;&amp; false !== (result = repeater(index++, context.data))) {
+<span class="cstat-no" title="statement not covered" >        next(result);</span>
+      }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      done();</span>
+    };
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function repeatStaticEmitter(value) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >      w</span>hile (context.active) {
+<span class="cstat-no" title="statement not covered" >        next(value);</span>
+      }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      done();</span>
+    };
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function repeatEmitter(value) {</span>
+<span class="cstat-no" title="statement not covered" >    return isFunction(value) ? repeatDynamicEmitter(value) : repeatStaticEmitter(value);</span>
   }
 &nbsp;
 <span class="fstat-no" title="function not covered" >  function reduceAlongOperator(reducer) {</span>
@@ -1506,27 +2611,13 @@
     }
   }
 &nbsp;
-<span class="fstat-no" title="function not covered" >  function countOperator() {</span>
-<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (emitter) {</span></span>
-<span class="cstat-no" title="statement not covered" >      return reduceGeneralOperator(emitter, <span class="fstat-no" title="function not covered" >function (result) {</span></span>
-<span class="cstat-no" title="statement not covered" >        return result + 1;</span>
-      }, 0);
-    };
+<span class="fstat-no" title="function not covered" >  function countOperator(optional) {</span>
+<span class="cstat-no" title="statement not covered" >    return (optional ? reduceOptionalOperator : reduceGeneralOperator)(<span class="fstat-no" title="function not covered" >function (result) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return result + 1;</span>
+    }, 0);
   }
 &nbsp;
-<span class="fstat-no" title="function not covered" >  function customEmitter(emitter) {</span>
-<span class="cstat-no" title="statement not covered" >    return arguments.length ? isFunction$1(emitter) ? <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
-<span class="cstat-no" title="statement not covered" >      return context.track(emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
-<span class="cstat-no" title="statement not covered" >        i</span></span>f (context.active) <span class="cstat-no" title="statement not covered" >next();
-      }, <span class="fstat-no" title="function not covered" >function (error) {</span>
-<span class="cstat-no" title="statement not covered" >        i</span></span>f (!context.active) <span class="cstat-no" title="statement not covered" >return;
-<span class="cstat-no" title="statement not covered" >        done();</span>
-<span class="cstat-no" title="statement not covered" >        context.done();</span>
-      }, context));
-    } : valueEmitter(emitter) : emptyEmitter();
-  }
-&nbsp;
-<span class="fstat-no" title="function not covered" >  function delayDynamicOperator(emitter, selector) {</span>
+<span class="fstat-no" title="function not covered" >  function delayDynamicOperator(selector) {</span>
 <span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (emitter) {</span></span>
 <span class="cstat-no" title="statement not covered" >      return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
 <span class="cstat-no" title="statement not covered" >        var completition = dateNow(),</span>
@@ -1554,7 +2645,7 @@
     };
   }
 &nbsp;
-<span class="fstat-no" title="function not covered" >  function delayStaticOperator(emitter, interval) {</span>
+<span class="fstat-no" title="function not covered" >  function delayStaticOperator(interval) {</span>
 <span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (emitter) {</span></span>
 <span class="cstat-no" title="statement not covered" >      return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
 <span class="cstat-no" title="statement not covered" >        return emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
@@ -1576,156 +2667,364 @@
     }) : delayStaticOperator(mathMax(+condition || 0, 0));
   }
 &nbsp;
+<span class="fstat-no" title="function not covered" >  function dumpToConsoleOperator(prefix) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (emitter) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >        return emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >          console.log(prefix + 'next', value);</span>
+<span class="cstat-no" title="statement not covered" >          next(value);</span>
+        }, <span class="fstat-no" title="function not covered" >function (error) {</span>
+<span class="cstat-no" title="statement not covered" >          error ? console.error(prefix + 'done', error) : console.log(prefix + 'done');</span>
+<span class="cstat-no" title="statement not covered" >          done(error);</span>
+        }, context);
+      };
+    };
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function dumpToLoggerOperator(prefix, logger) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (emitter) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >        return emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >          logger(prefix + 'next', value);</span>
+<span class="cstat-no" title="statement not covered" >          next(value);</span>
+        }, <span class="fstat-no" title="function not covered" >function (error) {</span>
+<span class="cstat-no" title="statement not covered" >          error ? logger(prefix + 'done', error) : logger(prefix + 'done');</span>
+<span class="cstat-no" title="statement not covered" >          done(error);</span>
+        }, context);
+      };
+    };
+  }
+&nbsp;
 <span class="fstat-no" title="function not covered" >  function dumpOperator(prefix, logger) {</span>
-<span class="cstat-no" title="statement not covered" >    return arguments.length === 0 ? dumpToConsoleEmitter('') : arguments.length === 1 ? isFunction$1(prefix) ? dumpToLoggerEmitter('', prefix) : dumpToConsoleEmitter('') : isFunction$1(logger) ? isNothing(prefix) ? dumpToLoggerEmitter('', logger) : dumpToLoggerEmitter(prefix, logger) : dumpToConsoleEmitter(prefix);</span>
+<span class="cstat-no" title="statement not covered" >    return isFunction$1(prefix) ? dumpToLoggerOperator('', prefix) : isFunction$1(logger) ? dumpToLoggerOperator(prefix, logger) : isNothing$1(prefix) ? dumpToConsoleOperator('') : dumpToConsoleOperator(prefix);</span>
   }
 &nbsp;
-<span class="fstat-no" title="function not covered" >  function expandEmitter(expander, seed) {</span>
-<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
-<span class="cstat-no" title="statement not covered" >      var index = 0,</span>
-          value = seed;
-&nbsp;
-<span class="cstat-no" title="statement not covered" >      w</span>hile (context.active) {
-<span class="cstat-no" title="statement not covered" >        next(value = expander(value, index++, context.data));</span>
-      }
-&nbsp;
-<span class="cstat-no" title="statement not covered" >      done();</span>
+<span class="fstat-no" title="function not covered" >  function everyOperator(condition) {</span>
+<span class="cstat-no" title="statement not covered" >    var predicate = isFunction$1(condition) ? condition : isRegExp(condition) ? <span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return condition.test(value);</span>
+    } : <span class="fstat-no" title="function not covered" >function (value) {</span>
+<span class="cstat-no" title="statement not covered" >      return value === condition;</span>
+    };
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (emitter) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >        var idle = true,</span>
+            result = true;
+<span class="cstat-no" title="statement not covered" >        context = context.spawn();</span>
+<span class="cstat-no" title="statement not covered" >        emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >          idle = false;</span>
+<span class="cstat-no" title="statement not covered" >          i</span></span>f (!predicate(value)) <span class="cstat-no" title="statement not covered" >return;
+<span class="cstat-no" title="statement not covered" >          result = false;</span>
+<span class="cstat-no" title="statement not covered" >          context.done();</span>
+        }, <span class="fstat-no" title="function not covered" >function (error) {</span>
+<span class="cstat-no" title="statement not covered" >          next(result &amp;&amp; !idle);</span>
+<span class="cstat-no" title="statement not covered" >          done(error);</span>
+        }, context);
+      };
     };
   }
 &nbsp;
-<span class="fstat-no" title="function not covered" >  function functionEmitter(source) {</span>
-<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
-<span class="cstat-no" title="statement not covered" >      return next(source(context.data));</span>
+<span class="fstat-no" title="function not covered" >  function filterOperator(condition) {</span>
+<span class="cstat-no" title="statement not covered" >    var predicate = isFunction$1(condition) ? condition : isRegExp(condition) ? <span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return condition.test(value);</span>
+    } : isNothing$1(condition) ? <span class="fstat-no" title="function not covered" >function (value) {</span>
+<span class="cstat-no" title="statement not covered" >      return !!value;</span>
+    } : <span class="fstat-no" title="function not covered" >function (value) {</span>
+<span class="cstat-no" title="statement not covered" >      return value === condition;</span>
+    };
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (emitter) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >        var index = 0;</span>
+<span class="cstat-no" title="statement not covered" >        emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >          i</span></span>f (predicate(value, index++, context.data)) <span class="cstat-no" title="statement not covered" >next(value);
+        }, done, context);
+      };
     };
   }
 &nbsp;
-<span class="fstat-no" title="function not covered" >  function iterableEmitter(source) {</span>
-<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
-<span class="cstat-no" title="statement not covered" >      var iterator = source[ITERATOR]();</span>
-<span class="cstat-no" title="statement not covered" >      var iteration = undefined;</span>
+<span class="fstat-no" title="function not covered" >  function joinOperator(separator, optional) {</span>
+<span class="cstat-no" title="statement not covered" >    var joiner = isFunction$1(separator) ? separator : isNothing$1(separator) ? <span class="fstat-no" title="function not covered" >function () {</span></span>
+<span class="cstat-no" title="statement not covered" >      return ',';</span>
+    } : <span class="fstat-no" title="function not covered" >function () {</span>
+<span class="cstat-no" title="statement not covered" >      return separator;</span>
+    };
+<span class="cstat-no" title="statement not covered" >    return (optional ? reduceOptionalOperator : reduceGeneralOperator)(<span class="fstat-no" title="function not covered" >function (result, value, index, data) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return result.length ? result + joiner(value, index, data) + value : value;</span>
+    }, '');
+  }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >      w</span>hile (context.active &amp;&amp; !(iteration = iterator.next()).done) {
-<span class="cstat-no" title="statement not covered" >        next(iteration.value);</span>
-      }
-&nbsp;
-<span class="cstat-no" title="statement not covered" >      done();</span>
+<span class="fstat-no" title="function not covered" >  function mapOperator(mapping) {</span>
+<span class="cstat-no" title="statement not covered" >    i</span></span>f (isNothing$1(mapping)) <span class="cstat-no" title="statement not covered" >return identity$1;
+<span class="cstat-no" title="statement not covered" >    var mapper = isFunction$1(mapping) ? mapping : constant(mapping);</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (emitter) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >        var index = 0;</span>
+<span class="cstat-no" title="statement not covered" >        emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >          return next(mapper(value, index++, context.data));</span>
+        }, done, context);
+      };
     };
   }
 &nbsp;
-<span class="fstat-no" title="function not covered" >  function promiseEmitter(source) {</span>
-<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
-<span class="cstat-no" title="statement not covered" >      return source.then(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
-<span class="cstat-no" title="statement not covered" >        return next(value);</span>
-      }, <span class="fstat-no" title="function not covered" >function (error) {</span>
-<span class="cstat-no" title="statement not covered" >        return done(error);</span>
-      });
+<span class="fstat-no" title="function not covered" >  function maxOperator() {</span>
+<span class="cstat-no" title="statement not covered" >    return reduceAlongOperator(<span class="fstat-no" title="function not covered" >function (maximum, value) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return value &gt; maximum ? value : maximum;</span>
+    });
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function toArrayOperator() {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (emitter) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >        var result = [];</span>
+<span class="cstat-no" title="statement not covered" >        emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >          return result.push(value);</span>
+        }, <span class="fstat-no" title="function not covered" >function (error) {</span>
+<span class="cstat-no" title="statement not covered" >          next(result);</span>
+<span class="cstat-no" title="statement not covered" >          done(error);</span>
+        }, context);
+      };
     };
   }
 &nbsp;
-<span class="fstat-no" title="function not covered" >  function randomDecimalEmitter(inclusiveMin, exclusiveMax) {</span>
-<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
-<span class="cstat-no" title="statement not covered" >      w</span>hile (context.active) {
-<span class="cstat-no" title="statement not covered" >        next(inclusiveMin + exclusiveMax * mathRandom());</span>
-      }
-&nbsp;
-<span class="cstat-no" title="statement not covered" >      done();</span>
+<span class="fstat-no" title="function not covered" >  function meanOperator() {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (emitter) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >        return toArrayOperator()(emitter)(<span class="fstat-no" title="function not covered" >function (values) {</span></span>
+<span class="cstat-no" title="statement not covered" >          i</span></span>f (!values.length) <span class="cstat-no" title="statement not covered" >return;
+<span class="cstat-no" title="statement not covered" >          values.sort();</span>
+<span class="cstat-no" title="statement not covered" >          next(values[mathFloor(values.length / 2)]);</span>
+        }, done, context);
+      };
     };
   }
 &nbsp;
-<span class="fstat-no" title="function not covered" >  function randomIntegerEmitter(inclusiveMin, exclusiveMax) {</span>
-<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
-<span class="cstat-no" title="statement not covered" >      w</span>hile (context.active) {
-<span class="cstat-no" title="statement not covered" >        next(mathFloor(inclusiveMin + exclusiveMax * mathRandom()));</span>
-      }
+<span class="fstat-no" title="function not covered" >  function minOperator() {</span>
+<span class="cstat-no" title="statement not covered" >    return reduceAlongOperator(<span class="fstat-no" title="function not covered" >function (minimum, value) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return value &lt; minimum ? value : minimum;</span>
+    });
+  }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >      done();</span>
+<span class="fstat-no" title="function not covered" >  function skipAllOperator() {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (emitter) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >        return emitter(noop, done, context);</span>
+      };
     };
   }
 &nbsp;
-<span class="fstat-no" title="function not covered" >  function randomEmitter(inclusiveMin, exclusiveMax) {</span>
-<span class="cstat-no" title="statement not covered" >    inclusiveMin = +inclusiveMin || 0;</span>
-<span class="cstat-no" title="statement not covered" >    exclusiveMax = +exclusiveMax || 1;</span>
-<span class="cstat-no" title="statement not covered" >    exclusiveMax -= inclusiveMin;</span>
-<span class="cstat-no" title="statement not covered" >    return isInteger(inclusiveMin) &amp;&amp; isInteger(exclusiveMax) ? randomIntegerEmitter(inclusiveMin, exclusiveMax) : randomDecimalEmitter(inclusiveMin, exclusiveMax);</span>
-  }
-&nbsp;
-<span class="fstat-no" title="function not covered" >  function rangeEmitter(inclusiveStart, inclusiveEnd, step) {</span>
-<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
-<span class="cstat-no" title="statement not covered" >      var i = inclusiveStart - step;</span>
-<span class="cstat-no" title="statement not covered" >      if (inclusiveStart &lt; inclusiveEnd) <span class="cstat-no" title="statement not covered" >w</span>hile (context.active &amp;&amp; (i += step) &lt;= inclusiveEnd) {</span>
-<span class="cstat-no" title="statement not covered" >        next(i);</span>
-      } else <span class="cstat-no" title="statement not covered" >w</span>hile (context.active &amp;&amp; (i += step) &gt;= inclusiveEnd) {
-<span class="cstat-no" title="statement not covered" >        next(i);</span>
-      }
-<span class="cstat-no" title="statement not covered" >      done();</span>
+<span class="fstat-no" title="function not covered" >  function skipFirstOperator(count) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (emitter) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >        var index = -1;</span>
+<span class="cstat-no" title="statement not covered" >        emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >          i</span></span>f (++index &gt;= count) <span class="cstat-no" title="statement not covered" >next(value);
+        }, done, context);
+      };
     };
   }
 &nbsp;
-<span class="fstat-no" title="function not covered" >  function repeatDynamicEmitter(repeater) {</span>
-<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
-<span class="cstat-no" title="statement not covered" >      var index = 0,</span>
-          result = undefined;
-&nbsp;
-<span class="cstat-no" title="statement not covered" >      w</span>hile (context.active &amp;&amp; false !== (result = repeater(index++, context.data))) {
-<span class="cstat-no" title="statement not covered" >        next(result);</span>
-      }
-&nbsp;
-<span class="cstat-no" title="statement not covered" >      done();</span>
+<span class="fstat-no" title="function not covered" >  function skipLastOperator(count) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (emitter) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >        return toArrayOperator()(emitter)(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >          f</span>or (var index = -1, limit = value.length - count; ++index &lt; limit;) {
+<span class="cstat-no" title="statement not covered" >            next(value[index]);</span>
+          }
+        }, done, context);
+      };
     };
   }
 &nbsp;
-<span class="fstat-no" title="function not covered" >  function repeatStaticEmitter(value) {</span>
-<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
-<span class="cstat-no" title="statement not covered" >      w</span>hile (context.active) {
-<span class="cstat-no" title="statement not covered" >        next(value);</span>
-      }
-&nbsp;
-<span class="cstat-no" title="statement not covered" >      done();</span>
+<span class="fstat-no" title="function not covered" >  function skipWhileOperator(predicate) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (emitter) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >        var index = 0,</span>
+            skipping = true;
+<span class="cstat-no" title="statement not covered" >        emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >          i</span></span>f (skipping &amp;&amp; !predicate(value, index++, context.data)) <span class="cstat-no" title="statement not covered" >skipping = false;
+<span class="cstat-no" title="statement not covered" >          i</span></span>f (!skipping) <span class="cstat-no" title="statement not covered" >next(value);
+        }, done, context);
+      };
     };
   }
 &nbsp;
-<span class="fstat-no" title="function not covered" >  function repeatEmitter(value) {</span>
-<span class="cstat-no" title="statement not covered" >    return isFunction(value) ? repeatDynamicEmitter(value) : repeatStaticEmitter(value);</span>
+<span class="fstat-no" title="function not covered" >  function skipOperator(condition) {</span>
+<span class="cstat-no" title="statement not covered" >    return arguments.length ? isNumber(condition) ? condition === 0 ? identity : condition &gt; 0 ? skipFirstOperator(condition) : skipLastOperator(-condition) : isFunction$1(condition) ? skipWhileOperator(condition) : condition ? skipAllOperator() : identity : skipAllOperator();</span>
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function someOperator(condition) {</span>
+<span class="cstat-no" title="statement not covered" >    var predicate = isFunction$1(condition) ? condition : isRegExp(condition) ? <span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return condition.test(value);</span>
+    } : <span class="fstat-no" title="function not covered" >function (value) {</span>
+<span class="cstat-no" title="statement not covered" >      return value === condition;</span>
+    };
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (emitter) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >        var result = false;</span>
+<span class="cstat-no" title="statement not covered" >        context = context.spawn();</span>
+<span class="cstat-no" title="statement not covered" >        emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >          i</span></span>f (!predicate(value)) <span class="cstat-no" title="statement not covered" >return;
+<span class="cstat-no" title="statement not covered" >          result = true;</span>
+<span class="cstat-no" title="statement not covered" >          context.done();</span>
+        }, <span class="fstat-no" title="function not covered" >function (error) {</span>
+<span class="cstat-no" title="statement not covered" >          next(result);</span>
+<span class="cstat-no" title="statement not covered" >          done(error);</span>
+        }, context);
+      };
+    };
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function sumOperator() {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (emitter) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return reduceGeneralOperator(<span class="fstat-no" title="function not covered" >function (result, value) {</span></span>
+<span class="cstat-no" title="statement not covered" >        return result + value;</span>
+      }, 0);
+    };
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function takeFirstOperator(count) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (emitter) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >        var index = 1;</span>
+<span class="cstat-no" title="statement not covered" >        context = context.spawn();</span>
+<span class="cstat-no" title="statement not covered" >        emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >          next(value);</span>
+<span class="cstat-no" title="statement not covered" >          i</span></span>f (count &lt;= index++) <span class="cstat-no" title="statement not covered" >context.done();
+        }, done, context);
+      };
+    };
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function takeLastOperator(count) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (emitter) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >        return toArrayOperator()(emitter)(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >          var limit = value.length;</span>
+<span class="cstat-no" title="statement not covered" >          var index = mathMax(limit - 1 - count, 0);</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >          w</span>hile (index &lt; limit) {
+<span class="cstat-no" title="statement not covered" >            next(value[index++]);</span>
+          }
+        }, done, context);
+      };
+    };
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function takeWhileOperator(predicate) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (emitter) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >        var index = 0;</span>
+<span class="cstat-no" title="statement not covered" >        context = context.spawn();</span>
+<span class="cstat-no" title="statement not covered" >        emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >          i</span></span></span>f (predicate(value, index++, context.data)) <span class="cstat-no" title="statement not covered" >next(value);else <span class="cstat-no" title="statement not covered" >context.done();
+        }, done, context);
+      };
+    };
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function takeOperator(condition) {</span>
+<span class="cstat-no" title="statement not covered" >    return arguments.length ? isNumber(condition) ? condition === 0 ? emptyEmitter() : condition &gt; 0 ? takeFirstOperator(condition) : takeLastOperator(condition) : isFunction$1(condition) ? takeWhileOperator(condition) : condition ? identity$1 : emptyEmitter() : identity$1;</span>
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function tapOperator(callback) {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (emitter) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return isFunction$1(callback) ? <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >        var index = 0;</span>
+<span class="cstat-no" title="statement not covered" >        emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >          callback(value, index++, context.data);</span>
+<span class="cstat-no" title="statement not covered" >          return next(value);</span>
+        }, done, context);
+      } : emitter;
+    };
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function timestampOperator() {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (emitter) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >        var past = dateNow();</span>
+<span class="cstat-no" title="statement not covered" >        emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >          var current = dateNow();</span>
+<span class="cstat-no" title="statement not covered" >          next({</span>
+            timedelta: current - past,
+            timestamp: dateNow,
+            value: value
+          });
+<span class="cstat-no" title="statement not covered" >          past = current;</span>
+        }, done, context);
+      };
+    };
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function toMapOperator(keyTransformation, valueTransformation) {</span>
+<span class="cstat-no" title="statement not covered" >    var keyTransformer = isNothing(keyTransformation) ? identity$1 : isFunction$1(keyTransformation) ? keyTransformation : constant(keyTransformation);</span>
+<span class="cstat-no" title="statement not covered" >    var valueTransformer = isNothing(valueTransformation) ? identity$1 : isFunction$1(valueTransformation) ? valueTransformation : constant(valueTransformation);</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (emitter) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >        var index = 0,</span>
+            result = new Map();
+<span class="cstat-no" title="statement not covered" >        emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >          return result.set(keyTransformer(value, index++, context.data), valueTransformer(value, index++, context.data));</span>
+        }, <span class="fstat-no" title="function not covered" >function (error) {</span>
+<span class="cstat-no" title="statement not covered" >          next(result);</span>
+<span class="cstat-no" title="statement not covered" >          done(error);</span>
+        }, context);
+      };
+    };
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function toSetOperator() {</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (emitter) {</span></span>
+<span class="cstat-no" title="statement not covered" >      return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+<span class="cstat-no" title="statement not covered" >        var result = new Set();</span>
+<span class="cstat-no" title="statement not covered" >        emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
+<span class="cstat-no" title="statement not covered" >          result.add(value);</span>
+        }, <span class="fstat-no" title="function not covered" >function (error) {</span>
+<span class="cstat-no" title="statement not covered" >          next(result);</span>
+<span class="cstat-no" title="statement not covered" >          done(error);</span>
+        }, context);
+      };
+    };
   }
 &nbsp;
   var CALLBACKS = Symbol('callbacks');
-  var COMPLETED = Symbol('completed');
+  var DONE = Symbol('done');
 &nbsp;
   var Context = function () {
 <span class="fstat-no" title="function not covered" >    function Context(flow, data) {</span>
-<span class="cstat-no" title="statement not covered" >      var _objectDefineProperti;</span>
-&nbsp;
 <span class="cstat-no" title="statement not covered" >      _classCallCheck(this, Context);</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >      objectDefineProperties(this, (_objectDefineProperti = {}, _defineProperty(_objectDefineProperti, CALLBACKS, {</span>
-        value: []
-      }), _defineProperty(_objectDefineProperti, 'data', {
-        value: data
-      }), _defineProperty(_objectDefineProperti, 'flow', {
-        value: flow
-      }), _objectDefineProperti));
+<span class="cstat-no" title="statement not covered" >      objectDefineProperties(this, {</span>
+        data: {
+          value: data
+        },
+        flow: {
+          value: flow
+        }
+      });
     }
 &nbsp;
     _createClass(Context, [{
       key: 'done',
       value: <span class="fstat-no" title="function not covered" >function done() {</span>
-<span class="cstat-no" title="statement not covered" >        i</span></span>f (this[COMPLETED]) <span class="cstat-no" title="statement not covered" >return false;
-<span class="cstat-no" title="statement not covered" >        objectDefineProperty(this[COMPLETED], {</span>
+<span class="cstat-no" title="statement not covered" >        i</span></span>f (this[DONE]) <span class="cstat-no" title="statement not covered" >return false;
+<span class="cstat-no" title="statement not covered" >        objectDefineProperty(this, DONE, {</span>
           value: true
         });
 <span class="cstat-no" title="statement not covered" >        var callbacks = this[CALLBACKS];</span>
-<span class="cstat-no" title="statement not covered" >        callbacks.forEach(<span class="fstat-no" title="function not covered" >function (callback) {</span></span>
-<span class="cstat-no" title="statement not covered" >          return callback();</span>
-        });
-<span class="cstat-no" title="statement not covered" >        this[CALLBACKS].length = 0;</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        i</span>f (callbacks) {
+<span class="cstat-no" title="statement not covered" >          callbacks.forEach(<span class="fstat-no" title="function not covered" >function (callback) {</span></span>
+<span class="cstat-no" title="statement not covered" >            return callback();</span>
+          });
+<span class="cstat-no" title="statement not covered" >          callbacks.length = 0;</span>
+        }
+&nbsp;
 <span class="cstat-no" title="statement not covered" >        return true;</span>
       }
     }, {
       key: 'spawn',
       value: <span class="fstat-no" title="function not covered" >function spawn() {</span>
-<span class="cstat-no" title="statement not covered" >        i</span></span>f (this[COMPLETED]) <span class="cstat-no" title="statement not covered" >return;
 <span class="cstat-no" title="statement not covered" >        var context = new Context(this.flow, this.data);</span>
-<span class="cstat-no" title="statement not covered" >        this[CALLBACKS].push(<span class="fstat-no" title="function not covered" >function () {</span></span>
+<span class="cstat-no" title="statement not covered" >        this.track(<span class="fstat-no" title="function not covered" >function () {</span></span>
 <span class="cstat-no" title="statement not covered" >          return context.done();</span>
         });
 <span class="cstat-no" title="statement not covered" >        return context;</span>
@@ -1734,23 +3033,33 @@
       key: 'track',
       value: <span class="fstat-no" title="function not covered" >function track(callback) {</span>
 <span class="cstat-no" title="statement not covered" >        i</span></span>f (!isFunction$1(callback)) <span class="cstat-no" title="statement not covered" >return;
-<span class="cstat-no" title="statement not covered" >        i</span></span></span>f (this[COMPLETED]) <span class="cstat-no" title="statement not covered" >callback();else <span class="cstat-no" title="statement not covered" >this[CALLBACKS].push(callback);
+<span class="cstat-no" title="statement not covered" >        i</span></span>f (this[DONE]) <span class="cstat-no" title="statement not covered" >callback();else {
+<span class="cstat-no" title="statement not covered" >          var callbacks = this[CALLBACKS];</span>
+<span class="cstat-no" title="statement not covered" >          i</span></span></span>f (callbacks) <span class="cstat-no" title="statement not covered" >callbacks.push(callback);else <span class="cstat-no" title="statement not covered" >objectDefineProperty(this, CALLBACKS, {
+            value: [callback]
+          });
+        }
       }
     }, {
       key: 'active',
       get: <span class="fstat-no" title="function not covered" >function get() {</span>
-<span class="cstat-no" title="statement not covered" >        return !this[COMPLETED];</span>
+<span class="cstat-no" title="statement not covered" >        return !this[DONE];</span>
       }
     }]);
 &nbsp;
     return Context;
   }();
 &nbsp;
-  var Aeroflow = function Aeroflow(emitter) {
+  var Aeroflow = function Aeroflow(emitter, sources) {
     _classCallCheck(this, Aeroflow);
 &nbsp;
-    objectDefineProperty(this, EMITTER, {
-      value: emitter
+    objectDefineProperties(this, {
+      emitter: {
+        value: emitter
+      },
+      sources: {
+        value: sources
+      }
     });
   };
 &nbsp;
@@ -1762,12 +3071,20 @@
 <span class="cstat-no" title="statement not covered" >    return aeroflow.apply(undefined, [this].concat(sources));</span>
   }
 &nbsp;
-<span class="fstat-no" title="function not covered" >  function chain(operator) {</span>
-<span class="cstat-no" title="statement not covered" >    return new Aeroflow(operator(this[EMITTER]));</span>
+<span class="fstat-no" title="function not covered" >  function bind() {</span>
+<span class="cstat-no" title="statement not covered" >    f</span>or (var _len2 = arguments.length, sources = Array(_len2), _key2 = 0; _key2 &lt; _len2; _key2++) {
+<span class="cstat-no" title="statement not covered" >      sources[_key2] = arguments[_key2];</span>
+    }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    return new Aeroflow(this.emitter, sources);</span>
   }
 &nbsp;
-<span class="fstat-no" title="function not covered" >  function count() {</span>
-<span class="cstat-no" title="statement not covered" >    return this.chain(countOperator());</span>
+<span class="fstat-no" title="function not covered" >  function chain(operator) {</span>
+<span class="cstat-no" title="statement not covered" >    return new Aeroflow(operator(this.emitter), this.sources);</span>
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function count(optional) {</span>
+<span class="cstat-no" title="statement not covered" >    return this.chain(countOperator(optional));</span>
   }
 &nbsp;
 <span class="fstat-no" title="function not covered" >  function delay(condition) {</span>
@@ -1775,12 +3092,40 @@
   }
 &nbsp;
 <span class="fstat-no" title="function not covered" >  function dump(prefix, logger) {</span>
-<span class="cstat-no" title="statement not covered" >    return dumpOperator(prefix, logger);</span>
+<span class="cstat-no" title="statement not covered" >    return this.chain(dumpOperator(prefix, logger));</span>
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function every(condition) {</span>
+<span class="cstat-no" title="statement not covered" >    return this.chain(everyOperator(condition));</span>
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function filter(condition) {</span>
+<span class="cstat-no" title="statement not covered" >    return this.chain(filterOperator(condition));</span>
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function join(condition, optional) {</span>
+<span class="cstat-no" title="statement not covered" >    return this.chain(joinOperator(condition, optional));</span>
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function map(mapping) {</span>
+<span class="cstat-no" title="statement not covered" >    return this.chain(mapOperator(mapping));</span>
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function max() {</span>
+<span class="cstat-no" title="statement not covered" >    return this.chain(maxOperator());</span>
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function mean() {</span>
+<span class="cstat-no" title="statement not covered" >    return this.chain(meanOperator());</span>
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function min() {</span>
+<span class="cstat-no" title="statement not covered" >    return this.chain(minOperator());</span>
   }
 &nbsp;
 <span class="fstat-no" title="function not covered" >  function prepend() {</span>
-<span class="cstat-no" title="statement not covered" >    f</span>or (var _len2 = arguments.length, sources = Array(_len2), _key2 = 0; _key2 &lt; _len2; _key2++) {
-<span class="cstat-no" title="statement not covered" >      sources[_key2] = arguments[_key2];</span>
+<span class="cstat-no" title="statement not covered" >    f</span>or (var _len3 = arguments.length, sources = Array(_len3), _key3 = 0; _key3 &lt; _len3; _key3++) {
+<span class="cstat-no" title="statement not covered" >      sources[_key3] = arguments[_key3];</span>
     }
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    return aeroflow.apply(undefined, sources.concat([this]));</span>
@@ -1794,11 +3139,11 @@
 <span class="cstat-no" title="statement not covered" >    i</span></span>f (!isFunction$1(done)) <span class="cstat-no" title="statement not covered" >done = noop;
 <span class="cstat-no" title="statement not covered" >    i</span></span>f (!isFunction$1(next)) <span class="cstat-no" title="statement not covered" >next = noop;
 <span class="cstat-no" title="statement not covered" >    var context = new Context(this, data),</span>
-        emitter = this[EMITTER];
+        emitter = this.emitter;
 <span class="cstat-no" title="statement not covered" >    setImmediate(<span class="fstat-no" title="function not covered" >function () {</span></span>
 <span class="cstat-no" title="statement not covered" >      var index = 0;</span>
 <span class="cstat-no" title="statement not covered" >      emitter(<span class="fstat-no" title="function not covered" >function (value) {</span></span>
-<span class="cstat-no" title="statement not covered" >        return next(value, index++, context);</span>
+<span class="cstat-no" title="statement not covered" >        next(value, index++, context);</span>
       }, <span class="fstat-no" title="function not covered" >function (error) {</span>
 <span class="cstat-no" title="statement not covered" >        context.done();</span>
 <span class="cstat-no" title="statement not covered" >        done(error, index, context);</span>
@@ -1807,82 +3152,206 @@
 <span class="cstat-no" title="statement not covered" >    return this;</span>
   }
 &nbsp;
-  var operators = objectCreate(null);
+<span class="fstat-no" title="function not covered" >  function skip(condition) {</span>
+<span class="cstat-no" title="statement not covered" >    return this.chain(skipOperator(condition));</span>
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function some(condition) {</span>
+<span class="cstat-no" title="statement not covered" >    return this.chain(someOperator(condition));</span>
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function sum() {</span>
+<span class="cstat-no" title="statement not covered" >    return this.chain(sumOperator());</span>
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function take(condition) {</span>
+<span class="cstat-no" title="statement not covered" >    return this.chain(takeOperator(condition));</span>
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function tap(callback) {</span>
+<span class="cstat-no" title="statement not covered" >    return this.chain(tapOperator(callback));</span>
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function timestamp() {</span>
+<span class="cstat-no" title="statement not covered" >    return this.chain(timestampOperator());</span>
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function toArray() {</span>
+<span class="cstat-no" title="statement not covered" >    return this.chain(toArrayOperator());</span>
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function toMap(keyTransformation, valueTransformation) {</span>
+<span class="cstat-no" title="statement not covered" >    return this.chain(toMapOperator(keyTransformation, valueTransformation));</span>
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function toSet() {</span>
+<span class="cstat-no" title="statement not covered" >    return this.chain(toSetOperator());</span>
+  }
+&nbsp;
+  var operators = objectCreate(null, {
+    count: {
+      value: count,
+      writable: true
+    },
+    delay: {
+      value: delay,
+      writable: true
+    },
+    dump: {
+      value: dump,
+      writable: true
+    },
+    every: {
+      value: every,
+      writable: true
+    },
+    filter: {
+      value: filter,
+      writable: true
+    },
+    join: {
+      value: join,
+      writable: true
+    },
+    map: {
+      value: map,
+      writable: true
+    },
+    max: {
+      value: max,
+      writable: true
+    },
+    mean: {
+      value: mean,
+      writable: true
+    },
+    min: {
+      value: min,
+      writable: true
+    },
+    reduce: {
+      value: reduce,
+      writable: true
+    },
+    skip: {
+      value: skip,
+      writable: true
+    },
+    some: {
+      value: some,
+      writable: true
+    },
+    sum: {
+      value: sum,
+      writable: true
+    },
+    take: {
+      value: take,
+      writable: true
+    },
+    tap: {
+      value: tap,
+      writable: true
+    },
+    timestamp: {
+      value: timestamp,
+      writable: true
+    },
+    toArray: {
+      value: toArray,
+      writable: true
+    },
+    toMap: {
+      value: toMap,
+      writable: true
+    },
+    toSet: {
+      value: toSet,
+      writable: true
+    }
+  });
   Aeroflow[PROTOTYPE] = objectCreate(operators, (_objectCreate = {}, _defineProperty(_objectCreate, CLASS, {
     value: AEROFLOW
   }), _defineProperty(_objectCreate, 'append', {
-    configurable: true,
-    value: append,
-    writable: true
+    value: append
+  }), _defineProperty(_objectCreate, 'bind', {
+    value: bind
   }), _defineProperty(_objectCreate, 'chain', {
     value: chain
-  }), _defineProperty(_objectCreate, 'count', {
-    configurable: true,
-    value: count,
-    writable: true
-  }), _defineProperty(_objectCreate, 'dump', {
-    configurable: true,
-    value: dump,
-    writable: true
   }), _defineProperty(_objectCreate, 'prepend', {
-    configurable: true,
-    value: prepend,
-    writable: true
-  }), _defineProperty(_objectCreate, 'reduce', {
-    configurable: true,
-    value: reduce,
-    writable: true
+    value: prepend
   }), _defineProperty(_objectCreate, 'run', {
     value: run
   }), _objectCreate));
   var adapters = objectCreate(null, (_objectCreate2 = {}, _defineProperty(_objectCreate2, ARRAY, {
-    configurable: true,
     value: arrayEmitter,
     writable: true
+  }), _defineProperty(_objectCreate2, BOOLEAN, {
+    value: valueEmitter,
+    writable: true
+  }), _defineProperty(_objectCreate2, DATE, {
+    value: valueEmitter,
+    writable: true
   }), _defineProperty(_objectCreate2, FUNCTION, {
-    configurable: true,
     value: functionEmitter,
     writable: true
+  }), _defineProperty(_objectCreate2, NUMBER, {
+    value: valueEmitter,
+    writable: true
   }), _defineProperty(_objectCreate2, PROMISE, {
-    configurable: true,
     value: promiseEmitter,
+    writable: true
+  }), _defineProperty(_objectCreate2, REGEXP, {
+    value: valueEmitter,
     writable: true
   }), _objectCreate2));
 &nbsp;
-<span class="fstat-no" title="function not covered" >  function emit() {</span>
-<span class="cstat-no" title="statement not covered" >    f</span>or (var _len3 = arguments.length, sources = Array(_len3), _key3 = 0; _key3 &lt; _len3; _key3++) {
-<span class="cstat-no" title="statement not covered" >      sources[_key3] = arguments[_key3];</span>
-    }
+<span class="fstat-no" title="function not covered" >  function adapt(source) {</span>
+<span class="cstat-no" title="statement not covered" >    i</span></span>f (isNothing$1(source)) <span class="cstat-no" title="statement not covered" >return valueEmitter(source);
+<span class="cstat-no" title="statement not covered" >    var sourceClass = classOf(source);</span>
+<span class="cstat-no" title="statement not covered" >    i</span></span>f (sourceClass === AEROFLOW) <span class="cstat-no" title="statement not covered" >return source.emitter;
+<span class="cstat-no" title="statement not covered" >    var adapter = adapters[sourceClass];</span>
+<span class="cstat-no" title="statement not covered" >    i</span></span>f (isFunction$1(adapter)) <span class="cstat-no" title="statement not covered" >return adapter(source);
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    switch (sources.length) {</span>
-      case 0:
-<span class="cstat-no" title="statement not covered" >        return emptyEmitter();</span>
-&nbsp;
-      case 1:
-<span class="cstat-no" title="statement not covered" >        var source = sources[0],</span>
-            sourceClass = classOf(source);
-<span class="cstat-no" title="statement not covered" >        i</span></span>f (sourceClass === AEROFLOW) <span class="cstat-no" title="statement not covered" >return source[EMITTER];
-<span class="cstat-no" title="statement not covered" >        var adapter = adapters[sourceClass];</span>
-<span class="cstat-no" title="statement not covered" >        i</span></span>f (isFunction$1(adapter)) <span class="cstat-no" title="statement not covered" >return adapter(source);
-<span class="cstat-no" title="statement not covered" >        i</span></span>f (source &amp;&amp; ITERATOR in source) <span class="cstat-no" title="statement not covered" >return iterableEmitter(source);
+<span class="cstat-no" title="statement not covered" >    switch (sourceClass) {</span>
+      case BOOLEAN:
+      case NUMBER:
+      case SYMBOL:
 <span class="cstat-no" title="statement not covered" >        return valueEmitter(source);</span>
 &nbsp;
       default:
-<span class="cstat-no" title="statement not covered" >        return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
-<span class="cstat-no" title="statement not covered" >          var index = -1;</span>
+<span class="cstat-no" title="statement not covered" >        var iterate = source[ITERATOR];</span>
+<span class="cstat-no" title="statement not covered" >        i</span></span>f (isFunction$1(iterate)) <span class="cstat-no" title="statement not covered" >return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span>
+<span class="cstat-no" title="statement not covered" >          var iterator = iterate();</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >          var limit = sources.length,</span>
-              proceed = <span class="fstat-no" title="function not covered" >function proceed() {</span>
-<span class="cstat-no" title="statement not covered" >            return context.active &amp;&amp; ++index &lt; limit ? emit(sources[index])(next, proceed, context) : done();</span>
-          };
+<span class="cstat-no" title="statement not covered" >          w</span>hile (context.active) {
+<span class="cstat-no" title="statement not covered" >            var iteration = iterator.next();</span>
+<span class="cstat-no" title="statement not covered" >            i</span></span>f (iteration.done) <span class="cstat-no" title="statement not covered" >break;
+<span class="cstat-no" title="statement not covered" >            next(iteration.value);</span>
+          }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >          proceed();</span>
+<span class="cstat-no" title="statement not covered" >          done();</span>
         };
+<span class="cstat-no" title="statement not covered" >        return valueEmitter(source);</span>
     }
   }
 &nbsp;
+<span class="fstat-no" title="function not covered" >  function emit(next, done, context) {</span>
+<span class="cstat-no" title="statement not covered" >    var sources = context.flow.sources;</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    f</span>or (var i = -1, l = sources.length; context.active &amp;&amp; ++i &lt; l;) {
+<span class="cstat-no" title="statement not covered" >      adapt(sources[i])(next, noop, context);</span>
+    }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    done();</span>
+  }
+&nbsp;
 <span class="fstat-no" title="function not covered" >  function aeroflow() {</span>
-<span class="cstat-no" title="statement not covered" >    return new Aeroflow(emit.apply(undefined, arguments));</span>
+<span class="cstat-no" title="statement not covered" >    f</span>or (var _len4 = arguments.length, sources = Array(_len4), _key4 = 0; _key4 &lt; _len4; _key4++) {
+<span class="cstat-no" title="statement not covered" >      sources[_key4] = arguments[_key4];</span>
+    }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    return new Aeroflow(emit, sources);</span>
   }
 &nbsp;
 <span class="fstat-no" title="function not covered" >  function create(emitter) {</span>
@@ -1894,7 +3363,7 @@
   }
 &nbsp;
 <span class="fstat-no" title="function not covered" >  function just(value) {</span>
-<span class="cstat-no" title="statement not covered" >    return new Aeroflow(just(value));</span>
+<span class="cstat-no" title="statement not covered" >    return new Aeroflow(valueEmitter(value));</span>
   }
 &nbsp;
 <span class="fstat-no" title="function not covered" >  function random(inclusiveMin, exclusiveMax) {</span>
@@ -1919,6 +3388,7 @@
       value: create
     },
     empty: {
+      enumerable: true,
       value: new Aeroflow(emptyEmitter())
     },
     expand: {
@@ -1942,8 +3412,8 @@
       value: repeat
     }
   });
-  exports.delay = delay;
   exports.default = aeroflow;
+  module.exports = exports['default'];
 });
 &nbsp;</pre></td></tr>
 </table></pre>
@@ -1951,7 +3421,7 @@
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Sun Jan 24 2016 20:50:30 GMT+0300 (Belarus Standard Time)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Mon Jan 25 2016 14:38:47 GMT+0300 (Belarus Standard Time)
 </div>
 </div>
 <script src="../../prettify.js"></script>

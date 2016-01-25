@@ -70,6 +70,7 @@
   var PROTOTYPE = 'prototype';
   var REGEXP = 'RegExp';
   var SYMBOL = 'Symbol';
+  var UNDEFINED = 'Undefined';
 
   var classOf = function classOf(value) {
     return Object.prototype.toString.call(value).slice(8, -1);
@@ -101,8 +102,6 @@
     return value == null;
   };
 
-  var isNumber = classIs(NUMBER);
-  var isRegExp = classIs(REGEXP);
   var mathFloor = Math.floor;
   var mathRandom = Math.random;
   var mathMax = Math.max;
@@ -141,7 +140,8 @@
   function promiseEmitter(source) {
     return function (next, done, context) {
       return source.then(function (value) {
-        return next(value);
+        next(value);
+        done();
       }, function (error) {
         return done(error);
       });
@@ -338,14 +338,14 @@
             interval = interval - dateNow();
           } else estimation = dateNow() + interval;
 
-          if (completition < estimation) completition = estimation;
+          if (completition < estimation) completition = estimation + 1;
           setTimeout(function () {
-            return resolve(next(value));
+            return next(value);
           }, mathMax(interval, 0));
         }, function (error) {
           completition -= dateNow();
           setTimeout(function () {
-            return resolve(done(error));
+            return done(error);
           }, mathMax(completition, 0));
         }, context);
       };
@@ -369,9 +369,18 @@
   }
 
   function delayOperator(condition) {
-    return isFunction$1(condition) ? delayDynamicOperator(condition) : isDate(condition) ? delayDynamicOperator(function () {
-      return mathMax(condition - new Date(), 0);
-    }) : delayStaticOperator(mathMax(+condition || 0, 0));
+    switch (classOf(condition)) {
+      case DATE:
+        return delayDynamicOperator(function () {
+          return mathMax(condition - new Date(), 0);
+        });
+
+      case FUNCTION:
+        return delayDynamicOperator(condition);
+
+      default:
+        return delayStaticOperator(mathMax(+condition || 0, 0));
+    }
   }
 
   function dumpToConsoleOperator(prefix) {
@@ -407,11 +416,35 @@
   }
 
   function everyOperator(condition) {
-    var predicate = isFunction$1(condition) ? condition : isRegExp(condition) ? function (value) {
-      return condition.test(value);
-    } : function (value) {
-      return value === condition;
-    };
+    var predicate = undefined;
+
+    switch (classOf(condition)) {
+      case FUNCTION:
+        predicate = condition;
+        break;
+
+      case REGEXP:
+        predicate = function predicate(value) {
+          return condition.test(value);
+        };
+
+        break;
+
+      case UNDEFINED:
+        predicate = function predicate(value) {
+          return !!value;
+        };
+
+        break;
+
+      default:
+        predicate = function predicate(value) {
+          return value === condition;
+        };
+
+        break;
+    }
+
     return function (emitter) {
       return function (next, done, context) {
         var idle = true,
@@ -419,7 +452,7 @@
         context = context.spawn();
         emitter(function (value) {
           idle = false;
-          if (!predicate(value)) return;
+          if (predicate(value)) return;
           result = false;
           context.done();
         }, function (error) {
@@ -431,13 +464,35 @@
   }
 
   function filterOperator(condition) {
-    var predicate = isFunction$1(condition) ? condition : isRegExp(condition) ? function (value) {
-      return condition.test(value);
-    } : isNothing$1(condition) ? function (value) {
-      return !!value;
-    } : function (value) {
-      return value === condition;
-    };
+    var predicate = undefined;
+
+    switch (classOf(condition)) {
+      case FUNCTION:
+        predicate = condition;
+        break;
+
+      case REGEXP:
+        predicate = function predicate(value) {
+          return condition.test(value);
+        };
+
+        break;
+
+      case UNDEFINED:
+        predicate = function predicate(value) {
+          return !!value;
+        };
+
+        break;
+
+      default:
+        predicate = function predicate(value) {
+          return value === condition;
+        };
+
+        break;
+    }
+
     return function (emitter) {
       return function (next, done, context) {
         var index = 0;
@@ -449,11 +504,7 @@
   }
 
   function joinOperator(separator, optional) {
-    var joiner = isFunction$1(separator) ? separator : isNothing$1(separator) ? function () {
-      return ',';
-    } : function () {
-      return separator;
-    };
+    var joiner = isFunction$1(separator) ? separator : isNothing$1(separator) ? constant(',') : constant(separator);
     return (optional ? reduceOptionalOperator : reduceGeneralOperator)(function (result, value, index, data) {
       return result.length ? result + joiner(value, index, data) + value : value;
     }, '');
@@ -555,15 +606,48 @@
   }
 
   function skipOperator(condition) {
-    return arguments.length ? isNumber(condition) ? condition === 0 ? identity : condition > 0 ? skipFirstOperator(condition) : skipLastOperator(-condition) : isFunction$1(condition) ? skipWhileOperator(condition) : condition ? skipAllOperator() : identity : skipAllOperator();
+    switch (classOf(condition)) {
+      case NUMBER:
+        return condition > 0 ? skipFirstOperator(condition) : condition < 0 ? skipLastOperator(-condition) : identity;
+
+      case FUNCTION:
+        return skipWhileOperator(condition);
+
+      default:
+        return condition ? skipAllOperator() : identity;
+    }
   }
 
   function someOperator(condition) {
-    var predicate = isFunction$1(condition) ? condition : isRegExp(condition) ? function (value) {
-      return condition.test(value);
-    } : function (value) {
-      return value === condition;
-    };
+    var predicate = undefined;
+
+    switch (classOf(condition)) {
+      case FUNCTION:
+        predicate = condition;
+        break;
+
+      case REGEXP:
+        predicate = function predicate(value) {
+          return condition.test(value);
+        };
+
+        break;
+
+      case UNDEFINED:
+        predicate = function predicate(value) {
+          return !!value;
+        };
+
+        break;
+
+      default:
+        predicate = function predicate(value) {
+          return value === condition;
+        };
+
+        break;
+    }
+
     return function (emitter) {
       return function (next, done, context) {
         var result = false;
@@ -629,7 +713,16 @@
   }
 
   function takeOperator(condition) {
-    return arguments.length ? isNumber(condition) ? condition === 0 ? emptyEmitter() : condition > 0 ? takeFirstOperator(condition) : takeLastOperator(condition) : isFunction$1(condition) ? takeWhileOperator(condition) : condition ? identity$1 : emptyEmitter() : identity$1;
+    switch (classOf(condition)) {
+      case NUMBER:
+        return condition > 0 ? takeFirstOperator(condition) : condition < 0 ? takeLastOperator(condition) : emptyEmitter();
+
+      case FUNCTION:
+        return takeWhileOperator(condition);
+
+      default:
+        return condition ? identity$1 : emptyEmitter();
+    }
   }
 
   function tapOperator(callback) {
@@ -775,7 +868,7 @@
       sources[_key] = arguments[_key];
     }
 
-    return aeroflow.apply(undefined, [this].concat(sources));
+    return new Aeroflow(this.emitter, this.sources.concat(sources));
   }
 
   function bind() {
@@ -835,7 +928,7 @@
       sources[_key3] = arguments[_key3];
     }
 
-    return aeroflow.apply(undefined, sources.concat([this]));
+    return new Aeroflow(this.emitter, sources.concat(this.sources));
   }
 
   function reduce(reducer, seed, optional) {
@@ -1045,12 +1138,11 @@
 
   function emit(next, done, context) {
     var sources = context.flow.sources;
-
-    for (var i = -1, l = sources.length; context.active && ++i < l;) {
-      adapt(sources[i])(next, noop, context);
-    }
-
-    done();
+    var limit = sources.length,
+        index = -1;
+    !function proceed(error) {
+      if (!error && context.active && ++index < limit) adapt(sources[index])(next, proceed, context);else done(error);
+    }();
   }
 
   function aeroflow() {

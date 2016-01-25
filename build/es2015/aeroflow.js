@@ -10,6 +10,7 @@ const PROMISE = 'Promise';
 const PROTOTYPE = 'prototype';
 const REGEXP = 'RegExp';
 const SYMBOL = 'Symbol';
+const UNDEFINED = 'Undefined';
 
 const classOf = value => Object.prototype.toString.call(value).slice(8, -1);
 const classIs = className => value => classOf(value) === className;
@@ -20,8 +21,6 @@ const isDate = classIs(DATE);
 const isFunction$1 = classIs(FUNCTION);
 const isInteger = Number.isInteger;
 const isNothing$1 = value => value == null;
-const isNumber = classIs(NUMBER);
-const isRegExp = classIs(REGEXP);
 const mathFloor = Math.floor;
 const mathRandom = Math.random;
 const mathMax = Math.max;
@@ -51,7 +50,10 @@ function functionEmitter(source) {
 
 function promiseEmitter(source) {
   return (next, done, context) => source.then(
-    value => next(value),
+    value => {
+      next(value);
+      done();
+    },
     error => done(error));
 }
 
@@ -223,13 +225,14 @@ function delayDynamicOperator(selector) {
           estimation = interval;
           interval = interval - dateNow();
         }
+        // todo: convert interval to number
         else estimation = dateNow() + interval;
-        if (completition < estimation) completition = estimation;
-        setTimeout(() => resolve(next(value)), mathMax(interval, 0));
+        if (completition < estimation) completition = estimation + 1;
+        setTimeout(() => next(value), mathMax(interval, 0));
       },
       error => {
         completition -= dateNow();
-        setTimeout(() => resolve(done(error)), mathMax(completition, 0));
+        setTimeout(() => done(error), mathMax(completition, 0));
       },
       context);
   };
@@ -243,11 +246,14 @@ function delayStaticOperator(interval) {
 }
 
 function delayOperator(condition) {
-  return isFunction$1(condition)
-    ? delayDynamicOperator(condition)
-    : isDate(condition)
-      ? delayDynamicOperator(() => mathMax(condition - new Date, 0))
-      : delayStaticOperator(mathMax(+condition || 0, 0));
+  switch (classOf(condition)) {
+    case DATE:
+      return delayDynamicOperator(() => mathMax(condition - new Date, 0));
+    case FUNCTION:
+      return delayDynamicOperator(condition);
+    default:
+      return delayStaticOperator(mathMax(+condition || 0, 0));
+  }
 }
 
 function dumpToConsoleOperator(prefix) {
@@ -291,18 +297,28 @@ function dumpOperator(prefix, logger) {
 }
 
 function everyOperator(condition) {
-  const predicate = isFunction$1(condition)
-    ? condition
-    : isRegExp(condition)
-      ? value => condition.test(value)
-      : value => value === condition;
+  let predicate;
+  switch (classOf(condition)) {
+    case FUNCTION:
+      predicate = condition;
+      break;
+    case REGEXP:
+      predicate = value => condition.test(value);
+      break;
+    case UNDEFINED:
+      predicate = value => !!value;
+      break;
+    default:
+      predicate = value => value === condition;
+      break;
+  }
   return emitter => (next, done, context) => {
     let idle = true, result = true;
     context = context.spawn();
     emitter(
       value => {
         idle = false;
-        if (!predicate(value)) return;
+        if (predicate(value)) return;
         result = false;
         context.done();
       },
@@ -315,13 +331,21 @@ function everyOperator(condition) {
 }
 
 function filterOperator(condition) {
-  const predicate = isFunction$1(condition)
-    ? condition
-    : isRegExp(condition)
-      ? value => condition.test(value)
-      : isNothing$1(condition)
-        ? value => !!value
-        : value => value === condition;
+  let predicate;
+  switch (classOf(condition)) {
+    case FUNCTION:
+      predicate = condition;
+      break;
+    case REGEXP:
+      predicate = value => condition.test(value);
+      break;
+    case UNDEFINED:
+      predicate = value => !!value;
+      break;
+    default:
+      predicate = value => value === condition
+      break;
+  }
   return emitter => (next, done, context) => {
     let index = 0;
     emitter(
@@ -337,8 +361,8 @@ function joinOperator(separator, optional) {
   const joiner = isFunction$1(separator)
     ? separator
     : isNothing$1(separator)
-      ? () => ','
-      : () => separator;
+      ? constant(',')
+      : constant(separator);
   return (optional ? reduceOptionalOperator : reduceGeneralOperator)(
     (result, value, index, data) => result.length
       ? result + joiner(value, index, data) + value 
@@ -433,27 +457,35 @@ function skipWhileOperator(predicate) {
 }
 
 function skipOperator(condition) {
-  return arguments.length
-    ? isNumber(condition)
-      ? condition === 0
-        ? identity
-        : condition > 0
-          ? skipFirstOperator(condition)
-          : skipLastOperator(-condition)
-      : isFunction$1(condition)
-        ? skipWhileOperator(condition)
-        : condition
-          ? skipAllOperator()
-          : identity
-    : skipAllOperator();
+  switch (classOf(condition)) {
+    case NUMBER: return condition > 0
+      ? skipFirstOperator(condition)
+      : condition < 0
+        ? skipLastOperator(-condition)
+        : identity;
+    case FUNCTION: return skipWhileOperator(condition);
+    default: return condition
+      ? skipAllOperator()
+      : identity;
+  }
 }
 
 function someOperator(condition) {
-  const predicate = isFunction$1(condition)
-    ? condition
-    : isRegExp(condition)
-      ? value => condition.test(value)
-      : value => value === condition;
+  let predicate;
+  switch (classOf(condition)) {
+    case FUNCTION:
+      predicate = condition;
+      break;
+    case REGEXP:
+      predicate = value => condition.test(value);
+      break;
+    case UNDEFINED:
+      predicate = value => !!value;
+      break;
+    default:
+      predicate = value => value === condition;
+      break;
+  }
   return emitter => (next, done, context) => {
     let result = false;
     context = context.spawn();
@@ -515,19 +547,17 @@ function takeWhileOperator(predicate) {
 }
 
 function takeOperator(condition) {
-  return arguments.length
-    ? isNumber(condition)
-      ? condition === 0
-        ? emptyEmitter()
-        : condition > 0
-          ? takeFirstOperator(condition)
-          : takeLastOperator(condition)
-      : isFunction$1(condition)
-        ? takeWhileOperator(condition)
-        : condition
-          ? identity$1
-          : emptyEmitter()
-    : identity$1;
+  switch (classOf(condition)) {
+    case NUMBER: return condition > 0
+      ? takeFirstOperator(condition)
+      : condition < 0
+        ? takeLastOperator(condition)
+        : emptyEmitter();
+    case FUNCTION: return takeWhileOperator(condition);
+    default: return condition
+      ? identity$1
+      : emptyEmitter();
+  }
 }
 
 function tapOperator(callback) {
@@ -665,7 +695,7 @@ class Aeroflow {
 * // done
 */
 function append(...sources) {
-  return aeroflow(this, ...sources);
+  return new Aeroflow(this.emitter, this.sources.concat(sources));
 }
 function bind(...sources) {
   return new Aeroflow(this.emitter, sources);
@@ -700,7 +730,7 @@ function count(optional) {
   * aeroflow(1).delay(500).dump().run();
   * // next 1 // after 500ms
   * // done
-  * aeroflow(1, 2).delay(new Date + 500).dump().run();
+  * aeroflow(1, 2).delay(new Date(Date.now() + 500)).dump().run();
   * // next 1 // after 500ms
   * // next 2
   * // done
@@ -722,10 +752,13 @@ function delay(condition) {
   *   value - The value (next event) or error (done event) emitted by this flow.
   *
   * @example
-  * aeroflow(1, 2, 3).dump('test ', console.info.bind(console)).run();
+  * aeroflow(1, 2).dump('test ', console.info.bind(console)).run();
+  * // next 1
+  * // next 2
+  * // done
+  * aeroflow(1, 2).dump('test ', console.info.bind(console)).run();
   * // test next 1
   * // test next 2
-  * // test next 3
   * // test done
   */
 function dump(prefix, logger) {
@@ -827,7 +860,7 @@ function min() {
 * // done
 */
 function prepend(...sources) {
-  return aeroflow(...sources, this);
+  return new Aeroflow(this.emitter, sources.concat(this.sources));
 }
 /**
 * Applies a function against an accumulator and each value emitted by this flow to reduce it to a single value,
@@ -1083,9 +1116,11 @@ function adapt(source) {
 
 function emit(next, done, context) {
   const sources = context.flow.sources;
-  for (let i = -1, l = sources.length; context.active && ++i < l;)
-    adapt(sources[i])(next, noop, context);
-  done();
+  let limit = sources.length, index = -1;
+  !function proceed(error) {
+    if (!error && context.active && ++index < limit) adapt(sources[index])(next, proceed, context);
+    else done(error);
+  }();
 }
 
 function aeroflow(...sources) {

@@ -60,7 +60,7 @@ class Aeroflow {
 * // done
 */
 function append(...sources) {
-  return aeroflow(this, ...sources);
+  return new Aeroflow(this.emitter, this.sources.concat(sources));
 }
 function bind(...sources) {
   return new Aeroflow(this.emitter, sources);
@@ -95,7 +95,7 @@ function count(optional) {
   * aeroflow(1).delay(500).dump().run();
   * // next 1 // after 500ms
   * // done
-  * aeroflow(1, 2).delay(new Date + 500).dump().run();
+  * aeroflow(1, 2).delay(new Date(Date.now() + 500)).dump().run();
   * // next 1 // after 500ms
   * // next 2
   * // done
@@ -117,10 +117,13 @@ function delay(condition) {
   *   value - The value (next event) or error (done event) emitted by this flow.
   *
   * @example
-  * aeroflow(1, 2, 3).dump('test ', console.info.bind(console)).run();
+  * aeroflow(1, 2).dump('test ', console.info.bind(console)).run();
+  * // next 1
+  * // next 2
+  * // done
+  * aeroflow(1, 2).dump('test ', console.info.bind(console)).run();
   * // test next 1
   * // test next 2
-  * // test next 3
   * // test done
   */
 function dump(prefix, logger) {
@@ -222,7 +225,7 @@ function min() {
 * // done
 */
 function prepend(...sources) {
-  return aeroflow(...sources, this);
+  return new Aeroflow(this.emitter, sources.concat(this.sources));
 }
 /**
 * Applies a function against an accumulator and each value emitted by this flow to reduce it to a single value,
@@ -478,9 +481,11 @@ function adapt(source) {
 
 function emit(next, done, context) {
   const sources = context.flow.sources;
-  for (let i = -1, l = sources.length; context.active && ++i < l;)
-    adapt(sources[i])(next, noop, context);
-  done();
+  let limit = sources.length, index = -1;
+  !function proceed(error) {
+    if (!error && context.active && ++index < limit) adapt(sources[index])(next, proceed, context);
+    else done(error);
+  }();
 }
 
 export default function aeroflow(...sources) {

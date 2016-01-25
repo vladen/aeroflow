@@ -1,6 +1,7 @@
 'use strict';
 
-import { dateNow, isDate, isFunction, mathMax } from '../utilites';
+import { DATE, FUNCTION } from '../symbols';
+import { classOf, dateNow, isDate, mathMax } from '../utilites';
 
 export function delayDynamicOperator(selector) {
   return emitter => (next, done, context) => {
@@ -12,13 +13,14 @@ export function delayDynamicOperator(selector) {
           estimation = interval;
           interval = interval - dateNow();
         }
+        // todo: convert interval to number
         else estimation = dateNow() + interval;
-        if (completition < estimation) completition = estimation;
-        setTimeout(() => resolve(next(value)), mathMax(interval, 0));
+        if (completition < estimation) completition = estimation + 1;
+        setTimeout(() => next(value), mathMax(interval, 0));
       },
       error => {
         completition -= dateNow();
-        setTimeout(() => resolve(done(error)), mathMax(completition, 0));
+        setTimeout(() => done(error), mathMax(completition, 0));
       },
       context);
   };
@@ -32,9 +34,12 @@ export function delayStaticOperator(interval) {
 }
 
 export function delayOperator(condition) {
-  return isFunction(condition)
-    ? delayDynamicOperator(condition)
-    : isDate(condition)
-      ? delayDynamicOperator(() => mathMax(condition - new Date, 0))
-      : delayStaticOperator(mathMax(+condition || 0, 0));
+  switch (classOf(condition)) {
+    case DATE:
+      return delayDynamicOperator(() => mathMax(condition - new Date, 0));
+    case FUNCTION:
+      return delayDynamicOperator(condition);
+    default:
+      return delayStaticOperator(mathMax(+condition || 0, 0));
+  }
 }

@@ -1,6 +1,7 @@
 'use strict';
 
-import { isFunction, isNumber, noop } from '../utilites';
+import { FUNCTION, NUMBER } from '../symbols';
+import { classOf, noop } from '../utilites';
 import { toArrayOperator } from './toArray';
 
 export function skipAllOperator() {
@@ -42,15 +43,15 @@ export function skipWhileOperator(predicate) {
 }
 
 export function skipOperator(condition) {
-  return isNumber(condition)
-    ? condition > 0
+  switch (classOf(condition)) {
+    case NUMBER: return condition > 0
       ? skipFirstOperator(condition)
       : condition < 0
         ? skipLastOperator(-condition)
-        : identity
-    : isFunction(condition)
-      ? skipWhileOperator(condition)
-      : condition
-        ? skipAllOperator()
         : identity;
+    case FUNCTION: return skipWhileOperator(condition);
+    default: return condition
+      ? skipAllOperator()
+      : identity;
+  }
 }

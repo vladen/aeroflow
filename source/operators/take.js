@@ -1,6 +1,7 @@
 'use strict';
 
-import { identity, isFunction, isNumber, mathMax } from '../utilites';
+import { FUNCTION, NUMBER } from '../symbols';
+import { classOf, identity, mathMax } from '../utilites';
 import { emptyEmitter } from '../emitters/empty';
 import { toArrayOperator } from './toArray';
 
@@ -44,17 +45,15 @@ export function takeWhileOperator(predicate) {
 }
 
 export function takeOperator(condition) {
-  return arguments.length
-    ? isNumber(condition)
-      ? condition === 0
-        ? emptyEmitter()
-        : condition > 0
-          ? takeFirstOperator(condition)
-          : takeLastOperator(condition)
-      : isFunction(condition)
-        ? takeWhileOperator(condition)
-        : condition
-          ? identity
-          : emptyEmitter()
-    : identity;
+  switch (classOf(condition)) {
+    case NUMBER: return condition > 0
+      ? takeFirstOperator(condition)
+      : condition < 0
+        ? takeLastOperator(condition)
+        : emptyEmitter();
+    case FUNCTION: return takeWhileOperator(condition);
+    default: return condition
+      ? identity
+      : emptyEmitter();
+  }
 }
