@@ -1,7 +1,9 @@
 'use strict';
 
-import { reduceGeneralOperator } from './reduce';
+import { reduceGeneralOperator, reduceOptionalOperator } from './reduce';
 
-export function countOperator() {
-  return emitter => reduceGeneralOperator(emitter, result => result + 1, 0);
+export function countOperator(optional) {
+  return (optional ? reduceOptionalOperator : reduceGeneralOperator)(
+  	result => result + 1,
+  	0);
 } 

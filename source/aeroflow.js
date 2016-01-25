@@ -1,29 +1,38 @@
 'use strict';
 
-import { AEROFLOW, ARRAY, CLASS, EMITTER, FUNCTION, ITERATOR, PROMISE, PROTOTYPE } from './symbols';
-import {
-  classOf, isFunction, objectDefineProperties, objectDefineProperty, objectCreate, noop
-} from './utilites';
-import { arrayEmitter } from './emitters/array';
+import { AEROFLOW, CLASS, PROMISE, PROTOTYPE } from './symbols';
+import { isFunction, isNothing, objectDefineProperties, objectCreate, noop } from './utilites';
+import { Context } from './context';
+import { customGenerator } from './emitters/custom';
+import { emptyEmitter } from './emitters/empty';
+import { expandGenerator } from './emitters/expand';
+import { randomGenerator } from './emitters/random';
+import { rangeGenerator } from './emitters/range';
+import { repeatGenerator } from './emitters/repeat';
+import { valueEmitter } from './emitters/value';
+import { adapters } from './adapters';
+import { emit } from './emit';
 import { countOperator } from './operators/count';
-import { customEmitter } from './emitters/custom';
 import { delayOperator } from './operators/delay';
 import { dumpOperator } from './operators/dump';
-import { emptyEmitter } from './emitters/empty';
-import { expandEmitter } from './emitters/expand';
-import { functionEmitter } from './emitters/function';
-import { iterableEmitter } from './emitters/iterable';
-import { promiseEmitter } from './emitters/promise';
-import { randomEmitter } from './emitters/random';
-import { rangeEmitter } from './emitters/range';
-import { repeatEmitter } from './emitters/repeat';
-import { valueEmitter } from './emitters/value';
+import { everyOperator } from './operators/every';
+import { filterOperator } from './operators/filter';
+import { joinOperator } from './operators/join';
+import { mapOperator } from './operators/map';
+import { maxOperator } from './operators/max';
 import { reduceOperator } from './operators/reduce';
-import { Context } from './context';
+import { tapOperator } from './operators/tap';
+import { timestampOperator } from './operators/timestamp';
+import { toArrayOperator } from './operators/toArray';
+import { toMapOperator } from './operators/toMap';
+import { toSetOperator } from './operators/toSet';
 
 class Aeroflow {
-  constructor(emitter) {
-    objectDefineProperty(this, EMITTER, { value: emitter });
+  constructor(emitter, source) {
+    objectDefineProperties(this, {
+      emitter: { value: emitter },
+      source: { value: source }
+    });
   }
 }
 /**
@@ -44,8 +53,11 @@ class Aeroflow {
 function append(...sources) {
   return aeroflow(this, ...sources);
 }
+function bind(source) {
+  return new Aeroflow(this.emitter, source);
+}
 function chain(operator) {
-  return new Aeroflow(operator(this[EMITTER]));
+  return new Aeroflow(operator(this.emitter), this.source);
 }
 /**
 * Counts the number of values emitted by this flow, returns new flow emitting only this value.
@@ -55,8 +67,8 @@ function chain(operator) {
 * // next 3
 * // done
 */
-function count() {
-  return this.chain(countOperator());
+function count(optional) {
+  return this.chain(countOperator(optional));
 }
 /**
   * Returns new flow delaying emission of each value accordingly provided condition.
@@ -103,7 +115,66 @@ export function delay(condition) {
   * // test done
   */
 function dump(prefix, logger) {
-  return dumpOperator(prefix, logger);
+  return this.chain(dumpOperator(prefix, logger));
+}
+/**
+  * Tests whether all values emitted by this flow pass the predicate test, returns flow emitting true if the predicate returns true for all emitted values; otherwise, false.
+  *
+  * @param {function|regexp|any} [predicate] The predicate function or regular expression object used to test each emitted value,
+  *   or scalar value to compare emitted values with. If omitted, default (truthy) predicate is used.
+  * @returns {Aeroflow} New flow that emits true or false.
+  *
+  * @example
+  * aeroflow(1).every().dump().run();
+  * // next true
+  * // done
+  * aeroflow.range(1, 3).every(2).dump().run();
+  * // next false
+  * // done
+  * aeroflow.range(1, 3).every(value => value % 2).dump().run();
+  * // next false
+  * // done
+  */
+function every(condition) {
+  return this.chain(everyOperator(condition));
+}
+/**
+  * Returns new from emitting inly values that pass the test implemented by the provided predicate.
+  *
+  * @param {function|regexp|any} [predicate] The test applied to each emitted value.
+  *
+  * @example
+  * aeroflow(0, 1).filter().dump().run();
+  * // next 1
+  * // done
+  * aeroflow('a', 'b', 'a').filter(/a/).dump().run();
+  * // next "a"
+  * // next "a"
+  * // done
+  * aeroflow('a', 'b', 'b').filter('b').dump().run();
+  * // next "b"
+  * // next "b"
+  * // done
+  */
+function filter(condition) {
+  return this.chain(filterOperator(condition)); 
+}
+function join(separator, optional) {
+  return this.chain(joinOperator(condition, optional)); 
+}
+function map(mapping) {
+  return this.chain(mapOperator(mapping)); 
+}
+/**
+  * Determines the maximum value emitted by this flow, returns new flow emitting only this value.
+  *
+  * @example
+  * aeroflow([1, 2, 3]).max().dump().run();
+  * // next 3
+  * // done
+  */
+function max() {
+  return this.chain(maxOperator());
 }
 /**
 * Returns new flow emitting the emissions from all provided sources and then from this flow without interleaving them.
@@ -161,7 +232,7 @@ function reduce(reducer, seed, optional) {
 function run(next, done, data) {
   if (!isFunction(done)) done = noop;
   if (!isFunction(next)) next = noop;
-  const context = new Context(this, data), emitter = this[EMITTER];
+  const context = new Context(this.source, data), emitter = this.emitter;
   setImmediate(() => {
     let index = 0;
     emitter(
@@ -174,47 +245,109 @@ function run(next, done, data) {
   });
   return this;
 }
+/**
+  * Executes provided callback once per each value emitted by this flow,
+  * returns new tapped flow or this flow if no callback provided.
+  *
+  * @param {function} [callback] Function to execute for each value emitted, taking three arguments:
+  *   value emitted by this flow,
+  *   index of the value,
+  *   context object.
+  *
+  * @example
+  * aeroflow(1, 2, 3).tap((value, index) => console.log('value:', value, 'index:', index)).run();
+  * // value: 1 index: 0
+  * // value: 2 index: 1
+  * // value: 3 index: 2
+  */
+function tap(callback) {
+  return this.chain(tapOperator(callback));
+}
+/*
+  aeroflow.repeat().take(3).delay(10).timestamp().dump().run();
+*/
+function timestamp() {
+  return this.chain(timestampOperator());
+}
+/**
+  * Collects all values emitted by this flow to array, returns flow emitting this array.
+  *
+  * @returns {Aeroflow} New flow that emits an array.
+  *
+  * @example
+  * aeroflow.range(1, 3).toArray().dump().run();
+  * // next [1, 2, 3]
+  * // done
+  */
+function toArray() {
+  return this.chain(toArrayOperator());
+}
+/**
+  * Collects all values emitted by this flow to ES6 map, returns flow emitting this map.
+  *
+  * @param {function|any} [keyTransformation] The mapping function used to transform each emitted value to map key,
+  *   or scalar value to use as map key.
+  * @param {function|any} [valueTransformation] The mapping function used to transform each emitted value to map value,
+  *   or scalar value to use as map value.
+  * @returns {Aeroflow} New flow that emits a map.
+  *
+  * @example
+  * aeroflow.range(1, 3).toMap(v => 'key' + v, true).dump().run();
+  * // next Map {"key1" => true, "key2" => true, "key3" => true}
+  * // done
+  * aeroflow.range(1, 3).toMap(v => 'key' + v, v => v * 10).dump().run();
+  * // next Map {"key1" => 10, "key2" => 20, "key3" => 30}
+  * // done
+  */
+function toMap(keyTransformation, valueTransformation) {
+   return this.chain(toMapOperator(keyTransformation, valueTransformation));
+}
+/**
+  * Collects all values emitted by this flow to ES6 set, returns flow emitting this set.
+  *
+  * @returns {Aeroflow} New flow that emits a set.
+  *
+  * @example
+  * aeroflow.range(1, 3).toSet().dump().run();
+  * // next Set {1, 2, 3}
+  * // done
+  */
+function toSet() {
+  return this.chain(toSetOperator()); 
+}
 const operators = objectCreate(null);
 Aeroflow[PROTOTYPE] = objectCreate(operators, {
   [CLASS]: { value: AEROFLOW },
   append: { configurable: true, value: append, writable: true },
+  bind: { value: bind },
   chain: { value: chain },
   count: { configurable: true, value: count, writable: true },
   dump: { configurable: true, value: dump, writable: true },
+  every: { configurable: true, value: every, writable: true },
+  filter: { configurable: true, value: filter, writable: true },
+  join: { configurable: true, value: join, writable: true },
+  map: { configurable: true, value: map, writable: true },
+  max: { configurable: true, value: max, writable: true },
   prepend: { configurable: true, value: prepend, writable: true },
   reduce: { configurable: true, value: reduce, writable: true },
-  run: { value: run }
+  run: { value: run },
+  tap: { configurable: true, value: tap, writable: true },
+  timestamp: { configurable: true, value: timestamp, writable: true },
+  toArray: { configurable: true, value: toArray, writable: true },
+  toMap: { configurable: true, value: toMap, writable: true },
+  toSet: { configurable: true, value: toSet, writable: true },
 });
 
-const adapters = objectCreate(null, {
-  [ARRAY]: { configurable: true, value: arrayEmitter, writable: true },
-  [FUNCTION]: { configurable: true, value: functionEmitter, writable: true },
-  [PROMISE]: { configurable: true, value: promiseEmitter, writable: true }
-});
-
-function emit(...sources) {
-  switch (sources.length) {
-    case 0: return emptyEmitter();
-    case 1:
-      const source = sources[0], sourceClass = classOf(source);
-      if (sourceClass === AEROFLOW) return source[EMITTER];
-      const adapter = adapters[sourceClass];
-      if (isFunction(adapter)) return adapter(source);
-      if (source && ITERATOR in source) return iterableEmitter(source);
-      return valueEmitter(source);
-    default:
-      return (next, done, context) => {
-        let index = -1;
-        const limit = sources.length, proceed = () => context.active && ++index < limit
-          ? emit(sources[index])(next, proceed, context)
-          : done();
-        proceed();
-      };
+function prebind(emitter) {
+  return (next, done, context) => {
+    const source = context.source;
+    if (isNothing(source)) emitter(next, done, context);
+    else emit(source)(next, done, context);
   }
 }
 
 export default function aeroflow(...sources) {
-  return new Aeroflow(emit(...sources));
+  return new Aeroflow(prebind(emptyEmitter()), sources);
 }
 /**
   * Creates programmatically controlled flow.
@@ -235,10 +368,10 @@ export default function aeroflow(...sources) {
   * // done
   */
 function create(emitter) {
-  return new Aeroflow(customEmitter(emitter));
+  return new Aeroflow(customGenerator(emitter));
 }
 function expand(expander, seed) {
-  return new Aeroflow(expandEmitter(expander, seed))
+  return new Aeroflow(expandGenerator(expander, seed))
 }
 /**
   * Returns new flow emitting the provided value only.
@@ -254,7 +387,7 @@ function expand(expander, seed) {
   * // done
   */
 function just(value) {
-  return new Aeroflow(just(value));
+  return new Aeroflow(valueAdapter(value));
 }
 /**
   * Returns new flow emitting random numbers.
@@ -267,7 +400,7 @@ function just(value) {
   * aeroflow.random(1, 9).take(3).dump().run();
   */
 function random(inclusiveMin, exclusiveMax) {
-  return new Aeroflow(randomEmitter(inclusiveMin, exclusiveMax));
+  return new Aeroflow(randomGenerator(inclusiveMin, exclusiveMax));
 }
 /*
   aeroflow.range().take(3).dump().run();
@@ -277,7 +410,7 @@ function random(inclusiveMin, exclusiveMax) {
   aeroflow.range(5, 0, -2).dump().run();
 */
 function range(inclusiveStart, inclusiveEnd, step) {
-  return new Aeroflow(rangeEmitter(inclusiveStart, inclusiveEnd, step));
+  return new Aeroflow(rangeGenerator(inclusiveStart, inclusiveEnd, step));
 }
 /**
   * Creates flow of repeting values.
@@ -305,7 +438,7 @@ function range(inclusiveStart, inclusiveEnd, step) {
   * // done
   */
 function repeat(value) {
-  return new Aeroflow(repeatEmitter(value));
+  return new Aeroflow(repeatGenerator(value));
 }
 objectDefineProperties(aeroflow, {
   adapters: { get: () => adapters },

@@ -5,11 +5,11 @@ import { isFunction, objectDefineProperties, objectDefineProperty } from './util
 const CALLBACKS = Symbol('callbacks'), COMPLETED = Symbol('completed');
 
 export class Context {
-  constructor(flow, data) {
+  constructor(source, data) {
     objectDefineProperties(this, {
       [CALLBACKS]: { value: [] },
       data: { value: data },
-      flow: { value: flow }
+      source: { value: source }
     });
   }
   get active() {
@@ -25,7 +25,7 @@ export class Context {
   }
   spawn() {
     if (this[COMPLETED]) return;
-    const context = new Context(this.flow, this.data);
+    const context = new Context(this.source, this.data);
     this[CALLBACKS].push(() => context.done());
     return context;
   }

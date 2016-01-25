@@ -2,7 +2,7 @@
 
 import { dateNow, isDate, isFunction, mathMax } from '../utilites';
 
-export function delayDynamicOperator(emitter, selector) {
+export function delayDynamicOperator(selector) {
   return emitter => (next, done, context) => {
     let completition = dateNow(), index = 0;
     emitter(
@@ -13,8 +13,7 @@ export function delayDynamicOperator(emitter, selector) {
           interval = interval - dateNow();
         }
         else estimation = dateNow() + interval;
-        if (completition < estimation)
-          completition = estimation;
+        if (completition < estimation) completition = estimation;
         setTimeout(() => resolve(next(value)), mathMax(interval, 0));
       },
       error => {
@@ -25,7 +24,7 @@ export function delayDynamicOperator(emitter, selector) {
   };
 }
 
-export function delayStaticOperator(emitter, interval) {
+export function delayStaticOperator(interval) {
   return emitter => (next, done, context) => emitter(
     value => setTimeout(() => next(value), interval),
     error => setTimeout(() => done(error), interval),

@@ -4,7 +4,6 @@ export const AEROFLOW = 'Aeroflow';
 export const ARRAY = 'Array';
 export const CLASS = Symbol.toStringTag;
 export const DATE = 'Date';
-export const EMITTER = Symbol('emitter');
 export const ERROR = 'Error';
 export const FUNCTION = 'Function';
 export const ITERATOR = Symbol.iterator;

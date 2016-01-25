@@ -1,8 +1,11 @@
 'use strict';
 
-import { isFunction } from '../utilites';
+import { constant, isFunction } from '../utilites';
 
-export function expandEmitter(expander, seed) {
+export function expandEmitter(expanding, seed) {
+  const expander = isFunction(expanding)
+    ? expanding
+    : constant(expanding);
   return (next, done, context) => {
     let index = 0, value = seed;
     while (context.active) next(value = expander(value, index++, context.data));
