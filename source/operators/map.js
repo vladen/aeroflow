@@ -1,6 +1,6 @@
 'use strict';
 
-import { constant, identity, isFunction, isNothing } from './utilites';
+import { constant, identity, isFunction, isNothing } from '../utilites';
 
 export function mapOperator(mapping) {
   if (isNothing(mapping)) return identity;

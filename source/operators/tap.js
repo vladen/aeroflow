@@ -1,6 +1,6 @@
 'use strict';
 
-import { isFunction } from './utilites';
+import { isFunction } from '../utilites';
 
 export function tapOperator(callback) {
   return emitter => isFunction(callback)

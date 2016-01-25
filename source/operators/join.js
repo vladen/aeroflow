@@ -1,9 +1,9 @@
 'use strict';
 
 import { reduceGeneralOperator, reduceOptionalOperator } from './reduce';
-import { isFunction, isNothing, isString } from './utilites';
+import { isFunction, isNothing, isString } from '../utilites';
 
-export function joinOperator(separator, optional) => {
+export function joinOperator(separator, optional) {
   const joiner = isFunction(separator)
     ? separator
     : isNothing(separator)

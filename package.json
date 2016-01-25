@@ -21,6 +21,8 @@
     "babel:library": "node_modules/.bin/babel build/es2015/aeroflow.js --out-file build/legacy/aeroflow.js --presets es2015 --plugins add-module-exports,transform-es2015-modules-umd",
     "babel:tests": "node_modules/.bin/babel build/es2015/aeroflow.tests.js --out-file build/legacy/aeroflow.tests.js --presets es2015 --plugins add-module-exports,transform-es2015-modules-umd",
     "build": "npm run rollup && npm run babel && npm run uglify",
+    "build:library": "npm run rollup:library && npm run rollup:library:modern && npm run babel:library && npm run uglify",
+    "build:tests": "npm run rollup:tests && npm run rollup:tests:modern && npm run babel:tests",
     "document": "npm run jsdoc2md && npm run mocha:specs",
     "isparta": "./node_modules/.bin/babel-node ./node_modules/isparta/bin/isparta cover ./node_modules/mocha/bin/_mocha -- build/coverage.js",
     "jsdoc2md": "node_modules/.bin/jsdoc2md build/modern/aeroflow.js > documentation/readme.md --global-index-format dl --member-index-format grouped --module-index-format grouped --param-list-format list --property-list-format list --sort-by name",

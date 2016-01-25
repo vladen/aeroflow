@@ -1,8 +1,6 @@
 'use strict';
 
-import { flow } from './flow';
-import { EMITTER } from './symbols';
-import { constant, identity, isFunction } from './utilites';
+import { constant, identity, isFunction } from '../utilites';
 
 export function toMapOperator(keyTransformation, valueTransformation) {
   const keyTransformer = isNothing(keyTransformation)

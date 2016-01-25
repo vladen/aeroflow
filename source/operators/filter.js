@@ -1,6 +1,6 @@
 'use strict';
 
-import { isFunction, isNothing, isRegExp } from './utilites';
+import { isFunction, isNothing, isRegExp } from '../utilites';
 
 export function filterOperator(condition) {
   const predicate = isFunction(condition)

@@ -7,9 +7,7 @@ export function everyOperator(condition) {
     ? condition
     : isRegExp(condition)
       ? value => condition.test(value)
-      : isNothing(condition)
-        ? value => !!value
-        : value => value === condition;
+      : value => value === condition;
   return emitter => (next, done, context) => {
     let idle = true, result = true;
     context = context.spawn();

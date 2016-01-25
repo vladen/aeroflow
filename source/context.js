@@ -2,36 +2,40 @@
 
 import { isFunction, objectDefineProperties, objectDefineProperty } from './utilites';
 
-const CALLBACKS = Symbol('callbacks'), COMPLETED = Symbol('completed');
+const CALLBACKS = Symbol('callbacks'), DONE = Symbol('done');
 
 export class Context {
-  constructor(source, data) {
+  constructor(flow, data) {
     objectDefineProperties(this, {
-      [CALLBACKS]: { value: [] },
       data: { value: data },
-      source: { value: source }
+      flow: { value: flow }
     });
   }
   get active() {
-    return !this[COMPLETED];
+    return !this[DONE];
   }
   done() {
-    if (this[COMPLETED]) return false;
-    objectDefineProperty(this[COMPLETED], { value: true});
+    if (this[DONE]) return false;
+    objectDefineProperty(this, DONE, { value: true });
     const callbacks = this[CALLBACKS];
-    callbacks.forEach(callback => callback());
-    this[CALLBACKS].length = 0;
+    if (callbacks) {
+      callbacks.forEach(callback => callback());
+      callbacks.length = 0;
+    }
     return true;
   }
   spawn() {
-    if (this[COMPLETED]) return;
-    const context = new Context(this.source, this.data);
-    this[CALLBACKS].push(() => context.done());
+    const context = new Context(this.flow, this.data);
+    this.track(() => context.done());
     return context;
   }
   track(callback) {
     if (!isFunction(callback)) return;
-    if (this[COMPLETED]) callback();
-    else this[CALLBACKS].push(callback);
+    if (this[DONE]) callback();
+    else {
+      const callbacks = this[CALLBACKS];
+      if (callbacks) callbacks.push(callback);
+      else objectDefineProperty(this, CALLBACKS, { value: [callback] });
+    }
   }
 }

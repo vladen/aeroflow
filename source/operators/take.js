@@ -1,64 +1,60 @@
 'use strict';
 
-import { empty } from './aeroflow';
-import { flow } from './flow';
-import { EMITTER } from './symbols';
-import { toArrayEmitter } from './toArray';
-import { isFunction, isNumber, mathMax } from './utilites';
+import { identity, isFunction, isNumber, mathMax } from '../utilites';
+import { emptyEmitter } from '../emitters/empty';
+import { toArrayOperator } from './toArray';
 
-const takeFirstEmitter = (emitter, count) => (next, done, context) => {
-  let index = 1;
-  context = context.spawn();
-  emitter(
+export function takeFirstOperator(count) {
+  return emitter => (next, done, context) => {
+    let index = 1;
+    context = context.spawn();
+    emitter(
+      value => {
+        next(value);
+        if (count <= index++) context.done();
+      },
+      done,
+      context);
+  };
+}
+
+export function takeLastOperator(count) {
+  return emitter => (next, done, context) => toArrayOperator()(emitter)(
     value => {
-      next(value);
-      if (count <= index++) context.done();
+      const limit = value.length;
+      let index = mathMax(limit - 1 - count, 0);
+      while (index < limit) next(value[index++]);
     },
     done,
     context);
-};
+}
 
-const takeLastEmitter = (emitter, count) => (next, done, context) => toArrayEmitter(emitter)(
-  value => {
-    const limit = value.length;
-    let index = mathMax(limit - 1 - count, 0);
-    while (index < limit)
-      next(value[index++]);
-  },
-  done,
-  context);
+export function takeWhileOperator(predicate) {
+  return emitter => (next, done, context) => {
+    let index = 0;
+    context = context.spawn();
+    emitter(
+      value => {
+        if (predicate(value, index++, context.data)) next(value);
+        else context.done();
+      },
+      done,
+      context);
+  };
+}
 
-const takeWhileEmitter = (emitter, predicate) => (next, done, context) => {
-  let index = 0;
-  context = context.spawn();
-  emitter(
-    value => predicate(value, index++, context.data)
-      ? next(value)
-      : context.done(),
-    done,
-    context);
-};
-
-function take(condition) {
+export function takeOperator(condition) {
   return arguments.length
     ? isNumber(condition)
       ? condition === 0
-        ? empty
-        : flow(condition > 0
-          ? takeFirstEmitter(
-              this[EMITTER],
-              condition)
-          : takeLastEmitter(
-              this[EMITTER],
-              condition))
+        ? emptyEmitter()
+        : condition > 0
+          ? takeFirstOperator(condition)
+          : takeLastOperator(condition)
       : isFunction(condition)
-        ? flow(takeWhileEmitter(
-            this[EMITTER],
-            condition))
+        ? takeWhileOperator(condition)
         : condition
-          ? this
-          : empty
-    : this;
+          ? identity
+          : emptyEmitter()
+    : identity;
 }
-
-export { take, takeFirstEmitter, takeLastEmitter, takeWhileEmitter };

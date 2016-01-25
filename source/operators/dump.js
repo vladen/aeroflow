@@ -33,15 +33,11 @@ export function dumpToLoggerOperator(prefix, logger) {
 }
 
 export function dumpOperator(prefix, logger) {
-  return arguments.length === 0
-    ? dumpToConsoleEmitter('')
-    : arguments.length === 1
-      ? isFunction(prefix)
-        ? dumpToLoggerEmitter('', prefix)
-        : dumpToConsoleEmitter('')
-      : isFunction(logger)
-        ? isNothing(prefix)
-          ? dumpToLoggerEmitter('', logger)
-          : dumpToLoggerEmitter(prefix, logger)
-        : dumpToConsoleEmitter(prefix);
+  return isFunction(prefix)
+    ? dumpToLoggerOperator('', prefix)
+    : isFunction(logger)
+      ? dumpToLoggerOperator(prefix, logger)
+      : isNothing(prefix)
+        ? dumpToConsoleOperator('')
+        : dumpToConsoleOperator(prefix);
 }
