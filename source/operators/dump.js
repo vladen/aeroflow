@@ -6,13 +6,13 @@ export function dumpToConsoleOperator(prefix) {
   return emitter => (next, done, context) => emitter(
     value => {
       console.log(prefix + 'next', value);
-      next(value);
+      return next(value);
     },
     error => {
       error
         ? console.error(prefix + 'done', error)
         : console.log(prefix + 'done');
-      done(error);
+      return done(error);
     },
     context);
 }
@@ -21,13 +21,13 @@ export function dumpToLoggerOperator(prefix, logger) {
   return emitter => (next, done, context) => emitter(
     value => {
       logger(prefix + 'next', value);
-      next(value);
+      return next(value);
     },
     error => {
       error
         ? logger(prefix + 'done', error)
         : logger(prefix + 'done');
-      done(error);
+      return done(error);
     },
     context);
 }

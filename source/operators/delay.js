@@ -6,6 +6,7 @@ import { classOf, dateNow, isDate, mathMax } from '../utilites';
 export function delayDynamicOperator(selector) {
   return emitter => (next, done, context) => {
     let completition = dateNow(), index = 0;
+    // todoL switch to sequential notifications, accumulate pending values
     emitter(
       value => {
         let interval = selector(value, index++, context.data), estimation;
@@ -17,10 +18,12 @@ export function delayDynamicOperator(selector) {
         else estimation = dateNow() + interval;
         if (completition < estimation) completition = estimation + 1;
         setTimeout(() => next(value), mathMax(interval, 0));
+        return true;
       },
       error => {
         completition -= dateNow();
         setTimeout(() => done(error), mathMax(completition, 0));
+        return true;
       },
       context);
   };

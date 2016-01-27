@@ -8,7 +8,7 @@ export function expandEmitter(expanding, seed) {
     : constant(expanding);
   return (next, done, context) => {
     let index = 0, value = seed;
-    while (context.active) next(value = expander(value, index++, context.data));
+    while (next(expander(value, index++, context.data)));
     done();
   };
 }

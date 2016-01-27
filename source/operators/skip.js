@@ -1,7 +1,7 @@
 'use strict';
 
 import { FUNCTION, NUMBER } from '../symbols';
-import { classOf, noop } from '../utilites';
+import { classOf, identity, mathMax, noop } from '../utilites';
 import { toArrayOperator } from './toArray';
 
 export function skipAllOperator() {
@@ -12,9 +12,7 @@ export function skipFirstOperator(count) {
   return emitter => (next, done, context) => {
     let index = -1;
     emitter(
-      value => {
-        if (++index >= count) next(value);
-      },
+      value => ++index < count || next(value),
       done,
       context);
   };
@@ -22,8 +20,11 @@ export function skipFirstOperator(count) {
 
 export function skipLastOperator(count) {
   return emitter => (next, done, context) => toArrayOperator()(emitter)(
-    value => {
-      for (let index = -1, limit = value.length - count; ++index < limit;) next(value[index]);
+    values => {
+      const limit = mathMax(values.length - count, 0);
+      let index = -1;
+      while (++index < limit && next(values[index]));
+      done();
     },
     done,
     context);
@@ -35,7 +36,7 @@ export function skipWhileOperator(predicate) {
     emitter(
       value => {
         if (skipping && !predicate(value, index++, context.data)) skipping = false;
-        if (!skipping) next(value);
+        return skipping || next(value);
       },
       done,
       context);

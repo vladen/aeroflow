@@ -1,6 +1,6 @@
 'use strict';
 
-import { isFunction } from '../utilites';
+import { isFunction, isNothing } from '../utilites';
 import { emptyEmitter } from '../emitters/empty';
 import { valueEmitter } from '../emitters/value';
 
@@ -14,10 +14,11 @@ export function reduceAlongOperator(reducer) {
           result = value;
         }
         else result = reducer(result, value, index++, context.data);
+        return true;
       },
       error => {
-        if (!idle) next(result);
-        done(error);
+        if (isNothing(error) && !idle) next(result);
+        return done(error);
       },
       context);
   };
@@ -27,10 +28,13 @@ export function reduceGeneralOperator(reducer, seed) {
   return emitter => (next, done, context) => {
     let index = 0, result = seed;
     emitter(
-      value => result = reducer(result, value, index++, context.data),
+      value => {
+        result = reducer(result, value, index++, context.data)
+        return true;
+      },
       error => {
-        next(result);
-        done(error);
+        if (isNothing(error)) next(result);
+        return done(error);
       },
       context);
   };
@@ -43,10 +47,11 @@ export function reduceOptionalOperator(reducer, seed) {
       value => {
         idle = false;
         result = reducer(result, value, index++, context.data);
+        return true;
       },
       error => {
-        if (!idle) next(result);
-        done(error);
+        if (isNothing(error) && !idle) next(result);
+        return done(error);
       },
       context);
   };

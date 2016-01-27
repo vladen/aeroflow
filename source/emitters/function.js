@@ -2,7 +2,12 @@
 
 export function functionEmitter(source) {
   return (next, done, context) => {
-  	next(source(context.data));
-  	done();
+    try {
+      next(source(context.data));
+      return done();
+    }
+  	catch(error) {
+    	return done(error);
+    }
   };
 }

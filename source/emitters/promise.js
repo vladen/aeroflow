@@ -6,5 +6,5 @@ export function promiseEmitter(source) {
       next(value);
       done();
     },
-    error => done(error));
+    done);
 }

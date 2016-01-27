@@ -1,6 +1,6 @@
 'use strict';
 
-import { constant, identity, isFunction } from '../utilites';
+import { constant, identity, isFunction, isNothing } from '../utilites';
 
 export function toMapOperator(keyTransformation, valueTransformation) {
   const keyTransformer = isNothing(keyTransformation)
@@ -16,12 +16,15 @@ export function toMapOperator(keyTransformation, valueTransformation) {
   return emitter=> (next, done, context) => {
     let index = 0, result = new Map;
     emitter(
-      value => result.set(
-        keyTransformer(value, index++, context.data),
-        valueTransformer(value, index++, context.data)),
+      value => {
+        result.set(
+          keyTransformer(value, index++, context.data),
+          valueTransformer(value, index++, context.data));
+        return true;
+      },
       error => {
-        next(result);
-        done(error);
+        if (isNothing(error)) next(result);
+        return done(error);
       },
       context);
   };

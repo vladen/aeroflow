@@ -22,9 +22,7 @@ export function filterOperator(condition) {
   return emitter => (next, done, context) => {
     let index = 0;
     emitter(
-      value => {
-        if (predicate(value, index++, context.data)) next(value);
-      },
+      value => !predicate(value, index++, context.data) || next(value),
       done,
       context);
   };

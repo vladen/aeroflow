@@ -40,24 +40,6 @@
     }
   }
 
-  var _createClass = function () {
-    function defineProperties(target, props) {
-      for (var i = 0; i < props.length; i++) {
-        var descriptor = props[i];
-        descriptor.enumerable = descriptor.enumerable || false;
-        descriptor.configurable = true;
-        if ("value" in descriptor) descriptor.writable = true;
-        Object.defineProperty(target, descriptor.key, descriptor);
-      }
-    }
-
-    return function (Constructor, protoProps, staticProps) {
-      if (protoProps) defineProperties(Constructor.prototype, protoProps);
-      if (staticProps) defineProperties(Constructor, staticProps);
-      return Constructor;
-    };
-  }();
-
   var AEROFLOW = 'Aeroflow';
   var ARRAY = 'Array';
   var BOOLEAN = 'Boolean';
@@ -71,9 +53,29 @@
   var REGEXP = 'RegExp';
   var SYMBOL = 'Symbol';
   var UNDEFINED = 'Undefined';
+  var dateNow = Date.now;
+  var mathFloor = Math.floor;
+  var mathRandom = Math.random;
+  var mathMax = Math.max;
+  var maxInteger = Number.MAX_SAFE_INTEGER;
+  var objectCreate = Object.create;
+  var objectDefineProperties = Object.defineProperties;
+  var objectToString = Object.prototype.toString;
+
+  var constant = function constant(value) {
+    return function () {
+      return value;
+    };
+  };
+
+  var identity = function identity(value) {
+    return value;
+  };
+
+  var noop = function noop() {};
 
   var classOf = function classOf(value) {
-    return Object.prototype.toString.call(value).slice(8, -1);
+    return objectToString.call(value).slice(8, -1);
   };
 
   var classIs = function classIs(className) {
@@ -82,43 +84,30 @@
     };
   };
 
-  var constant = function constant(value) {
-    return function () {
-      return value;
-    };
-  };
-
-  var dateNow = Date.now;
-
-  var identity$1 = function identity$1(value) {
-    return value;
-  };
-
   var isDate = classIs(DATE);
   var isFunction$1 = classIs(FUNCTION);
   var isInteger = Number.isInteger;
 
-  var isNothing$1 = function isNothing$1(value) {
+  var isNothing = function isNothing(value) {
     return value == null;
   };
 
-  var mathFloor = Math.floor;
-  var mathRandom = Math.random;
-  var mathMax = Math.max;
+  var isNumber = classIs(NUMBER);
 
-  var noop = function noop() {};
+  var toNumber = function toNumber(value, def) {
+    if (!isNumber(value)) {
+      value = +value;
+      if (isNaN(value)) return def;
+    }
 
-  var objectCreate = Object.create;
-  var objectDefineProperties = Object.defineProperties;
-  var objectDefineProperty = Object.defineProperty;
+    return value;
+  };
 
   function arrayEmitter(source) {
     return function (next, done, context) {
       var index = -1;
 
-      while (context.active && ++index < source.length) {
-        next(source[index]);
-      }
+      while (++index < source.length && next(source[index])) {}
 
       done();
     };
@@ -132,8 +121,12 @@
 
   function functionEmitter(source) {
     return function (next, done, context) {
-      next(source(context.data));
-      done();
+      try {
+        next(source(context.data));
+        return done();
+      } catch (error) {
+        return done(error);
+      }
     };
   }
 
@@ -142,9 +135,7 @@
       return source.then(function (value) {
         next(value);
         done();
-      }, function (error) {
-        return done(error);
-      });
+      }, done);
     };
   }
 
@@ -155,15 +146,37 @@
     };
   }
 
+  function finalize(finalizer) {
+    if (isFunction$1(finalizer)) finalizer();
+  }
+
   function customEmitter(emitter) {
     return arguments.length ? isFunction$1(emitter) ? function (next, done, context) {
-      return context.track(emitter(function (value) {
-        if (context.active) next();
-      }, function (error) {
-        if (!context.active) return;
+      var complete = false,
+          finalizer = undefined;
+
+      try {
+        finalizer = emitter(function (value) {
+          if (complete) return false;
+          if (next(value)) return true;
+          complete = true;
+          done();
+        }, function (error) {
+          if (complete) return;
+          complete = true;
+          done(error);
+        }, context);
+      } catch (error) {
+        if (complete) {
+          finalize(finalizer);
+          throw error;
+        }
+
+        complete = true;
         done();
-        context.done();
-      }, context));
+      }
+
+      finalize(finalizer);
     } : valueEmitter(emitter) : emptyEmitter();
   }
 
@@ -173,71 +186,80 @@
       var index = 0,
           value = seed;
 
-      while (context.active) {
-        next(value = expander(value, index++, context.data));
-      }
+      while (next(expander(value, index++, context.data))) {}
 
       done();
     };
   }
 
-  function randomDecimalEmitter(inclusiveMin, exclusiveMax) {
-    return function (next, done, context) {
-      while (context.active) {
-        next(inclusiveMin + exclusiveMax * mathRandom());
-      }
+  function randomDecimalEmitter(min, max) {
+    return function (next, done) {
+      while (next(min + max * mathRandom())) {}
 
       done();
     };
   }
 
-  function randomIntegerEmitter(inclusiveMin, exclusiveMax) {
-    return function (next, done, context) {
-      while (context.active) {
-        next(mathFloor(inclusiveMin + exclusiveMax * mathRandom()));
-      }
+  function randomIntegerEmitter(min, max) {
+    return function (next, done) {
+      while (next(mathFloor(min + max * mathRandom()))) {}
 
       done();
     };
   }
 
-  function randomEmitter(inclusiveMin, exclusiveMax) {
-    inclusiveMin = +inclusiveMin || 0;
-    exclusiveMax = +exclusiveMax || 1;
-    exclusiveMax -= inclusiveMin;
-    return isInteger(inclusiveMin) && isInteger(exclusiveMax) ? randomIntegerEmitter(inclusiveMin, exclusiveMax) : randomDecimalEmitter(inclusiveMin, exclusiveMax);
+  function randomEmitter(min, max) {
+    max = toNumber(max, 1);
+    min = toNumber(min, 0);
+    max -= min;
+    return isInteger(min) && isInteger(max) ? randomIntegerEmitter(min, max) : randomDecimalEmitter(min, max);
   }
 
-  function rangeEmitter(inclusiveStart, inclusiveEnd, step) {
+  function rangeEmitter(start, end, step) {
+    end = toNumber(end, maxInteger);
+    start = toNumber(start, 0);
+    if (start === end) return valueEmitter(start);
+
+    if (start < end) {
+      step = toNumber(step, 1);
+      if (step < 1) return valueEmitter(start);
+      return function (next, done, context) {
+        var value = start;
+
+        while (next(value) && (value += step) <= end) {}
+
+        done();
+      };
+    }
+
+    step = toNumber(step, -1);
+    if (step > -1) return valueEmitter(start);
     return function (next, done, context) {
-      var i = inclusiveStart - step;
-      if (inclusiveStart < inclusiveEnd) while (context.active && (i += step) <= inclusiveEnd) {
-        next(i);
-      } else while (context.active && (i += step) >= inclusiveEnd) {
-        next(i);
-      }
+      var value = start;
+
+      while (next(value) && (value += step) >= end) {}
+
       done();
     };
   }
 
   function repeatDynamicEmitter(repeater) {
     return function (next, done, context) {
-      var index = 0,
-          result = undefined;
+      var index = 0;
 
-      while (context.active && false !== (result = repeater(index++, context.data))) {
-        next(result);
+      try {
+        while (next(repeater(index++, context.data))) {}
+
+        done();
+      } catch (error) {
+        done(error);
       }
-
-      done();
     };
   }
 
   function repeatStaticEmitter(value) {
     return function (next, done, context) {
-      while (context.active) {
-        next(value);
-      }
+      while (next(value)) {}
 
       done();
     };
@@ -245,6 +267,18 @@
 
   function repeatEmitter(value) {
     return isFunction(value) ? repeatDynamicEmitter(value) : repeatStaticEmitter(value);
+  }
+
+  function timerEmitter(interval) {
+    interval = +interval;
+    return isNaN(interval) ? emptyEmitter() : function (next, done, context) {
+      var timer = setInterval(function () {
+        if (!next(new Date())) {
+          clearInterval(timer);
+          done();
+        }
+      }, interval);
+    };
   }
 
   function reduceAlongOperator(reducer) {
@@ -258,9 +292,11 @@
             idle = false;
             result = value;
           } else result = reducer(result, value, index++, context.data);
+
+          return true;
         }, function (error) {
-          if (!idle) next(result);
-          done(error);
+          if (isNothing(error) && !idle) next(result);
+          return done(error);
         }, context);
       };
     };
@@ -272,10 +308,11 @@
         var index = 0,
             result = seed;
         emitter(function (value) {
-          return result = reducer(result, value, index++, context.data);
+          result = reducer(result, value, index++, context.data);
+          return true;
         }, function (error) {
-          next(result);
-          done(error);
+          if (isNothing(error)) next(result);
+          return done(error);
         }, context);
       };
     };
@@ -290,9 +327,10 @@
         emitter(function (value) {
           idle = false;
           result = reducer(result, value, index++, context.data);
+          return true;
         }, function (error) {
-          if (!idle) next(result);
-          done(error);
+          if (isNothing(error) && !idle) next(result);
+          return done(error);
         }, context);
       };
     };
@@ -342,11 +380,13 @@
           setTimeout(function () {
             return next(value);
           }, mathMax(interval, 0));
+          return true;
         }, function (error) {
           completition -= dateNow();
           setTimeout(function () {
             return done(error);
           }, mathMax(completition, 0));
+          return true;
         }, context);
       };
     };
@@ -388,10 +428,10 @@
       return function (next, done, context) {
         return emitter(function (value) {
           console.log(prefix + 'next', value);
-          next(value);
+          return next(value);
         }, function (error) {
           error ? console.error(prefix + 'done', error) : console.log(prefix + 'done');
-          done(error);
+          return done(error);
         }, context);
       };
     };
@@ -402,17 +442,17 @@
       return function (next, done, context) {
         return emitter(function (value) {
           logger(prefix + 'next', value);
-          next(value);
+          return next(value);
         }, function (error) {
           error ? logger(prefix + 'done', error) : logger(prefix + 'done');
-          done(error);
+          return done(error);
         }, context);
       };
     };
   }
 
   function dumpOperator(prefix, logger) {
-    return isFunction$1(prefix) ? dumpToLoggerOperator('', prefix) : isFunction$1(logger) ? dumpToLoggerOperator(prefix, logger) : isNothing$1(prefix) ? dumpToConsoleOperator('') : dumpToConsoleOperator(prefix);
+    return isFunction$1(prefix) ? dumpToLoggerOperator('', prefix) : isFunction$1(logger) ? dumpToLoggerOperator(prefix, logger) : isNothing(prefix) ? dumpToConsoleOperator('') : dumpToConsoleOperator(prefix);
   }
 
   function everyOperator(condition) {
@@ -452,12 +492,11 @@
         context = context.spawn();
         emitter(function (value) {
           idle = false;
-          if (predicate(value)) return;
-          result = false;
-          context.done();
+          if (predicate(value)) return true;
+          return result = false;
         }, function (error) {
-          next(result && !idle);
-          done(error);
+          if (isNothing(error)) next(result && !idle);
+          return done(error);
         }, context);
       };
     };
@@ -497,21 +536,21 @@
       return function (next, done, context) {
         var index = 0;
         emitter(function (value) {
-          if (predicate(value, index++, context.data)) next(value);
+          return !predicate(value, index++, context.data) || next(value);
         }, done, context);
       };
     };
   }
 
   function joinOperator(separator, optional) {
-    var joiner = isFunction$1(separator) ? separator : isNothing$1(separator) ? constant(',') : constant(separator);
+    var joiner = isFunction$1(separator) ? separator : isNothing(separator) ? constant(',') : constant(separator);
     return (optional ? reduceOptionalOperator : reduceGeneralOperator)(function (result, value, index, data) {
       return result.length ? result + joiner(value, index, data) + value : value;
     }, '');
   }
 
   function mapOperator(mapping) {
-    if (isNothing$1(mapping)) return identity$1;
+    if (isNothing(mapping)) return identity;
     var mapper = isFunction$1(mapping) ? mapping : constant(mapping);
     return function (emitter) {
       return function (next, done, context) {
@@ -534,10 +573,11 @@
       return function (next, done, context) {
         var result = [];
         emitter(function (value) {
-          return result.push(value);
+          result.push(value);
+          return true;
         }, function (error) {
-          next(result);
-          done(error);
+          if (isNothing(error)) next(result);
+          return done(error);
         }, context);
       };
     };
@@ -561,6 +601,20 @@
     });
   }
 
+  function reverseOperator() {
+    return function (emitter) {
+      return function (next, done, context) {
+        return toArrayOperator()(emitter)(function (value) {
+          for (var index = value.length; index--;) {
+            next(value[index]);
+          }
+
+          return false;
+        }, done, context);
+      };
+    };
+  }
+
   function skipAllOperator() {
     return function (emitter) {
       return function (next, done, context) {
@@ -574,7 +628,7 @@
       return function (next, done, context) {
         var index = -1;
         emitter(function (value) {
-          if (++index >= count) next(value);
+          return ++index < count || next(value);
         }, done, context);
       };
     };
@@ -583,10 +637,13 @@
   function skipLastOperator(count) {
     return function (emitter) {
       return function (next, done, context) {
-        return toArrayOperator()(emitter)(function (value) {
-          for (var index = -1, limit = value.length - count; ++index < limit;) {
-            next(value[index]);
-          }
+        return toArrayOperator()(emitter)(function (values) {
+          var limit = mathMax(values.length - count, 0);
+          var index = -1;
+
+          while (++index < limit && next(values[index])) {}
+
+          done();
         }, done, context);
       };
     };
@@ -599,7 +656,7 @@
             skipping = true;
         emitter(function (value) {
           if (skipping && !predicate(value, index++, context.data)) skipping = false;
-          if (!skipping) next(value);
+          return skipping || next(value);
         }, done, context);
       };
     };
@@ -653,12 +710,12 @@
         var result = false;
         context = context.spawn();
         emitter(function (value) {
-          if (!predicate(value)) return;
+          if (!predicate(value)) return true;
           result = true;
-          context.done();
+          return false;
         }, function (error) {
-          next(result);
-          done(error);
+          if (isNothing(error)) next(result);
+          return done(error);
         }, context);
       };
     };
@@ -675,11 +732,9 @@
   function takeFirstOperator(count) {
     return function (emitter) {
       return function (next, done, context) {
-        var index = 1;
-        context = context.spawn();
+        var index = -1;
         emitter(function (value) {
-          next(value);
-          if (count <= index++) context.done();
+          return ++index < count && next(value);
         }, done, context);
       };
     };
@@ -688,13 +743,13 @@
   function takeLastOperator(count) {
     return function (emitter) {
       return function (next, done, context) {
-        return toArrayOperator()(emitter)(function (value) {
-          var limit = value.length;
-          var index = mathMax(limit - 1 - count, 0);
+        return toArrayOperator()(emitter)(function (values) {
+          var limit = values.length;
+          var index = mathMax(limit - count - 1, 0);
 
-          while (index < limit) {
-            next(value[index++]);
-          }
+          while (++index < limit && next(values[index])) {}
+
+          done();
         }, done, context);
       };
     };
@@ -704,9 +759,8 @@
     return function (emitter) {
       return function (next, done, context) {
         var index = 0;
-        context = context.spawn();
         emitter(function (value) {
-          if (predicate(value, index++, context.data)) next(value);else context.done();
+          return predicate(value, index++, context.data) && next(value);
         }, done, context);
       };
     };
@@ -715,13 +769,13 @@
   function takeOperator(condition) {
     switch (classOf(condition)) {
       case NUMBER:
-        return condition > 0 ? takeFirstOperator(condition) : condition < 0 ? takeLastOperator(condition) : emptyEmitter();
+        return condition > 0 ? takeFirstOperator(condition) : condition < 0 ? takeLastOperator(-condition) : emptyEmitter();
 
       case FUNCTION:
         return takeWhileOperator(condition);
 
       default:
-        return condition ? identity$1 : emptyEmitter();
+        return condition ? identity : emptyEmitter();
     }
   }
 
@@ -742,30 +796,32 @@
       return function (next, done, context) {
         var past = dateNow();
         emitter(function (value) {
-          var current = dateNow();
-          next({
+          var current = dateNow(),
+              result = next({
             timedelta: current - past,
             timestamp: dateNow,
             value: value
           });
           past = current;
+          return result;
         }, done, context);
       };
     };
   }
 
   function toMapOperator(keyTransformation, valueTransformation) {
-    var keyTransformer = isNothing(keyTransformation) ? identity$1 : isFunction$1(keyTransformation) ? keyTransformation : constant(keyTransformation);
-    var valueTransformer = isNothing(valueTransformation) ? identity$1 : isFunction$1(valueTransformation) ? valueTransformation : constant(valueTransformation);
+    var keyTransformer = isNothing(keyTransformation) ? identity : isFunction$1(keyTransformation) ? keyTransformation : constant(keyTransformation);
+    var valueTransformer = isNothing(valueTransformation) ? identity : isFunction$1(valueTransformation) ? valueTransformation : constant(valueTransformation);
     return function (emitter) {
       return function (next, done, context) {
         var index = 0,
             result = new Map();
         emitter(function (value) {
-          return result.set(keyTransformer(value, index++, context.data), valueTransformer(value, index++, context.data));
+          result.set(keyTransformer(value, index++, context.data), valueTransformer(value, index++, context.data));
+          return true;
         }, function (error) {
-          next(result);
-          done(error);
+          if (isNothing(error)) next(result);
+          return done(error);
         }, context);
       };
     };
@@ -777,78 +833,14 @@
         var result = new Set();
         emitter(function (value) {
           result.add(value);
+          return true;
         }, function (error) {
-          next(result);
-          done(error);
+          if (isNothing(error)) next(result);
+          return done(error);
         }, context);
       };
     };
   }
-
-  var CALLBACKS = Symbol('callbacks');
-  var DONE = Symbol('done');
-
-  var Context = function () {
-    function Context(flow, data) {
-      _classCallCheck(this, Context);
-
-      objectDefineProperties(this, {
-        data: {
-          value: data
-        },
-        flow: {
-          value: flow
-        }
-      });
-    }
-
-    _createClass(Context, [{
-      key: 'done',
-      value: function done() {
-        if (this[DONE]) return false;
-        objectDefineProperty(this, DONE, {
-          value: true
-        });
-        var callbacks = this[CALLBACKS];
-
-        if (callbacks) {
-          callbacks.forEach(function (callback) {
-            return callback();
-          });
-          callbacks.length = 0;
-        }
-
-        return true;
-      }
-    }, {
-      key: 'spawn',
-      value: function spawn() {
-        var context = new Context(this.flow, this.data);
-        this.track(function () {
-          return context.done();
-        });
-        return context;
-      }
-    }, {
-      key: 'track',
-      value: function track(callback) {
-        if (!isFunction$1(callback)) return;
-        if (this[DONE]) callback();else {
-          var callbacks = this[CALLBACKS];
-          if (callbacks) callbacks.push(callback);else objectDefineProperty(this, CALLBACKS, {
-            value: [callback]
-          });
-        }
-      }
-    }, {
-      key: 'active',
-      get: function get() {
-        return !this[DONE];
-      }
-    }]);
-
-    return Context;
-  }();
 
   var Aeroflow = function Aeroflow(emitter, sources) {
     _classCallCheck(this, Aeroflow);
@@ -935,18 +927,26 @@
     return this.chain(reduceOperator(reducer, seed, optional));
   }
 
+  function reverse() {
+    return this.chain(reverseOperator());
+  }
+
   function run(next, done, data) {
     if (!isFunction$1(done)) done = noop;
     if (!isFunction$1(next)) next = noop;
-    var context = new Context(this, data),
-        emitter = this.emitter;
+    var context = objectDefineProperties({}, {
+      data: {
+        value: data
+      },
+      flow: {
+        value: this
+      }
+    });
     setImmediate(function () {
-      var index = 0;
-      emitter(function (value) {
-        next(value, index++, context);
+      context.flow.emitter(function (value) {
+        return false !== next(value, data);
       }, function (error) {
-        context.done();
-        done(error, index, context);
+        return done(error, data);
       }, context);
     });
     return this;
@@ -988,7 +988,7 @@
     return this.chain(toSetOperator());
   }
 
-  var operators = objectCreate(null, {
+  var operators = objectCreate(Object[PROTOTYPE], {
     count: {
       value: count,
       writable: true
@@ -1031,6 +1031,10 @@
     },
     reduce: {
       value: reduce,
+      writable: true
+    },
+    reverse: {
+      value: reverse,
       writable: true
     },
     skip: {
@@ -1107,7 +1111,7 @@
   }), _objectCreate2));
 
   function adapt(source) {
-    if (isNothing$1(source)) return valueEmitter(source);
+    if (isNothing(source)) return valueEmitter(source);
     var sourceClass = classOf(source);
     if (sourceClass === AEROFLOW) return source.emitter;
     var adapter = adapters[sourceClass];
@@ -1141,7 +1145,7 @@
     var limit = sources.length,
         index = -1;
     !function proceed(error) {
-      if (!error && context.active && ++index < limit) adapt(sources[index])(next, proceed, context);else done(error);
+      if (isNothing(error) && ++index < limit) adapt(sources[index])(next, proceed, context);else done(error);
     }();
   }
 
@@ -1165,16 +1169,20 @@
     return new Aeroflow(valueEmitter(value));
   }
 
-  function random(inclusiveMin, exclusiveMax) {
-    return new Aeroflow(randomEmitter(inclusiveMin, exclusiveMax));
+  function random(min, max) {
+    return new Aeroflow(randomEmitter(min, max));
   }
 
-  function range(inclusiveStart, inclusiveEnd, step) {
-    return new Aeroflow(rangeEmitter(inclusiveStart, inclusiveEnd, step));
+  function range(start, end, step) {
+    return new Aeroflow(rangeEmitter(start, end, step));
   }
 
   function repeat(value) {
     return new Aeroflow(repeatEmitter(value));
+  }
+
+  function timer(interval) {
+    return new Aeroflow(timerEmitter(interval));
   }
 
   objectDefineProperties(aeroflow, {
@@ -1209,6 +1217,9 @@
     },
     repeat: {
       value: repeat
+    },
+    timer: {
+      value: timer
     }
   });
   exports.default = aeroflow;

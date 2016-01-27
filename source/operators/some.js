@@ -1,7 +1,7 @@
 'use strict';
 
 import { FUNCTION, REGEXP, UNDEFINED } from '../symbols';
-import { classOf } from '../utilites';
+import { classOf, isNothing } from '../utilites';
 
 export function someOperator(condition) {
   let predicate;
@@ -24,13 +24,13 @@ export function someOperator(condition) {
     context = context.spawn();
     emitter(
       value => {
-        if (!predicate(value)) return;
+        if (!predicate(value)) return true;
         result = true;
-        context.done();
+        return false;
       },
       error => {
-        next(result);
-        done(error);
+        if (isNothing(error)) next(result);
+        return done(error);
       },
       context);
   };

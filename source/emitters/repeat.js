@@ -2,15 +2,20 @@
 
 export function repeatDynamicEmitter(repeater) {
   return (next, done, context) => {
-    let index = 0, result;
-    while (context.active && false !== (result = repeater(index++, context.data))) next(result);
-    done();
+    let index = 0;
+    try {
+      while (next(repeater(index++, context.data)));
+      done();
+    }
+    catch(error) {
+      done(error);
+    }
   };
 }
 
 export function repeatStaticEmitter(value) {
   return (next, done, context) => {
-    while(context.active) next(value);
+    while (next(value));
     done();
   };
 }
