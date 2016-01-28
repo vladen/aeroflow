@@ -34,7 +34,6 @@
   const classOf = value => objectToString.call(value).slice(8, -1);
   const classIs = className => value => classOf(value) === className;
 
-  const isDate = classIs(DATE);
   const isFunction$1 = classIs(FUNCTION);
   const isInteger = Number.isInteger;
   const isNothing = value => value == null;
@@ -298,46 +297,49 @@
     	0);
   }
 
-  function delayDynamicOperator(selector) {
+  function delayOperator(condition) {
+    const delayer = isFunction$1(condition)
+      ? condition
+      : constant(condition);
     return emitter => (next, done, context) => {
-      let completition = dateNow(), index = 0;
-      emitter(
-        value => {
-          let interval = selector(value, index++, context.data), estimation;
-          if (isDate(interval)) {
-            estimation = interval;
+      let buffer = [], completed = false, delivering = false, index = 0;
+      function schedule(action, argument) {
+        if (delivering) {
+          buffer.push([action, argument]);
+          return;
+        }
+        delivering = true;
+        let interval = delayer(argument, index++, context.data);
+        switch (classOf(interval)) {
+          case DATE:
             interval = interval - dateNow();
+            break;
+          case NUMBER:
+            break;
+          default:
+            interval = +interval;
+        }
+        if (interval < 0) interval = 0;
+        setTimeout(() => {
+          delivering = false;
+          if (!action(argument)) {
+            completed = true;
+            buffer.length = 0;
           }
-          // todo: convert interval to number
-          else estimation = dateNow() + interval;
-          if (completition < estimation) completition = estimation + 1;
-          setTimeout(() => next(value), mathMax(interval, 0));
+          else if (buffer.length) schedule.apply(null, buffer.shift());
+        }, interval);
+      };
+      return emitter(
+        value => {
+          if (completed) return false;
+          schedule(next, value);
           return true;
         },
         error => {
-          completition -= dateNow();
-          setTimeout(() => done(error), mathMax(completition, 0));
-          return true;
+          completed = true;
+          schedule(done, error);
         },
         context);
-    };
-  }
-
-  function delayStaticOperator(interval) {
-    return emitter => (next, done, context) => emitter(
-      value => setTimeout(() => next(value), interval),
-      error => setTimeout(() => done(error), interval),
-      context);
-  }
-
-  function delayOperator(condition) {
-    switch (classOf(condition)) {
-      case DATE:
-        return delayDynamicOperator(() => mathMax(condition - new Date, 0));
-      case FUNCTION:
-        return delayDynamicOperator(condition);
-      default:
-        return delayStaticOperator(mathMax(+condition || 0, 0));
     }
   }
 
@@ -435,6 +437,42 @@
       emitter(
         value => !predicate(value, index++, context.data) || next(value),
         done,
+        context);
+    };
+  }
+
+  function groupOperator(selectors) {
+    selectors = selectors.length
+      ? selectors.map(selector => isFunction$1(selector)
+        ? selector
+        : constant(selector))
+      : [constant()];
+    const limit = selectors.length - 1;
+    return emitter => (next, done, context) => {
+      const groups = new Map;
+      let index = 0;
+      emitter(
+        value => {
+          let current, parent = groups;
+          for (let i = -1; ++i <= limit;) {
+            const key = selectors[i](value, index++, context.data);
+            current = parent.get(key);
+            if (!current) {
+              current = i === limit ? [] : new Map;
+              parent.set(key, current);
+            }
+            parent = current;
+          }
+          current.push(value);
+          return true;
+        },
+        error => {
+          if (error) done(error);
+          else {
+            Array.from(groups).every(next);
+            done();
+          }
+        },
         context);
     };
   }
@@ -782,18 +820,18 @@
     *   The result of condition function will be converted nu number and used as milliseconds interval.
     *
     * @example:
-    * aeroflow(1).delay(500).dump().run();
+    * aeroflow(1, 2).delay(500).dump().run();
     * // next 1 // after 500ms
-    * // done
+    * // next 2 // after 500ms
+    * // done // after 500ms
     * aeroflow(1, 2).delay(new Date(Date.now() + 500)).dump().run();
     * // next 1 // after 500ms
-    * // next 2
-    * // done
-    * aeroflow([1, 2, 3]).delay((value, index) => index * 500).dump().run();
-    * // next 1
     * // next 2 // after 500ms
-    * // next 3 // after 1000ms
-    * // done
+    * // done // after 500ms
+    * aeroflow(1, 2).delay((value, index) => 500 + index * 500).dump().run();
+    * // next 1 // after 500ms
+    * // next 2 // after 1000ms
+    * // done // after 1500ms
     */
   function delay(condition) {
     return this.chain(delayOperator(condition));
@@ -860,6 +898,9 @@
     */
   function filter(condition) {
     return this.chain(filterOperator(condition)); 
+  }
+  function group(...selectors) {
+    return this.chain(groupOperator(selectors)); 
   }
   function join(condition, optional) {
     return this.chain(joinOperator(condition, optional)); 
@@ -1108,6 +1149,7 @@
     dump: { value: dump, writable: true },
     every: { value: every, writable: true },
     filter: { value: filter, writable: true },
+    group: { value: group, writable: true },
     join: { value: join, writable: true },
     map: { value: map, writable: true },
     max: { value: max, writable: true },

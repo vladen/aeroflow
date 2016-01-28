@@ -1,48 +1,50 @@
 'use strict';
 
-import { DATE, FUNCTION } from '../symbols';
-import { classOf, dateNow, isDate, mathMax } from '../utilites';
+import { DATE, FUNCTION, NUMBER } from '../symbols';
+import { classOf, constant, dateNow, isFunction, mathMax } from '../utilites';
 
-export function delayDynamicOperator(selector) {
+export function delayOperator(condition) {
+  const delayer = isFunction(condition)
+    ? condition
+    : constant(condition);
   return emitter => (next, done, context) => {
-    let completition = dateNow(), index = 0;
-    // todoL switch to sequential notifications, accumulate pending values
-    emitter(
-      value => {
-        let interval = selector(value, index++, context.data), estimation;
-        if (isDate(interval)) {
-          estimation = interval;
+    let buffer = [], completed = false, delivering = false, index = 0;
+    function schedule(action, argument) {
+      if (delivering) {
+        buffer.push([action, argument]);
+        return;
+      }
+      delivering = true;
+      let interval = delayer(argument, index++, context.data);
+      switch (classOf(interval)) {
+        case DATE:
           interval = interval - dateNow();
+          break;
+        case NUMBER:
+          break;
+        default:
+          interval = +interval;
+      }
+      if (interval < 0) interval = 0;
+      setTimeout(() => {
+        delivering = false;
+        if (!action(argument)) {
+          completed = true;
+          buffer.length = 0;
         }
-        // todo: convert interval to number
-        else estimation = dateNow() + interval;
-        if (completition < estimation) completition = estimation + 1;
-        setTimeout(() => next(value), mathMax(interval, 0));
+        else if (buffer.length) schedule.apply(null, buffer.shift());
+      }, interval);
+    };
+    return emitter(
+      value => {
+        if (completed) return false;
+        schedule(next, value);
         return true;
       },
       error => {
-        completition -= dateNow();
-        setTimeout(() => done(error), mathMax(completition, 0));
-        return true;
+        completed = true;
+        schedule(done, error);
       },
       context);
-  };
-}
-
-export function delayStaticOperator(interval) {
-  return emitter => (next, done, context) => emitter(
-    value => setTimeout(() => next(value), interval),
-    error => setTimeout(() => done(error), interval),
-    context);
-}
-
-export function delayOperator(condition) {
-  switch (classOf(condition)) {
-    case DATE:
-      return delayDynamicOperator(() => mathMax(condition - new Date, 0));
-    case FUNCTION:
-      return delayDynamicOperator(condition);
-    default:
-      return delayStaticOperator(mathMax(+condition || 0, 0));
   }
 }

@@ -24,6 +24,7 @@ import { delayOperator } from './operators/delay';
 import { dumpOperator } from './operators/dump';
 import { everyOperator } from './operators/every';
 import { filterOperator } from './operators/filter';
+import { groupOperator } from './operators/group';
 import { joinOperator } from './operators/join';
 import { mapOperator } from './operators/map';
 import { maxOperator } from './operators/max';
@@ -97,18 +98,18 @@ function count(optional) {
   *   The result of condition function will be converted nu number and used as milliseconds interval.
   *
   * @example:
-  * aeroflow(1).delay(500).dump().run();
+  * aeroflow(1, 2).delay(500).dump().run();
   * // next 1 // after 500ms
-  * // done
+  * // next 2 // after 500ms
+  * // done // after 500ms
   * aeroflow(1, 2).delay(new Date(Date.now() + 500)).dump().run();
   * // next 1 // after 500ms
-  * // next 2
-  * // done
-  * aeroflow([1, 2, 3]).delay((value, index) => index * 500).dump().run();
-  * // next 1
   * // next 2 // after 500ms
-  * // next 3 // after 1000ms
-  * // done
+  * // done // after 500ms
+  * aeroflow(1, 2).delay((value, index) => 500 + index * 500).dump().run();
+  * // next 1 // after 500ms
+  * // next 2 // after 1000ms
+  * // done // after 1500ms
   */
 function delay(condition) {
   return this.chain(delayOperator(condition));
@@ -175,6 +176,21 @@ function every(condition) {
   */
 function filter(condition) {
   return this.chain(filterOperator(condition)); 
+}
+/*
+aeroflow(
+  { country: 'Belarus', city: 'Brest' },
+  { country: 'Poland', city: 'Krakow' },
+  { country: 'Belarus', city: 'Minsk' },
+  { country: 'Belarus', city: 'Grodno' },
+  { country: 'Poland', city: 'Lodz' }
+).group(value => value.country, value => value.city).dump().run();
+// next ["Belarus", {{"Brest" => Array[1]}, {"Minsk" => Array[1]}, {"Grodno" => Array[1]}}]
+// next ["Poland", {{"Krakow" => Array[1]}, {"Lodz" => Array[1]}}]
+// done
+*/
+function group(...selectors) {
+  return this.chain(groupOperator(selectors)); 
 }
 function join(condition, optional) {
   return this.chain(joinOperator(condition, optional)); 
@@ -423,6 +439,7 @@ const operators = objectCreate(Object[PROTOTYPE], {
   dump: { value: dump, writable: true },
   every: { value: every, writable: true },
   filter: { value: filter, writable: true },
+  group: { value: group, writable: true },
   join: { value: join, writable: true },
   map: { value: map, writable: true },
   max: { value: max, writable: true },

@@ -84,7 +84,6 @@
     };
   };
 
-  var isDate = classIs(DATE);
   var isFunction$1 = classIs(FUNCTION);
   var isInteger = Number.isInteger;
 
@@ -362,65 +361,58 @@
     }, 0);
   }
 
-  function delayDynamicOperator(selector) {
-    return function (emitter) {
-      return function (next, done, context) {
-        var completition = dateNow(),
-            index = 0;
-        emitter(function (value) {
-          var interval = selector(value, index++, context.data),
-              estimation = undefined;
-
-          if (isDate(interval)) {
-            estimation = interval;
-            interval = interval - dateNow();
-          } else estimation = dateNow() + interval;
-
-          if (completition < estimation) completition = estimation + 1;
-          setTimeout(function () {
-            return next(value);
-          }, mathMax(interval, 0));
-          return true;
-        }, function (error) {
-          completition -= dateNow();
-          setTimeout(function () {
-            return done(error);
-          }, mathMax(completition, 0));
-          return true;
-        }, context);
-      };
-    };
-  }
-
-  function delayStaticOperator(interval) {
-    return function (emitter) {
-      return function (next, done, context) {
-        return emitter(function (value) {
-          return setTimeout(function () {
-            return next(value);
-          }, interval);
-        }, function (error) {
-          return setTimeout(function () {
-            return done(error);
-          }, interval);
-        }, context);
-      };
-    };
-  }
-
   function delayOperator(condition) {
-    switch (classOf(condition)) {
-      case DATE:
-        return delayDynamicOperator(function () {
-          return mathMax(condition - new Date(), 0);
-        });
+    var delayer = isFunction$1(condition) ? condition : constant(condition);
+    return function (emitter) {
+      return function (next, done, context) {
+        var buffer = [],
+            completed = false,
+            delivering = false,
+            index = 0;
 
-      case FUNCTION:
-        return delayDynamicOperator(condition);
+        function schedule(action, argument) {
+          if (delivering) {
+            buffer.push([action, argument]);
+            return;
+          }
 
-      default:
-        return delayStaticOperator(mathMax(+condition || 0, 0));
-    }
+          delivering = true;
+          var interval = delayer(argument, index++, context.data);
+
+          switch (classOf(interval)) {
+            case DATE:
+              interval = interval - dateNow();
+              break;
+
+            case NUMBER:
+              break;
+
+            default:
+              interval = +interval;
+          }
+
+          if (interval < 0) interval = 0;
+          setTimeout(function () {
+            delivering = false;
+
+            if (!action(argument)) {
+              completed = true;
+              buffer.length = 0;
+            } else if (buffer.length) schedule.apply(null, buffer.shift());
+          }, interval);
+        }
+
+        ;
+        return emitter(function (value) {
+          if (completed) return false;
+          schedule(next, value);
+          return true;
+        }, function (error) {
+          completed = true;
+          schedule(done, error);
+        }, context);
+      };
+    };
   }
 
   function dumpToConsoleOperator(prefix) {
@@ -538,6 +530,43 @@
         emitter(function (value) {
           return !predicate(value, index++, context.data) || next(value);
         }, done, context);
+      };
+    };
+  }
+
+  function groupOperator(selectors) {
+    selectors = selectors.length ? selectors.map(function (selector) {
+      return isFunction$1(selector) ? selector : constant(selector);
+    }) : [constant()];
+    var limit = selectors.length - 1;
+    return function (emitter) {
+      return function (next, done, context) {
+        var groups = new Map();
+        var index = 0;
+        emitter(function (value) {
+          var current = undefined,
+              parent = groups;
+
+          for (var i = -1; ++i <= limit;) {
+            var key = selectors[i](value, index++, context.data);
+            current = parent.get(key);
+
+            if (!current) {
+              current = i === limit ? [] : new Map();
+              parent.set(key, current);
+            }
+
+            parent = current;
+          }
+
+          current.push(value);
+          return true;
+        }, function (error) {
+          if (error) done(error);else {
+            Array.from(groups).every(next);
+            done();
+          }
+        }, context);
       };
     };
   }
@@ -895,6 +924,14 @@
     return this.chain(filterOperator(condition));
   }
 
+  function group() {
+    for (var _len3 = arguments.length, selectors = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+      selectors[_key3] = arguments[_key3];
+    }
+
+    return this.chain(groupOperator(selectors));
+  }
+
   function join(condition, optional) {
     return this.chain(joinOperator(condition, optional));
   }
@@ -916,8 +953,8 @@
   }
 
   function prepend() {
-    for (var _len3 = arguments.length, sources = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-      sources[_key3] = arguments[_key3];
+    for (var _len4 = arguments.length, sources = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+      sources[_key4] = arguments[_key4];
     }
 
     return new Aeroflow(this.emitter, sources.concat(this.sources));
@@ -1007,6 +1044,10 @@
     },
     filter: {
       value: filter,
+      writable: true
+    },
+    group: {
+      value: group,
       writable: true
     },
     join: {
@@ -1150,8 +1191,8 @@
   }
 
   function aeroflow() {
-    for (var _len4 = arguments.length, sources = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-      sources[_key4] = arguments[_key4];
+    for (var _len5 = arguments.length, sources = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+      sources[_key5] = arguments[_key5];
     }
 
     return new Aeroflow(emit, sources);
