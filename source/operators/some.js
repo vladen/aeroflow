@@ -21,7 +21,6 @@ export function someOperator(condition) {
   }
   return emitter => (next, done, context) => {
     let result = false;
-    context = context.spawn();
     emitter(
       value => {
         if (!predicate(value)) return true;

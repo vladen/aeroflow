@@ -395,7 +395,6 @@ function everyOperator(condition) {
   }
   return emitter => (next, done, context) => {
     let idle = true, result = true;
-    context = context.spawn();
     emitter(
       value => {
         idle = false;
@@ -591,10 +590,14 @@ function skipOperator(condition) {
       : condition < 0
         ? skipLastOperator(-condition)
         : identity;
-    case FUNCTION: return skipWhileOperator(condition);
-    default: return condition
-      ? skipAllOperator()
-      : identity;
+    case FUNCTION:
+      return skipWhileOperator(condition);
+    case UNDEFINED:
+      return skipAllOperator();
+    default:
+      return condition
+        ? skipAllOperator()
+        : identity;
   }
 }
 
@@ -616,7 +619,6 @@ function someOperator(condition) {
   }
   return emitter => (next, done, context) => {
     let result = false;
-    context = context.spawn();
     emitter(
       value => {
         if (!predicate(value)) return true;
@@ -632,7 +634,7 @@ function someOperator(condition) {
 }
 
 function sumOperator() {
-  return emitter => reduceGeneralOperator((result, value) => result + value, 0);
+  return reduceGeneralOperator((result, value) => result + value, 0);
 }
 
 function takeFirstOperator(count) {
@@ -772,13 +774,12 @@ class Aeroflow {
 * @param {...any} [sources] The value sources to append to this flow.
 * @return {Aeroflow} new flow.
 * @example
-* aeroflow(1).append(2, [3, 4], Promise.resolve(5), () => new Promise(resolve => setTimeout(() => resolve(6), 500))).dump().run();
+* aeroflow(1).append(2, [3, 4], new Promise(resolve => setTimeout(() => resolve(5), 500))).dump().run();
 * // next 1
 * // next 2
 * // next 3
 * // next 4
-* // next 5
-* // next 6 // after 500ms
+* // next 5 // after 500ms
 * // done
 */
 function append(...sources) {
@@ -820,7 +821,7 @@ function count(optional) {
   * // done // after 500ms
   * aeroflow(1, 2).delay(new Date(Date.now() + 500)).dump().run();
   * // next 1 // after 500ms
-  * // next 2 // after 500ms
+  * // next 2
   * // done // after 500ms
   * aeroflow(1, 2).delay((value, index) => 500 + index * 500).dump().run();
   * // next 1 // after 500ms
@@ -843,10 +844,6 @@ function delay(condition) {
   * // next 1
   * // next 2
   * // done
-  * aeroflow(1, 2).dump('test ', console.info.bind(console)).run();
-  * // test next 1
-  * // test next 2
-  * // test done
   */
 function dump(prefix, logger) {
   return this.chain(dumpOperator(prefix, logger));
@@ -865,8 +862,8 @@ function dump(prefix, logger) {
   * aeroflow.range(1, 3).every(2).dump().run();
   * // next false
   * // done
-  * aeroflow.range(1, 3).every(value => value % 2).dump().run();
-  * // next false
+  * aeroflow.range(1, 3).every(value => value > 0).dump().run();
+  * // next true
   * // done
   */
 function every(condition) {
@@ -881,18 +878,34 @@ function every(condition) {
   * aeroflow(0, 1).filter().dump().run();
   * // next 1
   * // done
-  * aeroflow('a', 'b', 'a').filter(/a/).dump().run();
+  * aeroflow('a', 'b', 'a').filter('a').dump().run();
   * // next "a"
   * // next "a"
   * // done
-  * aeroflow('a', 'b', 'b').filter('b').dump().run();
+  * aeroflow(a', 'b', 'a').filter(/a/).dump().run();
   * // next "b"
   * // next "b"
+  * // done
+  * aeroflow.range(1, 5).filter(value => (value % 2) === 0).dump().run();
+  * // next 2
+  * // next 4
   * // done
   */
 function filter(condition) {
   return this.chain(filterOperator(condition)); 
 }
+/*
+aeroflow(
+  { country: 'Belarus', city: 'Brest' },
+  { country: 'Poland', city: 'Krakow' },
+  { country: 'Belarus', city: 'Minsk' },
+  { country: 'Belarus', city: 'Grodno' },
+  { country: 'Poland', city: 'Lodz' }
+).group(value => value.country, value => value.city).dump().run();
+// next ["Belarus", {{"Brest" => Array[1]}, {"Minsk" => Array[1]}, {"Grodno" => Array[1]}}]
+// next ["Poland", {{"Krakow" => Array[1]}, {"Lodz" => Array[1]}}]
+// done
+*/
 function group(...selectors) {
   return this.chain(groupOperator(selectors)); 
 }
@@ -906,7 +919,7 @@ function map(mapping) {
   * Determines the maximum value emitted by this flow, returns new flow emitting only this value.
   *
   * @example
-  * aeroflow([1, 2, 3]).max().dump().run();
+  * aeroflow([1, 3, 2]).max().dump().run();
   * // next 3
   * // done
   */
@@ -928,7 +941,7 @@ function mean() {
   * Determine the minimum value emitted by this flow, returns new flow emitting only this value.
   *
   * @example
-  * aeroflow([1, 2, 3]).min().dump().run();
+  * aeroflow([2, 1, 3]).min().dump().run();
   * // next 1
   * // done
   */
@@ -940,12 +953,11 @@ function min() {
 * @public @instance @alias Aeroflow@prepend
 * @param {...any} [sources] Values to concatenate with this flow.
 * @example
-* aeroflow(1).prepend(2, [3, 4], Promise.resolve(5), () => new Promise(resolve => setTimeout(() => resolve(6), 500))).dump().run();
+* aeroflow(1).prepend(2, [3, 4], new Promise(resolve => setTimeout(() => resolve(5), 500))).dump().run();
 * // next 2
 * // next 3
 * // next 4
-* // next 5
-* // next 6 // after 500ms
+* // next 5 // after 500ms
 * // next 1
 * // done
 */
@@ -966,11 +978,28 @@ function prepend(...sources) {
 *
 * @example
 * aeroflow([2, 4, 8]).reduce((product, value) => product * value, 1).dump().run();
+* // next 64
+* // done
 * aeroflow(['a', 'b', 'c']).reduce((product, value, index) => product + value + index, '').dump().run();
+* // next a0b1c2
+* // done
 */
 function reduce(reducer, seed, optional) {
   return this.chain(reduceOperator(reducer, seed, optional));
 }
+/**
+ * @example
+ * aeroflow(1, 2, 3).reverse().dump().run()
+ * // next 3
+ * // next 2
+ * // next 1
+ * // done
+ * aeroflow.range(1, 3).reverse().dump().run()
+ * // next 3
+ * // next 2
+ * // next 1
+ * // done
+ */
 function reverse() {
   return this.chain(reverseOperator());
 }
@@ -982,10 +1011,8 @@ function reverse() {
  * @param {function} [next] Callback to execute for each emitted value, taking two arguments: value, context.
  * @param {function} [done] Callback to execute as emission is complete, taking two arguments: error, context.
  * @param {function} [data] Arbitrary value passed to each callback invoked by this flow as context.data.
-  * @example
- * aeroflow.range(1, 3).run(
- *   value => console.log('next', value),
- *   error => console.log('done', error));
+ * @example
+ * aeroflow.range(1, 3).run(value => console.log('next', value), error => console.log('done', error));
  * // next 1
  * // next 2
  * // next 3
@@ -1029,7 +1056,7 @@ function run(next, done, data) {
   * // next 1
   * // next 2
   * // done
-  * aeroflow([1, 2, 3]).some(value => value < 3).dump().run();
+  * aeroflow([1, 2, 3]).skip(value => value < 3).dump().run();
   * // next 3
   * // done
   */
@@ -1194,12 +1221,10 @@ function adapt(source) {
     default: 
       const iterate = source[ITERATOR];
       if (isFunction$1(iterate)) return (next, done, context) => {
-        const iterator = iterate();
-        while (context.active) {
-          let iteration = iterator.next();
-          if (iteration.done) break;
-          next(iteration.value);
-        }
+        const iterator = iterate.call(source);
+        let iteration;
+        do iteration = iterator.next();
+        while (!iteration.done && next(iteration.value));
         done();
       };
       return valueEmitter(source);

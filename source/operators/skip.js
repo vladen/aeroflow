@@ -1,6 +1,6 @@
 'use strict';
 
-import { FUNCTION, NUMBER } from '../symbols';
+import { FUNCTION, NUMBER, UNDEFINED } from '../symbols';
 import { classOf, identity, mathMax, noop } from '../utilites';
 import { toArrayOperator } from './toArray';
 
@@ -50,9 +50,13 @@ export function skipOperator(condition) {
       : condition < 0
         ? skipLastOperator(-condition)
         : identity;
-    case FUNCTION: return skipWhileOperator(condition);
-    default: return condition
-      ? skipAllOperator()
-      : identity;
+    case FUNCTION:
+      return skipWhileOperator(condition);
+    case UNDEFINED:
+      return skipAllOperator();
+    default:
+      return condition
+        ? skipAllOperator()
+        : identity;
   }
 }

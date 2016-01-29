@@ -21,7 +21,6 @@ export function everyOperator(condition) {
   }
   return emitter => (next, done, context) => {
     let idle = true, result = true;
-    context = context.spawn();
     emitter(
       value => {
         idle = false;

@@ -481,7 +481,6 @@
       return function (next, done, context) {
         var idle = true,
             result = true;
-        context = context.spawn();
         emitter(function (value) {
           idle = false;
           if (predicate(value)) return true;
@@ -699,6 +698,9 @@
       case FUNCTION:
         return skipWhileOperator(condition);
 
+      case UNDEFINED:
+        return skipAllOperator();
+
       default:
         return condition ? skipAllOperator() : identity;
     }
@@ -737,7 +739,6 @@
     return function (emitter) {
       return function (next, done, context) {
         var result = false;
-        context = context.spawn();
         emitter(function (value) {
           if (!predicate(value)) return true;
           result = true;
@@ -751,11 +752,9 @@
   }
 
   function sumOperator() {
-    return function (emitter) {
-      return reduceGeneralOperator(function (result, value) {
-        return result + value;
-      }, 0);
-    };
+    return reduceGeneralOperator(function (result, value) {
+      return result + value;
+    }, 0);
   }
 
   function takeFirstOperator(count) {
@@ -1167,13 +1166,12 @@
       default:
         var iterate = source[ITERATOR];
         if (isFunction$1(iterate)) return function (next, done, context) {
-          var iterator = iterate();
+          var iterator = iterate.call(source);
+          var iteration = undefined;
 
-          while (context.active) {
-            var iteration = iterator.next();
-            if (iteration.done) break;
-            next(iteration.value);
-          }
+          do {
+            iteration = iterator.next();
+          } while (!iteration.done && next(iteration.value));
 
           done();
         };
