@@ -7,6 +7,7 @@ export const CLASS = Symbol.toStringTag;
 export const DATE = 'Date';
 export const FUNCTION = 'Function';
 export const ITERATOR = Symbol.iterator;
+export const NULL = 'Null';
 export const NUMBER = 'Number';
 export const PROMISE = 'Promise';
 export const PROTOTYPE = 'prototype';

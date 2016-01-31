@@ -1,6 +1,6 @@
 'use strict';
 
-import { isFunction, isNothing } from '../utilites';
+import { isFunction, isUndefined } from '../utilites';
 
 export function dumpToConsoleOperator(prefix) {
   return emitter => (next, done, context) => emitter(
@@ -37,7 +37,7 @@ export function dumpOperator(prefix, logger) {
     ? dumpToLoggerOperator('', prefix)
     : isFunction(logger)
       ? dumpToLoggerOperator(prefix, logger)
-      : isNothing(prefix)
+      : isUndefined(prefix)
         ? dumpToConsoleOperator('')
         : dumpToConsoleOperator(prefix);
 }

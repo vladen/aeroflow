@@ -2,25 +2,25 @@
 
 import { isInteger, mathFloor, mathRandom, toNumber } from '../utilites';
 
-export function randomDecimalEmitter(min, max) {
+export function randomDecimalEmitter(minimum, maximum) {
   return (next, done) => {
-    while (next(min + max * mathRandom()));
+    while (next(minimum + maximum * mathRandom()));
     done();
   };
 }
 
-export function randomIntegerEmitter(min, max) { 
+export function randomIntegerEmitter(minimum, maximum) { 
   return (next, done) => {
-    while (next(mathFloor(min + max * mathRandom())));
+    while (next(mathFloor(minimum + maximum * mathRandom())));
     done();
   };
 }
 
-export function randomEmitter(min, max) {
-  max = toNumber(max, 1);
-  min = toNumber(min, 0);
-  max -= min;
-  return isInteger(min) && isInteger(max)
-    ? randomIntegerEmitter(min, max)
-    : randomDecimalEmitter(min, max);
+export function randomEmitter(minimum, maximum) {
+  maximum = toNumber(maximum, 1);
+  minimum = toNumber(minimum, 0);
+  maximum -= minimum;
+  return isInteger(minimum) && isInteger(maximum)
+    ? randomIntegerEmitter(minimum, maximum)
+    : randomDecimalEmitter(minimum, maximum);
 }

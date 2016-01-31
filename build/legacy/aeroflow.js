@@ -17,6 +17,12 @@
     value: true
   });
 
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
+
   var _objectCreate, _objectCreate2;
 
   function _defineProperty(obj, key, value) {
@@ -34,12 +40,6 @@
     return obj;
   }
 
-  function _classCallCheck(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-      throw new TypeError("Cannot call a class as a function");
-    }
-  }
-
   var AEROFLOW = 'Aeroflow';
   var ARRAY = 'Array';
   var BOOLEAN = 'Boolean';
@@ -47,6 +47,7 @@
   var DATE = 'Date';
   var FUNCTION = 'Function';
   var ITERATOR = Symbol.iterator;
+  var NULL = 'Null';
   var NUMBER = 'Number';
   var PROMISE = 'Promise';
   var PROTOTYPE = 'prototype';
@@ -84,14 +85,22 @@
     };
   };
 
-  var isFunction$1 = classIs(FUNCTION);
-  var isInteger = Number.isInteger;
-
-  var isNothing = function isNothing(value) {
-    return value == null;
+  var isDefined = function isDefined(value) {
+    return value !== undefined;
   };
 
+  var isFunction$1 = classIs(FUNCTION);
+  var isInteger = Number.isInteger;
   var isNumber = classIs(NUMBER);
+  var isPromise = classIs(PROMISE);
+
+  var isTrue = function isTrue(value) {
+    return value === true;
+  };
+
+  var isUndefined = function isUndefined(value) {
+    return value === undefined;
+  };
 
   var toNumber = function toNumber(value, def) {
     if (!isNumber(value)) {
@@ -102,19 +111,30 @@
     return value;
   };
 
-  function arrayEmitter(source) {
-    return function (next, done, context) {
-      var index = -1;
+  function emptyEmitter() {
+    return function (next, done) {
+      return done();
+    };
+  }
 
-      while (++index < source.length && next(source[index])) {}
-
+  function scalarEmitter(value) {
+    return function (next, done) {
+      next(value);
       done();
     };
   }
 
-  function emptyEmitter() {
-    return function (next, done) {
-      return done();
+  function arrayEmitter(source) {
+    return function (next, done, context) {
+      var index = -1;
+      !function proceed(result) {
+        if (isTrue(result)) while (++index < source.length) {
+          result = next(source[index]);
+          if (isPromise(result)) result.then(proceed, proceed);
+          if (!isTrue(result)) break;
+        }
+        done(result);
+      }(true);
     };
   }
 
@@ -138,11 +158,55 @@
     };
   }
 
-  function valueEmitter(value) {
-    return function (next, done) {
-      next(value);
-      done();
+  var adapters = objectCreate(null, (_objectCreate = {}, _defineProperty(_objectCreate, ARRAY, {
+    value: arrayEmitter,
+    writable: true
+  }), _defineProperty(_objectCreate, BOOLEAN, {
+    value: scalarEmitter,
+    writable: true
+  }), _defineProperty(_objectCreate, DATE, {
+    value: scalarEmitter,
+    writable: true
+  }), _defineProperty(_objectCreate, FUNCTION, {
+    value: functionEmitter,
+    writable: true
+  }), _defineProperty(_objectCreate, NUMBER, {
+    value: scalarEmitter,
+    writable: true
+  }), _defineProperty(_objectCreate, PROMISE, {
+    value: promiseEmitter,
+    writable: true
+  }), _defineProperty(_objectCreate, REGEXP, {
+    value: scalarEmitter,
+    writable: true
+  }), _objectCreate));
+
+  function iterableEmitter(source) {
+    return function (next, done, context) {
+      var iterator = source[ITERATOR]();
+      var iteration = undefined;
+
+      try {
+        do {
+          iteration = iterator.next();
+        } while (!iteration.done && next(iteration.value));
+
+        done();
+      } catch (error) {
+        done(error);
+      }
     };
+  }
+
+  var primitives = new Set([BOOLEAN, NULL, NUMBER, SYMBOL, UNDEFINED]);
+
+  function emitterSelector(source, scalar) {
+    var cls = classOf(source);
+    if (cls === AEROFLOW) return source.emitter;
+    var adapter = adapters[cls];
+    if (isFunction$1(adapter)) return adapter(source);
+    if (!primitives.has(cls) && ITERATOR in source) return iterableEmitter(source);
+    if (scalar) return scalarEmitter(source);
   }
 
   function finalize(finalizer) {
@@ -150,7 +214,9 @@
   }
 
   function customEmitter(emitter) {
-    return arguments.length ? isFunction$1(emitter) ? function (next, done, context) {
+    if (isUndefined(emitter)) return emptyEmitter();
+    if (!isFunction$1(emitter)) return scalarEmitter(emitter);
+    return function (next, done, context) {
       var complete = false,
           finalizer = undefined;
 
@@ -176,7 +242,7 @@
       }
 
       finalize(finalizer);
-    } : valueEmitter(emitter) : emptyEmitter();
+    };
   }
 
   function expandEmitter(expanding, seed) {
@@ -191,37 +257,37 @@
     };
   }
 
-  function randomDecimalEmitter(min, max) {
+  function randomDecimalEmitter(minimum, maximum) {
     return function (next, done) {
-      while (next(min + max * mathRandom())) {}
+      while (next(minimum + maximum * mathRandom())) {}
 
       done();
     };
   }
 
-  function randomIntegerEmitter(min, max) {
+  function randomIntegerEmitter(minimum, maximum) {
     return function (next, done) {
-      while (next(mathFloor(min + max * mathRandom()))) {}
+      while (next(mathFloor(minimum + maximum * mathRandom()))) {}
 
       done();
     };
   }
 
-  function randomEmitter(min, max) {
-    max = toNumber(max, 1);
-    min = toNumber(min, 0);
-    max -= min;
-    return isInteger(min) && isInteger(max) ? randomIntegerEmitter(min, max) : randomDecimalEmitter(min, max);
+  function randomEmitter(minimum, maximum) {
+    maximum = toNumber(maximum, 1);
+    minimum = toNumber(minimum, 0);
+    maximum -= minimum;
+    return isInteger(minimum) && isInteger(maximum) ? randomIntegerEmitter(minimum, maximum) : randomDecimalEmitter(minimum, maximum);
   }
 
   function rangeEmitter(start, end, step) {
     end = toNumber(end, maxInteger);
     start = toNumber(start, 0);
-    if (start === end) return valueEmitter(start);
+    if (start === end) return scalarEmitter(start);
 
     if (start < end) {
       step = toNumber(step, 1);
-      if (step < 1) return valueEmitter(start);
+      if (step < 1) return scalarEmitter(start);
       return function (next, done, context) {
         var value = start;
 
@@ -232,7 +298,7 @@
     }
 
     step = toNumber(step, -1);
-    if (step > -1) return valueEmitter(start);
+    if (step > -1) return scalarEmitter(start);
     return function (next, done, context) {
       var value = start;
 
@@ -294,7 +360,7 @@
 
           return true;
         }, function (error) {
-          if (isNothing(error) && !idle) next(result);
+          if (isUndefined(error) && !idle) next(result);
           return done(error);
         }, context);
       };
@@ -310,7 +376,7 @@
           result = reducer(result, value, index++, context.data);
           return true;
         }, function (error) {
-          if (isNothing(error)) next(result);
+          if (isUndefined(error)) next(result);
           return done(error);
         }, context);
       };
@@ -328,7 +394,7 @@
           result = reducer(result, value, index++, context.data);
           return true;
         }, function (error) {
-          if (isNothing(error) && !idle) next(result);
+          if (isUndefined(error) && !idle) next(result);
           return done(error);
         }, context);
       };
@@ -336,23 +402,9 @@
   }
 
   function reduceOperator(reducer, seed, optional) {
-    var arity = arguments.length;
-    if (!arity || !isFunction$1(reducer)) return function () {
-      return emptyEmitter();
-    };
-
-    switch (arity) {
-      case 1:
-        return reduceAlongOperator(reducer);
-
-      case 2:
-        return reduceGeneralOperator(reducer, seed);
-
-      default:
-        return isFunction$1(reducer) ? optional ? reduceOptionalOperator(reducer, seed) : reduceGeneralOperator(reducer, seed) : function () {
-          return valueEmitter(reducer);
-        };
-    }
+    return isUndefined(reducer) ? emptyEmitter : !isFunction$1(reducer) ? function () {
+      return scalarEmitter(reducer);
+    } : isUndefined(seed) ? reduceAlongOperator(reducer) : optional ? reduceOptionalOperator(reducer, seed) : reduceGeneralOperator(reducer, seed);
   }
 
   function countOperator(optional) {
@@ -444,7 +496,7 @@
   }
 
   function dumpOperator(prefix, logger) {
-    return isFunction$1(prefix) ? dumpToLoggerOperator('', prefix) : isFunction$1(logger) ? dumpToLoggerOperator(prefix, logger) : isNothing(prefix) ? dumpToConsoleOperator('') : dumpToConsoleOperator(prefix);
+    return isFunction$1(prefix) ? dumpToLoggerOperator('', prefix) : isFunction$1(logger) ? dumpToLoggerOperator(prefix, logger) : isUndefined(prefix) ? dumpToConsoleOperator('') : dumpToConsoleOperator(prefix);
   }
 
   function everyOperator(condition) {
@@ -486,7 +538,7 @@
           if (predicate(value)) return true;
           return result = false;
         }, function (error) {
-          if (isNothing(error)) next(result && !idle);
+          if (isUndefined(error)) next(result && !idle);
           return done(error);
         }, context);
       };
@@ -571,14 +623,14 @@
   }
 
   function joinOperator(separator, optional) {
-    var joiner = isFunction$1(separator) ? separator : isNothing(separator) ? constant(',') : constant(separator);
+    var joiner = isFunction$1(separator) ? separator : isUndefined(separator) ? constant(',') : constant(separator);
     return (optional ? reduceOptionalOperator : reduceGeneralOperator)(function (result, value, index, data) {
       return result.length ? result + joiner(value, index, data) + value : value;
     }, '');
   }
 
   function mapOperator(mapping) {
-    if (isNothing(mapping)) return identity;
+    if (isUndefined(mapping)) return identity;
     var mapper = isFunction$1(mapping) ? mapping : constant(mapping);
     return function (emitter) {
       return function (next, done, context) {
@@ -604,7 +656,7 @@
           result.push(value);
           return true;
         }, function (error) {
-          if (isNothing(error)) next(result);
+          if (isUndefined(error)) next(result);
           return done(error);
         }, context);
       };
@@ -744,7 +796,7 @@
           result = true;
           return false;
         }, function (error) {
-          if (isNothing(error)) next(result);
+          if (isUndefined(error)) next(result);
           return done(error);
         }, context);
       };
@@ -838,8 +890,8 @@
   }
 
   function toMapOperator(keyTransformation, valueTransformation) {
-    var keyTransformer = isNothing(keyTransformation) ? identity : isFunction$1(keyTransformation) ? keyTransformation : constant(keyTransformation);
-    var valueTransformer = isNothing(valueTransformation) ? identity : isFunction$1(valueTransformation) ? valueTransformation : constant(valueTransformation);
+    var keyTransformer = isUndefined(keyTransformation) ? identity : isFunction$1(keyTransformation) ? keyTransformation : constant(keyTransformation);
+    var valueTransformer = isUndefined(valueTransformation) ? identity : isFunction$1(valueTransformation) ? valueTransformation : constant(valueTransformation);
     return function (emitter) {
       return function (next, done, context) {
         var index = 0,
@@ -848,7 +900,7 @@
           result.set(keyTransformer(value, index++, context.data), valueTransformer(value, index++, context.data));
           return true;
         }, function (error) {
-          if (isNothing(error)) next(result);
+          if (isUndefined(error)) next(result);
           return done(error);
         }, context);
       };
@@ -863,7 +915,7 @@
           result.add(value);
           return true;
         }, function (error) {
-          if (isNothing(error)) next(result);
+          if (isUndefined(error)) next(result);
           return done(error);
         }, context);
       };
@@ -1114,77 +1166,26 @@
       writable: true
     }
   });
-  Aeroflow[PROTOTYPE] = objectCreate(operators, (_objectCreate = {}, _defineProperty(_objectCreate, CLASS, {
+  Aeroflow[PROTOTYPE] = objectCreate(operators, (_objectCreate2 = {}, _defineProperty(_objectCreate2, CLASS, {
     value: AEROFLOW
-  }), _defineProperty(_objectCreate, 'append', {
+  }), _defineProperty(_objectCreate2, 'append', {
     value: append
-  }), _defineProperty(_objectCreate, 'bind', {
+  }), _defineProperty(_objectCreate2, 'bind', {
     value: bind
-  }), _defineProperty(_objectCreate, 'chain', {
+  }), _defineProperty(_objectCreate2, 'chain', {
     value: chain
-  }), _defineProperty(_objectCreate, 'prepend', {
+  }), _defineProperty(_objectCreate2, 'prepend', {
     value: prepend
-  }), _defineProperty(_objectCreate, 'run', {
+  }), _defineProperty(_objectCreate2, 'run', {
     value: run
-  }), _objectCreate));
-  var adapters = objectCreate(null, (_objectCreate2 = {}, _defineProperty(_objectCreate2, ARRAY, {
-    value: arrayEmitter,
-    writable: true
-  }), _defineProperty(_objectCreate2, BOOLEAN, {
-    value: valueEmitter,
-    writable: true
-  }), _defineProperty(_objectCreate2, DATE, {
-    value: valueEmitter,
-    writable: true
-  }), _defineProperty(_objectCreate2, FUNCTION, {
-    value: functionEmitter,
-    writable: true
-  }), _defineProperty(_objectCreate2, NUMBER, {
-    value: valueEmitter,
-    writable: true
-  }), _defineProperty(_objectCreate2, PROMISE, {
-    value: promiseEmitter,
-    writable: true
-  }), _defineProperty(_objectCreate2, REGEXP, {
-    value: valueEmitter,
-    writable: true
   }), _objectCreate2));
 
-  function adapt(source) {
-    if (isNothing(source)) return valueEmitter(source);
-    var sourceClass = classOf(source);
-    if (sourceClass === AEROFLOW) return source.emitter;
-    var adapter = adapters[sourceClass];
-    if (isFunction$1(adapter)) return adapter(source);
-
-    switch (sourceClass) {
-      case BOOLEAN:
-      case NUMBER:
-      case SYMBOL:
-        return valueEmitter(source);
-
-      default:
-        var iterate = source[ITERATOR];
-        if (isFunction$1(iterate)) return function (next, done, context) {
-          var iterator = iterate.call(source);
-          var iteration = undefined;
-
-          do {
-            iteration = iterator.next();
-          } while (!iteration.done && next(iteration.value));
-
-          done();
-        };
-        return valueEmitter(source);
-    }
-  }
-
   function emit(next, done, context) {
-    var sources = context.flow.sources;
-    var limit = sources.length,
-        index = -1;
+    var sources = context.flow.sources,
+        limit = sources.length;
+    var index = -1;
     !function proceed(error) {
-      if (isNothing(error) && ++index < limit) adapt(sources[index])(next, proceed, context);else done(error);
+      if (isDefined(error) || ++index >= limit) done();else emitterSelector(sources[index], true)(next, proceed, context);
     }();
   }
 
@@ -1205,11 +1206,11 @@
   }
 
   function just(value) {
-    return new Aeroflow(valueEmitter(value));
+    return new Aeroflow(scalarEmitter(value));
   }
 
-  function random(min, max) {
-    return new Aeroflow(randomEmitter(min, max));
+  function random(minimum, maximum) {
+    return new Aeroflow(randomEmitter(minimum, maximum));
   }
 
   function range(start, end, step) {

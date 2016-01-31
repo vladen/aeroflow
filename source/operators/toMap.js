@@ -1,14 +1,14 @@
 'use strict';
 
-import { constant, identity, isFunction, isNothing } from '../utilites';
+import { constant, identity, isFunction, isUndefined } from '../utilites';
 
 export function toMapOperator(keyTransformation, valueTransformation) {
-  const keyTransformer = isNothing(keyTransformation)
+  const keyTransformer = isUndefined(keyTransformation)
     ? identity
     : isFunction(keyTransformation)
       ? keyTransformation
       : constant(keyTransformation);
-  const valueTransformer = isNothing(valueTransformation)
+  const valueTransformer = isUndefined(valueTransformation)
     ? identity
     : isFunction(valueTransformation)
       ? valueTransformation
@@ -23,7 +23,7 @@ export function toMapOperator(keyTransformation, valueTransformation) {
         return true;
       },
       error => {
-        if (isNothing(error)) next(result);
+        if (isUndefined(error)) next(result);
         return done(error);
       },
       context);

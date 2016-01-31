@@ -1,7 +1,7 @@
 'use strict';
 
 import { FUNCTION, REGEXP, UNDEFINED } from '../symbols';
-import { classOf, isNothing } from '../utilites';
+import { classOf, isUndefined } from '../utilites';
 
 export function everyOperator(condition) {
   let predicate;
@@ -28,7 +28,7 @@ export function everyOperator(condition) {
         return result = false;
       },
       error => {
-        if (isNothing(error)) next(result && !idle);
+        if (isUndefined(error)) next(result && !idle);
         return done(error);
       },
       context);
