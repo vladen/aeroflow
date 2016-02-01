@@ -1,3 +1,7 @@
 'use strict';
 
-export default (aeroflow, assert) => {};
+import factoryTests from './factory';
+
+export default (aeroflow, assert) => {
+    factoryTests(aeroflow, assert);
+};
