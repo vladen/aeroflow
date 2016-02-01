@@ -1,26 +1,35 @@
 'use strict';
 
-import { isFunction, isNothing, isRegExp } from '../utilites';
+import { FUNCTION, REGEXP, UNDEFINED } from '../symbols';
+import { classOf, isUndefined } from '../utilites';
 
 export function everyOperator(condition) {
-  const predicate = isFunction(condition)
-    ? condition
-    : isRegExp(condition)
-      ? value => condition.test(value)
-      : value => value === condition;
+  let predicate;
+  switch (classOf(condition)) {
+    case FUNCTION:
+      predicate = condition;
+      break;
+    case REGEXP:
+      predicate = value => condition.test(value);
+      break;
+    case UNDEFINED:
+      predicate = value => !!value;
+      break;
+    default:
+      predicate = value => value === condition;
+      break;
+  }
   return emitter => (next, done, context) => {
     let idle = true, result = true;
-    context = context.spawn();
     emitter(
       value => {
         idle = false;
-        if (!predicate(value)) return;
-        result = false;
-        context.done();
+        if (predicate(value)) return true;
+        return result = false;
       },
       error => {
-        next(result && !idle);
-        done(error);
+        if (isUndefined(error)) next(result && !idle);
+        return done(error);
       },
       context);
   };

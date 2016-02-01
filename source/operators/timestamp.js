@@ -7,13 +7,13 @@ export function timestampOperator() {
     let past = dateNow();
     emitter(
       value => {
-        let current = dateNow();
-        next({
+        let current = dateNow(), result = next({
           timedelta: current - past,
           timestamp: dateNow,
           value
         });
         past = current;
+        return result;
       },
       done,
       context);

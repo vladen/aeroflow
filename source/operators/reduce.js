@@ -1,8 +1,8 @@
 'use strict';
 
-import { isFunction } from '../utilites';
+import { isFunction, isUndefined } from '../utilites';
 import { emptyEmitter } from '../emitters/empty';
-import { valueEmitter } from '../emitters/value';
+import { scalarEmitter } from '../emitters/scalar';
 
 export function reduceAlongOperator(reducer) {
   return emitter => (next, done, context) => {
@@ -14,10 +14,11 @@ export function reduceAlongOperator(reducer) {
           result = value;
         }
         else result = reducer(result, value, index++, context.data);
+        return true;
       },
       error => {
-        if (!idle) next(result);
-        done(error);
+        if (isUndefined(error) && !idle) next(result);
+        return done(error);
       },
       context);
   };
@@ -27,10 +28,13 @@ export function reduceGeneralOperator(reducer, seed) {
   return emitter => (next, done, context) => {
     let index = 0, result = seed;
     emitter(
-      value => result = reducer(result, value, index++, context.data),
+      value => {
+        result = reducer(result, value, index++, context.data)
+        return true;
+      },
       error => {
-        next(result);
-        done(error);
+        if (isUndefined(error)) next(result);
+        return done(error);
       },
       context);
   };
@@ -43,26 +47,24 @@ export function reduceOptionalOperator(reducer, seed) {
       value => {
         idle = false;
         result = reducer(result, value, index++, context.data);
+        return true;
       },
       error => {
-        if (!idle) next(result);
-        done(error);
+        if (isUndefined(error) && !idle) next(result);
+        return done(error);
       },
       context);
   };
 }
 
 export function reduceOperator(reducer, seed, optional) {
-  const arity = arguments.length;
-  if (!arity || !isFunction(reducer)) return () => emptyEmitter();
-  switch (arity) {
-    case 1: return reduceAlongOperator(reducer);
-    case 2: return reduceGeneralOperator(reducer, seed);
-    default:
-      return isFunction(reducer)
-        ? optional
+  return isUndefined(reducer)
+    ? emptyEmitter
+    : !isFunction(reducer)
+      ? () => scalarEmitter(reducer)
+      : isUndefined(seed)
+        ? reduceAlongOperator(reducer)
+        : optional
           ? reduceOptionalOperator(reducer, seed)
-          : reduceGeneralOperator(reducer, seed)
-        : () => valueEmitter(reducer)
-  }
+          : reduceGeneralOperator(reducer, seed);
 }

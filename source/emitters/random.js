@@ -1,26 +1,26 @@
 'use strict';
 
-import { isInteger, mathFloor, mathRandom } from '../utilites';
+import { isInteger, mathFloor, mathRandom, toNumber } from '../utilites';
 
-export function randomDecimalEmitter(inclusiveMin, exclusiveMax) {
-  return (next, done, context) => {
-    while(context.active) next(inclusiveMin + exclusiveMax * mathRandom());
+export function randomDecimalEmitter(minimum, maximum) {
+  return (next, done) => {
+    while (next(minimum + maximum * mathRandom()));
     done();
   };
 }
 
-export function randomIntegerEmitter(inclusiveMin, exclusiveMax) { 
-  return (next, done, context) => {
-    while(context.active) next(mathFloor(inclusiveMin + exclusiveMax * mathRandom()));
+export function randomIntegerEmitter(minimum, maximum) { 
+  return (next, done) => {
+    while (next(mathFloor(minimum + maximum * mathRandom())));
     done();
   };
 }
 
-export function randomEmitter(inclusiveMin, exclusiveMax) {
-  inclusiveMin = +inclusiveMin || 0;
-  exclusiveMax = +exclusiveMax || 1;
-  exclusiveMax -= inclusiveMin;
-  return isInteger(inclusiveMin) && isInteger(exclusiveMax)
-    ? randomIntegerEmitter(inclusiveMin, exclusiveMax)
-    : randomDecimalEmitter(inclusiveMin, exclusiveMax);
+export function randomEmitter(minimum, maximum) {
+  maximum = toNumber(maximum, 1);
+  minimum = toNumber(minimum, 0);
+  maximum -= minimum;
+  return isInteger(minimum) && isInteger(maximum)
+    ? randomIntegerEmitter(minimum, maximum)
+    : randomDecimalEmitter(minimum, maximum);
 }

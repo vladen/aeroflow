@@ -1,18 +1,15 @@
 'use strict';
 
-import { identity, isFunction, isNumber, mathMax } from '../utilites';
+import { FUNCTION, NUMBER } from '../symbols';
+import { classOf, identity, mathMax } from '../utilites';
 import { emptyEmitter } from '../emitters/empty';
 import { toArrayOperator } from './toArray';
 
 export function takeFirstOperator(count) {
   return emitter => (next, done, context) => {
-    let index = 1;
-    context = context.spawn();
+    let index = -1;
     emitter(
-      value => {
-        next(value);
-        if (count <= index++) context.done();
-      },
+      value => ++index < count && next(value),
       done,
       context);
   };
@@ -20,11 +17,12 @@ export function takeFirstOperator(count) {
 
 export function takeLastOperator(count) {
   return emitter => (next, done, context) => toArrayOperator()(emitter)(
-    value => {
-      const limit = value.length;
-      let index = mathMax(limit - 1 - count, 0);
-      while (index < limit) next(value[index++]);
-    },
+    values => {
+      const limit = values.length;
+      let index = mathMax(limit - count - 1, 0);
+      while (++index < limit && next(values[index]));
+      done();
+    }, 
     done,
     context);
 }
@@ -32,29 +30,23 @@ export function takeLastOperator(count) {
 export function takeWhileOperator(predicate) {
   return emitter => (next, done, context) => {
     let index = 0;
-    context = context.spawn();
     emitter(
-      value => {
-        if (predicate(value, index++, context.data)) next(value);
-        else context.done();
-      },
+      value => predicate(value, index++, context.data) && next(value),
       done,
       context);
   };
 }
 
 export function takeOperator(condition) {
-  return arguments.length
-    ? isNumber(condition)
-      ? condition === 0
-        ? emptyEmitter()
-        : condition > 0
-          ? takeFirstOperator(condition)
-          : takeLastOperator(condition)
-      : isFunction(condition)
-        ? takeWhileOperator(condition)
-        : condition
-          ? identity
-          : emptyEmitter()
-    : identity;
+  switch (classOf(condition)) {
+    case NUMBER: return condition > 0
+      ? takeFirstOperator(condition)
+      : condition < 0
+        ? takeLastOperator(-condition)
+        : emptyEmitter();
+    case FUNCTION: return takeWhileOperator(condition);
+    default: return condition
+      ? identity
+      : emptyEmitter();
+  }
 }

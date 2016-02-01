@@ -1,40 +1,50 @@
 'use strict';
 
-import { dateNow, isDate, isFunction, mathMax } from '../utilites';
-
-export function delayDynamicOperator(selector) {
-  return emitter => (next, done, context) => {
-    let completition = dateNow(), index = 0;
-    emitter(
-      value => {
-        let interval = selector(value, index++, context.data), estimation;
-        if (isDate(interval)) {
-          estimation = interval;
-          interval = interval - dateNow();
-        }
-        else estimation = dateNow() + interval;
-        if (completition < estimation) completition = estimation;
-        setTimeout(() => resolve(next(value)), mathMax(interval, 0));
-      },
-      error => {
-        completition -= dateNow();
-        setTimeout(() => resolve(done(error)), mathMax(completition, 0));
-      },
-      context);
-  };
-}
-
-export function delayStaticOperator(interval) {
-  return emitter => (next, done, context) => emitter(
-    value => setTimeout(() => next(value), interval),
-    error => setTimeout(() => done(error), interval),
-    context);
-}
+import { DATE, FUNCTION, NUMBER } from '../symbols';
+import { classOf, constant, dateNow, isFunction, mathMax } from '../utilites';
 
 export function delayOperator(condition) {
-  return isFunction(condition)
-    ? delayDynamicOperator(condition)
-    : isDate(condition)
-      ? delayDynamicOperator(() => mathMax(condition - new Date, 0))
-      : delayStaticOperator(mathMax(+condition || 0, 0));
+  const delayer = isFunction(condition)
+    ? condition
+    : constant(condition);
+  return emitter => (next, done, context) => {
+    let buffer = [], completed = false, delivering = false, index = 0;
+    function schedule(action, argument) {
+      if (delivering) {
+        buffer.push([action, argument]);
+        return;
+      }
+      delivering = true;
+      let interval = delayer(argument, index++, context.data);
+      switch (classOf(interval)) {
+        case DATE:
+          interval = interval - dateNow();
+          break;
+        case NUMBER:
+          break;
+        default:
+          interval = +interval;
+      }
+      if (interval < 0) interval = 0;
+      setTimeout(() => {
+        delivering = false;
+        if (!action(argument)) {
+          completed = true;
+          buffer.length = 0;
+        }
+        else if (buffer.length) schedule.apply(null, buffer.shift());
+      }, interval);
+    };
+    return emitter(
+      value => {
+        if (completed) return false;
+        schedule(next, value);
+        return true;
+      },
+      error => {
+        completed = true;
+        schedule(done, error);
+      },
+      context);
+  }
 }
