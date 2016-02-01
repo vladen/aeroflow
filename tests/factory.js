@@ -1,4 +1,6 @@
-var factoryTests = (aeroflow, assert) => describe('aeroflow', () => {
+'use strict';
+
+export default (aeroflow, assert) => describe('aeroflow', () => {
     it('is function', () => {
         assert.isFunction(aeroflow);
     });
@@ -8,12 +10,7 @@ var factoryTests = (aeroflow, assert) => describe('aeroflow', () => {
 
         let index = 0;
 
-        aeroflow(sources).run(
-            value => 
-                assert.strictEqual(value, sources[index++]),
-            (error, count) => 
-                assert.strictEqual(count, sources.length)
-        );
+        aeroflow(sources).run(value => assert.strictEqual(value, sources[index++]));
     });
 
     describe('aeroflow', () => {
@@ -27,13 +24,4 @@ var factoryTests = (aeroflow, assert) => describe('aeroflow', () => {
             assert.isFunction(aeroflow.empty.append);
         });
     });
-
-
-
 });
-
-var aeroflow = (aeroflow, assert) => {
-    factoryTests(aeroflow, assert);
-};
-
-export default aeroflow;
