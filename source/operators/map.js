@@ -1,9 +1,9 @@
 'use strict';
 
-import { constant, identity, isFunction, isNothing } from '../utilites';
+import { constant, identity, isFunction, isUndefined } from '../utilites';
 
 export function mapOperator(mapping) {
-  if (isNothing(mapping)) return identity;
+  if (isUndefined(mapping)) return identity;
   const mapper = isFunction(mapping)
     ? mapping
     : constant(mapping);

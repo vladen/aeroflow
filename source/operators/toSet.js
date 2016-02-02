@@ -1,6 +1,6 @@
 'use strict';
 
-import { isNothing } from '../utilites';
+import { isUndefined } from '../utilites';
 
 export function toSetOperator() {
   return emitter => (next, done, context) => {
@@ -11,7 +11,7 @@ export function toSetOperator() {
         return true;
       },
       error => {
-        if (isNothing(error)) next(result);
+        if (isUndefined(error)) next(result);
         return done(error);
       },
       context);

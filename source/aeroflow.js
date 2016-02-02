@@ -1,17 +1,12 @@
 'use strict';
 
-import {
-  AEROFLOW, ARRAY, BOOLEAN, CLASS, DATE, FUNCTION, ITERATOR, NUMBER, PROMISE, PROTOTYPE, REGEXP, SYMBOL
-} from './symbols';
-import {
-  classOf, isFunction, isNothing, objectDefineProperties, objectCreate, noop
-} from './utilites';
+import { AEROFLOW, CLASS, PROTOTYPE } from './symbols';
+import { isDefined, isFunction, objectDefineProperties, objectCreate, noop } from './utilites';
 
-import { arrayEmitter } from './emitters/array';
 import { emptyEmitter } from './emitters/empty';
-import { functionEmitter } from './emitters/function';
-import { promiseEmitter } from './emitters/promise';
-import { valueEmitter } from './emitters/value';
+import { scalarEmitter } from './emitters/scalar';
+import { adapters } from './emitters/adapters';
+import { emitterSelector } from './emitters/selector';
 import { customEmitter } from './emitters/custom';
 import { expandEmitter } from './emitters/expand';
 import { randomEmitter } from './emitters/random';
@@ -479,47 +474,12 @@ Aeroflow[PROTOTYPE] = objectCreate(operators, {
   run: { value: run }
 });
 
-const adapters = objectCreate(null, {
-  [ARRAY]: { value: arrayEmitter, writable: true },
-  [BOOLEAN]: { value: valueEmitter, writable: true },
-  [DATE]: { value: valueEmitter, writable: true },
-  [FUNCTION]: { value: functionEmitter, writable: true },
-  [NUMBER]: { value: valueEmitter, writable: true },
-  [PROMISE]: { value: promiseEmitter, writable: true },
-  [REGEXP]: { value: valueEmitter, writable: true }
-});
-
-function adapt(source) {
-  if (isNothing(source)) return valueEmitter(source);
-  const sourceClass = classOf(source);
-  if (sourceClass === AEROFLOW) return source.emitter;
-  let adapter = adapters[sourceClass];
-  if (isFunction(adapter)) return adapter(source);
-  switch (sourceClass) {
-    case BOOLEAN:
-    case NUMBER:
-    case SYMBOL:
-      return valueEmitter(source);
-    default: 
-      const iterate = source[ITERATOR];
-      if (isFunction(iterate)) return (next, done, context) => {
-        const iterator = iterate.call(source);
-        let iteration;
-        do iteration = iterator.next();
-        while (!iteration.done && next(iteration.value));
-        done();
-      };
-      return valueEmitter(source);
-  }
-}
-
 function emit(next, done, context) {
-  const sources = context.flow.sources;
-  let limit = sources.length, index = -1;
+  const sources = context.flow.sources, limit = sources.length;
+  let index = -1;
   !function proceed(error) {
-    if (isNothing(error) && ++index < limit)
-      adapt(sources[index])(next, proceed, context);
-    else done(error);
+    if (isDefined(error) || ++index >= limit) done();
+    else emitterSelector(sources[index], true)(next, proceed, context);
   }();
 }
 
@@ -564,7 +524,7 @@ function expand(expander, seed) {
   * // done
   */
 function just(value) {
-  return new Aeroflow(valueEmitter(value));
+  return new Aeroflow(scalarEmitter(value));
 }
 /**
   * Returns new flow emitting random numbers.
@@ -576,8 +536,8 @@ function just(value) {
   * aeroflow.random(null, 0.1).take(3).dump().run();
   * aeroflow.random(1, 9).take(3).dump().run();
   */
-function random(min, max) {
-  return new Aeroflow(randomEmitter(min, max));
+function random(minimum, maximum) {
+  return new Aeroflow(randomEmitter(minimum, maximum));
 }
 /*
   aeroflow.range().take(3).dump().run();

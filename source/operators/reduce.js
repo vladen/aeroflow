@@ -1,8 +1,8 @@
 'use strict';
 
-import { isFunction, isNothing } from '../utilites';
+import { isFunction, isUndefined } from '../utilites';
 import { emptyEmitter } from '../emitters/empty';
-import { valueEmitter } from '../emitters/value';
+import { scalarEmitter } from '../emitters/scalar';
 
 export function reduceAlongOperator(reducer) {
   return emitter => (next, done, context) => {
@@ -17,7 +17,7 @@ export function reduceAlongOperator(reducer) {
         return true;
       },
       error => {
-        if (isNothing(error) && !idle) next(result);
+        if (isUndefined(error) && !idle) next(result);
         return done(error);
       },
       context);
@@ -33,7 +33,7 @@ export function reduceGeneralOperator(reducer, seed) {
         return true;
       },
       error => {
-        if (isNothing(error)) next(result);
+        if (isUndefined(error)) next(result);
         return done(error);
       },
       context);
@@ -50,7 +50,7 @@ export function reduceOptionalOperator(reducer, seed) {
         return true;
       },
       error => {
-        if (isNothing(error) && !idle) next(result);
+        if (isUndefined(error) && !idle) next(result);
         return done(error);
       },
       context);
@@ -58,16 +58,13 @@ export function reduceOptionalOperator(reducer, seed) {
 }
 
 export function reduceOperator(reducer, seed, optional) {
-  const arity = arguments.length;
-  if (!arity || !isFunction(reducer)) return () => emptyEmitter();
-  switch (arity) {
-    case 1: return reduceAlongOperator(reducer);
-    case 2: return reduceGeneralOperator(reducer, seed);
-    default:
-      return isFunction(reducer)
-        ? optional
+  return isUndefined(reducer)
+    ? emptyEmitter
+    : !isFunction(reducer)
+      ? () => scalarEmitter(reducer)
+      : isUndefined(seed)
+        ? reduceAlongOperator(reducer)
+        : optional
           ? reduceOptionalOperator(reducer, seed)
-          : reduceGeneralOperator(reducer, seed)
-        : () => valueEmitter(reducer)
-  }
+          : reduceGeneralOperator(reducer, seed);
 }

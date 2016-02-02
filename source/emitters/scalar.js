@@ -1,6 +1,6 @@
 'use strict';
 
-export function valueEmitter(value) {
+export function scalarEmitter(value) {
   return (next, done) => {
     next(value);
     done();
