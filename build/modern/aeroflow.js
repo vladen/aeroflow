@@ -9,6 +9,7 @@
   const BOOLEAN = 'Boolean';
   const CLASS = Symbol.toStringTag;
   const DATE = 'Date';
+  const ERROR = 'Error';
   const FUNCTION = 'Function';
   const ITERATOR = Symbol.iterator;
   const NULL = 'Null';
@@ -28,20 +29,20 @@
   const objectDefineProperties = Object.defineProperties;
   const objectToString = Object.prototype.toString;
 
-  const constant = value => () => value;
-  const identity = value => value;
+  const constant$1 = value => () => value;
+  const identity$1 = value => value;
   const noop = () => {};
 
   const classOf = value => objectToString.call(value).slice(8, -1);
   const classIs = className => value => classOf(value) === className;
 
-  const isDefined = value => value !== undefined;
+  const isError$1 = classIs(ERROR);
   const isFunction$1 = classIs(FUNCTION);
   const isInteger = Number.isInteger;
   const isNumber = classIs(NUMBER);
-  const isPromise = classIs(PROMISE);
-  const isTrue = value => value === true;
   const isUndefined = value => value === undefined;
+
+  const tie = (func, ...args) => () => func(...args);
 
   const toNumber = (value, def) => {
     if (!isNumber(value)) {
@@ -55,35 +56,53 @@
     return (next, done) => done();
   }
 
+  function unsync$1(result, next, done) {
+    switch (result) {
+      case true:
+        return false;
+      case false:
+        done(false);
+        return true;
+    }
+    switch (classOf(result)) {
+      case PROMISE:
+        result.then(promiseResult => {
+          if (!unsync$1(promiseResult, next, done)) next(true);
+        }, done);
+        break;
+      case ERROR:
+        done(result);
+        break;
+    }
+    return true;
+  }
+
   function scalarEmitter(value) {
     return (next, done) => {
-      next(value);
-      done();
+      if (!unsync$1(next(value), done, done))
+        done(true);
     };
   }
 
-  function arrayEmitter(source) {
+  function arrayEmitter$1(source) {
     return (next, done, context) => {
       let index = -1;
-      !function proceed(result) {
-        if (isTrue(result)) while (++index < source.length) {
-          result = next(source[index]);
-          if (isPromise(result)) result.then(proceed, proceed);
-          if (!isTrue(result)) break;
-        }
-        done(result);
-      }(true);
+      !function proceed() {
+        while (++index < source.length)
+          if (unsync$1(next(source[index]), proceed, done))
+            return;
+        done(true);
+      }();
     };
   }
 
   function functionEmitter(source) {
     return (next, done, context) => {
       try {
-        next(source(context.data));
-        return done();
+        if (!unsync$1(next(source(context.data)), done, done)) done();
       }
-    	catch(error) {
-      	return done(error);
+      catch(error) {
+        done(error);
       }
     };
   }
@@ -91,14 +110,14 @@
   function promiseEmitter(source) {
     return (next, done, context) => source.then(
       value => {
-        next(value);
-        done();
+        if (!unsync$1(next(value), done, done))
+          done(true);
       },
       done);
   }
 
   const adapters = objectCreate(null, {
-    [ARRAY]: { value: arrayEmitter, writable: true },
+    [ARRAY]: { value: arrayEmitter$1, writable: true },
     [BOOLEAN]: { value: scalarEmitter, writable: true },
     [DATE]: { value: scalarEmitter, writable: true },
     [FUNCTION]: { value: functionEmitter, writable: true },
@@ -109,88 +128,77 @@
 
   function iterableEmitter(source) {
     return (next, done, context) => {
-      const iterator = source[ITERATOR]();
-      let iteration;
-      try {
-        do iteration = iterator.next();
-        while (!iteration.done && next(iteration.value));
-        done();  
-      }
-      catch(error) {
-        done(error);
-      }
+      let iteration, iterator = iterator = source[ITERATOR]();
+      !function proceed() {
+        while (!(iteration = iterator.next()).done)
+          if (unsync$1(next(iteration.value), proceed, done))
+            return;
+        done(true);
+      }();
     };
   }
 
   const primitives = new Set([BOOLEAN, NULL, NUMBER, SYMBOL, UNDEFINED]);
 
-  function emitterSelector(source, scalar) {
+  function adapterEmitter(source, scalar) {
     const cls = classOf(source);
-    if (cls === AEROFLOW) return source.emitter;
+    if (cls === AEROFLOW)
+      return source.emitter;
     const adapter = adapters[cls];
-    if (isFunction$1(adapter)) return adapter(source);
-    if (!primitives.has(cls) && ITERATOR in source) return iterableEmitter(source);
-    if (scalar) return scalarEmitter(source);
-  }
-
-  function finalize(finalizer) {
-    if (isFunction$1(finalizer)) finalizer();
+    if (isFunction$1(adapter))
+      return adapter(source);
+    if (!primitives.has(cls) && ITERATOR in source)
+      return iterableEmitter(source);
+    if (scalar)
+      return scalarEmitter(source);
   }
 
   function customEmitter(emitter) {
-    if (isUndefined(emitter)) return emptyEmitter();
-    if (!isFunction$1(emitter)) return scalarEmitter(emitter);
+    if (isUndefined(emitter))
+      return emptyEmitter();
+    if (!isFunction$1(emitter))
+      return scalarEmitter(emitter);
     return (next, done, context) => {
-      let complete = false, finalizer;
-      try {
-        finalizer = emitter(
-          value => {
-            if (complete) return false;
-            if (next(value)) return true;
-            complete = true;
-            done();
-          },
-          error => {
-            if (complete) return;
-            complete = true;
-            done(error);
-          },
-          context);
+      let buffer = [], completed = false, finalizer, waiting = false;
+      finalizer = emitter(accept, finish, context);
+      function accept(result) {
+        buffer.push(result);
+        proceed();
       }
-      catch(error) {
-        if (complete) {
-          finalize(finalizer);
-          throw error;
-        }
-        complete = true;
-        done();
+      function finish(result) {
+        if (completed)
+          return;
+        completed = true;
+        if (isFunction$1(finalizer))
+          setTimeout(finalizer, 0);
+        done(result);
       }
-      finalize(finalizer);
+      function proceed() {
+        waiting = false;
+        while (buffer.length)
+          if (unsync$1(next(buffer.shift()), proceed, finish)) {
+            waiting = true;
+            return;
+          }
+      }
     };
+  }
+
+  function errorEmitter(message) {
+    return (next, done) => done(isError$1(message)
+      ? message
+      : new Error(message));
   }
 
   function expandEmitter(expanding, seed) {
     const expander = isFunction$1(expanding)
       ? expanding
-      : constant(expanding);
+      : constant$1(expanding);
     return (next, done, context) => {
       let index = 0, value = seed;
-      while (next(expander(value, index++, context.data)));
-      done();
-    };
-  }
-
-  function randomDecimalEmitter(minimum, maximum) {
-    return (next, done) => {
-      while (next(minimum + maximum * mathRandom()));
-      done();
-    };
-  }
-
-  function randomIntegerEmitter(minimum, maximum) { 
-    return (next, done) => {
-      while (next(mathFloor(minimum + maximum * mathRandom())));
-      done();
+      !function proceed() {
+        while (!unsync$1(next(expander(value, index++, context.data))), proceed, done);
+      }();
     };
   }
 
@@ -198,73 +206,66 @@
     maximum = toNumber(maximum, 1);
     minimum = toNumber(minimum, 0);
     maximum -= minimum;
-    return isInteger(minimum) && isInteger(maximum)
-      ? randomIntegerEmitter(minimum, maximum)
-      : randomDecimalEmitter(minimum, maximum);
+    const rounder = isInteger(minimum) && isInteger(maximum)
+      ? mathFloor
+      : identity;
+    return (next, done) => {
+      !function proceed() {
+        while (!unsync$1(next(rounder(minimum + maximum * mathRandom())), proceed, done));
+      }();
+    };
   }
 
   function rangeEmitter(start, end, step) {
     end = toNumber(end, maxInteger);
     start = toNumber(start, 0);
     if (start === end) return scalarEmitter(start);
-    if (start < end) {
+    const down = start < end;
+    if (down) {
       step = toNumber(step, 1);
       if (step < 1) return scalarEmitter(start);
-      return (next, done, context) => {
-        let value = start;
-        while (next(value) && (value += step) <= end);
-        done();
-      };
     }
-    step = toNumber(step, -1);
-    if (step > -1) return scalarEmitter(start);
+    else {
+      step = toNumber(step, -1);
+      if (step > -1) return scalarEmitter(start);
+    }
+    const limiter = down
+      ? value => value >= end
+      : value => value <= end;
     return (next, done, context) => {
-      let value = start;
-      while (next(value) && (value += step) >= end);
-      done();
-    };
-  }
-
-  function repeatDynamicEmitter(repeater) {
-    return (next, done, context) => {
-      let index = 0;
-      try {
-        while (next(repeater(index++, context.data)));
-        done();
-      }
-      catch(error) {
-        done(error);
-      }
-    };
-  }
-
-  function repeatStaticEmitter(value) {
-    return (next, done, context) => {
-      while (next(value));
-      done();
+      let value = start - step;
+      !function proceed() {
+        while ((value += step) <= end)
+          if (unsync$1(next(value), proceed, done))
+            return;
+        done(true);
+      }();
     };
   }
 
   function repeatEmitter(value) {
-    return isFunction(value)
-      ? repeatDynamicEmitter(value)
-      : repeatStaticEmitter(value);
+    const repeater = isFunction(value)
+      ? value
+      : constant(value);
+    return (next, done, context) => {
+      let index = 0;
+      !function proceed() {
+        while (!unsync$1(next(repeater(index++, context.data)), proceed, done));
+      }();
+    };
   }
 
   function timerEmitter(interval) {
     interval = +interval;
-    return isNaN(interval) 
-      ? emptyEmitter()
-      : (next, done, context) => {
-          const timer = setInterval(
-            () => {
-              if (!next(new Date)) {
-                clearInterval(timer);
-                done();
-              }
-            },
-            interval);
-        };
+    if (isNaN(interval) || interval < 0) interval = 0;
+    return (next, done, context) => {
+      !function delay() {
+        setTimeout(proceed, interval);
+      }();
+      function proceed(result) {
+        if (!unsync$1(next(new Date), delay, done)) delay();
+      }
+    };
   }
 
   function reduceAlongOperator(reducer) {
@@ -333,83 +334,69 @@
   }
 
   function countOperator(optional) {
-    return (optional ? reduceOptionalOperator : reduceGeneralOperator)(
-    	result => result + 1,
-    	0);
+    const reducer = optional
+      ? reduceOptionalOperator
+      : reduceGeneralOperator;
+    return reducer(result => result + 1, 0);
   }
 
-  function delayOperator(condition) {
-    const delayer = isFunction$1(condition)
-      ? condition
-      : constant(condition);
+  function delayOperator(interval) {
+    const delayer = isFunction$1(interval)
+      ? interval
+      : constant$1(interval);
     return emitter => (next, done, context) => {
-      let buffer = [], completed = false, delivering = false, index = 0;
-      function schedule(action, argument) {
-        if (delivering) {
-          buffer.push([action, argument]);
-          return;
-        }
-        delivering = true;
-        let interval = delayer(argument, index++, context.data);
-        switch (classOf(interval)) {
-          case DATE:
-            interval = interval - dateNow();
-            break;
-          case NUMBER:
-            break;
-          default:
-            interval = +interval;
-        }
-        if (interval < 0) interval = 0;
-        setTimeout(() => {
-          delivering = false;
-          if (!action(argument)) {
-            completed = true;
-            buffer.length = 0;
-          }
-          else if (buffer.length) schedule.apply(null, buffer.shift());
-        }, interval);
-      };
+      let index = 0;
       return emitter(
-        value => {
-          if (completed) return false;
-          schedule(next, value);
-          return true;
+        result => {
+          let interval = delayer(result, index++, context.data);
+          switch (classOf(interval)) {
+            case DATE:
+              interval = interval - dateNow();
+              break;
+            case NUMBER:
+              break;
+            default:
+              interval = +interval;
+          }
+          if (interval < 0) interval = 0;
+          return new Promise((resolve, reject) => {
+            setTimeout(() => {
+              if (!unsync$1(next(result), resolve, reject))
+                resolve(true);
+            }, interval);
+          });
         },
-        error => {
-          completed = true;
-          schedule(done, error);
-        },
+        done,
         context);
     }
   }
 
   function dumpToConsoleOperator(prefix) {
     return emitter => (next, done, context) => emitter(
-      value => {
-        console.log(prefix + 'next', value);
-        return next(value);
+      result => {
+        console.log(prefix + 'next', result);
+        return next(result);
       },
-      error => {
-        error
-          ? console.error(prefix + 'done', error)
+      result => {
+        isError$1(result)
+          ? console.error(prefix + 'done', result)
           : console.log(prefix + 'done');
-        return done(error);
+        done(result);
       },
       context);
   }
 
   function dumpToLoggerOperator(prefix, logger) {
     return emitter => (next, done, context) => emitter(
-      value => {
-        logger(prefix + 'next', value);
-        return next(value);
+      result => {
+        logger(prefix + 'next', result);
+        return next(result);
       },
-      error => {
-        error
-          ? logger(prefix + 'done', error)
+      result => {
+        isError$1(result)
+          ? logger(prefix + 'done', result)
           : logger(prefix + 'done');
-        return done(error);
+        done(result);
       },
       context);
   }
@@ -431,26 +418,26 @@
         predicate = condition;
         break;
       case REGEXP:
-        predicate = value => condition.test(value);
+        predicate = result => condition.test(result);
         break;
       case UNDEFINED:
-        predicate = value => !!value;
+        predicate = result => !!result;
         break;
       default:
-        predicate = value => value === condition;
+        predicate = result => result === condition;
         break;
     }
     return emitter => (next, done, context) => {
-      let idle = true, result = true;
+      let empty = true, every = true;
       emitter(
-        value => {
-          idle = false;
-          if (predicate(value)) return true;
-          return result = false;
+        result => {
+          empty = false;
+          if (predicate(result)) return true;
+          every = false;
+          return false;
         },
-        error => {
-          if (isUndefined(error)) next(result && !idle);
-          return done(error);
+        result => {
+          if (isError$1(result) || !unsync$1(next(every && !empty), done, done)) done(result);
         },
         context);
     };
@@ -463,19 +450,19 @@
         predicate = condition;
         break;
       case REGEXP:
-        predicate = value => condition.test(value);
+        predicate = result => condition.test(result);
         break;
       case UNDEFINED:
-        predicate = value => !!value;
+        predicate = result => !!result;
         break;
       default:
-        predicate = value => value === condition
+        predicate = result => result === condition
         break;
     }
     return emitter => (next, done, context) => {
       let index = 0;
       emitter(
-        value => !predicate(value, index++, context.data) || next(value),
+        result => !predicate(result, index++, context.data) || next(result),
         done,
         context);
     };
@@ -485,17 +472,16 @@
     selectors = selectors.length
       ? selectors.map(selector => isFunction$1(selector)
         ? selector
-        : constant(selector))
-      : [constant()];
+        : constant$1(selector))
+      : [constant$1()];
     const limit = selectors.length - 1;
     return emitter => (next, done, context) => {
-      const groups = new Map;
-      let index = 0;
+      let groups = new Map, index = 0;
       emitter(
         value => {
           let current, parent = groups;
           for (let i = -1; ++i <= limit;) {
-            const key = selectors[i](value, index++, context.data);
+            let key = selectors[i](value, index++, context.data);
             current = parent.get(key);
             if (!current) {
               current = i === limit ? [] : new Map;
@@ -506,12 +492,9 @@
           current.push(value);
           return true;
         },
-        error => {
-          if (error) done(error);
-          else {
-            Array.from(groups).every(next);
-            done();
-          }
+        result => {
+          if (isError(result)) done(result);
+          else iterableEmitter(groups)(next, done, context);
         },
         context);
     };
@@ -521,20 +504,23 @@
     const joiner = isFunction$1(separator)
       ? separator
       : isUndefined(separator)
-        ? constant(',')
-        : constant(separator);
-    return (optional ? reduceOptionalOperator : reduceGeneralOperator)(
-      (result, value, index, data) => result.length
-        ? result + joiner(value, index, data) + value 
+        ? constant$1(',')
+        : constant$1(separator);
+    const reducer = optional
+      ? reduceOptionalOperator
+      : reduceGeneralOperator;
+    return reducer((result, value, index, data) =>
+      result.length
+        ? result + joiner(value, index, data) + value
         : value,
       '');
   }
 
   function mapOperator(mapping) {
-    if (isUndefined(mapping)) return identity;
+    if (isUndefined(mapping)) return identity$1;
     const mapper = isFunction$1(mapping)
       ? mapping
-      : constant(mapping);
+      : constant$1(mapping);
     return emitter => (next, done, context) => {
       let index = 0;
       emitter(
@@ -545,21 +531,19 @@
   }
 
   function maxOperator () {
-    return reduceAlongOperator(
-      (maximum, value) => value > maximum ? value : maximum);
+    return reduceAlongOperator((maximum, value) => value > maximum ? value : maximum);
   }
 
   function toArrayOperator() {
     return emitter => (next, done, context) => {
-      const result = [];
+      let array = [];
       emitter(
-        value => {
-          result.push(value)
+        result => {
+          array.push(result);
           return true;
         },
-        error => {
-          if (isUndefined(error)) next(result);
-          return done(error);
+        result => {
+          if (isError(result) || !defer(next(array), tie(done, result), done)) done(result);
         },
         context);
     };
@@ -577,8 +561,7 @@
   }
 
   function minOperator() {
-    return reduceAlongOperator(
-      (minimum, value) => value < minimum ? value : minimum);
+    return reduceAlongOperator((minimum, value) => value < minimum ? value : minimum);
   }
 
   function reverseOperator() {
@@ -599,22 +582,26 @@
     return emitter => (next, done, context) => {
       let index = -1;
       emitter(
-        value => ++index < count || next(value),
+        result => ++index < count || next(result),
         done,
         context);
     };
   }
 
   function skipLastOperator(count) {
-    return emitter => (next, done, context) => toArrayOperator()(emitter)(
-      values => {
-        const limit = mathMax(values.length - count, 0);
-        let index = -1;
-        while (++index < limit && next(values[index]));
-        done();
-      },
-      done,
-      context);
+    return emitter => (next, done, context) => {
+      let array;
+      toArrayOperator()(emitter)(
+        result => {
+          array = result;
+          return false;
+        },
+        result => {
+          if (isError(result)) done(result);
+          else arrayEmitter(array.slice(mathMax(values.length - count, 0)))(next, done, context);
+        },
+        context);
+    }
   }
 
   function skipWhileOperator(predicate) {
@@ -632,11 +619,12 @@
 
   function skipOperator(condition) {
     switch (classOf(condition)) {
-      case NUMBER: return condition > 0
-        ? skipFirstOperator(condition)
-        : condition < 0
-          ? skipLastOperator(-condition)
-          : identity;
+      case NUMBER:
+        return condition > 0
+          ? skipFirstOperator(condition)
+          : condition < 0
+            ? skipLastOperator(-condition)
+            : identity$1;
       case FUNCTION:
         return skipWhileOperator(condition);
       case UNDEFINED:
@@ -644,7 +632,7 @@
       default:
         return condition
           ? skipAllOperator()
-          : identity;
+          : identity$1;
     }
   }
 
@@ -655,26 +643,25 @@
         predicate = condition;
         break;
       case REGEXP:
-        predicate = value => condition.test(value);
+        predicate = result => condition.test(result);
         break;
       case UNDEFINED:
-        predicate = value => !!value;
+        predicate = result => !!result;
         break;
       default:
-        predicate = value => value === condition;
+        predicate = result => result === condition;
         break;
     }
     return emitter => (next, done, context) => {
-      let result = false;
+      let some = false;
       emitter(
-        value => {
-          if (!predicate(value)) return true;
-          result = true;
+        result => {
+          if (!predicate(result)) return true;
+          some = true;
           return false;
         },
-        error => {
-          if (isUndefined(error)) next(result);
-          return done(error);
+        result => {
+          if (isError(result) || !unsync(next(some), done, done)) done(result);
         },
         context);
     };
@@ -688,22 +675,26 @@
     return emitter => (next, done, context) => {
       let index = -1;
       emitter(
-        value => ++index < count && next(value),
+        result => ++index < count && next(result),
         done,
         context);
     };
   }
 
   function takeLastOperator(count) {
-    return emitter => (next, done, context) => toArrayOperator()(emitter)(
-      values => {
-        const limit = values.length;
-        let index = mathMax(limit - count - 1, 0);
-        while (++index < limit && next(values[index]));
-        done();
-      }, 
-      done,
-      context);
+    return emitter => (next, done, context) => {
+      let array;
+      toArrayOperator()(emitter)(
+        result => {
+          array = result;
+          return false;
+        },
+        result => {
+          if (isError(result)) done(result);
+          else arrayEmitter(array)(next, done, context);
+        }, 
+        context);
+    };
   }
 
   function takeWhileOperator(predicate) {
@@ -718,15 +709,18 @@
 
   function takeOperator(condition) {
     switch (classOf(condition)) {
-      case NUMBER: return condition > 0
-        ? takeFirstOperator(condition)
-        : condition < 0
-          ? takeLastOperator(-condition)
+      case NUMBER:
+        return condition > 0
+          ? takeFirstOperator(condition)
+          : condition < 0
+            ? takeLastOperator(-condition)
+            : emptyEmitter();
+      case FUNCTION:
+        return takeWhileOperator(condition);
+      default:
+        return condition
+          ? identity$1
           : emptyEmitter();
-      case FUNCTION: return takeWhileOperator(condition);
-      default: return condition
-        ? identity
-        : emptyEmitter();
     }
   }
 
@@ -735,9 +729,9 @@
       ? (next, done, context) => {
         let index = 0;
         emitter(
-          value => {
+          result => {
             callback(value, index++, context.data);
-            return next(value);
+            return next(result);
           },
           done,
           context);
@@ -745,47 +739,28 @@
       : emitter;
   }
 
-  function timestampOperator() {
-    return emitter => (next, done, context) => {
-      let past = dateNow();
-      emitter(
-        value => {
-          let current = dateNow(), result = next({
-            timedelta: current - past,
-            timestamp: dateNow,
-            value
-          });
-          past = current;
-          return result;
-        },
-        done,
-        context);
-    };
-  }
-
   function toMapOperator(keyTransformation, valueTransformation) {
     const keyTransformer = isUndefined(keyTransformation)
-      ? identity
+      ? identity$1
       : isFunction$1(keyTransformation)
         ? keyTransformation
-        : constant(keyTransformation);
+        : constant$1(keyTransformation);
     const valueTransformer = isUndefined(valueTransformation)
-      ? identity
+      ? identity$1
       : isFunction$1(valueTransformation)
         ? valueTransformation
-        : constant(valueTransformation);
+        : constant$1(valueTransformation);
     return emitter=> (next, done, context) => {
-      let index = 0, result = new Map;
+      let index = 0, map = new Map;
       emitter(
-        value => {
-          result.set(
-            keyTransformer(value, index++, context.data),
-            valueTransformer(value, index++, context.data));
+        result => {
+          map.set(
+            keyTransformer(result, index++, context.data),
+            valueTransformer(result, index++, context.data));
           return true;
         },
-        error => {
-          if (isUndefined(error)) next(result);
-          return done(error);
+        result => {
+          if (isError(result) || !desync(next(map), tie(done, result), done)) done(result);
         },
         context);
     };
@@ -793,15 +768,14 @@
 
   function toSetOperator() {
     return emitter => (next, done, context) => {
-      let result = new Set;
+      let set = new Set;
       emitter(
-        value => {
-          result.add(value);
+        result => {
+          set.add(result);
           return true;
         },
-        error => {
-          if (isUndefined(error)) next(result);
-          return done(error);
+        result => {
+          if (isError$1(result) || !unsync$1(next(set), tie(done, result), done)) done(result);
         },
         context);
     };
@@ -852,7 +826,7 @@
   /**
     * Returns new flow delaying emission of each value accordingly provided condition.
     *
-    * @param {number|date|function} [condition] The condition used to determine delay for each subsequent emission.
+    * @param {number|date|function} [interval] The condition used to determine delay for each subsequent emission.
     *   Number is threated as milliseconds interval (negative number is considered as 0).
     *   Date is threated as is (date in past is considered as now).
     *   Function is execute for each emitted value, with three arguments:
@@ -875,8 +849,8 @@
     * // next 2 // after 1000ms
     * // done // after 1500ms
     */
-  function delay(condition) {
-    return this.chain(delayOperator(condition));
+  function delay$1(interval) {
+    return this.chain(delayOperator(interval));
   }
   /**
     * Dumps all events emitted by this flow to the `logger` with optional prefix.
@@ -1059,7 +1033,7 @@
    * @param {function} [done] Callback to execute as emission is complete, taking two arguments: error, context.
    * @param {function} [data] Arbitrary value passed to each callback invoked by this flow as context.data.
    * @example
-   * aeroflow.range(1, 3).run(value => console.log('next', value), error => console.log('done', error));
+   * aeroflow(1, 2, 3).run(value => console.log('next', value), error => console.log('done', error));
    * // next 1
    * // next 2
    * // next 3
@@ -1072,12 +1046,15 @@
       data: { value: data },
       flow: { value: this }
     });
-    setImmediate(() => {
+    try {
       context.flow.emitter(
-        value => false !== next(value, data),
-        error => done(error, data),
+        result => false !== next(result, data),
+        result => done(result, data),
         context);
-    });
+    }
+    catch(error) {
+      done(error, data);
+    }
     return this;
   }
   /**
@@ -1159,12 +1136,6 @@
   function tap(callback) {
     return this.chain(tapOperator(callback));
   }
-  /*
-    aeroflow.repeat().take(3).delay(10).timestamp().dump().run();
-  */
-  function timestamp() {
-    return this.chain(timestampOperator());
-  }
   /**
     * Collects all values emitted by this flow to array, returns flow emitting this array.
     *
@@ -1213,7 +1184,7 @@
   }
   const operators = objectCreate(Object[PROTOTYPE], {
     count: { value: count, writable: true },
-    delay: { value: delay, writable: true },
+    delay: { value: delay$1, writable: true },
     dump: { value: dump, writable: true },
     every: { value: every, writable: true },
     filter: { value: filter, writable: true },
@@ -1230,7 +1201,6 @@
     sum: { value: sum, writable: true },
     take: { value: take, writable: true },
     tap: { value: tap, writable: true },
-    timestamp: { value: timestamp, writable: true },
     toArray: { value: toArray, writable: true },
     toMap: { value: toMap, writable: true },
     toSet: { value: toSet, writable: true }
@@ -1247,9 +1217,9 @@
   function emit(next, done, context) {
     const sources = context.flow.sources, limit = sources.length;
     let index = -1;
-    !function proceed(error) {
-      if (isDefined(error) || ++index >= limit) done();
-      else emitterSelector(sources[index], true)(next, proceed, context);
+    !function proceed(result) {
+      if (result !== true || ++index >= limit) done(result);
+      else adapterEmitter(sources[index], true)(next, proceed, context);
     }();
   }
 
@@ -1277,8 +1247,11 @@
   function create(emitter) {
     return new Aeroflow(customEmitter(emitter));
   }
+  function error(message) {
+    return new Aeroflow(errorEmitter(message));
+  }
   function expand(expander, seed) {
-    return new Aeroflow(expandEmitter(expander, seed))
+    return new Aeroflow(expandEmitter(expander, seed));
   }
   /**
     * Returns new flow emitting the provided value only.
@@ -1354,6 +1327,7 @@
     adapters: { get: () => adapters },
     create: { value: create },
     empty: { enumerable: true, value: new Aeroflow(emptyEmitter()) },
+    error: { value: error },
     expand: { value: expand },
     just: { value: just },
     operators: { get: () => operators },

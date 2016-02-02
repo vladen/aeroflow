@@ -5,6 +5,7 @@ export const ARRAY = 'Array';
 export const BOOLEAN = 'Boolean';
 export const CLASS = Symbol.toStringTag;
 export const DATE = 'Date';
+export const ERROR = 'Error';
 export const FUNCTION = 'Function';
 export const ITERATOR = Symbol.iterator;
 export const NULL = 'Null';

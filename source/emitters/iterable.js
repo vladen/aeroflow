@@ -1,18 +1,16 @@
 'use strict';
 
-import { ITERATOR } from '../symbols'
+import { ITERATOR } from '../symbols';
+import { unsync } from '../unsync';
 
 export function iterableEmitter(source) {
   return (next, done, context) => {
-    const iterator = source[ITERATOR]();
-    let iteration;
-    try {
-      do iteration = iterator.next();
-      while (!iteration.done && next(iteration.value));
-      done();  
-    }
-    catch(error) {
-      done(error);
-    }
+    let iteration, iterator = iterator = source[ITERATOR]();
+    !function proceed() {
+      while (!(iteration = iterator.next()).done)
+        if (unsync(next(iteration.value), proceed, done))
+          return;
+      done(true);
+    }();
   };
 }

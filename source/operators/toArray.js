@@ -1,18 +1,18 @@
 'use strict';
 
-import { isUndefined } from '../utilites';
+import { isUndefined, tie } from '../utilites';
+import { unsync } from '../unsync';
 
 export function toArrayOperator() {
   return emitter => (next, done, context) => {
-    const result = [];
+    let array = [];
     emitter(
-      value => {
-        result.push(value)
+      result => {
+        array.push(result);
         return true;
       },
-      error => {
-        if (isUndefined(error)) next(result);
-        return done(error);
+      result => {
+        if (isError(result) || !defer(next(array), tie(done, result), done)) done(result);
       },
       context);
   };

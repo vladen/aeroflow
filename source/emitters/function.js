@@ -1,13 +1,14 @@
 'use strict';
 
+import { unsync } from '../unsync';
+
 export function functionEmitter(source) {
   return (next, done, context) => {
     try {
-      next(source(context.data));
-      return done();
+      if (!unsync(next(source(context.data)), done, done)) done();
     }
-  	catch(error) {
-    	return done(error);
+    catch(error) {
+      done(error);
     }
   };
 }

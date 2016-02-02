@@ -1,41 +1,37 @@
 'use strict';
 
 import { isFunction, isUndefined } from '../utilites';
+import { unsync } from '../unsync';
 import { emptyEmitter } from './empty';
 import { scalarEmitter } from './scalar';
 
-function finalize(finalizer) {
-  if (isFunction(finalizer)) finalizer();
-}
-
 export function customEmitter(emitter) {
-  if (isUndefined(emitter)) return emptyEmitter();
-  if (!isFunction(emitter)) return scalarEmitter(emitter);
+  if (isUndefined(emitter))
+    return emptyEmitter();
+  if (!isFunction(emitter))
+    return scalarEmitter(emitter);
   return (next, done, context) => {
-    let complete = false, finalizer;
-    try {
-      finalizer = emitter(
-        value => {
-          if (complete) return false;
-          if (next(value)) return true;
-          complete = true;
-          done();
-        },
-        error => {
-          if (complete) return;
-          complete = true;
-          done(error);
-        },
-        context);
+    let buffer = [], completed = false, finalizer, waiting = false;
+    finalizer = emitter(accept, finish, context);
+    function accept(result) {
+      buffer.push(result);
+      proceed();
     }
-    catch(error) {
-      if (complete) {
-        finalize(finalizer);
-        throw error;
-      }
-      complete = true;
-      done();
+    function finish(result) {
+      if (completed)
+        return;
+      completed = true;
+      if (isFunction(finalizer))
+        setTimeout(finalizer, 0);
+      done(result);
     }
-    finalize(finalizer);
+    function proceed() {
+      waiting = false;
+      while (buffer.length)
+        if (unsync(next(buffer.shift()), proceed, finish)) {
+          waiting = true;
+          return;
+        }
+    }
   };
 }

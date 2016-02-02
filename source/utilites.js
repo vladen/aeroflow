@@ -1,6 +1,6 @@
 'use strict';
 
-import { DATE, FUNCTION, NUMBER, PROMISE } from './symbols';
+import { DATE, ERROR, FUNCTION, NUMBER, PROMISE } from './symbols';
 
 export const dateNow = Date.now;
 export const mathFloor = Math.floor;
@@ -20,14 +20,14 @@ export const classOf = value => objectToString.call(value).slice(8, -1);
 export const classIs = className => value => classOf(value) === className;
 
 export const isDate = classIs(DATE);
-export const isDefined = value => value !== undefined;
+export const isError = classIs(ERROR);
 export const isFunction = classIs(FUNCTION);
 export const isInteger = Number.isInteger;
-export const isNothing = value => value == null;
 export const isNumber = classIs(NUMBER);
 export const isPromise = classIs(PROMISE);
-export const isTrue = value => value === true;
 export const isUndefined = value => value === undefined;
+
+export const tie = (func, ...args) => () => func(...args);
 
 export const toNumber = (value, def) => {
   if (!isNumber(value)) {

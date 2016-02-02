@@ -1,18 +1,18 @@
 'use strict';
 
-import { isUndefined } from '../utilites';
+import { isError, tie } from '../utilites';
+import { unsync } from '../unsync';
 
 export function toSetOperator() {
   return emitter => (next, done, context) => {
-    let result = new Set;
+    let set = new Set;
     emitter(
-      value => {
-        result.add(value);
+      result => {
+        set.add(result);
         return true;
       },
-      error => {
-        if (isUndefined(error)) next(result);
-        return done(error);
+      result => {
+        if (isError(result) || !unsync(next(set), tie(done, result), done)) done(result);
       },
       context);
   };

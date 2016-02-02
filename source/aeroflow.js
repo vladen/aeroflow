@@ -1,13 +1,14 @@
 'use strict';
 
 import { AEROFLOW, CLASS, PROTOTYPE } from './symbols';
-import { isDefined, isFunction, objectDefineProperties, objectCreate, noop } from './utilites';
+import { isFunction, objectDefineProperties, objectCreate, noop } from './utilites';
 
 import { emptyEmitter } from './emitters/empty';
 import { scalarEmitter } from './emitters/scalar';
 import { adapters } from './emitters/adapters';
-import { emitterSelector } from './emitters/selector';
+import { adapterEmitter } from './emitters/adapter';
 import { customEmitter } from './emitters/custom';
+import { errorEmitter } from './emitters/error';
 import { expandEmitter } from './emitters/expand';
 import { randomEmitter } from './emitters/random';
 import { rangeEmitter } from './emitters/range';
@@ -32,7 +33,6 @@ import { someOperator } from './operators/some';
 import { sumOperator } from './operators/sum';
 import { takeOperator } from './operators/take';
 import { tapOperator } from './operators/tap';
-import { timestampOperator } from './operators/timestamp';
 import { toArrayOperator } from './operators/toArray';
 import { toMapOperator } from './operators/toMap';
 import { toSetOperator } from './operators/toSet';
@@ -82,7 +82,7 @@ function count(optional) {
 /**
   * Returns new flow delaying emission of each value accordingly provided condition.
   *
-  * @param {number|date|function} [condition] The condition used to determine delay for each subsequent emission.
+  * @param {number|date|function} [interval] The condition used to determine delay for each subsequent emission.
   *   Number is threated as milliseconds interval (negative number is considered as 0).
   *   Date is threated as is (date in past is considered as now).
   *   Function is execute for each emitted value, with three arguments:
@@ -105,8 +105,8 @@ function count(optional) {
   * // next 2 // after 1000ms
   * // done // after 1500ms
   */
-function delay(condition) {
-  return this.chain(delayOperator(condition));
+function delay(interval) {
+  return this.chain(delayOperator(interval));
 }
 /**
   * Dumps all events emitted by this flow to the `logger` with optional prefix.
@@ -289,7 +289,7 @@ function reverse() {
  * @param {function} [done] Callback to execute as emission is complete, taking two arguments: error, context.
  * @param {function} [data] Arbitrary value passed to each callback invoked by this flow as context.data.
  * @example
- * aeroflow.range(1, 3).run(value => console.log('next', value), error => console.log('done', error));
+ * aeroflow(1, 2, 3).run(value => console.log('next', value), error => console.log('done', error));
  * // next 1
  * // next 2
  * // next 3
@@ -302,12 +302,15 @@ function run(next, done, data) {
     data: { value: data },
     flow: { value: this }
   });
-  setImmediate(() => {
+  try {
     context.flow.emitter(
-      value => false !== next(value, data),
-      error => done(error, data),
+      result => false !== next(result, data),
+      result => done(result, data),
       context);
-  });
+  }
+  catch(error) {
+    done(error, data);
+  }
   return this;
 }
 /**
@@ -389,12 +392,6 @@ function take(condition) {
 function tap(callback) {
   return this.chain(tapOperator(callback));
 }
-/*
-  aeroflow.repeat().take(3).delay(10).timestamp().dump().run();
-*/
-function timestamp() {
-  return this.chain(timestampOperator());
-}
 /**
   * Collects all values emitted by this flow to array, returns flow emitting this array.
   *
@@ -460,7 +457,6 @@ const operators = objectCreate(Object[PROTOTYPE], {
   sum: { value: sum, writable: true },
   take: { value: take, writable: true },
   tap: { value: tap, writable: true },
-  timestamp: { value: timestamp, writable: true },
   toArray: { value: toArray, writable: true },
   toMap: { value: toMap, writable: true },
   toSet: { value: toSet, writable: true }
@@ -477,9 +473,9 @@ Aeroflow[PROTOTYPE] = objectCreate(operators, {
 function emit(next, done, context) {
   const sources = context.flow.sources, limit = sources.length;
   let index = -1;
-  !function proceed(error) {
-    if (isDefined(error) || ++index >= limit) done();
-    else emitterSelector(sources[index], true)(next, proceed, context);
+  !function proceed(result) {
+    if (result !== true || ++index >= limit) done(result);
+    else adapterEmitter(sources[index], true)(next, proceed, context);
   }();
 }
 
@@ -507,8 +503,11 @@ export default function aeroflow(...sources) {
 function create(emitter) {
   return new Aeroflow(customEmitter(emitter));
 }
+function error(message) {
+  return new Aeroflow(errorEmitter(message));
+}
 function expand(expander, seed) {
-  return new Aeroflow(expandEmitter(expander, seed))
+  return new Aeroflow(expandEmitter(expander, seed));
 }
 /**
   * Returns new flow emitting the provided value only.
@@ -584,6 +583,7 @@ objectDefineProperties(aeroflow, {
   adapters: { get: () => adapters },
   create: { value: create },
   empty: { enumerable: true, value: new Aeroflow(emptyEmitter()) },
+  error: { value: error },
   expand: { value: expand },
   just: { value: just },
   operators: { get: () => operators },
