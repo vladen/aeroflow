@@ -1,8 +1,10 @@
 'use strict';
 
+import { unsync } from '../unsync';
+
 export function scalarEmitter(value) {
   return (next, done) => {
-    next(value);
-    done();
+    if (!unsync(next(value), done, done))
+      done(true);
   };
 }

@@ -1,6 +1,6 @@
 'use strict';
 
-import { ARRAY, BOOLEAN, DATE, FUNCTION, NUMBER, PROMISE, REGEXP } from '../symbols';
+import { ARRAY, BOOLEAN, DATE, FUNCTION, NUMBER, PROMISE, REGEXP, STRING } from '../symbols';
 import { objectCreate } from '../utilites';
 import { arrayEmitter } from './array';
 import { functionEmitter } from './function';
@@ -14,5 +14,6 @@ export const adapters = objectCreate(null, {
   [FUNCTION]: { value: functionEmitter, writable: true },
   [NUMBER]: { value: scalarEmitter, writable: true },
   [PROMISE]: { value: promiseEmitter, writable: true },
-  [REGEXP]: { value: scalarEmitter, writable: true }
+  [REGEXP]: { value: scalarEmitter, writable: true },
+  [STRING]: { value: scalarEmitter, writable: true }
 });

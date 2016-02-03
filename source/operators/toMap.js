@@ -1,6 +1,7 @@
 'use strict';
 
-import { constant, identity, isFunction, isUndefined } from '../utilites';
+import { constant, identity, isError, isFunction, isUndefined, tie } from '../utilites';
+import { unsync } from '../unsync';
 
 export function toMapOperator(keyTransformation, valueTransformation) {
   const keyTransformer = isUndefined(keyTransformation)
@@ -14,17 +15,17 @@ export function toMapOperator(keyTransformation, valueTransformation) {
       ? valueTransformation
       : constant(valueTransformation);
   return emitter=> (next, done, context) => {
-    let index = 0, result = new Map;
+    let index = 0, map = new Map;
     emitter(
-      value => {
-        result.set(
-          keyTransformer(value, index++, context.data),
-          valueTransformer(value, index++, context.data));
+      result => {
+        map.set(
+          keyTransformer(result, index++, context.data),
+          valueTransformer(result, index++, context.data));
         return true;
       },
-      error => {
-        if (isUndefined(error)) next(result);
-        return done(error);
+      result => {
+        if (isError(result) || !desync(next(map), tie(done, result), done))
+          done(result);
       },
       context);
   };
