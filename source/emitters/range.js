@@ -18,12 +18,12 @@ export function rangeEmitter(start, end, step) {
     if (step > -1) return scalarEmitter(start);
   }
   const limiter = down
-    ? value => value >= end
-    : value => value <= end;
+    ? value => value <= end
+    : value => value >= end;
   return (next, done, context) => {
     let value = start - step;
     !function proceed() {
-      while ((value += step) <= end)
+      while (limiter(value += step))
         if (unsync(next(value), proceed, done))
           return;
       done(true);

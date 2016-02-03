@@ -13,5 +13,6 @@ export const NUMBER = 'Number';
 export const PROMISE = 'Promise';
 export const PROTOTYPE = 'prototype';
 export const REGEXP = 'RegExp';
+export const STRING = 'String';
 export const SYMBOL = 'Symbol';
 export const UNDEFINED = 'Undefined';

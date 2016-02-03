@@ -8,7 +8,7 @@ export function tapOperator(callback) {
       let index = 0;
       emitter(
         result => {
-          callback(value, index++, context.data);
+          callback(result, index++, context.data);
           return next(result);
         },
         done,

@@ -16,7 +16,7 @@
   },
   "author": "Denis Vlassenko <denis_vlassenko@epam.com>",
   "scripts": {
-    "all": "npm run lint && npm run build && npm run test && npm run document",
+    "all": "npm run validate && npm run build && npm run test && npm run document",
     "build": "npm run concatenate && npm run transpile && npm run minify",
     "build:library": "npm run concatenate:library && npm run concatenate:library:modern && npm run transpile:library && npm run minify",
     "build:tests": "npm run concatenate:tests && npm run concatenate:tests:modern && npm run transpile:tests",

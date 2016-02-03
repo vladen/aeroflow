@@ -1,24 +1,24 @@
 'use strict';
 
-import { isFunction, isUndefined } from '../utilites';
+import { isError, isFunction, isUndefined, tie } from '../utilites';
 import { emptyEmitter } from '../emitters/empty';
 import { scalarEmitter } from '../emitters/scalar';
 
 export function reduceAlongOperator(reducer) {
   return emitter => (next, done, context) => {
-    let idle = true, index = 1, result;
+    let empty = true, index = 1, reduced;
     emitter(
-      value => {
-        if (idle) {
-          idle = false;
-          result = value;
+      result => {
+        if (empty) {
+          empty = false;
+          reduced = result;
         }
-        else result = reducer(result, value, index++, context.data);
+        else reduced = reducer(reduced, result, index++, context.data);
         return true;
       },
-      error => {
-        if (isUndefined(error) && !idle) next(result);
-        return done(error);
+      result => {
+        if (isError(result) || empty || !unsync(next(reduced), tie(done, result), done))
+          done(result);
       },
       context);
   };
@@ -26,15 +26,15 @@ export function reduceAlongOperator(reducer) {
 
 export function reduceGeneralOperator(reducer, seed) {
   return emitter => (next, done, context) => {
-    let index = 0, result = seed;
+    let index = 0, reduced = seed;
     emitter(
-      value => {
-        result = reducer(result, value, index++, context.data)
+      result => {
+        reduced = reducer(reduced, result, index++, context.data)
         return true;
       },
-      error => {
-        if (isUndefined(error)) next(result);
-        return done(error);
+      result => {
+        if (isError(result) || !unsync(next(reduced), tie(done, result), done))
+          done(result);
       },
       context);
   };
@@ -42,16 +42,16 @@ export function reduceGeneralOperator(reducer, seed) {
 
 export function reduceOptionalOperator(reducer, seed) {
   return emitter => (next, done, context) => {
-    let idle = true, index = 0, result = seed;
+    let empty = true, index = 0, reduced = seed;
     emitter(
-      value => {
-        idle = false;
-        result = reducer(result, value, index++, context.data);
+      result => {
+        empty = false;
+        reduced = reducer(reduced, result, index++, context.data);
         return true;
       },
-      error => {
-        if (isUndefined(error) && !idle) next(result);
-        return done(error);
+      result => {
+        if (isError(error) || empty || !unsync(next(reduced), tie(done, result), done))
+          done(result);
       },
       context);
   };

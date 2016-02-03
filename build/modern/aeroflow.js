@@ -17,11 +17,13 @@
   const PROMISE = 'Promise';
   const PROTOTYPE = 'prototype';
   const REGEXP = 'RegExp';
+  const STRING = 'String';
   const SYMBOL = 'Symbol';
   const UNDEFINED = 'Undefined';
 
   const dateNow = Date.now;
   const mathFloor = Math.floor;
+  const mathPow = Math.pow;
   const mathRandom = Math.random;
   const mathMax = Math.max;
   const maxInteger = Number.MAX_SAFE_INTEGER;
@@ -29,15 +31,18 @@
   const objectDefineProperties = Object.defineProperties;
   const objectToString = Object.prototype.toString;
 
-  const constant$1 = value => () => value;
-  const identity$1 = value => value;
+  const constant = value => () => value;
+  const identity = value => value;
   const noop = () => {};
 
   const classOf = value => objectToString.call(value).slice(8, -1);
-  const classIs = className => value => classOf(value) === className;
+  const classIs = className => {
+    const tag = `[object ${className}]`;
+    return value => objectToString.call(value) === tag;
+  }
 
   const isError$1 = classIs(ERROR);
-  const isFunction$1 = classIs(FUNCTION);
+  const isFunction = classIs(FUNCTION);
   const isInteger = Number.isInteger;
   const isNumber = classIs(NUMBER);
   const isUndefined = value => value === undefined;
@@ -99,7 +104,8 @@
   function functionEmitter(source) {
     return (next, done, context) => {
       try {
-        if (!unsync$1(next(source(context.data)), done, done)) done();
+        if (!unsync$1(next(source(context.data)), done, done))
+          done(true);
       }
       catch(error) {
         done(error);
@@ -123,7 +129,8 @@
     [FUNCTION]: { value: functionEmitter, writable: true },
     [NUMBER]: { value: scalarEmitter, writable: true },
     [PROMISE]: { value: promiseEmitter, writable: true },
-    [REGEXP]: { value: scalarEmitter, writable: true }
+    [REGEXP]: { value: scalarEmitter, writable: true },
+    [STRING]: { value: scalarEmitter, writable: true }
   });
 
   function iterableEmitter(source) {
@@ -138,14 +145,14 @@
     };
   }
 
-  const primitives = new Set([BOOLEAN, NULL, NUMBER, SYMBOL, UNDEFINED]);
+  const primitives = new Set([BOOLEAN, NULL, NUMBER, STRING, SYMBOL, UNDEFINED]);
 
   function adapterEmitter(source, scalar) {
     const cls = classOf(source);
     if (cls === AEROFLOW)
       return source.emitter;
     const adapter = adapters[cls];
-    if (isFunction$1(adapter))
+    if (isFunction(adapter))
       return adapter(source);
     if (!primitives.has(cls) && ITERATOR in source)
       return iterableEmitter(source);
@@ -156,7 +163,7 @@
   function customEmitter(emitter) {
     if (isUndefined(emitter))
       return emptyEmitter();
-    if (!isFunction$1(emitter))
+    if (!isFunction(emitter))
       return scalarEmitter(emitter);
     return (next, done, context) => {
       let buffer = [], completed = false, finalizer, waiting = false;
@@ -166,20 +173,18 @@
         proceed();
       }
       function finish(result) {
-        if (completed)
-          return;
+        if (completed) return;
         completed = true;
-        if (isFunction$1(finalizer))
-          setTimeout(finalizer, 0);
+        if (isFunction(finalizer)) setTimeout(finalizer, 0);
+        if (isUndefined(result)) result = true;
         done(result);
       }
       function proceed() {
         waiting = false;
-        while (buffer.length)
-          if (unsync$1(next(buffer.shift()), proceed, finish)) {
-            waiting = true;
-            return;
-          }
+        while (buffer.length) if (unsync$1(next(buffer.shift()), proceed, finish)) {
+          waiting = true;
+          return;
+        }
       }
     };
   }
@@ -191,9 +196,9 @@
   }
 
   function expandEmitter(expanding, seed) {
-    const expander = isFunction$1(expanding)
+    const expander = isFunction(expanding)
       ? expanding
-      : constant$1(expanding);
+      : constant(expanding);
     return (next, done, context) => {
       let index = 0, value = seed;
       !function proceed() {
@@ -203,7 +208,7 @@
   }
 
   function randomEmitter(minimum, maximum) {
-    maximum = toNumber(maximum, 1);
+    maximum = toNumber(maximum, 1 - mathPow(10,-15));
     minimum = toNumber(minimum, 0);
     maximum -= minimum;
     const rounder = isInteger(minimum) && isInteger(maximum)
@@ -230,12 +235,12 @@
       if (step > -1) return scalarEmitter(start);
     }
     const limiter = down
-      ? value => value >= end
-      : value => value <= end;
+      ? value => value <= end
+      : value => value >= end;
     return (next, done, context) => {
       let value = start - step;
       !function proceed() {
-        while ((value += step) <= end)
+        while (limiter(value += step))
           if (unsync$1(next(value), proceed, done))
             return;
         done(true);
@@ -256,33 +261,32 @@
   }
 
   function timerEmitter(interval) {
-    interval = +interval;
-    if (isNaN(interval) || interval < 0) interval = 0;
+    if (!isFunction(interval)) interval = constant(interval);
     return (next, done, context) => {
-      !function delay() {
-        setTimeout(proceed, interval);
+      let index = 0;
+      !function proceed(result) {
+        setTimeout(() => {
+          if (!unsync$1(next(new Date), proceed, done)) proceed();
+        }, toNumber(interval(index++), 1000));
       }();
-      function proceed(result) {
-        if (!unsync$1(next(new Date), delay, done)) delay();
-      }
     };
   }
 
   function reduceAlongOperator(reducer) {
     return emitter => (next, done, context) => {
-      let idle = true, index = 1, result;
+      let empty = true, index = 1, reduced;
       emitter(
-        value => {
-          if (idle) {
-            idle = false;
-            result = value;
+        result => {
+          if (empty) {
+            empty = false;
+            reduced = result;
           }
-          else result = reducer(result, value, index++, context.data);
+          else reduced = reducer(reduced, result, index++, context.data);
           return true;
         },
-        error => {
-          if (isUndefined(error) && !idle) next(result);
-          return done(error);
+        result => {
+          if (isError$1(result) || empty || !unsync(next(reduced), tie(done, result), done))
+            done(result);
         },
         context);
     };
@@ -290,15 +294,15 @@
 
   function reduceGeneralOperator(reducer, seed) {
     return emitter => (next, done, context) => {
-      let index = 0, result = seed;
+      let index = 0, reduced = seed;
       emitter(
-        value => {
-          result = reducer(result, value, index++, context.data)
+        result => {
+          reduced = reducer(reduced, result, index++, context.data)
           return true;
         },
-        error => {
-          if (isUndefined(error)) next(result);
-          return done(error);
+        result => {
+          if (isError$1(result) || !unsync(next(reduced), tie(done, result), done))
+            done(result);
         },
         context);
     };
@@ -306,16 +310,16 @@
 
   function reduceOptionalOperator(reducer, seed) {
     return emitter => (next, done, context) => {
-      let idle = true, index = 0, result = seed;
+      let empty = true, index = 0, reduced = seed;
       emitter(
-        value => {
-          idle = false;
-          result = reducer(result, value, index++, context.data);
+        result => {
+          empty = false;
+          reduced = reducer(reduced, result, index++, context.data);
           return true;
         },
-        error => {
-          if (isUndefined(error) && !idle) next(result);
-          return done(error);
+        result => {
+          if (isError$1(error) || empty || !unsync(next(reduced), tie(done, result), done))
+            done(result);
         },
         context);
     };
@@ -324,7 +328,7 @@
   function reduceOperator(reducer, seed, optional) {
     return isUndefined(reducer)
       ? emptyEmitter
-      : !isFunction$1(reducer)
+      : !isFunction(reducer)
         ? () => scalarEmitter(reducer)
         : isUndefined(seed)
           ? reduceAlongOperator(reducer)
@@ -341,9 +345,9 @@
   }
 
   function delayOperator(interval) {
-    const delayer = isFunction$1(interval)
+    const delayer = isFunction(interval)
       ? interval
-      : constant$1(interval);
+      : constant(interval);
     return emitter => (next, done, context) => {
       let index = 0;
       return emitter(
@@ -378,9 +382,7 @@
         return next(result);
       },
       result => {
-        isError$1(result)
-          ? console.error(prefix + 'done', result)
-          : console.log(prefix + 'done');
+        console[isError$1(result) ? 'error' : 'log'](prefix + 'done', result);
         done(result);
       },
       context);
@@ -393,18 +395,16 @@
         return next(result);
       },
       result => {
-        isError$1(result)
-          ? logger(prefix + 'done', result)
-          : logger(prefix + 'done');
+        logger(prefix + 'done', result);
         done(result);
       },
       context);
   }
 
   function dumpOperator(prefix, logger) {
-    return isFunction$1(prefix)
+    return isFunction(prefix)
       ? dumpToLoggerOperator('', prefix)
-      : isFunction$1(logger)
+      : isFunction(logger)
         ? dumpToLoggerOperator(prefix, logger)
         : isUndefined(prefix)
           ? dumpToConsoleOperator('')
@@ -470,10 +470,10 @@
 
   function groupOperator(selectors) {
     selectors = selectors.length
-      ? selectors.map(selector => isFunction$1(selector)
+      ? selectors.map(selector => isFunction(selector)
         ? selector
-        : constant$1(selector))
-      : [constant$1()];
+        : constant(selector))
+      : [constant()];
     const limit = selectors.length - 1;
     return emitter => (next, done, context) => {
       let groups = new Map, index = 0;
@@ -493,19 +493,19 @@
           return true;
         },
         result => {
-          if (isError(result)) done(result);
-          else iterableEmitter(groups)(next, done, context);
+          if (isError$1(result)) done(result);
+          else iterableEmitter(groups)(next, tie(done, result), context);
         },
         context);
     };
   }
 
   function joinOperator(separator, optional) {
-    const joiner = isFunction$1(separator)
+    const joiner = isFunction(separator)
       ? separator
       : isUndefined(separator)
-        ? constant$1(',')
-        : constant$1(separator);
+        ? constant(',')
+        : constant(separator);
     const reducer = optional
       ? reduceOptionalOperator
       : reduceGeneralOperator;
@@ -517,10 +517,10 @@
   }
 
   function mapOperator(mapping) {
-    if (isUndefined(mapping)) return identity$1;
-    const mapper = isFunction$1(mapping)
+    if (isUndefined(mapping)) return identity;
+    const mapper = isFunction(mapping)
       ? mapping
-      : constant$1(mapping);
+      : constant(mapping);
     return emitter => (next, done, context) => {
       let index = 0;
       emitter(
@@ -543,7 +543,8 @@
           return true;
         },
         result => {
-          if (isError(result) || !defer(next(array), tie(done, result), done)) done(result);
+          if (isError$1(result) || !unsync$1(next(array), tie(done, result), done)) 
+            done(result);
         },
         context);
     };
@@ -624,7 +625,7 @@
           ? skipFirstOperator(condition)
           : condition < 0
             ? skipLastOperator(-condition)
-            : identity$1;
+            : identity;
       case FUNCTION:
         return skipWhileOperator(condition);
       case UNDEFINED:
@@ -632,7 +633,7 @@
       default:
         return condition
           ? skipAllOperator()
-          : identity$1;
+          : identity;
     }
   }
 
@@ -719,18 +720,18 @@
         return takeWhileOperator(condition);
       default:
         return condition
-          ? identity$1
+          ? identity
           : emptyEmitter();
     }
   }
 
   function tapOperator(callback) {
-    return emitter => isFunction$1(callback)
+    return emitter => isFunction(callback)
       ? (next, done, context) => {
         let index = 0;
         emitter(
           result => {
-            callback(value, index++, context.data);
+            callback(result, index++, context.data);
             return next(result);
           },
           done,
@@ -741,15 +742,15 @@
 
   function toMapOperator(keyTransformation, valueTransformation) {
     const keyTransformer = isUndefined(keyTransformation)
-      ? identity$1
-      : isFunction$1(keyTransformation)
+      ? identity
+      : isFunction(keyTransformation)
         ? keyTransformation
-        : constant$1(keyTransformation);
+        : constant(keyTransformation);
     const valueTransformer = isUndefined(valueTransformation)
-      ? identity$1
-      : isFunction$1(valueTransformation)
+      ? identity
+      : isFunction(valueTransformation)
         ? valueTransformation
-        : constant$1(valueTransformation);
+        : constant(valueTransformation);
     return emitter=> (next, done, context) => {
       let index = 0, map = new Map;
       emitter(
@@ -760,7 +761,8 @@
           return true;
         },
         result => {
-          if (isError(result) || !desync(next(map), tie(done, result), done)) done(result);
+          if (isError$1(result) || !desync(next(map), tie(done, result), done))
+            done(result);
         },
         context);
     };
@@ -775,7 +777,8 @@
           return true;
         },
         result => {
-          if (isError$1(result) || !unsync$1(next(set), tie(done, result), done)) done(result);
+          if (isError$1(result) || !unsync$1(next(set), tie(done, result), done))
+            done(result);
         },
         context);
     };
@@ -790,22 +793,33 @@
     }
   }
   /**
-  * Returns new flow emitting values from this flow first and then from all provided sources without interleaving them.
-  * @public @instance @alias Aeroflow@append
-  * @param {...any} [sources] The value sources to append to this flow.
-  * @return {Aeroflow} new flow.
-  * @example
-  * aeroflow(1).append(2, [3, 4], new Promise(resolve => setTimeout(() => resolve(5), 500))).dump().run();
-  * // next 1
-  * // next 2
-  * // next 3
-  * // next 4
-  * // next 5 // after 500ms
-  * // done
+  Returns new flow emitting values from this flow first 
+  and then from all provided sources without interleaving them.
+
+  @public @instance @alias Aeroflow@append
+
+  @param {...any} [sources] Data sources to append to this flow.
+
+  @return {Aeroflow}
+  New flow emitting all values emitted by this flow first
+  and then all provided values.
+
+  @example
+  aeroflow(1).append(2, [3, 4], new Promise(resolve => setTimeout(() => resolve(5), 500))).dump().run();
+  // next 1
+  // next 2
+  // next 3
+  // next 4
+  // next 5 // after 500ms
+  // done
   */
   function append(...sources) {
     return new Aeroflow(this.emitter, this.sources.concat(sources));
   }
+  /**
+  @example
+  aeroflow().dump().bind(1, 2, 3).run();
+  */
   function bind(...sources) {
     return new Aeroflow(this.emitter, sources);
   }
@@ -813,109 +827,126 @@
     return new Aeroflow(operator(this.emitter), this.sources);
   }
   /**
-  * Counts the number of values emitted by this flow, returns new flow emitting only this value.
-  *
-  * @example
-  * aeroflow(['a', 'b', 'c']).count().dump().run();
-  * // next 3
-  * // done
+  Counts the number of values emitted by this flow, returns new flow emitting only this value.
+
+  @example
+  aeroflow(['a', 'b', 'c']).count().dump().run();
+  // next 3
+  // done
   */
   function count(optional) {
     return this.chain(countOperator(optional));
   }
   /**
-    * Returns new flow delaying emission of each value accordingly provided condition.
-    *
-    * @param {number|date|function} [interval] The condition used to determine delay for each subsequent emission.
-    *   Number is threated as milliseconds interval (negative number is considered as 0).
-    *   Date is threated as is (date in past is considered as now).
-    *   Function is execute for each emitted value, with three arguments:
-    *     value - The current value emitted by this flow
-    *     index - The index of the current value
-    *     context - The context object
-    *   The result of condition function will be converted nu number and used as milliseconds interval.
-    *
-    * @example:
-    * aeroflow(1, 2).delay(500).dump().run();
-    * // next 1 // after 500ms
-    * // next 2 // after 500ms
-    * // done // after 500ms
-    * aeroflow(1, 2).delay(new Date(Date.now() + 500)).dump().run();
-    * // next 1 // after 500ms
-    * // next 2
-    * // done // after 500ms
-    * aeroflow(1, 2).delay((value, index) => 500 + index * 500).dump().run();
-    * // next 1 // after 500ms
-    * // next 2 // after 1000ms
-    * // done // after 1500ms
+  Returns new flow delaying emission of each value accordingly provided condition.
+
+  @param {number|date|function} [interval]
+  The condition used to determine delay for each subsequent emission.
+  Number is threated as milliseconds interval (negative number is considered as 0).
+  Date is threated as is (date in past is considered as now).
+  Function is execute for each emitted value, with three arguments:
+    value - The current value emitted by this flow
+    index - The index of the current value
+    context - The context object
+  The result of condition function will be converted nu number and used as milliseconds interval.
+
+  @example:
+  aeroflow(1, 2).delay(500).dump().run();
+  // next 1 // after 500ms
+  // next 2 // after 500ms
+  // done // after 500ms
+  aeroflow(1, 2).delay(new Date(Date.now() + 500)).dump().run();
+  // next 1 // after 500ms
+  // next 2
+  // done // after 500ms
+  aeroflow(1, 2).delay((value, index) => 500 + index 500).dump().run();
+  // next 1 // after 500ms
+  // next 2 // after 1000ms
+  // done // after 1500ms
     */
-  function delay$1(interval) {
+  function delay(interval) {
     return this.chain(delayOperator(interval));
   }
   /**
-    * Dumps all events emitted by this flow to the `logger` with optional prefix.
-    *
-    * @param {string} [prefix=''] A string prefix prepended to each event name.
-    * @param {function} [logger=console.log] Function to execute for each event emitted, taking two arguments:
-    *   event - The name of event emitted prepended with prefix (next or done).
-    *   value - The value (next event) or error (done event) emitted by this flow.
-    *
-    * @example
-    * aeroflow(1, 2).dump('test ', console.info.bind(console)).run();
-    * // next 1
-    * // next 2
-    * // done
-    */
+  Dumps all events (next, done) emitted by this flow to the logger with optional prefix.
+
+  @param {string} [prefix='']
+  A string prefix to prepend to each event name.
+
+  @param {function} [logger=console.log]
+  Function to execute for each event emitted, taking two arguments:
+  name - The name of event emitted by this flow prepended with prefix.
+  value - The value of event emitted by this flow.
+
+  @example
+  aeroflow(1, 2).dump('test ', console.info.bind(console)).run();
+  // test next 1
+  // test next 2
+  // test done true
+  */
   function dump(prefix, logger) {
     return this.chain(dumpOperator(prefix, logger));
   }
   /**
-    * Tests whether all values emitted by this flow pass the predicate test, returns flow emitting true if the predicate returns true for all emitted values; otherwise, false.
-    *
-    * @param {function|regexp|any} [predicate] The predicate function or regular expression object used to test each emitted value,
-    *   or scalar value to compare emitted values with. If omitted, default (truthy) predicate is used.
-    * @returns {Aeroflow} New flow that emits true or false.
-    *
-    * @example
-    * aeroflow(1).every().dump().run();
-    * // next true
-    * // done
-    * aeroflow.range(1, 3).every(2).dump().run();
-    * // next false
-    * // done
-    * aeroflow.range(1, 3).every(value => value > 0).dump().run();
-    * // next true
-    * // done
-    */
+  Tests whether all values emitted by this flow pass the provided test.
+
+  @public @instance @alias aeroflow#every
+
+  @param {function|regexp|any} [predicate]
+  The predicate function or regular expression to test each emitted value with,
+  or scalar value to compare emitted values with.
+  If omitted, default (truthy) predicate is used.
+
+  @return {Aeroflow}
+  New flow emitting true if all emitted values pass the test; otherwise, false.
+
+  @example
+  aeroflow(1).every().dump().run();
+  // next true
+  // done true
+  aeroflow(1, 2).every(1).dump().run();
+  // next false
+  // done false
+  aeroflow(1, 2).every(value => value > 0).dump().run();
+  // next true
+  // done true
+  */
   function every(condition) {
     return this.chain(everyOperator(condition));
   }
   /**
-    * Returns new from emitting inly values that pass the test implemented by the provided predicate.
-    *
-    * @param {function|regexp|any} [predicate] The test applied to each emitted value.
-    *
-    * @example
-    * aeroflow(0, 1).filter().dump().run();
-    * // next 1
-    * // done
-    * aeroflow('a', 'b', 'a').filter('a').dump().run();
-    * // next "a"
-    * // next "a"
-    * // done
-    * aeroflow(a', 'b', 'a').filter(/a/).dump().run();
-    * // next "b"
-    * // next "b"
-    * // done
-    * aeroflow.range(1, 5).filter(value => (value % 2) === 0).dump().run();
-    * // next 2
-    * // next 4
-    * // done
-    */
+  Filters values emitted by this flow with the provided test.
+
+  @param {function|regexp|any} [predicate]
+  The predicate function or regular expression to test each emitted value with,
+  or scalar value to compare emitted values with.
+  If omitted, default (truthy) predicate is used.
+
+  @return {Aeroflow}
+  New flow emitting only values passing the provided test.
+
+  @example
+  aeroflow(0, 1).filter().dump().run();
+  // next 1
+  // done true
+  aeroflow('a', 'b', 'a').filter('a').dump().run();
+  // next "a"
+  // next "a"
+  // done true
+  aeroflow('a', 'b', 'a').filter(/a/).dump().run();
+  // next "b"
+  // next "b"
+  // done true
+  aeroflow(1, 2, 3, 4, 5).filter(value => (value % 2) === 0).dump().run();
+  // next 2
+  // next 4
+  // done true
+  */
   function filter(condition) {
     return this.chain(filterOperator(condition)); 
   }
   /*
+  @example
   aeroflow(
     { country: 'Belarus', city: 'Brest' },
     { country: 'Poland', city: 'Krakow' },
@@ -937,180 +968,201 @@
     return this.chain(mapOperator(mapping)); 
   }
   /**
-    * Determines the maximum value emitted by this flow, returns new flow emitting only this value.
-    *
-    * @example
-    * aeroflow([1, 3, 2]).max().dump().run();
-    * // next 3
-    * // done
+  Determines the maximum value emitted by this flow.
+
+  @public @instance @alias aeroflow#max
+
+  @return
+  New flow emitting the maximum value only.
+
+  @example
+  aeroflow([1, 3, 2]).max().dump().run();
+  // next 3
+  // done
     */
   function max() {
     return this.chain(maxOperator());
   }
   /**
-    * Determines the mean value emitted by this flow, returns new flow emitting only this value.
-    *
-    * @example
-    * aeroflow([1, 1, 2, 3, 5, 7, 9]).mean().dump().run();
-    * // next 3
-    * // done
+  Determines the mean value emitted by this flow.
+
+  @instance @alias aeroflow#mean
+
+  @return
+  New flow emitting the mean value only.
+
+  @example
+  aeroflow([1, 1, 2, 3, 5, 7, 9]).mean().dump().run();
+  // next 3
+  // done
     */
   function mean() {
     return this.chain(meanOperator());
   }
   /**
-    * Determine the minimum value emitted by this flow, returns new flow emitting only this value.
-    *
-    * @example
-    * aeroflow([2, 1, 3]).min().dump().run();
-    * // next 1
-    * // done
+  Determines the minimum value emitted by this flow.
+
+  @public @instance @alias aeroflow#min
+
+  @return
+  New flow emitting the minimum value only.
+
+  @example
+  aeroflow([2, 1, 3]).min().dump().run();
+  // next 1
+  // done
     */
   function min() {
     return this.chain(minOperator());
   }
   /**
-  * Returns new flow emitting the emissions from all provided sources and then from this flow without interleaving them.
-  * @public @instance @alias Aeroflow@prepend
-  * @param {...any} [sources] Values to concatenate with this flow.
-  * @example
-  * aeroflow(1).prepend(2, [3, 4], new Promise(resolve => setTimeout(() => resolve(5), 500))).dump().run();
-  * // next 2
-  * // next 3
-  * // next 4
-  * // next 5 // after 500ms
-  * // next 1
-  * // done
+  Returns new flow emitting the emissions from all provided sources and then from this flow without interleaving them.
+
+  @public @instance @alias Aeroflow#prepend
+
+  @param {...any} [sources] Values to concatenate with this flow.
+
+  @example
+  aeroflow(1).prepend(2, [3, 4], new Promise(resolve => setTimeout(() => resolve(5), 500))).dump().run();
+  // next 2
+  // next 3
+  // next 4
+  // next 5 // after 500ms
+  // next 1
+  // done
   */
   function prepend(...sources) {
     return new Aeroflow(this.emitter, sources.concat(this.sources));
   }
   /**
-  * Applies a function against an accumulator and each value emitted by this flow to reduce it to a single value,
-  * returns new flow emitting reduced value.
+  Applies a function against an accumulator and each value emitted by this flow to reduce it to a single value,
+  returns new flow emitting reduced value.
   *
-  * @param {function|any} reducer Function to execute on each emitted value, taking four arguments:
-  *   result - the value previously returned in the last invocation of the reducer, or seed, if supplied
-  *   value - the current value emitted by this flow
-  *   index - the index of the current value emitted by the flow
-  *   context.data.
-  *   If is not a function, a flow emitting just reducer value will be returned.
-  * @param {any} initial Value to use as the first argument to the first call of the reducer.
+  @param {function|any} reducer Function to execute on each emitted value, taking four arguments:
+    result - the value previously returned in the last invocation of the reducer, or seed, if supplied
+    value - the current value emitted by this flow
+    index - the index of the current value emitted by the flow
+    context.data.
+    If is not a function, a flow emitting just reducer value will be returned.
+  @param {any} initial Value to use as the first argument to the first call of the reducer.
   *
-  * @example
-  * aeroflow([2, 4, 8]).reduce((product, value) => product * value, 1).dump().run();
-  * // next 64
-  * // done
-  * aeroflow(['a', 'b', 'c']).reduce((product, value, index) => product + value + index, '').dump().run();
-  * // next a0b1c2
-  * // done
+  @example
+  aeroflow([2, 4, 8]).reduce((product, value) => product value, 1).dump().run();
+  // next 64
+  // done
+  aeroflow(['a', 'b', 'c']).reduce((product, value, index) => product + value + index, '').dump().run();
+  // next a0b1c2
+  // done
   */
   function reduce(reducer, seed, optional) {
     return this.chain(reduceOperator(reducer, seed, optional));
   }
   /**
-   * @example
-   * aeroflow(1, 2, 3).reverse().dump().run()
-   * // next 3
-   * // next 2
-   * // next 1
-   * // done
-   * aeroflow.range(1, 3).reverse().dump().run()
-   * // next 3
-   * // next 2
-   * // next 1
-   * // done
+   @example
+   aeroflow(1, 2, 3).reverse().dump().run()
+   // next 3
+   // next 2
+   // next 1
+   // done
+   aeroflow.range(1, 3).reverse().dump().run()
+   // next 3
+   // next 2
+   // next 1
+   // done
    */
   function reverse() {
     return this.chain(reverseOperator());
   }
   /**
-   * Runs this flow asynchronously, initiating source to emit values,
-   * applying declared operators to emitted values and invoking provided callbacks.
-   * If no callbacks provided, runs this flow for its side-effects only.
-   * @public @instance @alias Aeroflow@run
-   * @param {function} [next] Callback to execute for each emitted value, taking two arguments: value, context.
-   * @param {function} [done] Callback to execute as emission is complete, taking two arguments: error, context.
-   * @param {function} [data] Arbitrary value passed to each callback invoked by this flow as context.data.
-   * @example
-   * aeroflow(1, 2, 3).run(value => console.log('next', value), error => console.log('done', error));
-   * // next 1
-   * // next 2
-   * // next 3
-   * // done undefined
+   Runs this flow asynchronously, initiating source to emit values,
+   applying declared operators to emitted values and invoking provided callbacks.
+   If no callbacks provided, runs this flow for its side-effects only.
+   @public @instance @alias Aeroflow@run
+   @param {function} [next] Callback to execute for each emitted value, taking two arguments: value, context.
+   @param {function} [done] Callback to execute as emission is complete, taking two arguments: error, context.
+   @param {function} [data] Arbitrary value passed to each callback invoked by this flow as context.data.
+   @example
+   aeroflow(1, 2, 3).run(value => console.log('next', value), error => console.log('done', error));
+   // next 1
+   // next 2
+   // next 3
+   // done undefined
    */
   function run(next, done, data) {
-    if (!isFunction$1(done)) done = noop;
-    if (!isFunction$1(next)) next = noop;
+    if (!isFunction(done)) done = result => {
+      if (isError$1(result)) throw result;
+    };
+    if (!isFunction(next)) next = noop;
     const context = objectDefineProperties({}, {
       data: { value: data },
       flow: { value: this }
     });
-    try {
-      context.flow.emitter(
-        result => false !== next(result, data),
-        result => done(result, data),
-        context);
-    }
-    catch(error) {
-      done(error, data);
-    }
+    setImmediate(() => {
+      try {
+        context.flow.emitter(
+          result => false !== next(result, data),
+          result => done(result, data),
+          context);
+      }
+      catch(err) {
+        done(err, data);
+      }  
+    });
     return this;
   }
   /**
-    * Skips some of the values emitted by this flow,
-    *   returns flow emitting remaining values.
+  Skips some of the values emitted by this flow,
+    returns flow emitting remaining values.
     *
-    * @param {number|function|any} [condition] The number or predicate function used to determine how many values to skip.
-    *   If omitted, returned flow skips all values emitting done event only.
-    *   If zero, returned flow skips nothing.
-    *   If positive number, returned flow skips this number of first emitted values.
-    *   If negative number, returned flow skips this number of last emitted values.
-    *   If function, returned flow skips emitted values while this function returns trythy value.
-    * @returns {Aeroflow} new flow emitting remaining values.
+  @param {number|function|any} [condition] The number or predicate function used to determine how many values to skip.
+    If omitted, returned flow skips all values emitting done event only.
+    If zero, returned flow skips nothing.
+    If positive number, returned flow skips this number of first emitted values.
+    If negative number, returned flow skips this number of last emitted values.
+    If function, returned flow skips emitted values while this function returns trythy value.
+  @return {Aeroflow} new flow emitting remaining values.
     *
-    * @example
-    * aeroflow([1, 2, 3]).skip().dump().run();
-    * // done
-    * aeroflow([1, 2, 3]).skip(1).dump().run();
-    * // next 2
-    * // next 3
-    * // done
-    * aeroflow([1, 2, 3]).skip(-1).dump().run();
-    * // next 1
-    * // next 2
-    * // done
-    * aeroflow([1, 2, 3]).skip(value => value < 3).dump().run();
-    * // next 3
-    * // done
+  @example
+  aeroflow([1, 2, 3]).skip().dump().run();
+  // done
+  aeroflow([1, 2, 3]).skip(1).dump().run();
+  // next 2
+  // next 3
+  // done
+  aeroflow([1, 2, 3]).skip(-1).dump().run();
+  // next 1
+  // next 2
+  // done
+  aeroflow([1, 2, 3]).skip(value => value < 3).dump().run();
+  // next 3
+  // done
     */
   function skip(condition) {
     return this.chain(skipOperator(condition));
   }
   /**
-  * Tests whether some value emitted by this flow passes the predicate test,
-    *   returns flow emitting true if the predicate returns true for any emitted value; otherwise, false.
-    *
-    * @param {function|regexp|any} [predicate] The predicate function or regular expression object used to test each emitted value,
-    *   or scalar value to compare emitted values with. If omitted, default (truthy) predicate is used.
-    * @returns {Aeroflow} New flow that emits true or false.
-    *
-    * @example
-    * aeroflow(0).some().dump().run();
-    * // next false
-    * // done
-    * aeroflow.range(1, 3).some(2).dump().run();
-    * // next true
-    * // done
-    * aeroflow.range(1, 3).some(value => value % 2).dump().run();
-    * // next true
-    * // done
-    */
+  Tests whether some value emitted by this flow passes the predicate test,
+    returns flow emitting true if the predicate returns true for any emitted value; otherwise, false.
+  @param {function|regexp|any} [predicate] The predicate function or regular expression object used to test each emitted value,
+    or scalar value to compare emitted values with. If omitted, default (truthy) predicate is used.
+  @return {Aeroflow} New flow that emits true or false.
+  @example
+  aeroflow(0).some().dump().run();
+  // next false
+  // done
+  aeroflow.range(1, 3).some(2).dump().run();
+  // next true
+  // done
+  aeroflow.range(1, 3).some(value => value % 2).dump().run();
+  // next true
+  // done
+  */
   function some(condition) {
     return this.chain(someOperator(condition));
   }
   /*
-    aeroflow([1, 2, 3]).sum().dump().run();
+  @example
+  aeroflow([1, 2, 3]).sum().dump().run();
   */
   function sum() {
     return this.chain(sumOperator());
@@ -1119,72 +1171,70 @@
     return this.chain(takeOperator(condition));
   }
   /**
-    * Executes provided callback once per each value emitted by this flow,
-    * returns new tapped flow or this flow if no callback provided.
-    *
-    * @param {function} [callback] Function to execute for each value emitted, taking three arguments:
-    *   value emitted by this flow,
-    *   index of the value,
-    *   context object.
-    *
-    * @example
-    * aeroflow(1, 2, 3).tap((value, index) => console.log('value:', value, 'index:', index)).run();
-    * // value: 1 index: 0
-    * // value: 2 index: 1
-    * // value: 3 index: 2
-    */
+  Executes provided callback once per each value emitted by this flow,
+  returns new tapped flow or this flow if no callback provided.
+  @param {function} [callback] Function to execute for each value emitted, taking three arguments:
+    value emitted by this flow,
+    index of the value,
+    context object.
+  @example
+  aeroflow(1, 2, 3).tap((value, index) => console.log('value:', value, 'index:', index)).run();
+  // value: 1 index: 0
+  // value: 2 index: 1
+  // value: 3 index: 2
+  */
   function tap(callback) {
     return this.chain(tapOperator(callback));
   }
   /**
-    * Collects all values emitted by this flow to array, returns flow emitting this array.
+  Collects all values emitted by this flow to array, returns flow emitting this array.
     *
-    * @returns {Aeroflow} New flow that emits an array.
+  @return {Aeroflow} New flow that emits an array.
     *
-    * @example
-    * aeroflow.range(1, 3).toArray().dump().run();
-    * // next [1, 2, 3]
-    * // done
+  @example
+  aeroflow(1, 2, 3).toArray().dump().run();
+  // next [1, 2, 3]
+  // done
     */
   function toArray() {
     return this.chain(toArrayOperator());
   }
   /**
-    * Collects all values emitted by this flow to ES6 map, returns flow emitting this map.
+  Collects all values emitted by this flow to ES6 map, returns flow emitting this map.
     *
-    * @param {function|any} [keyTransformation] The mapping function used to transform each emitted value to map key,
-    *   or scalar value to use as map key.
-    * @param {function|any} [valueTransformation] The mapping function used to transform each emitted value to map value,
-    *   or scalar value to use as map value.
-    * @returns {Aeroflow} New flow that emits a map.
+  @param {function|any} [keyTransformation] The mapping function used to transform each emitted value to map key,
+    or scalar value to use as map key.
+  @param {function|any} [valueTransformation] The mapping function used to transform each emitted value to map value,
+    or scalar value to use as map value.
+  @return {Aeroflow} New flow that emits a map.
     *
-    * @example
-    * aeroflow.range(1, 3).toMap(v => 'key' + v, true).dump().run();
-    * // next Map {"key1" => true, "key2" => true, "key3" => true}
-    * // done
-    * aeroflow.range(1, 3).toMap(v => 'key' + v, v => v * 10).dump().run();
-    * // next Map {"key1" => 10, "key2" => 20, "key3" => 30}
-    * // done
+  @example
+  aeroflow(1, 2, 3).toMap(v => 'key' + v, true).dump().run();
+  // next Map {"key1" => true, "key2" => true, "key3" => true}
+  // done
+  aeroflow(1, 2, 3).toMap(v => 'key' + v, v => v 10).dump().run();
+  // next Map {"key1" => 10, "key2" => 20, "key3" => 30}
+  // done
     */
   function toMap(keyTransformation, valueTransformation) {
      return this.chain(toMapOperator(keyTransformation, valueTransformation));
   }
   /**
-    * Collects all values emitted by this flow to ES6 set, returns flow emitting this set.
+  Collects all values emitted by this flow to ES6 set, returns flow emitting this set.
     *
-    * @returns {Aeroflow} New flow that emits a set.
+  @return {Aeroflow} New flow that emits a set.
     *
-    * @example
-    * aeroflow.range(1, 3).toSet().dump().run();
-    * // next Set {1, 2, 3}
-    * // done
+  @example
+  aeroflow(1, 2, 3).toSet().dump().run();
+  // next Set {1, 2, 3}
+  // done true
     */
   function toSet() {
     return this.chain(toSetOperator()); 
   }
   const operators = objectCreate(Object[PROTOTYPE], {
     count: { value: count, writable: true },
-    delay: { value: delay$1, writable: true },
+    delay: { value: delay, writable: true },
     dump: { value: dump, writable: true },
     every: { value: every, writable: true },
     filter: { value: filter, writable: true },
@@ -1220,106 +1270,185 @@
     !function proceed(result) {
       if (result !== true || ++index >= limit) done(result);
       else adapterEmitter(sources[index], true)(next, proceed, context);
-    }();
+    }(true);
   }
 
+  /**
+  Creates new flow emitting values from all provided data sources.
+
+  @static @alias aeroflow
+
+  @param {any} sources
+  Data sources.
+
+  @example
+  aeroflow().dump().run();
+  // done true
+  aeroflow(1, [2, 3], () => 4, new Promise(resolve => setTimeout(() => resolve(5), 500)))).dump().run();
+  // next 1
+  // next 2
+  // next 3
+  // next 4
+  // next 5 // after 500ms
+  // done true
+  */
   function aeroflow(...sources) {
     return new Aeroflow(emit, sources);
   }
   /**
-    * Creates programmatically controlled flow.
-    * @static
-    * @alias aeroflow.create
-    * @param {function|any} emitter The emitter function taking three arguments:
-    *   next - the function emitting 'next' event,
-    *   done - the function emitting 'done' event,
-    *   context - current execution context.
-    * @example
-    * aeroflow.create((next, done, context) => {
-    *   next(1);
-    *   next(new Promise(resolve => setTimeout(() => resolve(2), 500)));
-    *   setTimeout(done, 1000);
-    * }).dump().run();
-    * // next 1 // after 500ms
-    * // next 2 // after 1000ms
-    * // done
-    */
+  Creates programmatically controlled flow.
+
+  @static @alias aeroflow.create
+
+  @param {function|any} emitter
+  The emitter function taking three arguments:
+  next - the function emitting 'next' event,
+  done - the function emitting 'done' event,
+  context - the execution context.
+
+  @return {Aeroflow}
+  The new flow emitting values generated by emitter function.
+
+  @example
+  aeroflow.create((next, done, context) => {
+    next(1);
+    next(2);
+    done();
+  }).dump().run();
+  // next 1
+  // next 2
+  // done true
+  */
   function create(emitter) {
     return new Aeroflow(customEmitter(emitter));
   }
-  function error(message) {
+  function error$1(message) {
     return new Aeroflow(errorEmitter(message));
   }
   function expand(expander, seed) {
     return new Aeroflow(expandEmitter(expander, seed));
   }
   /**
-    * Returns new flow emitting the provided value only.
-    * @static
-    * @alias aeroflow.just
-    * @param {any} value The value to emit.
-    * @example
-    * aeroflow.just('test').dump().run();
-    * // next "test"
-    * // done
-    * aeroflow.just(() => 'test').dump().run();
-    * // next "test"
-    * // done
+  Creates new flow emitting the provided value only.
+
+  @static @alias aeroflow.just
+
+  @param {any} value
+  The value to emit.
+
+  @return {Aeroflow}
+  The new flow emitting provided value.
+
+  @example
+  aeroflow.just([1, 2, 3]).dump().run();
+  // next [1, 2, 3]
+  // done
     */
   function just(value) {
     return new Aeroflow(scalarEmitter(value));
   }
   /**
-    * Returns new flow emitting random numbers.
-    * @static
-    * @alias aeroflow.random
-    * @example
-    * aeroflow.random().take(3).dump().run();
-    * aeroflow.random(0.1).take(3).dump().run();
-    * aeroflow.random(null, 0.1).take(3).dump().run();
-    * aeroflow.random(1, 9).take(3).dump().run();
+  Creates new flow emitting infinite sequence of random numbers.
+
+  @static @alias aeroflow.random
+
+  @return {Aeroflow}
+  The new flow emitting random numbers.
+
+  @example
+  aeroflow.random().take(3).dump().run();
+  // next 0.07417976693250232
+  // next 0.5904422281309957
+  // next 0.792132444214075
+  // done false
+  aeroflow.random(1, 9).take(3).dump().run();
+  // next 7
+  // next 2
+  // next 8
+  // done false
+  aeroflow.random(1.1, 8.9).take(3).dump().run();
+  next 4.398837305698544
+  // next 2.287970747705549
+  // next 3.430788825778291
+  // done false
     */
   function random(minimum, maximum) {
     return new Aeroflow(randomEmitter(minimum, maximum));
   }
-  /*
-    aeroflow.range().take(3).dump().run();
-    aeroflow.range(-3).take(3).dump().run();
-    aeroflow.range(1, 1).dump().run();
-    aeroflow.range(0, 5, 2).dump().run();
-    aeroflow.range(5, 0, -2).dump().run();
+  /**
+  @example
+  aeroflow.range().take(3).dump().run();
+  // next 0
+  // next 1
+  // next 2
+  // done false
+  aeroflow.range(-3).take(3).dump().run();
+  // next -3
+  // next -2
+  // next -1
+  // done false
+  aeroflow.range(1, 1).dump().run();
+  // next 1
+  // done true
+  aeroflow.range(0, 5, 2).dump().run();
+  // next 0
+  // next 2
+  // next 4
+  // done true
+  aeroflow.range(5, 0, -2).dump().run();
+  // next 5
+  // next 3
+  // next 1
+  // done true
   */
   function range(start, end, step) {
     return new Aeroflow(rangeEmitter(start, end, step));
   }
   /**
-    * Creates flow of repeting values.
-    * @static
-    * @alias.aeroflow.repeat
-    * @param {function|any} repeater Arbitrary scalar value to repeat; or function invoked repeatedly with two arguments: 
-    *   index - index of the value being emitted,
-    *   data - contextual data.
-    * @returns {Aeroflow} new flow.
-    * @example
-    * aeroflow.repeat(new Date().getSeconds(), 3).dump().run();
-    * // next 1
-    * // next 1
-    * // next 1
-    * // done
-    * aeroflow.repeat(() => new Date().getSeconds(), 3).delay((value, index) => index * 1000).dump().run();
-    * // next 1
-    * // next 2
-    * // next 3
-    * // done
-    * aeroflow.repeat(index => Math.pow(2, index), 3).dump().run();
-    * // next 1
-    * // next 2
-    * // next 4
-    * // done
+  Creates flow repeating provided value.
+
+  @static @alias.aeroflow.repeat
+
+  @param {function|any} value
+  Arbitrary static value to repeat;
+  or function providing dynamic values and invoked with two arguments:
+  index - index of the value being emitted,
+   data - contextual data.
+
+  @return {Aeroflow}
+  The new flow emitting repeated values.
+
+  @example
+  aeroflow.repeat(Math.random()).take(2).dump().run();
+  // next 0.7492001398932189
+  // next 0.7492001398932189
+  // done false
+  aeroflow.repeat(() => Math.random()).take(2).dump().run();
+  // next 0.46067174314521253
+  // next 0.7977648684754968
+  // done false
+  aeroflow.repeat(index => Math.pow(2, index)).take(3).dump().run();
+  // next 1
+  // next 2
+  // next 4
+  // done false
     */
   function repeat(value) {
     return new Aeroflow(repeatEmitter(value));
   }
+  /**
+  @example
+  aeroflow.timer().take(3).dump().run();
+  // next Wed Feb 03 2016 02:35:45 ... // after 1s
+  // next Wed Feb 03 2016 02:35:46 ... // after 2s
+  // next Wed Feb 03 2016 02:35:47 ... // after 2s
+  // done false
+  aeroflow.timer(index => 500 + index * 500).take(3).dump().run();
+  // next Wed Feb 03 2016 02:37:36 ... // after 500ms
+  // next Wed Feb 03 2016 02:37:37 ... // after 1000ms
+  // next Wed Feb 03 2016 02:37:38 ... // after 1500ms
+  // done false
+  */
   function timer(interval) {
     return new Aeroflow(timerEmitter(interval));
   }
@@ -1327,7 +1456,7 @@
     adapters: { get: () => adapters },
     create: { value: create },
     empty: { enumerable: true, value: new Aeroflow(emptyEmitter()) },
-    error: { value: error },
+    error: { value: error$1 },
     expand: { value: expand },
     just: { value: just },
     operators: { get: () => operators },

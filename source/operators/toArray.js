@@ -1,6 +1,6 @@
 'use strict';
 
-import { isUndefined, tie } from '../utilites';
+import { isError, tie } from '../utilites';
 import { unsync } from '../unsync';
 
 export function toArrayOperator() {
@@ -12,7 +12,8 @@ export function toArrayOperator() {
         return true;
       },
       result => {
-        if (isError(result) || !defer(next(array), tie(done, result), done)) done(result);
+        if (isError(result) || !unsync(next(array), tie(done, result), done)) 
+          done(result);
       },
       context);
   };

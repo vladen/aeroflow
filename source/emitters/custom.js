@@ -18,20 +18,18 @@ export function customEmitter(emitter) {
       proceed();
     }
     function finish(result) {
-      if (completed)
-        return;
+      if (completed) return;
       completed = true;
-      if (isFunction(finalizer))
-        setTimeout(finalizer, 0);
+      if (isFunction(finalizer)) setTimeout(finalizer, 0);
+      if (isUndefined(result)) result = true;
       done(result);
     }
     function proceed() {
       waiting = false;
-      while (buffer.length)
-        if (unsync(next(buffer.shift()), proceed, finish)) {
-          waiting = true;
-          return;
-        }
+      while (buffer.length) if (unsync(next(buffer.shift()), proceed, finish)) {
+        waiting = true;
+        return;
+      }
     }
   };
 }

@@ -1,6 +1,6 @@
 'use strict';
 
-import { constant, isFunction } from '../utilites';
+import { constant, isError, isFunction, tie } from '../utilites';
 import { iterableEmitter } from '../emitters/iterable';
 
 export function groupOperator(selectors) {
@@ -29,7 +29,7 @@ export function groupOperator(selectors) {
       },
       result => {
         if (isError(result)) done(result);
-        else iterableEmitter(groups)(next, done, context);
+        else iterableEmitter(groups)(next, tie(done, result), context);
       },
       context);
   };

@@ -9,9 +9,7 @@ export function dumpToConsoleOperator(prefix) {
       return next(result);
     },
     result => {
-      isError(result)
-        ? console.error(prefix + 'done', result)
-        : console.log(prefix + 'done');
+      console[isError(result) ? 'error' : 'log'](prefix + 'done', result);
       done(result);
     },
     context);
@@ -24,9 +22,7 @@ export function dumpToLoggerOperator(prefix, logger) {
       return next(result);
     },
     result => {
-      isError(result)
-        ? logger(prefix + 'done', result)
-        : logger(prefix + 'done');
+      logger(prefix + 'done', result);
       done(result);
     },
     context);

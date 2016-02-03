@@ -12,7 +12,8 @@ export function toSetOperator() {
         return true;
       },
       result => {
-        if (isError(result) || !unsync(next(set), tie(done, result), done)) done(result);
+        if (isError(result) || !unsync(next(set), tie(done, result), done))
+          done(result);
       },
       context);
   };

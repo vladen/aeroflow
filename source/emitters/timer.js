@@ -1,17 +1,16 @@
 'use strict';
 
-import { emptyEmitter } from './empty';
+import { constant, isFunction, toNumber } from '../utilites';
 import { unsync } from '../unsync';
 
 export function timerEmitter(interval) {
-  interval = +interval;
-  if (isNaN(interval) || interval < 0) interval = 0;
+  if (!isFunction(interval)) interval = constant(interval);
   return (next, done, context) => {
-    !function delay() {
-      setTimeout(proceed, interval);
+    let index = 0;
+    !function proceed(result) {
+      setTimeout(() => {
+        if (!unsync(next(new Date), proceed, done)) proceed();
+      }, toNumber(interval(index++), 1000));
     }();
-    function proceed(result) {
-      if (!unsync(next(new Date), delay, done)) delay();
-    }
   };
 }

@@ -1,6 +1,6 @@
 'use strict';
 
-import { constant, identity, isFunction, isUndefined, tie } from '../utilites';
+import { constant, identity, isError, isFunction, isUndefined, tie } from '../utilites';
 import { unsync } from '../unsync';
 
 export function toMapOperator(keyTransformation, valueTransformation) {
@@ -24,7 +24,8 @@ export function toMapOperator(keyTransformation, valueTransformation) {
         return true;
       },
       result => {
-        if (isError(result) || !desync(next(map), tie(done, result), done)) done(result);
+        if (isError(result) || !desync(next(map), tie(done, result), done))
+          done(result);
       },
       context);
   };

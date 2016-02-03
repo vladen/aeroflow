@@ -1,12 +1,12 @@
 'use strict';
 
-import { AEROFLOW, BOOLEAN, ITERATOR, NULL, NUMBER, SYMBOL, UNDEFINED } from '../symbols';
+import { AEROFLOW, BOOLEAN, ITERATOR, NULL, NUMBER, STRING, SYMBOL, UNDEFINED } from '../symbols';
 import { classOf, isFunction } from '../utilites';
 import { iterableEmitter } from './iterable';
 import { scalarEmitter } from './scalar';
 import { adapters } from './adapters';
 
-const primitives = new Set([BOOLEAN, NULL, NUMBER, SYMBOL, UNDEFINED]);
+const primitives = new Set([BOOLEAN, NULL, NUMBER, STRING, SYMBOL, UNDEFINED]);
 
 export function adapterEmitter(source, scalar) {
   const cls = classOf(source);

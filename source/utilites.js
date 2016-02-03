@@ -4,6 +4,7 @@ import { DATE, ERROR, FUNCTION, NUMBER, PROMISE } from './symbols';
 
 export const dateNow = Date.now;
 export const mathFloor = Math.floor;
+export const mathPow = Math.pow;
 export const mathRandom = Math.random;
 export const mathMax = Math.max;
 export const maxInteger = Number.MAX_SAFE_INTEGER;
@@ -17,7 +18,10 @@ export const identity = value => value;
 export const noop = () => {};
 
 export const classOf = value => objectToString.call(value).slice(8, -1);
-export const classIs = className => value => classOf(value) === className;
+export const classIs = className => {
+  const tag = `[object ${className}]`;
+  return value => objectToString.call(value) === tag;
+}
 
 export const isDate = classIs(DATE);
 export const isError = classIs(ERROR);

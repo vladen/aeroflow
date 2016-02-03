@@ -1,5 +1,6 @@
 'use strict';
 
+import { constant, isFunction } from '../utilites';
 import { unsync } from '../unsync';
 
 export function repeatEmitter(value) {
