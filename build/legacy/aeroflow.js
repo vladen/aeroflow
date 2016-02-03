@@ -195,26 +195,11 @@
   var adapters = objectCreate(null, (_objectCreate = {}, _defineProperty(_objectCreate, ARRAY, {
     value: arrayEmitter$1,
     writable: true
-  }), _defineProperty(_objectCreate, BOOLEAN, {
-    value: scalarEmitter,
-    writable: true
-  }), _defineProperty(_objectCreate, DATE, {
-    value: scalarEmitter,
-    writable: true
   }), _defineProperty(_objectCreate, FUNCTION, {
     value: functionEmitter,
     writable: true
-  }), _defineProperty(_objectCreate, NUMBER, {
-    value: scalarEmitter,
-    writable: true
   }), _defineProperty(_objectCreate, PROMISE, {
     value: promiseEmitter,
-    writable: true
-  }), _defineProperty(_objectCreate, REGEXP, {
-    value: scalarEmitter,
-    writable: true
-  }), _defineProperty(_objectCreate, STRING, {
-    value: scalarEmitter,
     writable: true
   }), _objectCreate));
 
@@ -572,6 +557,33 @@
         emitter(function (result) {
           return !predicate(result, index++, context.data) || next(result);
         }, done, context);
+      };
+    };
+  }
+
+  function flattenOperator(depth) {
+    depth = toNumber(depth, maxInteger);
+    if (depth < 1) return identity;
+    return function (emitter) {
+      return function (next, done, context) {
+        var level = 0;
+
+        var flatten = function flatten(result) {
+          if (level === depth) return next(result);
+          var adapter = adapterEmitter(result, false);
+
+          if (adapter) {
+            level++;
+            return new Promise(function (resolve) {
+              return adapter(flatten, function (adapterResult) {
+                level--;
+                resolve(adapterResult);
+              }, context);
+            });
+          } else return next(result);
+        };
+
+        emitter(flatten, done, context);
       };
     };
   }
@@ -948,6 +960,10 @@
     return this.chain(groupOperator(selectors));
   }
 
+  function flatten(depth) {
+    return this.chain(flattenOperator(depth));
+  }
+
   function map(mapping) {
     return this.chain(mapOperator(mapping));
   }
@@ -1062,6 +1078,10 @@
     },
     filter: {
       value: filter,
+      writable: true
+    },
+    flatten: {
+      value: flatten,
       writable: true
     },
     group: {

@@ -13,6 +13,18 @@
 <dt><a href="#aeroflow">aeroflow(sources)</a></dt>
 <dd><p>Creates new flow emitting values from all provided data sources.</p>
 </dd>
+<dt><a href="#flatten">flatten()</a></dt>
+<dd></dd>
+<dt><a href="#map">map()</a></dt>
+<dd><p>aeroflow(1, 2).map(&#39;test&#39;).dump().run();
+// next test
+// next test
+// done true
+aeroflow(1, 2).map(value =&gt; value * 10).dump().run();
+// next 10
+// next 20
+// done true</p>
+</dd>
 <dt><a href="#toString">toString()</a></dt>
 <dd></dd>
 </dl>
@@ -637,6 +649,43 @@ aeroflow.timer(index => 500 + index * 500).take(3).dump().run();
 // next Wed Feb 03 2016 02:37:38 ... // after 1500ms
 // done false
 ```
+<a name="flatten"></a>
+## flatten()
+**Kind**: global function  
+**Params**
+
+**Example**  
+```js
+aeroflow([[1, 2]]).flatten().dump().run();
+// next 1
+// next 2
+// done true
+aeroflow(() => [[1], [2]]).flatten(1).dump().run();
+// next [1]
+// next [2]
+// done true
+aeroflow(new Promise(resolve => setTimeout(() => resolve(() => [1, 2]), 500))).flatten().dump().run();
+// next 1 // after 500ms
+// next 2
+// done true
+aeroflow(new Promise(resolve => setTimeout(() => resolve(() => [1, 2]), 500))).flatten(1).dump().run();
+// next [1, 2]
+// done true
+```
+<a name="map"></a>
+## map()
+aeroflow(1, 2).map('test').dump().run();
+// next test
+// next test
+// done true
+aeroflow(1, 2).map(value => value * 10).dump().run();
+// next 10
+// next 20
+// done true
+
+**Kind**: global function  
+**Params**
+
 <a name="toString"></a>
 ## toString()
 **Kind**: global function  
