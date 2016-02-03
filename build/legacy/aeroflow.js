@@ -60,7 +60,7 @@
   var mathFloor = Math.floor;
   var mathPow = Math.pow;
   var mathRandom = Math.random;
-  var mathMax = Math.max;
+  var mathMax$1 = Math.max;
   var maxInteger = Number.MAX_SAFE_INTEGER;
   var objectCreate = Object.create;
   var objectDefineProperties = Object.defineProperties;
@@ -419,6 +419,14 @@
     } : isUndefined(seed) ? reduceAlongOperator(reducer) : optional ? reduceOptionalOperator(reducer, seed) : reduceGeneralOperator(reducer, seed);
   }
 
+  function averageOperator() {
+    var count = 0;
+    return reduceGeneralOperator(function (result, value) {
+      count++;
+      return (result * (count - 1) + value) / count;
+    }, 0);
+  }
+
   function countOperator(optional) {
     var reducer = optional ? reduceOptionalOperator : reduceGeneralOperator;
     return reducer(function (result) {
@@ -702,7 +710,7 @@
           array = result;
           return false;
         }, function (result) {
-          if (isError(result)) done(result);else arrayEmitter(array.slice(mathMax(values.length - count, 0)))(next, done, context);
+          if (isError(result)) done(result);else arrayEmitter(array.slice(mathMax$1(values.length - count, 0)))(next, done, context);
         }, context);
       };
     };
@@ -735,6 +743,36 @@
       default:
         return condition ? skipAllOperator() : identity;
     }
+  }
+
+  function sliceWithPositiveIndexes(start, end) {
+    return function (emitter) {
+      return function (next, done, context) {
+        var curr = -1;
+        emitter(function (value) {
+          return ++curr < start ? true : (!end || curr <= end) && next(value);
+        }, done, context);
+      };
+    };
+  }
+
+  function sliceWithNegativeIndexes(start, end) {
+    return function (emitter) {
+      return function (next, done, context) {
+        var array = undefined;
+        toArrayOperator()(emitter)(function (result) {
+          array = result;
+          return false;
+        }, function (result) {
+          if (isError(result)) done(result);else arrayEmitter(array.slice(mathMax(values.length - count, 0)))(next, done, context);
+        }, context);
+      };
+    };
+  }
+
+  function sliceOperator(start, end) {
+    if (classOf(start) !== NUMBER || end && classOf(end) !== NUMBER) return emptyEmitter;
+    return start >= 0 && (!end || end >= 0) ? sliceWithPositiveIndexes(start, end) : sliceWithNegativeIndexes(start, end);
   }
 
   function someOperator(condition) {
@@ -908,6 +946,10 @@
     return new Aeroflow(this.emitter, this.sources.concat(sources));
   }
 
+  function average() {
+    return this.chain(averageOperator());
+  }
+
   function bind() {
     for (var _len3 = arguments.length, sources = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
       sources[_key3] = arguments[_key3];
@@ -920,7 +962,7 @@
     return new Aeroflow(operator(this.emitter), this.sources);
   }
 
-  function count(optional) {
+  function count$1(optional) {
     return this.chain(countOperator(optional));
   }
 
@@ -1011,6 +1053,10 @@
     return this.chain(skipOperator(condition));
   }
 
+  function slice(start, end) {
+    return this.chain(sliceOperator(start, end));
+  }
+
   function some(condition) {
     return this.chain(someOperator(condition));
   }
@@ -1044,8 +1090,12 @@
   }
 
   var operators = objectCreate(Object[PROTOTYPE], {
+    average: {
+      value: average,
+      writable: true
+    },
     count: {
-      value: count,
+      value: count$1,
       writable: true
     },
     delay: {
@@ -1094,6 +1144,10 @@
     },
     skip: {
       value: skip,
+      writable: true
+    },
+    slice: {
+      value: slice,
       writable: true
     },
     some: {
