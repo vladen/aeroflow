@@ -1,6 +1,7 @@
 'use strict';
 
-import { constant, isFunction } from '../utilites';
+import { constant, isError, isFunction, tie } from '../utilites';
+import { iterableEmitter } from '../emitters/iterable';
 
 export function groupOperator(selectors) {
   selectors = selectors.length
@@ -10,13 +11,12 @@ export function groupOperator(selectors) {
     : [constant()];
   const limit = selectors.length - 1;
   return emitter => (next, done, context) => {
-    const groups = new Map;
-    let index = 0;
+    let groups = new Map, index = 0;
     emitter(
       value => {
         let current, parent = groups;
         for (let i = -1; ++i <= limit;) {
-          const key = selectors[i](value, index++, context.data);
+          let key = selectors[i](value, index++, context.data);
           current = parent.get(key);
           if (!current) {
             current = i === limit ? [] : new Map;
@@ -27,12 +27,9 @@ export function groupOperator(selectors) {
         current.push(value);
         return true;
       },
-      error => {
-        if (error) done(error);
-        else {
-          Array.from(groups).every(next);
-          done();
-        }
+      result => {
+        if (isError(result)) done(result);
+        else iterableEmitter(groups)(next, tie(done, result), context);
       },
       context);
   };

@@ -10,19 +10,19 @@ export function filterOperator(condition) {
       predicate = condition;
       break;
     case REGEXP:
-      predicate = value => condition.test(value);
+      predicate = result => condition.test(result);
       break;
     case UNDEFINED:
-      predicate = value => !!value;
+      predicate = result => !!result;
       break;
     default:
-      predicate = value => value === condition
+      predicate = result => result === condition
       break;
   }
   return emitter => (next, done, context) => {
     let index = 0;
     emitter(
-      value => !predicate(value, index++, context.data) || next(value),
+      result => !predicate(result, index++, context.data) || next(result),
       done,
       context);
   };

@@ -3,7 +3,8 @@
 import { reduceGeneralOperator, reduceOptionalOperator } from './reduce';
 
 export function countOperator(optional) {
-  return (optional ? reduceOptionalOperator : reduceGeneralOperator)(
-  	result => result + 1,
-  	0);
+  const reducer = optional
+    ? reduceOptionalOperator
+    : reduceGeneralOperator;
+  return reducer(result => result + 1, 0);
 } 

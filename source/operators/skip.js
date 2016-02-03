@@ -12,22 +12,26 @@ export function skipFirstOperator(count) {
   return emitter => (next, done, context) => {
     let index = -1;
     emitter(
-      value => ++index < count || next(value),
+      result => ++index < count || next(result),
       done,
       context);
   };
 }
 
 export function skipLastOperator(count) {
-  return emitter => (next, done, context) => toArrayOperator()(emitter)(
-    values => {
-      const limit = mathMax(values.length - count, 0);
-      let index = -1;
-      while (++index < limit && next(values[index]));
-      done();
-    },
-    done,
-    context);
+  return emitter => (next, done, context) => {
+    let array;
+    toArrayOperator()(emitter)(
+      result => {
+        array = result;
+        return false;
+      },
+      result => {
+        if (isError(result)) done(result);
+        else arrayEmitter(array.slice(mathMax(values.length - count, 0)))(next, done, context);
+      },
+      context);
+  }
 }
 
 export function skipWhileOperator(predicate) {
@@ -45,11 +49,12 @@ export function skipWhileOperator(predicate) {
 
 export function skipOperator(condition) {
   switch (classOf(condition)) {
-    case NUMBER: return condition > 0
-      ? skipFirstOperator(condition)
-      : condition < 0
-        ? skipLastOperator(-condition)
-        : identity;
+    case NUMBER:
+      return condition > 0
+        ? skipFirstOperator(condition)
+        : condition < 0
+          ? skipLastOperator(-condition)
+          : identity;
     case FUNCTION:
       return skipWhileOperator(condition);
     case UNDEFINED:

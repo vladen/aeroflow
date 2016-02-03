@@ -1,20 +1,16 @@
 'use strict';
 
-import { isPromise, isTrue } from '../utilites';
-import { emptyEmitter } from './empty';
+import { constant, isFunction, toNumber } from '../utilites';
+import { unsync } from '../unsync';
 
 export function timerEmitter(interval) {
-  interval = +interval;
-  return isNaN(interval) 
-    ? emptyEmitter()
-    : (next, done, context) => {
-        let index = 0;
-        !function proceed(result) {
-          if (isTrue(result))
-            setTimeout(() => proceed(next(new Date, index++)), interval);
-          else if (isPromise(result))
-            result.then(proceed, proceed);
-          else done(result);
-        }(true);
-      };
+  if (!isFunction(interval)) interval = constant(interval);
+  return (next, done, context) => {
+    let index = 0;
+    !function proceed(result) {
+      setTimeout(() => {
+        if (!unsync(next(new Date), proceed, done)) proceed();
+      }, toNumber(interval(index++), 1000));
+    }();
+  };
 }

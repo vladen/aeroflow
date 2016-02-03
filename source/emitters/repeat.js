@@ -1,27 +1,16 @@
 'use strict';
 
-export function repeatDynamicEmitter(repeater) {
-  return (next, done, context) => {
-    let index = 0;
-    try {
-      while (next(repeater(index++, context.data)));
-      done();
-    }
-    catch(error) {
-      done(error);
-    }
-  };
-}
-
-export function repeatStaticEmitter(value) {
-  return (next, done, context) => {
-    while (next(value));
-    done();
-  };
-}
+import { constant, isFunction } from '../utilites';
+import { unsync } from '../unsync';
 
 export function repeatEmitter(value) {
-  return isFunction(value)
-    ? repeatDynamicEmitter(value)
-    : repeatStaticEmitter(value);
+  const repeater = isFunction(value)
+    ? value
+    : constant(value);
+  return (next, done, context) => {
+    let index = 0;
+    !function proceed() {
+      while (!unsync(next(repeater(index++, context.data)), proceed, done));
+    }();
+  };
 }
