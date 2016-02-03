@@ -6,9 +6,9 @@ Inspired by [Reactive Extensions](http://reactivex.io/) but much more simplier, 
 
 Aeroflow is extremely simple and blazingly fast. Internally it does nothing special but combines emitters and operators, keeps reference to this combination and invokes it when activated.
 
-Emitter is just a function which emits values from a data source amd accepts following argument:
+Emitter is just a function which emits values from a data source and accepts following argument:
 * next - function to emit next value from the source;
-* done - function to signal that no more values can be emitter because source has been depleted or an error has happened (in this case the error object can be passed to done function and will be transfered to the consumer of current flow).
+* done - function to signal that no more values can be emitted because source has been depleted or an error has happened (in this case the error object can be passed to done function and will be transfered to the consumer of current flow).
 
 Aeroflow originally provides standard set of most usefull emitters, particularly for:
 * arrays,
@@ -59,7 +59,7 @@ mapOperator(
   error => error ? console.log('error', error) : console.log('done'));
 ```
 
-But, where's the emitter-operators chain? Now runner just calls operator which calls emitter and there's no magic at all. This is jusy because the basic idea of lazy functional reactive data flow is extremely simple. And equally easy implement chaining. 
+But, where's the emitter-operators chain? Now runner just calls operator which calls emitter and there's no magic at all. This is just because the basic idea of lazy functional reactive data flow is extremely simple. And equally easy implement chaining. 
 
 For elegant implicit chaining emitters and operators should be created by appropriate factories:
 ```js
