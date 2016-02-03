@@ -1,7 +1,7 @@
 'use strict';
 
 import { AEROFLOW, CLASS, PROTOTYPE } from './symbols';
-import { isError, isFunction, objectDefineProperties, objectCreate, noop } from './utilites';
+import { isError, isFunction, objectDefineProperties, objectCreate, noop, toError } from './utilites';
 
 import { emptyEmitter } from './emitters/empty';
 import { scalarEmitter } from './emitters/scalar';
@@ -361,22 +361,30 @@ function reverse() {
   return this.chain(reverseOperator());
 }
 /**
- Runs this flow asynchronously, initiating source to emit values,
- applying declared operators to emitted values and invoking provided callbacks.
- If no callbacks provided, runs this flow for its side-effects only.
- 
- @alias Aeroflow#run
+Runs this flow asynchronously, initiating source to emit values,
+applying declared operators to emitted values and invoking provided callbacks.
+If no callbacks provided, runs this flow for its side-effects only.
 
- @param {function} [next] Callback to execute for each emitted value, taking two arguments: value, context.
- @param {function} [done] Callback to execute as emission is complete, taking two arguments: error, context.
- @param {function} [data] Arbitrary value passed to each callback invoked by this flow as context.data.
- 
- @example
- aeroflow(1, 2, 3).run(value => console.log('next', value), error => console.log('done', error));
- // next 1
- // next 2
- // next 3
- // done undefined
+@alias Aeroflow#run
+
+@param {function} [next] Callback to execute for each emitted value, taking two arguments: value, context.
+@param {function} [done] Callback to execute as emission is complete, taking two arguments: error, context.
+@param {function} [data] Arbitrary value passed to each callback invoked by this flow as context.data.
+
+@example
+aeroflow(1, 2, 3).run(value => console.log('next', value), error => console.log('done', error));
+// next 1
+// next 2
+// next 3
+// done true
+aeroflow(1, 2, 3).dump().run(() => false);
+// next 1
+// done false
+aeroflow(Promise.reject('test')).dump().run();
+// done Error: test(…)
+// Unhandled promise rejection Error: test(…)
+aeroflow(Promise.reject('test')).dump().run(() => {}, () => {});
+// done Error: test(…)
  */
 function run(next, done, data) {
   if (!isFunction(done)) done = result => {
@@ -395,7 +403,7 @@ function run(next, done, data) {
         context);
     }
     catch(err) {
-      done(err, data);
+      done(toError(err), data);
     }  
   });
   return this;

@@ -54,6 +54,10 @@
     return value;
   };
 
+  const toError = value => isError$1(value)
+    ? value
+    : new Error(value);
+
   function emptyEmitter() {
     return (next, done) => done();
   }
@@ -68,9 +72,11 @@
     }
     switch (classOf(result)) {
       case PROMISE:
-        result.then(promiseResult => {
-          if (!unsync$1(promiseResult, next, done)) next(true);
-        }, done);
+        result.then(
+          promiseResult => {
+            if (!unsync$1(promiseResult, next, done)) next(true);
+          },
+          promiseError => done(toError(promiseError)));
         break;
       case ERROR:
         done(result);
@@ -112,11 +118,11 @@
 
   function promiseEmitter(source) {
     return (next, done, context) => source.then(
-      value => {
-        if (!unsync$1(next(value), done, done))
+      result => {
+        if (!unsync$1(next(result), done, done))
           done(true);
       },
-      done);
+      result => done(toError(result)));
   }
 
   const adapters = objectCreate(null, {
@@ -1105,22 +1111,30 @@
     return this.chain(reverseOperator());
   }
   /**
-   Runs this flow asynchronously, initiating source to emit values,
-   applying declared operators to emitted values and invoking provided callbacks.
-   If no callbacks provided, runs this flow for its side-effects only.
-   
-   @alias Aeroflow#run
+  Runs this flow asynchronously, initiating source to emit values,
+  applying declared operators to emitted values and invoking provided callbacks.
+  If no callbacks provided, runs this flow for its side-effects only.
 
-   @param {function} [next] Callback to execute for each emitted value, taking two arguments: value, context.
-   @param {function} [done] Callback to execute as emission is complete, taking two arguments: error, context.
-   @param {function} [data] Arbitrary value passed to each callback invoked by this flow as context.data.
-   
-   @example
-   aeroflow(1, 2, 3).run(value => console.log('next', value), error => console.log('done', error));
-   // next 1
-   // next 2
-   // next 3
-   // done undefined
+  @alias Aeroflow#run
+
+  @param {function} [next] Callback to execute for each emitted value, taking two arguments: value, context.
+  @param {function} [done] Callback to execute as emission is complete, taking two arguments: error, context.
+  @param {function} [data] Arbitrary value passed to each callback invoked by this flow as context.data.
+
+  @example
+  aeroflow(1, 2, 3).run(value => console.log('next', value), error => console.log('done', error));
+  // next 1
+  // next 2
+  // next 3
+  // done true
+  aeroflow(1, 2, 3).dump().run(() => false);
+  // next 1
+  // done false
+  aeroflow(Promise.reject('test')).dump().run();
+  // done Error: test(…)
+  // Unhandled promise rejection Error: test(…)
+  aeroflow(Promise.reject('test')).dump().run(() => {}, () => {});
+  // done Error: test(…)
    */
   function run(next, done, data) {
     if (!isFunction(done)) done = result => {
@@ -1139,7 +1153,7 @@
           context);
       }
       catch(err) {
-        done(err, data);
+        done(toError(err), data);
       }  
     });
     return this;
@@ -1288,6 +1302,14 @@
   /**
   @example
   aeroflow(1, 2, 3).toString().dump().run();
+  // next 1,2,3
+  // done true
+  aeroflow(1, 2, 3).toString(';').dump().run();
+  // next 1;2;3
+  // done true
+  aeroflow(1, 2, 3).toString((value, index) => '-'.repeat(index + 1)).dump().run();
+  // next 1--2---3
+  // done true
   */
   function toString(condition, optional) {
     return this.chain(toStringOperator(condition, optional)); 

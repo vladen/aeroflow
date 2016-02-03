@@ -37,3 +37,7 @@ export const toNumber = (value, def) => {
   }
   return value;
 };
+
+export const toError = value => isError(value)
+  ? value
+  : new Error(value);

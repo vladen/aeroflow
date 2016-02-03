@@ -116,6 +116,10 @@
     return value;
   };
 
+  var toError = function toError(value) {
+    return isError$1(value) ? value : new Error(value);
+  };
+
   function emptyEmitter() {
     return function (next, done) {
       return done();
@@ -136,7 +140,9 @@
       case PROMISE:
         result.then(function (promiseResult) {
           if (!unsync$1(promiseResult, next, done)) next(true);
-        }, done);
+        }, function (promiseError) {
+          return done(toError(promiseError));
+        });
         break;
 
       case ERROR:
@@ -178,9 +184,11 @@
 
   function promiseEmitter(source) {
     return function (next, done, context) {
-      return source.then(function (value) {
-        if (!unsync$1(next(value), done, done)) done(true);
-      }, done);
+      return source.then(function (result) {
+        if (!unsync$1(next(result), done, done)) done(true);
+      }, function (result) {
+        return done(toError(result));
+      });
     };
   }
 
@@ -993,7 +1001,7 @@
           return done(result, data);
         }, context);
       } catch (err) {
-        done(err, data);
+        done(toError(err), data);
       }
     });
     return this;

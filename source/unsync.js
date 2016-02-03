@@ -1,7 +1,7 @@
 'use strict';
 
 import { ERROR, PROMISE } from './symbols';
-import { classOf } from './utilites';
+import { classOf, toError } from './utilites';
 
 export function unsync(result, next, done) {
   switch (result) {
@@ -13,9 +13,11 @@ export function unsync(result, next, done) {
   }
   switch (classOf(result)) {
     case PROMISE:
-      result.then(promiseResult => {
-        if (!unsync(promiseResult, next, done)) next(true);
-      }, done);
+      result.then(
+        promiseResult => {
+          if (!unsync(promiseResult, next, done)) next(true);
+        },
+        promiseError => done(toError(promiseError)));
       break;
     case ERROR:
       done(result);

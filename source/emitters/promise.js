@@ -1,12 +1,13 @@
 'use strict';
 
+import { toError } from '../utilites';
 import { unsync } from '../unsync';
 
 export function promiseEmitter(source) {
   return (next, done, context) => source.then(
-    value => {
-      if (!unsync(next(value), done, done))
+    result => {
+      if (!unsync(next(result), done, done))
         done(true);
     },
-    done);
+    result => done(toError(result)));
 }

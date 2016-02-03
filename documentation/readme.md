@@ -303,8 +303,8 @@ aeroflow(1, 2, 3).reverse().dump().run()
 <a name="Aeroflow+run"></a>
 ### aeroflow.run([next], [done], [data])
 Runs this flow asynchronously, initiating source to emit values,
- applying declared operators to emitted values and invoking provided callbacks.
- If no callbacks provided, runs this flow for its side-effects only.
+applying declared operators to emitted values and invoking provided callbacks.
+If no callbacks provided, runs this flow for its side-effects only.
 
 **Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
 **Params**
@@ -315,10 +315,18 @@ Runs this flow asynchronously, initiating source to emit values,
 **Example**  
 ```js
 aeroflow(1, 2, 3).run(value => console.log('next', value), error => console.log('done', error));
- // next 1
- // next 2
- // next 3
- // done undefined
+// next 1
+// next 2
+// next 3
+// done true
+aeroflow(1, 2, 3).dump().run(() => false);
+// next 1
+// done false
+aeroflow(Promise.reject('test')).dump().run();
+// done Error: test(…)
+// Unhandled promise rejection Error: test(…)
+aeroflow(Promise.reject('test')).dump().run(() => {}, () => {});
+// done Error: test(…)
 ```
 <a name="Aeroflow+skip"></a>
 ### aeroflow.skip([condition]) ⇒ <code>[Aeroflow](#Aeroflow)</code>
