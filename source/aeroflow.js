@@ -20,6 +20,7 @@ import { delayOperator } from './operators/delay';
 import { dumpOperator } from './operators/dump';
 import { everyOperator } from './operators/every';
 import { filterOperator } from './operators/filter';
+import { flattenOperator } from './operators/flatten';
 import { groupOperator } from './operators/group';
 import { mapOperator } from './operators/map';
 import { maxOperator } from './operators/max';
@@ -245,10 +246,41 @@ aeroflow(
 // done
 */
 function group(...selectors) {
-  return this.chain(groupOperator(selectors)); 
+  return this.chain(groupOperator(selectors));
 }
+/**
+@example
+aeroflow([[1, 2]]).flatten().dump().run();
+// next 1
+// next 2
+// done true
+aeroflow(() => [[1], [2]]).flatten(1).dump().run();
+// next [1]
+// next [2]
+// done true
+aeroflow(new Promise(resolve => setTimeout(() => resolve(() => [1, 2]), 500))).flatten().dump().run();
+// next 1 // after 500ms
+// next 2
+// done true
+aeroflow(new Promise(resolve => setTimeout(() => resolve(() => [1, 2]), 500))).flatten(1).dump().run();
+// next [1, 2]
+// done true
+*/
+function flatten(depth) {
+  return this.chain(flattenOperator(depth));
+}
+/**
+aeroflow(1, 2).map('test').dump().run();
+// next test
+// next test
+// done true
+aeroflow(1, 2).map(value => value * 10).dump().run();
+// next 10
+// next 20
+// done true
+*/
 function map(mapping) {
-  return this.chain(mapOperator(mapping)); 
+  return this.chain(mapOperator(mapping));
 }
 /**
 Determines the maximum value emitted by this flow.
@@ -570,6 +602,7 @@ const operators = objectCreate(Object[PROTOTYPE], {
   dump: { value: dump, writable: true },
   every: { value: every, writable: true },
   filter: { value: filter, writable: true },
+  flatten: { value: flatten, writable: true },
   group: { value: group, writable: true },
   map: { value: map, writable: true },
   max: { value: max, writable: true },
