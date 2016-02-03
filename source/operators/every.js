@@ -30,7 +30,7 @@ export function everyOperator(condition) {
         return false;
       },
       result => {
-        if (isError(result) || !unsync(next(every && !empty), done, done)) done(result);
+        if (isError(result) || !unsync(next(every || empty), done, done)) done(result);
       },
       context);
   };

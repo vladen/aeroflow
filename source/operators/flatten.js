@@ -1,7 +1,7 @@
 'use strict';
 
 import { constant, identity, isNumber, isUndefined, maxInteger } from '../utilites';
-import { emitterSelector } from '../emitters/selector';
+import { adapterEmitter } from '../emitters/adapter';
 
 /*
 export function flattenOperator(depth) {

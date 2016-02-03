@@ -83,9 +83,8 @@
   };
 
   var classIs = function classIs(className) {
-    var tag = '[object ' + className + ']';
     return function (value) {
-      return objectToString.call(value) === tag;
+      return classOf(value) === className;
     };
   };
 
@@ -117,6 +116,10 @@
     return value;
   };
 
+  var toError = function toError(value) {
+    return isError$1(value) ? value : new Error(value);
+  };
+
   function emptyEmitter() {
     return function (next, done) {
       return done();
@@ -137,7 +140,9 @@
       case PROMISE:
         result.then(function (promiseResult) {
           if (!unsync$1(promiseResult, next, done)) next(true);
-        }, done);
+        }, function (promiseError) {
+          return done(toError(promiseError));
+        });
         break;
 
       case ERROR:
@@ -179,9 +184,11 @@
 
   function promiseEmitter(source) {
     return function (next, done, context) {
-      return source.then(function (value) {
-        if (!unsync$1(next(value), done, done)) done(true);
-      }, done);
+      return source.then(function (result) {
+        if (!unsync$1(next(result), done, done)) done(true);
+      }, function (result) {
+        return done(toError(result));
+      });
     };
   }
 
@@ -368,7 +375,7 @@
 
           return true;
         }, function (result) {
-          if (isError$1(result) || empty || !unsync(next(reduced), tie(done, result), done)) done(result);
+          if (isError$1(result) || empty || !unsync$1(next(reduced), tie(done, result), done)) done(result);
         }, context);
       };
     };
@@ -383,7 +390,7 @@
           reduced = reducer(reduced, result, index++, context.data);
           return true;
         }, function (result) {
-          if (isError$1(result) || !unsync(next(reduced), tie(done, result), done)) done(result);
+          if (isError$1(result) || !unsync$1(next(reduced), tie(done, result), done)) done(result);
         }, context);
       };
     };
@@ -400,7 +407,7 @@
           reduced = reducer(reduced, result, index++, context.data);
           return true;
         }, function (result) {
-          if (isError$1(error) || empty || !unsync(next(reduced), tie(done, result), done)) done(result);
+          if (isError$1(error) || empty || !unsync$1(next(reduced), tie(done, result), done)) done(result);
         }, context);
       };
     };
@@ -437,6 +444,7 @@
 
             default:
               interval = +interval;
+              break;
           }
 
           if (interval < 0) interval = 0;
@@ -522,7 +530,7 @@
           every = false;
           return false;
         }, function (result) {
-          if (isError$1(result) || !unsync$1(next(every && !empty), done, done)) done(result);
+          if (isError$1(result) || !unsync$1(next(every || empty), done, done)) done(result);
         }, context);
       };
     };
@@ -600,14 +608,6 @@
         }, context);
       };
     };
-  }
-
-  function joinOperator(separator, optional) {
-    var joiner = isFunction(separator) ? separator : isUndefined(separator) ? constant(',') : constant(separator);
-    var reducer = optional ? reduceOptionalOperator : reduceGeneralOperator;
-    return reducer(function (result, value, index, data) {
-      return result.length ? result + joiner(value, index, data) + value : value;
-    }, '');
   }
 
   function mapOperator(mapping) {
@@ -879,6 +879,14 @@
     };
   }
 
+  function toStringOperator(separator, optional) {
+    var joiner = isUndefined(separator) ? constant(',') : isFunction(separator) ? separator : constant(separator);
+    var reducer = optional ? reduceOptionalOperator : reduceGeneralOperator;
+    return reducer(function (result, value, index, data) {
+      return result.length ? result + joiner(value, index, data) + value : '' + value;
+    }, '');
+  }
+
   var Aeroflow = function Aeroflow(emitter, sources) {
     _classCallCheck(this, Aeroflow);
 
@@ -940,10 +948,6 @@
     return this.chain(groupOperator(selectors));
   }
 
-  function join(condition, optional) {
-    return this.chain(joinOperator(condition, optional));
-  }
-
   function map(mapping) {
     return this.chain(mapOperator(mapping));
   }
@@ -997,7 +1001,7 @@
           return done(result, data);
         }, context);
       } catch (err) {
-        done(err, data);
+        done(toError(err), data);
       }
     });
     return this;
@@ -1035,6 +1039,10 @@
     return this.chain(toSetOperator());
   }
 
+  function toString(condition, optional) {
+    return this.chain(toStringOperator(condition, optional));
+  }
+
   var operators = objectCreate(Object[PROTOTYPE], {
     count: {
       value: count,
@@ -1058,10 +1066,6 @@
     },
     group: {
       value: group,
-      writable: true
-    },
-    join: {
-      value: join,
       writable: true
     },
     map: {
@@ -1118,6 +1122,10 @@
     },
     toSet: {
       value: toSet,
+      writable: true
+    },
+    toString: {
+      value: toString,
       writable: true
     }
   });

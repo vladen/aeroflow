@@ -1,6 +1,7 @@
 'use strict';
 
 import { isError, isFunction, isUndefined, tie } from '../utilites';
+import { unsync } from '../unsync';
 import { emptyEmitter } from '../emitters/empty';
 import { scalarEmitter } from '../emitters/scalar';
 
