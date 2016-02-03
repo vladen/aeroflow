@@ -1,33 +1,29 @@
 'use strict';
 
-import { isFunction, isUndefined } from '../utilites';
+import { isError, isFunction, isUndefined } from '../utilites';
 
 export function dumpToConsoleOperator(prefix) {
   return emitter => (next, done, context) => emitter(
-    value => {
-      console.log(prefix + 'next', value);
-      return next(value);
+    result => {
+      console.log(prefix + 'next', result);
+      return next(result);
     },
-    error => {
-      error
-        ? console.error(prefix + 'done', error)
-        : console.log(prefix + 'done');
-      return done(error);
+    result => {
+      console[isError(result) ? 'error' : 'log'](prefix + 'done', result);
+      done(result);
     },
     context);
 }
 
 export function dumpToLoggerOperator(prefix, logger) {
   return emitter => (next, done, context) => emitter(
-    value => {
-      logger(prefix + 'next', value);
-      return next(value);
+    result => {
+      logger(prefix + 'next', result);
+      return next(result);
     },
-    error => {
-      error
-        ? logger(prefix + 'done', error)
-        : logger(prefix + 'done');
-      return done(error);
+    result => {
+      logger(prefix + 'done', result);
+      done(result);
     },
     context);
 }

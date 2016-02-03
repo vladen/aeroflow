@@ -9,22 +9,26 @@ export function takeFirstOperator(count) {
   return emitter => (next, done, context) => {
     let index = -1;
     emitter(
-      value => ++index < count && next(value),
+      result => ++index < count && next(result),
       done,
       context);
   };
 }
 
 export function takeLastOperator(count) {
-  return emitter => (next, done, context) => toArrayOperator()(emitter)(
-    values => {
-      const limit = values.length;
-      let index = mathMax(limit - count - 1, 0);
-      while (++index < limit && next(values[index]));
-      done();
-    }, 
-    done,
-    context);
+  return emitter => (next, done, context) => {
+    let array;
+    toArrayOperator()(emitter)(
+      result => {
+        array = result;
+        return false;
+      },
+      result => {
+        if (isError(result)) done(result);
+        else arrayEmitter(array)(next, done, context);
+      }, 
+      context);
+  };
 }
 
 export function takeWhileOperator(predicate) {
@@ -39,14 +43,17 @@ export function takeWhileOperator(predicate) {
 
 export function takeOperator(condition) {
   switch (classOf(condition)) {
-    case NUMBER: return condition > 0
-      ? takeFirstOperator(condition)
-      : condition < 0
-        ? takeLastOperator(-condition)
+    case NUMBER:
+      return condition > 0
+        ? takeFirstOperator(condition)
+        : condition < 0
+          ? takeLastOperator(-condition)
+          : emptyEmitter();
+    case FUNCTION:
+      return takeWhileOperator(condition);
+    default:
+      return condition
+        ? identity
         : emptyEmitter();
-    case FUNCTION: return takeWhileOperator(condition);
-    default: return condition
-      ? identity
-      : emptyEmitter();
   }
 }

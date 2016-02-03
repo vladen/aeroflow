@@ -10,26 +10,25 @@ export function someOperator(condition) {
       predicate = condition;
       break;
     case REGEXP:
-      predicate = value => condition.test(value);
+      predicate = result => condition.test(result);
       break;
     case UNDEFINED:
-      predicate = value => !!value;
+      predicate = result => !!result;
       break;
     default:
-      predicate = value => value === condition;
+      predicate = result => result === condition;
       break;
   }
   return emitter => (next, done, context) => {
-    let result = false;
+    let some = false;
     emitter(
-      value => {
-        if (!predicate(value)) return true;
-        result = true;
+      result => {
+        if (!predicate(result)) return true;
+        some = true;
         return false;
       },
-      error => {
-        if (isUndefined(error)) next(result);
-        return done(error);
+      result => {
+        if (isError(result) || !unsync(next(some), done, done)) done(result);
       },
       context);
   };

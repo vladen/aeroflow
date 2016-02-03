@@ -9,9 +9,12 @@ export function joinOperator(separator, optional) {
     : isUndefined(separator)
       ? constant(',')
       : constant(separator);
-  return (optional ? reduceOptionalOperator : reduceGeneralOperator)(
-    (result, value, index, data) => result.length
-      ? result + joiner(value, index, data) + value 
+  const reducer = optional
+    ? reduceOptionalOperator
+    : reduceGeneralOperator;
+  return reducer((result, value, index, data) =>
+    result.length
+      ? result + joiner(value, index, data) + value
       : value,
     '');
 }

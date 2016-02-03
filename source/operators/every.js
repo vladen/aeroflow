@@ -1,7 +1,8 @@
 'use strict';
 
 import { FUNCTION, REGEXP, UNDEFINED } from '../symbols';
-import { classOf, isUndefined } from '../utilites';
+import { classOf, isError } from '../utilites';
+import { unsync } from '../unsync';
 
 export function everyOperator(condition) {
   let predicate;
@@ -10,26 +11,26 @@ export function everyOperator(condition) {
       predicate = condition;
       break;
     case REGEXP:
-      predicate = value => condition.test(value);
+      predicate = result => condition.test(result);
       break;
     case UNDEFINED:
-      predicate = value => !!value;
+      predicate = result => !!result;
       break;
     default:
-      predicate = value => value === condition;
+      predicate = result => result === condition;
       break;
   }
   return emitter => (next, done, context) => {
-    let idle = true, result = true;
+    let empty = true, every = true;
     emitter(
-      value => {
-        idle = false;
-        if (predicate(value)) return true;
-        return result = false;
+      result => {
+        empty = false;
+        if (predicate(result)) return true;
+        every = false;
+        return false;
       },
-      error => {
-        if (isUndefined(error)) next(result && !idle);
-        return done(error);
+      result => {
+        if (isError(result) || !unsync(next(every && !empty), done, done)) done(result);
       },
       context);
   };
