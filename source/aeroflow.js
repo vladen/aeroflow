@@ -37,6 +37,11 @@ import { toArrayOperator } from './operators/toArray';
 import { toMapOperator } from './operators/toMap';
 import { toSetOperator } from './operators/toSet';
 
+/**
+Aeroflow class.
+
+@public @class @alias Aeroflow
+*/
 class Aeroflow {
   constructor(emitter, sources) {
     objectDefineProperties(this, {
@@ -49,7 +54,7 @@ class Aeroflow {
 Returns new flow emitting values from this flow first 
 and then from all provided sources without interleaving them.
 
-@public @instance @alias Aeroflow@append
+@alias Aeroflow#append
 
 @param {...any} [sources] Data sources to append to this flow.
 
@@ -70,6 +75,8 @@ function append(...sources) {
   return new Aeroflow(this.emitter, this.sources.concat(sources));
 }
 /**
+@alias Aeroflow#bind
+
 @example
 aeroflow().dump().bind(1, 2, 3).run();
 */
@@ -82,6 +89,8 @@ function chain(operator) {
 /**
 Counts the number of values emitted by this flow, returns new flow emitting only this value.
 
+@alias Aeroflow#count
+
 @example
 aeroflow(['a', 'b', 'c']).count().dump().run();
 // next 3
@@ -92,6 +101,8 @@ function count(optional) {
 }
 /**
 Returns new flow delaying emission of each value accordingly provided condition.
+
+@alias Aeroflow#delay
 
 @param {number|date|function} [interval]
 The condition used to determine delay for each subsequent emission.
@@ -123,6 +134,8 @@ function delay(interval) {
 /**
 Dumps all events (next, done) emitted by this flow to the logger with optional prefix.
 
+@alias Aeroflow#dump
+
 @param {string} [prefix='']
 A string prefix to prepend to each event name.
 
@@ -143,7 +156,7 @@ function dump(prefix, logger) {
 /**
 Tests whether all values emitted by this flow pass the provided test.
 
-@public @instance @alias aeroflow#every
+@alias Aeroflow#every
 
 @param {function|regexp|any} [predicate]
 The predicate function or regular expression to test each emitted value with,
@@ -169,6 +182,8 @@ function every(condition) {
 }
 /**
 Filters values emitted by this flow with the provided test.
+
+@alias Aeroflow#filter
 
 @param {function|regexp|any} [predicate]
 The predicate function or regular expression to test each emitted value with,
@@ -199,6 +214,8 @@ function filter(condition) {
   return this.chain(filterOperator(condition)); 
 }
 /*
+@alias Aeroflow#group
+
 @example
 aeroflow(
   { country: 'Belarus', city: 'Brest' },
@@ -223,7 +240,7 @@ function map(mapping) {
 /**
 Determines the maximum value emitted by this flow.
 
-@public @instance @alias aeroflow#max
+@alias Aeroflow#max
 
 @return
 New flow emitting the maximum value only.
@@ -239,7 +256,7 @@ function max() {
 /**
 Determines the mean value emitted by this flow.
 
-@instance @alias aeroflow#mean
+@alias Aeroflow#mean
 
 @return
 New flow emitting the mean value only.
@@ -255,7 +272,7 @@ function mean() {
 /**
 Determines the minimum value emitted by this flow.
 
-@public @instance @alias aeroflow#min
+@alias Aeroflow#min
 
 @return
 New flow emitting the minimum value only.
@@ -271,7 +288,7 @@ function min() {
 /**
 Returns new flow emitting the emissions from all provided sources and then from this flow without interleaving them.
 
-@public @instance @alias Aeroflow#prepend
+@alias Aeroflow#prepend
 
 @param {...any} [sources] Values to concatenate with this flow.
 
@@ -290,7 +307,9 @@ function prepend(...sources) {
 /**
 Applies a function against an accumulator and each value emitted by this flow to reduce it to a single value,
 returns new flow emitting reduced value.
-*
+
+@alias Aeroflow#reduce
+
 @param {function|any} reducer Function to execute on each emitted value, taking four arguments:
   result - the value previously returned in the last invocation of the reducer, or seed, if supplied
   value - the current value emitted by this flow
@@ -298,7 +317,7 @@ returns new flow emitting reduced value.
   context.data.
   If is not a function, a flow emitting just reducer value will be returned.
 @param {any} initial Value to use as the first argument to the first call of the reducer.
-*
+
 @example
 aeroflow([2, 4, 8]).reduce((product, value) => product value, 1).dump().run();
 // next 64
@@ -311,6 +330,8 @@ function reduce(reducer, seed, optional) {
   return this.chain(reduceOperator(reducer, seed, optional));
 }
 /**
+@alias Aeroflow#reverse
+
  @example
  aeroflow(1, 2, 3).reverse().dump().run()
  // next 3
@@ -330,10 +351,13 @@ function reverse() {
  Runs this flow asynchronously, initiating source to emit values,
  applying declared operators to emitted values and invoking provided callbacks.
  If no callbacks provided, runs this flow for its side-effects only.
- @public @instance @alias Aeroflow@run
+ 
+ @alias Aeroflow#run
+
  @param {function} [next] Callback to execute for each emitted value, taking two arguments: value, context.
  @param {function} [done] Callback to execute as emission is complete, taking two arguments: error, context.
  @param {function} [data] Arbitrary value passed to each callback invoked by this flow as context.data.
+ 
  @example
  aeroflow(1, 2, 3).run(value => console.log('next', value), error => console.log('done', error));
  // next 1
@@ -365,8 +389,10 @@ function run(next, done, data) {
 }
 /**
 Skips some of the values emitted by this flow,
-  returns flow emitting remaining values.
-  *
+returns flow emitting remaining values.
+
+@alias Aeroflow#skip
+
 @param {number|function|any} [condition] The number or predicate function used to determine how many values to skip.
   If omitted, returned flow skips all values emitting done event only.
   If zero, returned flow skips nothing.
@@ -395,10 +421,15 @@ function skip(condition) {
 }
 /**
 Tests whether some value emitted by this flow passes the predicate test,
-  returns flow emitting true if the predicate returns true for any emitted value; otherwise, false.
+returns flow emitting true if the predicate returns true for any emitted value; otherwise, false.
+
+@alias Aeroflow#some
+
 @param {function|regexp|any} [predicate] The predicate function or regular expression object used to test each emitted value,
   or scalar value to compare emitted values with. If omitted, default (truthy) predicate is used.
+
 @return {Aeroflow} New flow that emits true or false.
+
 @example
 aeroflow(0).some().dump().run();
 // next false
@@ -414,6 +445,8 @@ function some(condition) {
   return this.chain(someOperator(condition));
 }
 /*
+@alias Aeroflow#sum
+
 @example
 aeroflow([1, 2, 3]).sum().dump().run();
 */
@@ -426,10 +459,14 @@ function take(condition) {
 /**
 Executes provided callback once per each value emitted by this flow,
 returns new tapped flow or this flow if no callback provided.
+
+@alias Aeroflow#tap
+
 @param {function} [callback] Function to execute for each value emitted, taking three arguments:
   value emitted by this flow,
   index of the value,
   context object.
+
 @example
 aeroflow(1, 2, 3).tap((value, index) => console.log('value:', value, 'index:', index)).run();
 // value: 1 index: 0
@@ -441,9 +478,11 @@ function tap(callback) {
 }
 /**
 Collects all values emitted by this flow to array, returns flow emitting this array.
-  *
+
+@alias Aeroflow#toArray
+
 @return {Aeroflow} New flow that emits an array.
-  *
+
 @example
 aeroflow(1, 2, 3).toArray().dump().run();
 // next [1, 2, 3]
@@ -454,13 +493,15 @@ function toArray() {
 }
 /**
 Collects all values emitted by this flow to ES6 map, returns flow emitting this map.
-  *
+
+@alias Aeroflow#toMap
+
 @param {function|any} [keyTransformation] The mapping function used to transform each emitted value to map key,
   or scalar value to use as map key.
 @param {function|any} [valueTransformation] The mapping function used to transform each emitted value to map value,
   or scalar value to use as map value.
 @return {Aeroflow} New flow that emits a map.
-  *
+
 @example
 aeroflow(1, 2, 3).toMap(v => 'key' + v, true).dump().run();
 // next Map {"key1" => true, "key2" => true, "key3" => true}
@@ -474,9 +515,11 @@ function toMap(keyTransformation, valueTransformation) {
 }
 /**
 Collects all values emitted by this flow to ES6 set, returns flow emitting this set.
-  *
+
+@alias Aeroflow#toSet
+
 @return {Aeroflow} New flow that emits a set.
-  *
+
 @example
 aeroflow(1, 2, 3).toSet().dump().run();
 // next Set {1, 2, 3}
@@ -529,7 +572,7 @@ function emit(next, done, context) {
 /**
 Creates new flow emitting values from all provided data sources.
 
-@static @alias aeroflow
+@alias aeroflow
 
 @param {any} sources
 Data sources.
@@ -551,7 +594,7 @@ export default function aeroflow(...sources) {
 /**
 Creates programmatically controlled flow.
 
-@static @alias aeroflow.create
+@alias aeroflow.create
 
 @param {function|any} emitter
 The emitter function taking three arguments:
@@ -575,16 +618,22 @@ aeroflow.create((next, done, context) => {
 function create(emitter) {
   return new Aeroflow(customEmitter(emitter));
 }
+/**
+@alias aeroflow.error
+*/
 function error(message) {
   return new Aeroflow(errorEmitter(message));
 }
+/**
+@alias aeroflow.expand
+*/
 function expand(expander, seed) {
   return new Aeroflow(expandEmitter(expander, seed));
 }
 /**
 Creates new flow emitting the provided value only.
 
-@static @alias aeroflow.just
+@alias aeroflow.just
 
 @param {any} value
 The value to emit.
@@ -603,7 +652,7 @@ function just(value) {
 /**
 Creates new flow emitting infinite sequence of random numbers.
 
-@static @alias aeroflow.random
+@alias aeroflow.random
 
 @return {Aeroflow}
 The new flow emitting random numbers.
@@ -629,6 +678,8 @@ function random(minimum, maximum) {
   return new Aeroflow(randomEmitter(minimum, maximum));
 }
 /**
+@alias aeroflow.range
+
 @example
 aeroflow.range().take(3).dump().run();
 // next 0
@@ -660,7 +711,7 @@ function range(start, end, step) {
 /**
 Creates flow repeating provided value.
 
-@static @alias.aeroflow.repeat
+@alias aeroflow.repeat
 
 @param {function|any} value
 Arbitrary static value to repeat;
@@ -690,6 +741,8 @@ function repeat(value) {
   return new Aeroflow(repeatEmitter(value));
 }
 /**
+@alias aeroflow.timer
+
 @example
 aeroflow.timer().take(3).dump().run();
 // next Wed Feb 03 2016 02:35:45 ... // after 1s

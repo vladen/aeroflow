@@ -26,7 +26,7 @@
     "concatenate:tests": "rollup --input tests/aeroflow.js --name tests --output build/es2015/aeroflow.tests.js",
     "concatenate:tests:modern": "rollup --format umd --input tests/aeroflow.js --name aeroflowTests --output build/modern/aeroflow.tests.js",
     "document": "npm run document:library && npm run document:tests",
-    "document:library": "jsdoc2md build/modern/aeroflow.js > documentation/readme.md --global-index-format dl --member-index-format grouped --module-index-format grouped --param-list-format list --property-list-format list --sort-by name",
+    "document:library": "jsdoc2md source/aeroflow.js > documentation/readme.md --global-index-format dl --member-index-format grouped --module-index-format grouped --param-list-format list --property-list-format list --sort-by name",
     "document:tests": "mocha build/tests.js --reporter markdown > specifications/readme.md",
     "minify": "uglifyjs build/legacy/aeroflow.js --compress --mangle --output build/legacy/aeroflow.min.js",
     "test:library": "mocha --bail --check-leaks --colors --prof build/tests.js",
