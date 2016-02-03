@@ -19,7 +19,7 @@ const dateNow = Date.now;
 const mathFloor = Math.floor;
 const mathPow = Math.pow;
 const mathRandom = Math.random;
-const mathMax = Math.max;
+const mathMax$1 = Math.max;
 const maxInteger = Number.MAX_SAFE_INTEGER;
 const objectCreate = Object.create;
 const objectDefineProperties = Object.defineProperties;
@@ -334,6 +334,14 @@ function reduceOperator(reducer, seed, optional) {
           : reduceGeneralOperator(reducer, seed);
 }
 
+function averageOperator() {
+  let count = 0;
+  return reduceGeneralOperator((result, value) => {
+  	count++;
+    return (result * (count - 1) + value) / count;
+  }, 0);
+}
+
 function countOperator(optional) {
   const reducer = optional
     ? reduceOptionalOperator
@@ -580,7 +588,7 @@ function skipLastOperator(count) {
       },
       result => {
         if (isError(result)) done(result);
-        else arrayEmitter(array.slice(mathMax(values.length - count, 0)))(next, done, context);
+        else arrayEmitter(array.slice(mathMax$1(values.length - count, 0)))(next, done, context);
       },
       context);
   }
@@ -616,6 +624,40 @@ function skipOperator(condition) {
         ? skipAllOperator()
         : identity;
   }
+}
+
+function sliceWithPositiveIndexes(start, end) {
+	return emitter => (next, done, context) => {
+    let curr = -1;
+    emitter(
+      value => ++curr < start ? true : (!end || curr <= end) && next(value),
+      done,
+      context);
+  };
+}
+
+function sliceWithNegativeIndexes(start, end) {
+	return emitter => (next, done, context) => {
+    let array;
+    toArrayOperator()(emitter)(
+      result => {
+        array = result;
+        return false;
+      },
+      result => {        
+        if (isError(result)) done(result);
+        else arrayEmitter(array.slice(mathMax(values.length - count, 0)))(next, done, context);
+      },
+      context);
+  }
+}
+
+function sliceOperator(start, end) {
+	if (classOf(start) !== NUMBER || (end && classOf(end) !== NUMBER)) return emptyEmitter;
+
+  return start >= 0 && (!end || end >= 0) 
+  	? sliceWithPositiveIndexes(start, end)
+  	: sliceWithNegativeIndexes(start, end);
 }
 
 function someOperator(condition) {
@@ -819,6 +861,11 @@ function append(...sources) {
   return new Aeroflow(this.emitter, this.sources.concat(sources));
 }
 /**
+*/
+function average() {
+  return this.chain(averageOperator());
+}
+/**
 @alias Aeroflow#bind
 
 @example
@@ -852,7 +899,7 @@ aeroflow(['a', 'b', 'c']).count().dump().run();
 // next 3
 // done
 */
-function count(optional) {
+function count$1(optional) {
   return this.chain(countOperator(optional));
 }
 /**
@@ -1185,6 +1232,13 @@ function skip(condition) {
   return this.chain(skipOperator(condition));
 }
 /**
+@alias Aeroflow#slice
+*/
+function slice(start, end) {
+  return this.chain(sliceOperator(start, end));
+}
+
+/**
 Tests whether some value emitted by this flow passes the predicate test,
 returns flow emitting true if the predicate returns true for any emitted value; otherwise, false.
 
@@ -1309,7 +1363,8 @@ function toString(condition, optional) {
   return this.chain(toStringOperator(condition, optional)); 
 }
 const operators = objectCreate(Object[PROTOTYPE], {
-  count: { value: count, writable: true },
+  average: { value: average, writable: true },
+  count: { value: count$1, writable: true },
   delay: { value: delay, writable: true },
   dump: { value: dump, writable: true },
   every: { value: every, writable: true },
@@ -1322,6 +1377,7 @@ const operators = objectCreate(Object[PROTOTYPE], {
   reduce: { value: reduce, writable: true },
   reverse: { value: reverse, writable: true },
   skip: { value: skip, writable: true },
+  slice: { value: slice, writable: true },
   some: { value: some, writable: true },
   sum: { value: sum, writable: true },
   take: { value: take, writable: true },
