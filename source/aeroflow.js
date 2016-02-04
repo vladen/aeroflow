@@ -1,7 +1,7 @@
 'use strict';
 
 import { AEROFLOW, CLASS, PROTOTYPE } from './symbols';
-import { isError, isFunction, objectDefineProperties, objectCreate, noop } from './utilites';
+import { isError, isFunction, objectDefineProperties, objectCreate, noop, toError } from './utilites';
 
 import { emptyEmitter } from './emitters/empty';
 import { scalarEmitter } from './emitters/scalar';
@@ -20,8 +20,8 @@ import { delayOperator } from './operators/delay';
 import { dumpOperator } from './operators/dump';
 import { everyOperator } from './operators/every';
 import { filterOperator } from './operators/filter';
+import { flattenOperator } from './operators/flatten';
 import { groupOperator } from './operators/group';
-import { joinOperator } from './operators/join';
 import { mapOperator } from './operators/map';
 import { maxOperator } from './operators/max';
 import { meanOperator } from './operators/mean';
@@ -36,6 +36,7 @@ import { tapOperator } from './operators/tap';
 import { toArrayOperator } from './operators/toArray';
 import { toMapOperator } from './operators/toMap';
 import { toSetOperator } from './operators/toSet';
+import { toStringOperator } from './operators/toString';
 
 /**
 Aeroflow class.
@@ -79,6 +80,15 @@ function append(...sources) {
 
 @example
 aeroflow().dump().bind(1, 2, 3).run();
+// next 1
+// next 2
+// next 3
+// done true
+aeroflow([1, 2, 3]).dump().bind([4, 5, 6]).run();
+// next 4
+// next 5
+// next 6
+// done true
 */
 function bind(...sources) {
   return new Aeroflow(this.emitter, sources);
@@ -92,6 +102,9 @@ Counts the number of values emitted by this flow, returns new flow emitting only
 @alias Aeroflow#count
 
 @example
+aeroflow().count().dump().run();
+// next 0
+// done
 aeroflow(['a', 'b', 'c']).count().dump().run();
 // next 3
 // done
@@ -118,15 +131,15 @@ The result of condition function will be converted nu number and used as millise
 aeroflow(1, 2).delay(500).dump().run();
 // next 1 // after 500ms
 // next 2 // after 500ms
-// done // after 500ms
+// done true // after 500ms
 aeroflow(1, 2).delay(new Date(Date.now() + 500)).dump().run();
 // next 1 // after 500ms
 // next 2
-// done // after 500ms
-aeroflow(1, 2).delay((value, index) => 500 + index 500).dump().run();
+// done true
+aeroflow(1, 2).delay((value, index) => 500 + 500 * index).dump().run();
 // next 1 // after 500ms
-// next 2 // after 1000ms
-// done // after 1500ms
+// next 2 // after 1500ms
+// done true
   */
 function delay(interval) {
   return this.chain(delayOperator(interval));
@@ -167,10 +180,10 @@ If omitted, default (truthy) predicate is used.
 New flow emitting true if all emitted values pass the test; otherwise, false.
 
 @example
-aeroflow(1).every().dump().run();
+aeroflow().every().dump().run();
 // next true
 // done true
-aeroflow(1, 2).every(1).dump().run();
+aeroflow('a', 'b').every('a').dump().run();
 // next false
 // done false
 aeroflow(1, 2).every(value => value > 0).dump().run();
@@ -217,6 +230,10 @@ function filter(condition) {
 @alias Aeroflow#group
 
 @example
+aeroflow.range(1, 10).group(value => (value % 2) ? 'odd' : 'even').dump().run();
+// next ["odd", Array[5]]
+// next ["even", Array[5]]
+// done true
 aeroflow(
   { country: 'Belarus', city: 'Brest' },
   { country: 'Poland', city: 'Krakow' },
@@ -229,13 +246,41 @@ aeroflow(
 // done
 */
 function group(...selectors) {
-  return this.chain(groupOperator(selectors)); 
+  return this.chain(groupOperator(selectors));
 }
-function join(condition, optional) {
-  return this.chain(joinOperator(condition, optional)); 
+/**
+@example
+aeroflow([[1, 2]]).flatten().dump().run();
+// next 1
+// next 2
+// done true
+aeroflow(() => [[1], [2]]).flatten(1).dump().run();
+// next [1]
+// next [2]
+// done true
+aeroflow(new Promise(resolve => setTimeout(() => resolve(() => [1, 2]), 500))).flatten().dump().run();
+// next 1 // after 500ms
+// next 2
+// done true
+aeroflow(new Promise(resolve => setTimeout(() => resolve(() => [1, 2]), 500))).flatten(1).dump().run();
+// next [1, 2]
+// done true
+*/
+function flatten(depth) {
+  return this.chain(flattenOperator(depth));
 }
+/**
+aeroflow(1, 2).map('test').dump().run();
+// next test
+// next test
+// done true
+aeroflow(1, 2).map(value => value * 10).dump().run();
+// next 10
+// next 20
+// done true
+*/
 function map(mapping) {
-  return this.chain(mapOperator(mapping)); 
+  return this.chain(mapOperator(mapping));
 }
 /**
 Determines the maximum value emitted by this flow.
@@ -348,22 +393,30 @@ function reverse() {
   return this.chain(reverseOperator());
 }
 /**
- Runs this flow asynchronously, initiating source to emit values,
- applying declared operators to emitted values and invoking provided callbacks.
- If no callbacks provided, runs this flow for its side-effects only.
- 
- @alias Aeroflow#run
+Runs this flow asynchronously, initiating source to emit values,
+applying declared operators to emitted values and invoking provided callbacks.
+If no callbacks provided, runs this flow for its side-effects only.
 
- @param {function} [next] Callback to execute for each emitted value, taking two arguments: value, context.
- @param {function} [done] Callback to execute as emission is complete, taking two arguments: error, context.
- @param {function} [data] Arbitrary value passed to each callback invoked by this flow as context.data.
- 
- @example
- aeroflow(1, 2, 3).run(value => console.log('next', value), error => console.log('done', error));
- // next 1
- // next 2
- // next 3
- // done undefined
+@alias Aeroflow#run
+
+@param {function} [next] Callback to execute for each emitted value, taking two arguments: value, context.
+@param {function} [done] Callback to execute as emission is complete, taking two arguments: error, context.
+@param {function} [data] Arbitrary value passed to each callback invoked by this flow as context.data.
+
+@example
+aeroflow(1, 2, 3).run(value => console.log('next', value), error => console.log('done', error));
+// next 1
+// next 2
+// next 3
+// done true
+aeroflow(1, 2, 3).dump().run(() => false);
+// next 1
+// done false
+aeroflow(Promise.reject('test')).dump().run();
+// done Error: test(…)
+// Unhandled promise rejection Error: test(…)
+aeroflow(Promise.reject('test')).dump().run(() => {}, () => {});
+// done Error: test(…)
  */
 function run(next, done, data) {
   if (!isFunction(done)) done = result => {
@@ -382,7 +435,7 @@ function run(next, done, data) {
         context);
     }
     catch(err) {
-      done(err, data);
+      done(toError(err), data);
     }  
   });
   return this;
@@ -528,14 +581,29 @@ aeroflow(1, 2, 3).toSet().dump().run();
 function toSet() {
   return this.chain(toSetOperator()); 
 }
+/**
+@example
+aeroflow(1, 2, 3).toString().dump().run();
+// next 1,2,3
+// done true
+aeroflow(1, 2, 3).toString(';').dump().run();
+// next 1;2;3
+// done true
+aeroflow(1, 2, 3).toString((value, index) => '-'.repeat(index + 1)).dump().run();
+// next 1--2---3
+// done true
+*/
+function toString(condition, optional) {
+  return this.chain(toStringOperator(condition, optional)); 
+}
 const operators = objectCreate(Object[PROTOTYPE], {
   count: { value: count, writable: true },
   delay: { value: delay, writable: true },
   dump: { value: dump, writable: true },
   every: { value: every, writable: true },
   filter: { value: filter, writable: true },
+  flatten: { value: flatten, writable: true },
   group: { value: group, writable: true },
-  join: { value: join, writable: true },
   map: { value: map, writable: true },
   max: { value: max, writable: true },
   mean: { value: mean, writable: true },
@@ -549,7 +617,8 @@ const operators = objectCreate(Object[PROTOTYPE], {
   tap: { value: tap, writable: true },
   toArray: { value: toArray, writable: true },
   toMap: { value: toMap, writable: true },
-  toSet: { value: toSet, writable: true }
+  toSet: { value: toSet, writable: true },
+  toString: { value: toString, writable: true }
 });
 Aeroflow[PROTOTYPE] = objectCreate(operators, {
   [CLASS]: { value: AEROFLOW },
@@ -620,6 +689,10 @@ function create(emitter) {
 }
 /**
 @alias aeroflow.error
+
+@example
+aeroflow.error('test').run();
+// Uncaught Error: test
 */
 function error(message) {
   return new Aeroflow(errorEmitter(message));

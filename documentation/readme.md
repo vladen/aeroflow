@@ -13,6 +13,20 @@
 <dt><a href="#aeroflow">aeroflow(sources)</a></dt>
 <dd><p>Creates new flow emitting values from all provided data sources.</p>
 </dd>
+<dt><a href="#flatten">flatten()</a></dt>
+<dd></dd>
+<dt><a href="#map">map()</a></dt>
+<dd><p>aeroflow(1, 2).map(&#39;test&#39;).dump().run();
+// next test
+// next test
+// done true
+aeroflow(1, 2).map(value =&gt; value * 10).dump().run();
+// next 10
+// next 20
+// done true</p>
+</dd>
+<dt><a href="#toString">toString()</a></dt>
+<dd></dd>
 </dl>
 
 <a name="Aeroflow"></a>
@@ -73,6 +87,15 @@ aeroflow(1).append(2, [3, 4], new Promise(resolve => setTimeout(() => resolve(5)
 **Example**  
 ```js
 aeroflow().dump().bind(1, 2, 3).run();
+// next 1
+// next 2
+// next 3
+// done true
+aeroflow([1, 2, 3]).dump().bind([4, 5, 6]).run();
+// next 4
+// next 5
+// next 6
+// done true
 ```
 <a name="Aeroflow+count"></a>
 ### aeroflow.count()
@@ -83,6 +106,9 @@ Counts the number of values emitted by this flow, returns new flow emitting only
 
 **Example**  
 ```js
+aeroflow().count().dump().run();
+// next 0
+// done
 aeroflow(['a', 'b', 'c']).count().dump().run();
 // next 3
 // done
@@ -95,15 +121,15 @@ Returns new flow delaying emission of each value accordingly provided condition.
 **Example:**: aeroflow(1, 2).delay(500).dump().run();
 // next 1 // after 500ms
 // next 2 // after 500ms
-// done // after 500ms
+// done true // after 500ms
 aeroflow(1, 2).delay(new Date(Date.now() + 500)).dump().run();
 // next 1 // after 500ms
 // next 2
-// done // after 500ms
-aeroflow(1, 2).delay((value, index) => 500 + index 500).dump().run();
+// done true
+aeroflow(1, 2).delay((value, index) => 500 + 500 * index).dump().run();
 // next 1 // after 500ms
-// next 2 // after 1000ms
-// done // after 1500ms  
+// next 2 // after 1500ms
+// done true  
 **Params**
 - [interval] <code>number</code> | <code>date</code> | <code>function</code> - The condition used to determine delay for each subsequent emission.
 Number is threated as milliseconds interval (negative number is considered as 0).
@@ -145,10 +171,10 @@ If omitted, default (truthy) predicate is used.
 
 **Example**  
 ```js
-aeroflow(1).every().dump().run();
+aeroflow().every().dump().run();
 // next true
 // done true
-aeroflow(1, 2).every(1).dump().run();
+aeroflow('a', 'b').every('a').dump().run();
 // next false
 // done false
 aeroflow(1, 2).every(value => value > 0).dump().run();
@@ -289,8 +315,8 @@ aeroflow(1, 2, 3).reverse().dump().run()
 <a name="Aeroflow+run"></a>
 ### aeroflow.run([next], [done], [data])
 Runs this flow asynchronously, initiating source to emit values,
- applying declared operators to emitted values and invoking provided callbacks.
- If no callbacks provided, runs this flow for its side-effects only.
+applying declared operators to emitted values and invoking provided callbacks.
+If no callbacks provided, runs this flow for its side-effects only.
 
 **Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
 **Params**
@@ -301,10 +327,18 @@ Runs this flow asynchronously, initiating source to emit values,
 **Example**  
 ```js
 aeroflow(1, 2, 3).run(value => console.log('next', value), error => console.log('done', error));
- // next 1
- // next 2
- // next 3
- // done undefined
+// next 1
+// next 2
+// next 3
+// done true
+aeroflow(1, 2, 3).dump().run(() => false);
+// next 1
+// done false
+aeroflow(Promise.reject('test')).dump().run();
+// done Error: test(…)
+// Unhandled promise rejection Error: test(…)
+aeroflow(Promise.reject('test')).dump().run(() => {}, () => {});
+// done Error: test(…)
 ```
 <a name="Aeroflow+skip"></a>
 ### aeroflow.skip([condition]) ⇒ <code>[Aeroflow](#Aeroflow)</code>
@@ -487,6 +521,11 @@ aeroflow.create((next, done, context) => {
 **Kind**: static method of <code>[aeroflow](#aeroflow)</code>  
 **Params**
 
+**Example**  
+```js
+aeroflow.error('test').run();
+// Uncaught Error: test
+```
 <a name="aeroflow.expand"></a>
 ### aeroflow.expand()
 **Kind**: static method of <code>[aeroflow](#aeroflow)</code>  
@@ -609,4 +648,58 @@ aeroflow.timer(index => 500 + index * 500).take(3).dump().run();
 // next Wed Feb 03 2016 02:37:37 ... // after 1000ms
 // next Wed Feb 03 2016 02:37:38 ... // after 1500ms
 // done false
+```
+<a name="flatten"></a>
+## flatten()
+**Kind**: global function  
+**Params**
+
+**Example**  
+```js
+aeroflow([[1, 2]]).flatten().dump().run();
+// next 1
+// next 2
+// done true
+aeroflow(() => [[1], [2]]).flatten(1).dump().run();
+// next [1]
+// next [2]
+// done true
+aeroflow(new Promise(resolve => setTimeout(() => resolve(() => [1, 2]), 500))).flatten().dump().run();
+// next 1 // after 500ms
+// next 2
+// done true
+aeroflow(new Promise(resolve => setTimeout(() => resolve(() => [1, 2]), 500))).flatten(1).dump().run();
+// next [1, 2]
+// done true
+```
+<a name="map"></a>
+## map()
+aeroflow(1, 2).map('test').dump().run();
+// next test
+// next test
+// done true
+aeroflow(1, 2).map(value => value * 10).dump().run();
+// next 10
+// next 20
+// done true
+
+**Kind**: global function  
+**Params**
+
+<a name="toString"></a>
+## toString()
+**Kind**: global function  
+**Params**
+
+**Example**  
+```js
+aeroflow(1, 2, 3).toString().dump().run();
+// next 1,2,3
+// done true
+aeroflow(1, 2, 3).toString(';').dump().run();
+// next 1;2;3
+// done true
+aeroflow(1, 2, 3).toString((value, index) => '-'.repeat(index + 1)).dump().run();
+// next 1--2---3
+// done true
 ```

@@ -18,10 +18,7 @@ export const identity = value => value;
 export const noop = () => {};
 
 export const classOf = value => objectToString.call(value).slice(8, -1);
-export const classIs = className => {
-  const tag = `[object ${className}]`;
-  return value => objectToString.call(value) === tag;
-}
+export const classIs = className => value => classOf(value) === className;
 
 export const isDate = classIs(DATE);
 export const isError = classIs(ERROR);
@@ -40,3 +37,7 @@ export const toNumber = (value, def) => {
   }
   return value;
 };
+
+export const toError = value => isError(value)
+  ? value
+  : new Error(value);

@@ -3,11 +3,11 @@
 import { reduceGeneralOperator, reduceOptionalOperator } from './reduce';
 import { constant, isFunction, isUndefined, isString } from '../utilites';
 
-export function joinOperator(separator, optional) {
-  const joiner = isFunction(separator)
-    ? separator
-    : isUndefined(separator)
-      ? constant(',')
+export function toStringOperator(separator, optional) {
+  const joiner = isUndefined(separator)
+    ? constant(',')
+    : isFunction(separator)
+      ? separator
       : constant(separator);
   const reducer = optional
     ? reduceOptionalOperator
@@ -15,6 +15,6 @@ export function joinOperator(separator, optional) {
   return reducer((result, value, index, data) =>
     result.length
       ? result + joiner(value, index, data) + value
-      : value,
+      : '' + value,
     '');
 }

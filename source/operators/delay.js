@@ -21,12 +21,12 @@ export function delayOperator(interval) {
             break;
           default:
             interval = +interval;
+            break;
         }
         if (interval < 0) interval = 0;
         return new Promise((resolve, reject) => {
           setTimeout(() => {
-            if (!unsync(next(result), resolve, reject))
-              resolve(true);
+            if (!unsync(next(result), resolve, reject)) resolve(true);
           }, interval);
         });
       },
