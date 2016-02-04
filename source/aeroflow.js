@@ -301,6 +301,17 @@ function group(...selectors) {
 }
 /**
 @alias Aeroflow#join
+
+@example
+aeroflow(['a','b']).join([1,2]).dump().run()
+// next ["a", 1]
+// next ["a", 2]
+// next ["b", 1]
+// next ["b", 2]
+aeroflow([1, 2]).join([3 , 4], (x, y) => y % x === 0).dump().run()
+// next [1, 3]
+// next [1, 4]
+// next [2, 4]
 */
 function join(right, comparer) {
   return this.chain(joinOperator(right, comparer));
