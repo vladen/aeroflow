@@ -1133,8 +1133,8 @@
     return this.chain(skipOperator(condition));
   }
 
-  function slice(start, end) {
-    return this.chain(sliceOperator(start, end));
+  function slice(begin, end) {
+    return this.chain(sliceOperator(begin, end));
   }
 
   function some(condition) {

@@ -4,124 +4,311 @@
     (global.aeroflowTests = factory());
 }(this, function () { 'use strict';
 
-    var factoryTests = (aeroflow, assert) => describe('aeroflow', () => {
-        it('is function', () => {
-            assert.isFunction(aeroflow);
-        });
+    var staticMethodsTests = (aeroflow, assert) => describe('aeroflow', () => {
 
-        describe('aeroflow()', () => {
-            it('returns instance of Aeroflow', () => {
-                assert.typeOf(aeroflow(), 'Aeroflow');
-            });
+        it('is function', () => 
+            assert.isFunction(aeroflow));
 
-            describe('#sources', () => {
-                it('is initially empty array', () => {
-                    assert.strictEqual(aeroflow().sources.length, 0);
-                });
-            });
+        describe('#empty', () => {
+            it('is static property returns instance of Aeroflow', () =>
+                assert.typeOf(aeroflow.empty, 'Aeroflow'));
 
-            describe('#emitter', () => {
-                it('is function', () => {
-                    assert.isFunction(aeroflow().emitter);
-                });
+            it('emitting empty flow', (done) => {
+                let result;
+                aeroflow.empty
+                        .run(value => result = value);
+                setImmediate(() => done(assert.isUndefined(result)));
             });
         });
 
-        describe('aeroflow(@Array)', (done) => {
-            it('returns instance of Aeroflow', () => {
-                assert.typeOf(aeroflow([1, 2]), 'Aeroflow');
-            });
+        describe('#expand()', () => {
+            it('is static method', () => 
+                assert.isFunction(aeroflow.expand));
 
-            describe('@Array', () => {
-                it('emitting array items', (done) => {
-                    let expected = ['str', new Date(), {}, 2]
-                        , actual = [];
-                    
-                    aeroflow(expected)
-                        .run(value => actual.push(value));
-
-                    setImmediate(() => done(assert.sameMembers(actual, expected)));
-                });
-            });
+            it('returns instance of Aeroflow', () =>
+                assert.typeOf(aeroflow.expand(), 'Aeroflow'));
         });
 
-        describe('aeroflow(@Map)', () => {
-            it('returns instance of Aeroflow', () => {
-                assert.typeOf(aeroflow(new Map([[1,2], [2, 1]])), 'Aeroflow');
-            });
+        describe('#expand(@function)', () => {
+            it('returns instance of Aeroflow', () =>
+                assert.typeOf(aeroflow.expand(() => true, 1), 'Aeroflow'));
 
-            describe('@Map', () => {
-                it('emitting map entries', (done) => {
-                    let expected = [['a', 1], ['b', 2]]
-                        , actual = [];
+            // describe('@function', () => {
+            //     it('emitting geometric progression', (done)=> {
+            //         let expander = value => value * 2
+            //             , actual = []
+            //             , seed = 1
+            //             , expected = [2, 4, 8]
+            //             , index = 0;
 
-                    aeroflow(new Map(expected))
-                        .run(value => actual.push(value));
+            //         aeroflow
+            //             .expand(expander, seed)
+            //             .take(expected.length)
+            //             .run(value => {
+            //                 actual.push(value);
+            //             });
 
-                    setImmediate(() => {
-                        expected.forEach((item, index) => assert.sameMembers(actual[index], expected[index]));
-                        done();
-                    });
-                });
-            });
+            //         setImmediate(() => {
+            //             assert.strictEqual(actual, expected);
+            //             //done();
+            //         });
+            //     });
+            // });
         });
 
-        describe('aerflow(@Set)', () => {
-            it('returns instance of Aeroflow', () => {
-                assert.typeOf(aeroflow(new Set([1, 2])), 'Aeroflow');
-            });
+        describe('#just()', () => {
+            it('is static method', () => 
+                assert.isFunction(aeroflow.just));
 
-            describe('@Set', () => {
-                it('emitting set keys', (done) => {
-                    let expected = ['a', 'b']
-                        , actual = [];
+            it('returns instance of Aeroflow', () =>
+                assert.typeOf(aeroflow.just(), 'Aeroflow'));
 
-                    aeroflow(new Set(expected))
-                        .run(value => actual.push(value));
+            it('emitting empty flow', (done) => {
+                let actual;
 
-                    setImmediate(() => done(assert.sameMembers(actual, expected)));
+                aeroflow.just()
+                        .run(value => value = actual );
+
+                setImmediate(() => {
+                    assert.isUndefined(actual);
+                    done();
                 });
             });
         });
 
-        describe('aeroflow(@Function)', () => {
-            it('returns instance of Aeroflow', () => {
-                assert.typeOf(aeroflow(() => true), 'Aeroflow');
-            });
+        describe('#just(@*)', () => {
+            it('returns instance of Aeroflow', () =>
+                assert.typeOf(aeroflow.just(() => true), 'Aeroflow'));
 
-            describe('@Function', () => {
-                it('emitting scalar value returned by function', (done) => {
-                    let expected = 'test tester'
+            describe('@function', () => {
+                it('emitting single function', (done) => {
+                    let expected = () => {}
                         , actual;
-                    aeroflow(() => expected)
-                        .run(value => actual = value);
+
+                    aeroflow.just(expected)
+                            .run(value => actual = value );
+                    
+                    setImmediate(() => done(assert.strictEqual(actual, expected)));
+                });
+            });
+
+            describe('@Promise', () => {
+                it('emitting single promise', (done) => {
+                    let expected = Promise.resolve([1, 2, 3])
+                        , actual;
+
+                    aeroflow.just(expected)
+                            .run(value => actual = value );
 
                     setImmediate(() => done(assert.strictEqual(actual, expected)));
                 });
             });
         });
 
-        describe('Aeroflow(@Promise)', () => {
-            it('returns instance of Aeroflow', () => {
-                assert.typeOf(aeroflow(Promise.resolve({})), 'Aeroflow');
+        describe('#random()', () => {
+            it('is static method', () => 
+                assert.isFunction(aeroflow.random));
+
+            it('emitting random decimals within 0 and 1', (done) => {
+                let actual = [];
+
+                aeroflow.random()
+                        .take(10)
+                        .run(value => actual.push(value));
+
+                setImmediate(() => {
+                    actual.forEach((item) => assert.isTrue(!Number.isInteger(item) && item >= 0 && item < 1));
+                    done();
+                });
             });
+        });
 
-            describe('@Promise', () => {
-                it('emitting array resolved by promise', (done) => {
-                    let expected = ['a', 'b']
-                        , actual
+        describe('#random(@Number, @Number)', ()=> {
+            it('returns instance of Aeroflow', () =>
+                assert.typeOf(aeroflow.random(0, 1), 'Aeroflow'));
 
-                    aeroflow(Promise.resolve(expected))
-                        .run( value => assert.strictEqual(value, expected), () => done());
+            describe('@Number, @Number', () => {
+                it('emitting random integers within a range', (done) => {
+                    let limit = 10
+                        , max = 10
+                        , min = 1
+                        , actual = [];
+
+                    aeroflow.random(min, max)
+                        .take(limit)
+                        .run(value => actual.push(value));
+
+                    setImmediate(() => {
+                        actual.forEach((item) => assert.isTrue(Number.isInteger(item) && item >= min && item < max));
+                        done();
+                    });
                 });
 
-                //TODO: Promise tests pending
+                it('emitting random decimals within a range', (done) => {
+                    let limit = 10
+                        , max = 10.1
+                        , min = 1.1
+                        , actual = [];
+
+                    aeroflow.random(min, max)
+                        .take(limit)
+                        .run(value => actual.push(value));
+
+                    setImmediate(() => {
+                        actual.forEach((item) => assert.isTrue(!Number.isInteger(item) && item >= min && item < max));
+                        done();
+                    });
+                });
+            });
+        });
+
+        describe('#range()', () => {
+             it('is static method', () => 
+                assert.isFunction(aeroflow.range));
+
+             it('emitting ascending sequential starting from 0', (done) => {
+                let expected = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+                    , actual = []
+
+                aeroflow.range()
+                        .take(10)
+                        .run(value => actual.push(value));
+
+                setImmediate(() => {
+                    actual.forEach((item, index) => assert.strictEqual(item, expected[index]));
+                    done();
+                });
+             });
+        });
+
+        describe('#range(@Number, @Number, @Number)', () => {
+            it('returns instance of Aeroflow', () =>
+                assert.typeOf(aeroflow.random(0, 1), 'Aeroflow'));
+
+            describe('@Number', () => {
+                it('emitting ascending sequential starting from passed number', (done)=>{
+                    let expected = [5, 6, 7, 8]
+                        , actual = []
+
+                    aeroflow.range(expected[0])
+                        .take(4)
+                        .run(value => actual.push(value));
+
+                    setImmediate(() => {
+                        actual.forEach((item, index) => assert.strictEqual(item, expected[index]));
+                        done();
+                    });
+                });
+            });
+
+            describe('@Number, @Number', () => {
+                it('emitting ascending sequential integers within a range', (done)=>{
+                    let expected = [5, 6, 7, 8]
+                        , start = expected[0]
+                        , end = expected[expected.length - 1]
+                        , actual = [];
+                        
+
+                    aeroflow.range(start, end)
+                        .take(4)
+                        .run(value => actual.push(value));
+
+                    setImmediate(() => {
+                        actual.forEach((item, index) => assert.strictEqual(item, expected[index]));
+                        done();
+                    });
+                });
+
+                it('emitting descending sequential integers within a range', (done) => {
+                     let expected = [8, 7, 6, 5]
+                        , start = expected[0]
+                        , end = expected[expected.length - 1]
+                        , actual = [];
+                        
+
+                    aeroflow.range(start, end)
+                        .take(4)
+                        .run(value => actual.push(value));
+
+                    setImmediate(() => {
+                        actual.forEach((item, index) => assert.strictEqual(item, expected[index]));
+                        done();
+                    });
+                });
+            });
+
+            describe('@Number, @Number, @Number', () => {
+                it('emitting ascending sequential integers within a stepped range', (done)=>{
+                    let expected = [0, 2, 4, 6]
+                        , start = expected[0]
+                        , end = expected[expected.length - 1]
+                        , step = 2
+                        , actual = [];
+
+                    aeroflow.range(start, end, step)
+                        .take(10)
+                        .run(value => actual.push(value));
+
+                    setImmediate(() => {
+                        actual.forEach((item, index) => assert.strictEqual(item, expected[index]));
+                        done();
+                    });
+                });
+
+                it('emitting descending sequential integers within a stepped range', (done) => {
+                    let expected = [6, 4, 2, 0]
+                        , start = expected[0]
+                        , end = expected[expected.length - 1]
+                        , step = -2
+                        , actual = [];
+
+                    aeroflow.range(start, end, step)
+                        .take(10)
+                        .run(value => actual.push(value));
+
+                    setImmediate(() => {
+                        actual.forEach((item, index) => assert.strictEqual(item, expected[index]));
+                        done();
+                    });
+
+                });
+            });
+        });
+
+        describe('#repeat()', () => {
+            it('is static method', () => 
+                assert.isFunction(aeroflow.repeat));
+
+            it('returns instance of Aeroflow', () =>
+                assert.typeOf(aeroflow.repeat(), 'Aeroflow'));
+        });
+
+        describe('#repeat(@function)', () => {
+            it('returns instance of Aeroflow', () =>
+                assert.typeOf(aeroflow.repeat(() => true), 'Aeroflow'));
+
+            describe('@function', () => {
+                it('emitting geometric progression', (done)=> {
+                    let repeater = index => index * 2
+                        , expected = [0, 2, 4, 6, 8]
+                        , actual = [];
+
+                    aeroflow
+                        .repeat(repeater)
+                        .take(expected.length)
+                        .run(value => actual.push(value));
+
+                    setImmediate(() => {
+                        actual.forEach((item, index) => assert.strictEqual(item, expected[index]));
+                        done();
+                    });
+                });
             });
         });
     });
 
     var aeroflow = (aeroflow, assert) => {
-        factoryTests(aeroflow, assert);
+        staticMethodsTests(aeroflow, assert);
     };
 
     return aeroflow;

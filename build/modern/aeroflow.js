@@ -1363,8 +1363,8 @@
   // next 2
   // done true
   */
-  function slice(start, end) {
-    return this.chain(sliceOperator(start, end));
+  function slice(begin, end) {
+    return this.chain(sliceOperator(begin, end));
   }
 
   /**

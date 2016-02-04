@@ -17,93 +17,82 @@
         value: true
     });
 
-    var factoryTests = function factoryTests(aeroflow, assert) {
+    var staticMethodsTests = function staticMethodsTests(aeroflow, assert) {
         return describe('aeroflow', function () {
             it('is function', function () {
-                assert.isFunction(aeroflow);
+                return assert.isFunction(aeroflow);
             });
-            describe('aeroflow()', function () {
-                it('returns instance of Aeroflow', function () {
-                    assert.typeOf(aeroflow(), 'Aeroflow');
+            describe('#empty', function () {
+                it('is static property returns instance of Aeroflow', function () {
+                    return assert.typeOf(aeroflow.empty, 'Aeroflow');
                 });
-                describe('#sources', function () {
-                    it('is initially empty array', function () {
-                        assert.strictEqual(aeroflow().sources.length, 0);
+                it('emitting empty flow', function (done) {
+                    var result = undefined;
+                    aeroflow.empty.run(function (value) {
+                        return result = value;
                     });
-                });
-                describe('#emitter', function () {
-                    it('is function', function () {
-                        assert.isFunction(aeroflow().emitter);
-                    });
-                });
-            });
-            describe('aeroflow(@Array)', function (done) {
-                it('returns instance of Aeroflow', function () {
-                    assert.typeOf(aeroflow([1, 2]), 'Aeroflow');
-                });
-                describe('@Array', function () {
-                    it('emitting array items', function (done) {
-                        var expected = ['str', new Date(), {}, 2],
-                            actual = [];
-                        aeroflow(expected).run(function (value) {
-                            return actual.push(value);
-                        });
-                        setImmediate(function () {
-                            return done(assert.sameMembers(actual, expected));
-                        });
+                    setImmediate(function () {
+                        return done(assert.isUndefined(result));
                     });
                 });
             });
-            describe('aeroflow(@Map)', function () {
-                it('returns instance of Aeroflow', function () {
-                    assert.typeOf(aeroflow(new Map([[1, 2], [2, 1]])), 'Aeroflow');
+            describe('#expand()', function () {
+                it('is static method', function () {
+                    return assert.isFunction(aeroflow.expand);
                 });
-                describe('@Map', function () {
-                    it('emitting map entries', function (done) {
-                        var expected = [['a', 1], ['b', 2]],
-                            actual = [];
-                        aeroflow(new Map(expected)).run(function (value) {
-                            return actual.push(value);
-                        });
-                        setImmediate(function () {
-                            expected.forEach(function (item, index) {
-                                return assert.sameMembers(actual[index], expected[index]);
-                            });
-                            done();
-                        });
+                it('returns instance of Aeroflow', function () {
+                    return assert.typeOf(aeroflow.expand(), 'Aeroflow');
+                });
+            });
+            describe('#expand(@function)', function () {
+                it('returns instance of Aeroflow', function () {
+                    return assert.typeOf(aeroflow.expand(function () {
+                        return true;
+                    }, 1), 'Aeroflow');
+                });
+            });
+            describe('#just()', function () {
+                it('is static method', function () {
+                    return assert.isFunction(aeroflow.just);
+                });
+                it('returns instance of Aeroflow', function () {
+                    return assert.typeOf(aeroflow.just(), 'Aeroflow');
+                });
+                it('emitting empty flow', function (done) {
+                    var actual = undefined;
+                    aeroflow.just().run(function (value) {
+                        return value = actual;
+                    });
+                    setImmediate(function () {
+                        assert.isUndefined(actual);
+                        done();
                     });
                 });
             });
-            describe('aerflow(@Set)', function () {
+            describe('#just(@*)', function () {
                 it('returns instance of Aeroflow', function () {
-                    assert.typeOf(aeroflow(new Set([1, 2])), 'Aeroflow');
-                });
-                describe('@Set', function () {
-                    it('emitting set keys', function (done) {
-                        var expected = ['a', 'b'],
-                            actual = [];
-                        aeroflow(new Set(expected)).run(function (value) {
-                            return actual.push(value);
-                        });
-                        setImmediate(function () {
-                            return done(assert.sameMembers(actual, expected));
-                        });
-                    });
-                });
-            });
-            describe('aeroflow(@Function)', function () {
-                it('returns instance of Aeroflow', function () {
-                    assert.typeOf(aeroflow(function () {
+                    return assert.typeOf(aeroflow.just(function () {
                         return true;
                     }), 'Aeroflow');
                 });
-                describe('@Function', function () {
-                    it('emitting scalar value returned by function', function (done) {
-                        var expected = 'test tester',
+                describe('@function', function () {
+                    it('emitting single function', function (done) {
+                        var expected = function expected() {},
                             actual = undefined;
-                        aeroflow(function () {
-                            return expected;
-                        }).run(function (value) {
+
+                        aeroflow.just(expected).run(function (value) {
+                            return actual = value;
+                        });
+                        setImmediate(function () {
+                            return done(assert.strictEqual(actual, expected));
+                        });
+                    });
+                });
+                describe('@Promise', function () {
+                    it('emitting single promise', function (done) {
+                        var expected = Promise.resolve([1, 2, 3]),
+                            actual = undefined;
+                        aeroflow.just(expected).run(function (value) {
                             return actual = value;
                         });
                         setImmediate(function () {
@@ -112,18 +101,194 @@
                     });
                 });
             });
-            describe('Aeroflow(@Promise)', function () {
-                it('returns instance of Aeroflow', function () {
-                    assert.typeOf(aeroflow(Promise.resolve({})), 'Aeroflow');
+            describe('#random()', function () {
+                it('is static method', function () {
+                    return assert.isFunction(aeroflow.random);
                 });
-                describe('@Promise', function () {
-                    it('emitting array resolved by promise', function (done) {
-                        var expected = ['a', 'b'],
-                            actual = undefined;
-                        aeroflow(Promise.resolve(expected)).run(function (value) {
-                            return assert.strictEqual(value, expected);
-                        }, function () {
-                            return done();
+                it('emitting random decimals within 0 and 1', function (done) {
+                    var actual = [];
+                    aeroflow.random().take(10).run(function (value) {
+                        return actual.push(value);
+                    });
+                    setImmediate(function () {
+                        actual.forEach(function (item) {
+                            return assert.isTrue(!Number.isInteger(item) && item >= 0 && item < 1);
+                        });
+                        done();
+                    });
+                });
+            });
+            describe('#random(@Number, @Number)', function () {
+                it('returns instance of Aeroflow', function () {
+                    return assert.typeOf(aeroflow.random(0, 1), 'Aeroflow');
+                });
+                describe('@Number, @Number', function () {
+                    it('emitting random integers within a range', function (done) {
+                        var limit = 10,
+                            max = 10,
+                            min = 1,
+                            actual = [];
+                        aeroflow.random(min, max).take(limit).run(function (value) {
+                            return actual.push(value);
+                        });
+                        setImmediate(function () {
+                            actual.forEach(function (item) {
+                                return assert.isTrue(Number.isInteger(item) && item >= min && item < max);
+                            });
+                            done();
+                        });
+                    });
+                    it('emitting random decimals within a range', function (done) {
+                        var limit = 10,
+                            max = 10.1,
+                            min = 1.1,
+                            actual = [];
+                        aeroflow.random(min, max).take(limit).run(function (value) {
+                            return actual.push(value);
+                        });
+                        setImmediate(function () {
+                            actual.forEach(function (item) {
+                                return assert.isTrue(!Number.isInteger(item) && item >= min && item < max);
+                            });
+                            done();
+                        });
+                    });
+                });
+            });
+            describe('#range()', function () {
+                it('is static method', function () {
+                    return assert.isFunction(aeroflow.range);
+                });
+                it('emitting ascending sequential starting from 0', function (done) {
+                    var expected = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+                        actual = [];
+                    aeroflow.range().take(10).run(function (value) {
+                        return actual.push(value);
+                    });
+                    setImmediate(function () {
+                        actual.forEach(function (item, index) {
+                            return assert.strictEqual(item, expected[index]);
+                        });
+                        done();
+                    });
+                });
+            });
+            describe('#range(@Number, @Number, @Number)', function () {
+                it('returns instance of Aeroflow', function () {
+                    return assert.typeOf(aeroflow.random(0, 1), 'Aeroflow');
+                });
+                describe('@Number', function () {
+                    it('emitting ascending sequential starting from passed number', function (done) {
+                        var expected = [5, 6, 7, 8],
+                            actual = [];
+                        aeroflow.range(expected[0]).take(4).run(function (value) {
+                            return actual.push(value);
+                        });
+                        setImmediate(function () {
+                            actual.forEach(function (item, index) {
+                                return assert.strictEqual(item, expected[index]);
+                            });
+                            done();
+                        });
+                    });
+                });
+                describe('@Number, @Number', function () {
+                    it('emitting ascending sequential integers within a range', function (done) {
+                        var expected = [5, 6, 7, 8],
+                            start = expected[0],
+                            end = expected[expected.length - 1],
+                            actual = [];
+                        aeroflow.range(start, end).take(4).run(function (value) {
+                            return actual.push(value);
+                        });
+                        setImmediate(function () {
+                            actual.forEach(function (item, index) {
+                                return assert.strictEqual(item, expected[index]);
+                            });
+                            done();
+                        });
+                    });
+                    it('emitting descending sequential integers within a range', function (done) {
+                        var expected = [8, 7, 6, 5],
+                            start = expected[0],
+                            end = expected[expected.length - 1],
+                            actual = [];
+                        aeroflow.range(start, end).take(4).run(function (value) {
+                            return actual.push(value);
+                        });
+                        setImmediate(function () {
+                            actual.forEach(function (item, index) {
+                                return assert.strictEqual(item, expected[index]);
+                            });
+                            done();
+                        });
+                    });
+                });
+                describe('@Number, @Number, @Number', function () {
+                    it('emitting ascending sequential integers within a stepped range', function (done) {
+                        var expected = [0, 2, 4, 6],
+                            start = expected[0],
+                            end = expected[expected.length - 1],
+                            step = 2,
+                            actual = [];
+                        aeroflow.range(start, end, step).take(10).run(function (value) {
+                            return actual.push(value);
+                        });
+                        setImmediate(function () {
+                            actual.forEach(function (item, index) {
+                                return assert.strictEqual(item, expected[index]);
+                            });
+                            done();
+                        });
+                    });
+                    it('emitting descending sequential integers within a stepped range', function (done) {
+                        var expected = [6, 4, 2, 0],
+                            start = expected[0],
+                            end = expected[expected.length - 1],
+                            step = -2,
+                            actual = [];
+                        aeroflow.range(start, end, step).take(10).run(function (value) {
+                            return actual.push(value);
+                        });
+                        setImmediate(function () {
+                            actual.forEach(function (item, index) {
+                                return assert.strictEqual(item, expected[index]);
+                            });
+                            done();
+                        });
+                    });
+                });
+            });
+            describe('#repeat()', function () {
+                it('is static method', function () {
+                    return assert.isFunction(aeroflow.repeat);
+                });
+                it('returns instance of Aeroflow', function () {
+                    return assert.typeOf(aeroflow.repeat(), 'Aeroflow');
+                });
+            });
+            describe('#repeat(@function)', function () {
+                it('returns instance of Aeroflow', function () {
+                    return assert.typeOf(aeroflow.repeat(function () {
+                        return true;
+                    }), 'Aeroflow');
+                });
+                describe('@function', function () {
+                    it('emitting geometric progression', function (done) {
+                        var repeater = function repeater(index) {
+                            return index * 2;
+                        },
+                            expected = [0, 2, 4, 6, 8],
+                            actual = [];
+
+                        aeroflow.repeat(repeater).take(expected.length).run(function (value) {
+                            return actual.push(value);
+                        });
+                        setImmediate(function () {
+                            actual.forEach(function (item, index) {
+                                return assert.strictEqual(item, expected[index]);
+                            });
+                            done();
                         });
                     });
                 });
@@ -132,7 +297,7 @@
     };
 
     var aeroflow = function aeroflow(_aeroflow, assert) {
-        factoryTests(_aeroflow, assert);
+        staticMethodsTests(_aeroflow, assert);
     };
 
     exports.default = aeroflow;

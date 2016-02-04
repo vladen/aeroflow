@@ -1,4 +1,6 @@
-var staticMethodsTests = (aeroflow, assert) => describe('aeroflow', () => {
+'use strict';
+
+export default (aeroflow, assert) => describe('aeroflow', () => {
 
     it('is function', () => 
         assert.isFunction(aeroflow));
@@ -300,9 +302,3 @@ var staticMethodsTests = (aeroflow, assert) => describe('aeroflow', () => {
         });
     });
 });
-
-var aeroflow = (aeroflow, assert) => {
-    staticMethodsTests(aeroflow, assert);
-};
-
-export default aeroflow;

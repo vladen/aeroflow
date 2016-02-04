@@ -30,7 +30,7 @@
     "document:tests": "mocha build/tests.js --reporter markdown > specifications/readme.md",
     "minify": "uglifyjs build/legacy/aeroflow.js --compress --mangle --output build/legacy/aeroflow.min.js",
     "test:library": "mocha --bail --check-leaks --colors --prof build/tests.js",
-    "test": "npm run test:library",
+    "test": "npm run test:library && npm run test:coverage",
     "test:coverage": "babel-node ./node_modules/isparta/bin/isparta cover ./node_modules/mocha/bin/_mocha -- build/coverage.js",
     "transpile": "npm run transpile:library && npm run transpile:tests",
     "transpile:library": "babel build/es2015/aeroflow.js --out-file build/legacy/aeroflow.js --presets es2015 --plugins add-module-exports,transform-es2015-modules-umd",
