@@ -1,7 +1,7 @@
 'use strict';
 
 import { AEROFLOW, CLASS, PROTOTYPE } from './symbols';
-import { classOf, isError, isFunction, objectDefineProperties, primitives, objectCreate } from './utilites';
+import { classOf, isError, isFunction, objectDefineProperties, primitives, noop, objectCreate } from './utilites';
 
 import { Context } from './context';
 
@@ -453,7 +453,13 @@ function run(next, done, data) {
       if (isError(result)) throw result;
     };
   }
-  else if (primitives.has(classOf(next))) data = next;
+  else if (primitives.has(classOf(next))) {
+    data = next;
+    next = noop;
+    done = result => {
+      if (isError(result)) throw result;
+    };
+  }
   else if (isFunction(next.dispatchEvent)) {
     const target = next;
     data = done;
