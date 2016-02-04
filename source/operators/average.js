@@ -1,10 +1,13 @@
 'use strict';
 
-import { reduceGeneralOperator } from './reduce';
+import { reduceGeneralOperator, reduceOptionalOperator } from './reduce';
 
-export function averageOperator() {
+export function averageOperator(optional) {
+  const reducer = optional
+    ? reduceOptionalOperator
+    : reduceGeneralOperator;
   let count = 0;
-  return reduceGeneralOperator((result, value) => {
+  return reducer((result, value) => {
   	count++;
     return (result * (count - 1) + value) / count;
   }, 0);

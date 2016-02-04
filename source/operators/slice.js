@@ -1,7 +1,8 @@
 'use strict';
 
 import { NUMBER } from '../symbols';
-import { classOf } from '../utilites';
+import { classOf, isError } from '../utilites';
+import { arrayEmitter } from '../emitters/array'
 import { emptyEmitter } from '../emitters/empty';
 import { toArrayOperator } from './toArray';
 
@@ -25,7 +26,7 @@ function sliceWithNegativeIndexes(start, end) {
       },
       result => {        
         if (isError(result)) done(result);
-        else arrayEmitter(array.slice(mathMax(values.length - count, 0)))(next, done, context);
+        else arrayEmitter(array.slice(start, end))(next, done, context);
       },
       context);
   }

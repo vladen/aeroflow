@@ -79,8 +79,8 @@ function append(...sources) {
 /**
 @alias Aeroflow#average
 */
-function average() {
-  return this.chain(averageOperator());
+function average(optional) {
+  return this.chain(averageOperator(optional));
 }
 /**
 @alias Aeroflow#bind
