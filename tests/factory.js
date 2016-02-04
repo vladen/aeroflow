@@ -1,4 +1,6 @@
-var factoryTests = (aeroflow, assert) => describe('aeroflow', () => {
+'use strict';
+
+export default (aeroflow, assert) => describe('aeroflow', () => {
     it('is function', () => {
         assert.isFunction(aeroflow);
     });
@@ -113,9 +115,3 @@ var factoryTests = (aeroflow, assert) => describe('aeroflow', () => {
         });
     });
 });
-
-var aeroflow = (aeroflow, assert) => {
-    factoryTests(aeroflow, assert);
-};
-
-export default aeroflow;
