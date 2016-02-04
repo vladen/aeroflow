@@ -22,6 +22,7 @@ import { dumpOperator } from './operators/dump';
 import { everyOperator } from './operators/every';
 import { filterOperator } from './operators/filter';
 import { groupOperator } from './operators/group';
+import { joinOperator } from './operators/join';
 import { mapOperator } from './operators/map';
 import { maxOperator } from './operators/max';
 import { meanOperator } from './operators/mean';
@@ -254,6 +255,12 @@ aeroflow(
 */
 function group(...selectors) {
   return this.chain(groupOperator(selectors)); 
+}
+/**
+@alias Aeroflow#join
+*/
+function join(flow, predicate) {
+  return this.chain(joinOperator(flow, predicate));
 }
 function map(mapping) {
   return this.chain(mapOperator(mapping)); 
@@ -587,6 +594,7 @@ const operators = objectCreate(Object[PROTOTYPE], {
   every: { value: every, writable: true },
   filter: { value: filter, writable: true },
   group: { value: group, writable: true },
+  join: { value: join, writable: true },
   map: { value: map, writable: true },
   max: { value: max, writable: true },
   mean: { value: mean, writable: true },
