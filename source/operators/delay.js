@@ -1,6 +1,6 @@
 'use strict';
 
-import { DATE, FUNCTION, NUMBER } from '../symbols';
+import { DATE, ERROR, FUNCTION, NUMBER } from '../symbols';
 import { classOf, constant, dateNow, isFunction, mathMax } from '../utilites';
 import { unsync } from '../unsync';
 
@@ -12,22 +12,29 @@ export function delayOperator(interval) {
     let index = 0;
     return emitter(
       result => {
-        let interval = delayer(result, index++, context.data);
-        switch (classOf(interval)) {
+        let delay = delayer(result, index++, context.data);
+        switch (classOf(delay)) {
           case DATE:
-            interval = interval - dateNow();
+            delay = delay - dateNow();
             break;
           case NUMBER:
             break;
+          case ERROR:
+            return delay;
           default:
-            interval = +interval;
+            delay = +delay;
             break;
         }
-        if (interval < 0) interval = 0;
+        if (delay < 0) delay = 0;
         return new Promise((resolve, reject) => {
           setTimeout(() => {
-            if (!unsync(next(result), resolve, reject)) resolve(true);
-          }, interval);
+            try {
+              if (!unsync(next(result), resolve, reject)) resolve(true);
+            }
+            catch (error) {
+              reject(error);
+            }
+          }, delay);
         });
       },
       done,

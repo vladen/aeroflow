@@ -136,7 +136,10 @@ aeroflow(1, 2).delay(new Date(Date.now() + 500)).dump().run();
 aeroflow(1, 2).delay((value, index) => 500 + 500 * index).dump().run();
 // next 1 // after 500ms
 // next 2 // after 1500ms
-// done true  
+// done true
+aeroflow(1, 2).delay(value => { throw new Error }).dump().run();
+// done Error(…)
+// Uncaught Error  
 **Params**
 - [interval] <code>number</code> | <code>date</code> | <code>function</code> - The condition used to determine delay for each subsequent emission.
 Number is threated as milliseconds interval (negative number is considered as 0).
@@ -160,10 +163,17 @@ value - The value of event emitted by this flow.
 
 **Example**  
 ```js
+aeroflow(1, 2).dump(console.info.bind(console)).run();
+// next 1
+// next 2
+// done true
 aeroflow(1, 2).dump('test ', console.info.bind(console)).run();
 // test next 1
 // test next 2
 // test done true
+aeroflow(1, 2).dump(event => { if (event === 'next') throw new Error }).dump().run();
+// done Error(…)
+// Uncaught Error
 ```
 <a name="Aeroflow+every"></a>
 ### aeroflow.every([predicate]) ⇒ <code>[Aeroflow](#Aeroflow)</code>
@@ -187,6 +197,9 @@ aeroflow('a', 'b').every('a').dump().run();
 aeroflow(1, 2).every(value => value > 0).dump().run();
 // next true
 // done true
+aeroflow(1, 2).every(value => { throw new Error }).dump().run();
+// done Error(…)
+// Uncaught Error
 ```
 <a name="Aeroflow+filter"></a>
 ### aeroflow.filter([predicate]) ⇒ <code>[Aeroflow](#Aeroflow)</code>
@@ -216,6 +229,9 @@ aeroflow(1, 2, 3, 4, 5).filter(value => (value % 2) === 0).dump().run();
 // next 2
 // next 4
 // done true
+aeroflow(1, 2).filter(value => { throw new Error }).dump().run();
+// done Error: (…)
+// Uncaught Error
 ```
 <a name="Aeroflow+flatten"></a>
 ### aeroflow.flatten()
@@ -442,6 +458,9 @@ aeroflow.range(1, 3).some(2).dump().run();
 aeroflow.range(1, 3).some(value => value % 2).dump().run();
 // next true
 // done
+aeroflow(1, 2).some(value => { throw new Error }).dump().run();
+// done Error(…)
+// Uncaught Error
 ```
 <a name="Aeroflow+sort"></a>
 ### aeroflow.sort()
@@ -561,6 +580,9 @@ aeroflow(1, [2, 3], () => 4, new Promise(resolve => setTimeout(() => resolve(5),
 // next 4
 // next 5 // after 500ms
 // done true
+aeroflow(() => { throw new Error }).dump().run();
+// done Error(…)
+// Uncaught Error
 ```
 
 * [aeroflow(sources)](#aeroflow)

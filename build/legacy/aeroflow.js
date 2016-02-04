@@ -178,11 +178,7 @@
 
   function functionEmitter(source) {
     return function (next, done, context) {
-      try {
-        if (!unsync$1(next(source(context.data)), done, done)) done(true);
-      } catch (error) {
-        done(error);
-      }
+      if (!unsync$1(next(source(context.data)), done, done)) done(true);
     };
   }
 
@@ -429,26 +425,33 @@
       return function (next, done, context) {
         var index = 0;
         return emitter(function (result) {
-          var interval = delayer(result, index++, context.data);
+          var delay = delayer(result, index++, context.data);
 
-          switch (classOf(interval)) {
+          switch (classOf(delay)) {
             case DATE:
-              interval = interval - dateNow();
+              delay = delay - dateNow();
               break;
 
             case NUMBER:
               break;
 
+            case ERROR:
+              return delay;
+
             default:
-              interval = +interval;
+              delay = +delay;
               break;
           }
 
-          if (interval < 0) interval = 0;
+          if (delay < 0) delay = 0;
           return new Promise(function (resolve, reject) {
             setTimeout(function () {
-              if (!unsync$1(next(result), resolve, reject)) resolve(true);
-            }, interval);
+              try {
+                if (!unsync$1(next(result), resolve, reject)) resolve(true);
+              } catch (error) {
+                reject(error);
+              }
+            }, delay);
           });
         }, done, context);
       };
@@ -830,7 +833,7 @@
           some = true;
           return false;
         }, function (result) {
-          if (isError(result) || !unsync(next(some), done, done)) done(result);
+          if (isError$1(result) || !unsync(next(some), done, done)) done(result);
         }, context);
       };
     };
@@ -1058,16 +1061,16 @@
     return this.chain(filterOperator(condition));
   }
 
+  function flatten(depth) {
+    return this.chain(flattenOperator(depth));
+  }
+
   function group() {
     for (var _len4 = arguments.length, selectors = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
       selectors[_key4] = arguments[_key4];
     }
 
     return this.chain(groupOperator(selectors));
-  }
-
-  function flatten(depth) {
-    return this.chain(flattenOperator(depth));
   }
 
   function map(mapping) {
@@ -1116,15 +1119,11 @@
       }
     });
     setImmediate(function () {
-      try {
-        context.flow.emitter(function (result) {
-          return false !== next(result, data);
-        }, function (result) {
-          return done(result, data);
-        }, context);
-      } catch (err) {
-        done(toError(err), data);
-      }
+      return context.flow.emitter(function (result) {
+        return false !== next(result, data);
+      }, function (result) {
+        return done(result, data);
+      }, context);
     });
     return this;
   }
@@ -1298,7 +1297,11 @@
         limit = sources.length;
     var index = -1;
     !function proceed(result) {
-      if (result !== true || ++index >= limit) done(result);else adapterEmitter(sources[index], true)(next, proceed, context);
+      if (result !== true || ++index >= limit) done(result);else try {
+        adapterEmitter(sources[index], true)(next, proceed, context);
+      } catch (err) {
+        done(err);
+      }
     }(true);
   }
 

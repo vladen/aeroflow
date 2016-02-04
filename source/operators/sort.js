@@ -32,7 +32,7 @@ export function sortOperator(parameters) {
     ? (left, right) => {
       let result;
       for (let i = -1, l = selectors.length; ++i < l;) {
-        const selector = selectors[i];
+        let selector = selectors[i];
         result = compare(selector(left), selector(right), directions[i]);
         if (result) break;
       }

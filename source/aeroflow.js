@@ -1,7 +1,7 @@
 'use strict';
 
 import { AEROFLOW, CLASS, PROTOTYPE } from './symbols';
-import { isError, isFunction, objectDefineProperties, objectCreate, noop, toError } from './utilites';
+import { isError, isFunction, objectDefineProperties, objectCreate, noop } from './utilites';
 
 import { emptyEmitter } from './emitters/empty';
 import { scalarEmitter } from './emitters/scalar';
@@ -149,7 +149,10 @@ aeroflow(1, 2).delay((value, index) => 500 + 500 * index).dump().run();
 // next 1 // after 500ms
 // next 2 // after 1500ms
 // done true
-  */
+aeroflow(1, 2).delay(value => { throw new Error }).dump().run();
+// done Error(…)
+// Uncaught Error
+*/
 function delay(interval) {
   return this.chain(delayOperator(interval));
 }
@@ -167,10 +170,17 @@ name - The name of event emitted by this flow prepended with prefix.
 value - The value of event emitted by this flow.
 
 @example
+aeroflow(1, 2).dump(console.info.bind(console)).run();
+// next 1
+// next 2
+// done true
 aeroflow(1, 2).dump('test ', console.info.bind(console)).run();
 // test next 1
 // test next 2
 // test done true
+aeroflow(1, 2).dump(event => { if (event === 'next') throw new Error }).dump().run();
+// done Error(…)
+// Uncaught Error
 */
 function dump(prefix, logger) {
   return this.chain(dumpOperator(prefix, logger));
@@ -198,6 +208,9 @@ aeroflow('a', 'b').every('a').dump().run();
 aeroflow(1, 2).every(value => value > 0).dump().run();
 // next true
 // done true
+aeroflow(1, 2).every(value => { throw new Error }).dump().run();
+// done Error(…)
+// Uncaught Error
 */
 function every(condition) {
   return this.chain(everyOperator(condition));
@@ -231,31 +244,12 @@ aeroflow(1, 2, 3, 4, 5).filter(value => (value % 2) === 0).dump().run();
 // next 2
 // next 4
 // done true
+aeroflow(1, 2).filter(value => { throw new Error }).dump().run();
+// done Error: (…)
+// Uncaught Error
 */
 function filter(condition) {
   return this.chain(filterOperator(condition)); 
-}
-/*
-@alias Aeroflow#group
-
-@example
-aeroflow.range(1, 10).group(value => (value % 2) ? 'odd' : 'even').dump().run();
-// next ["odd", Array[5]]
-// next ["even", Array[5]]
-// done true
-aeroflow(
-  { country: 'Belarus', city: 'Brest' },
-  { country: 'Poland', city: 'Krakow' },
-  { country: 'Belarus', city: 'Minsk' },
-  { country: 'Belarus', city: 'Grodno' },
-  { country: 'Poland', city: 'Lodz' }
-).group(value => value.country, value => value.city).dump().run();
-// next ["Belarus", {{"Brest" => Array[1]}, {"Minsk" => Array[1]}, {"Grodno" => Array[1]}}]
-// next ["Poland", {{"Krakow" => Array[1]}, {"Lodz" => Array[1]}}]
-// done
-*/
-function group(...selectors) {
-  return this.chain(groupOperator(selectors));
 }
 /**
 @alias Aeroflow#flatten
@@ -279,6 +273,28 @@ aeroflow(new Promise(resolve => setTimeout(() => resolve(() => [1, 2]), 500))).f
 */
 function flatten(depth) {
   return this.chain(flattenOperator(depth));
+}
+/*
+@alias Aeroflow#group
+
+@example
+aeroflow.range(1, 10).group(value => (value % 2) ? 'odd' : 'even').dump().run();
+// next ["odd", Array[5]]
+// next ["even", Array[5]]
+// done true
+aeroflow(
+  { country: 'Belarus', city: 'Brest' },
+  { country: 'Poland', city: 'Krakow' },
+  { country: 'Belarus', city: 'Minsk' },
+  { country: 'Belarus', city: 'Grodno' },
+  { country: 'Poland', city: 'Lodz' }
+).group(value => value.country, value => value.city).dump().run();
+// next ["Belarus", {{"Brest" => Array[1]}, {"Minsk" => Array[1]}, {"Grodno" => Array[1]}}]
+// next ["Poland", {{"Krakow" => Array[1]}, {"Lodz" => Array[1]}}]
+// done
+*/
+function group(...selectors) {
+  return this.chain(groupOperator(selectors));
 }
 /**
 aeroflow(1, 2).map('test').dump().run();
@@ -438,17 +454,10 @@ function run(next, done, data) {
     data: { value: data },
     flow: { value: this }
   });
-  setImmediate(() => {
-    try {
-      context.flow.emitter(
-        result => false !== next(result, data),
-        result => done(result, data),
-        context);
-    }
-    catch(err) {
-      done(toError(err), data);
-    }  
-  });
+  setImmediate(() => context.flow.emitter(
+    result => false !== next(result, data),
+    result => done(result, data),
+    context));
   return this;
 }
 /**
@@ -524,6 +533,9 @@ aeroflow.range(1, 3).some(2).dump().run();
 aeroflow.range(1, 3).some(value => value % 2).dump().run();
 // next true
 // done
+aeroflow(1, 2).some(value => { throw new Error }).dump().run();
+// done Error(…)
+// Uncaught Error
 */
 function some(condition) {
   return this.chain(someOperator(condition));
@@ -699,7 +711,12 @@ function emit(next, done, context) {
   let index = -1;
   !function proceed(result) {
     if (result !== true || ++index >= limit) done(result);
-    else adapterEmitter(sources[index], true)(next, proceed, context);
+    else try {
+      adapterEmitter(sources[index], true)(next, proceed, context);
+    }
+    catch (err) {
+      done(err);
+    }
   }(true);
 }
 
@@ -721,6 +738,9 @@ aeroflow(1, [2, 3], () => 4, new Promise(resolve => setTimeout(() => resolve(5),
 // next 4
 // next 5 // after 500ms
 // done true
+aeroflow(() => { throw new Error }).dump().run();
+// done Error(…)
+// Uncaught Error
 */
 export default function aeroflow(...sources) {
   return new Aeroflow(emit, sources);
