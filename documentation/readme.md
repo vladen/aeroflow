@@ -13,8 +13,6 @@
 <dt><a href="#aeroflow">aeroflow(sources)</a></dt>
 <dd><p>Creates new flow emitting values from all provided data sources.</p>
 </dd>
-<dt><a href="#flatten">flatten()</a></dt>
-<dd></dd>
 <dt><a href="#map">map()</a></dt>
 <dd><p>aeroflow(1, 2).map(&#39;test&#39;).dump().run();
 // next test
@@ -25,8 +23,6 @@ aeroflow(1, 2).map(value =&gt; value * 10).dump().run();
 // next 20
 // done true</p>
 </dd>
-<dt><a href="#sort">sort()</a></dt>
-<dd></dd>
 <dt><a href="#toString">toString()</a></dt>
 <dd></dd>
 </dl>
@@ -40,12 +36,14 @@ Aeroflow class.
 
 * [Aeroflow](#Aeroflow)
     * [.append([...sources])](#Aeroflow+append) ⇒ <code>[Aeroflow](#Aeroflow)</code>
+    * [.average()](#Aeroflow+average)
     * [.bind()](#Aeroflow+bind)
     * [.count()](#Aeroflow+count)
     * [.delay([interval])](#Aeroflow+delay)
     * [.dump([prefix], [logger])](#Aeroflow+dump)
     * [.every([predicate])](#Aeroflow+every) ⇒ <code>[Aeroflow](#Aeroflow)</code>
     * [.filter([predicate])](#Aeroflow+filter) ⇒ <code>[Aeroflow](#Aeroflow)</code>
+    * [.flatten()](#Aeroflow+flatten)
     * [.max()](#Aeroflow+max) ⇒
     * [.mean()](#Aeroflow+mean) ⇒
     * [.min()](#Aeroflow+min) ⇒
@@ -54,7 +52,9 @@ Aeroflow class.
     * [.reverse()](#Aeroflow+reverse)
     * [.run([next], [done], [data])](#Aeroflow+run)
     * [.skip([condition])](#Aeroflow+skip) ⇒ <code>[Aeroflow](#Aeroflow)</code>
+    * [.slice()](#Aeroflow+slice)
     * [.some([predicate])](#Aeroflow+some) ⇒ <code>[Aeroflow](#Aeroflow)</code>
+    * [.sort()](#Aeroflow+sort)
     * [.tap([callback])](#Aeroflow+tap)
     * [.toArray()](#Aeroflow+toArray) ⇒ <code>[Aeroflow](#Aeroflow)</code>
     * [.toMap([keyTransformation], [valueTransformation])](#Aeroflow+toMap) ⇒ <code>[Aeroflow](#Aeroflow)</code>
@@ -81,6 +81,11 @@ aeroflow(1).append(2, [3, 4], new Promise(resolve => setTimeout(() => resolve(5)
 // next 5 // after 500ms
 // done
 ```
+<a name="Aeroflow+average"></a>
+### aeroflow.average()
+**Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
+**Params**
+
 <a name="Aeroflow+bind"></a>
 ### aeroflow.bind()
 **Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
@@ -210,6 +215,29 @@ aeroflow('a', 'b', 'a').filter(/a/).dump().run();
 aeroflow(1, 2, 3, 4, 5).filter(value => (value % 2) === 0).dump().run();
 // next 2
 // next 4
+// done true
+```
+<a name="Aeroflow+flatten"></a>
+### aeroflow.flatten()
+**Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
+**Params**
+
+**Example**  
+```js
+aeroflow([[1, 2]]).flatten().dump().run();
+// next 1
+// next 2
+// done true
+aeroflow(() => [[1], [2]]).flatten(1).dump().run();
+// next [1]
+// next [2]
+// done true
+aeroflow(new Promise(resolve => setTimeout(() => resolve(() => [1, 2]), 500))).flatten().dump().run();
+// next 1 // after 500ms
+// next 2
+// done true
+aeroflow(new Promise(resolve => setTimeout(() => resolve(() => [1, 2]), 500))).flatten(1).dump().run();
+// next [1, 2]
 // done true
 ```
 <a name="Aeroflow+max"></a>
@@ -373,6 +401,25 @@ aeroflow([1, 2, 3]).skip(value => value < 3).dump().run();
 // next 3
 // done
 ```
+<a name="Aeroflow+slice"></a>
+### aeroflow.slice()
+**Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
+**Params**
+
+**Example**  
+```js
+aeroflow(1, 2, 3).slice(1).dump().run();
+// next 2
+// next 3
+// done true
+aeroflow(1, 2, 3).slice(1, 1).dump().run();
+// next 2
+// done false
+aeroflow(1, 2, 3).slice(-3, -1).dump().run();
+// next 1
+// next 2
+// done true
+```
 <a name="Aeroflow+some"></a>
 ### aeroflow.some([predicate]) ⇒ <code>[Aeroflow](#Aeroflow)</code>
 Tests whether some value emitted by this flow passes the predicate test,
@@ -395,6 +442,37 @@ aeroflow.range(1, 3).some(2).dump().run();
 aeroflow.range(1, 3).some(value => value % 2).dump().run();
 // next true
 // done
+```
+<a name="Aeroflow+sort"></a>
+### aeroflow.sort()
+**Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
+**Params**
+
+**Example**  
+```js
+aeroflow(3, 2, 1).sort().dump().run();
+// next 1
+// next 2
+// next 3
+// done true
+aeroflow(1, 2, 3).sort('desc').dump().run();
+// next 3
+// next 2
+// next 1
+// done true
+aeroflow(
+  { country: 'Belarus', city: 'Brest' },
+  { country: 'Poland', city: 'Krakow' },
+  { country: 'Belarus', city: 'Minsk' },
+  { country: 'Belarus', city: 'Grodno' },
+  { country: 'Poland', city: 'Lodz' }
+).sort(value => value.country, value => value.city, 'desc').dump().run();
+// next Object {country: "Belarus", city: "Minsk"}
+// next Object {country: "Belarus", city: "Grodno"}
+// next Object {country: "Belarus", city: "Brest"}
+// next Object {country: "Poland", city: "Lodz"}
+// next Object {country: "Poland", city: "Krakow"}
+// done true
 ```
 <a name="Aeroflow+tap"></a>
 ### aeroflow.tap([callback])
@@ -651,29 +729,6 @@ aeroflow.timer(index => 500 + index * 500).take(3).dump().run();
 // next Wed Feb 03 2016 02:37:38 ... // after 1500ms
 // done false
 ```
-<a name="flatten"></a>
-## flatten()
-**Kind**: global function  
-**Params**
-
-**Example**  
-```js
-aeroflow([[1, 2]]).flatten().dump().run();
-// next 1
-// next 2
-// done true
-aeroflow(() => [[1], [2]]).flatten(1).dump().run();
-// next [1]
-// next [2]
-// done true
-aeroflow(new Promise(resolve => setTimeout(() => resolve(() => [1, 2]), 500))).flatten().dump().run();
-// next 1 // after 500ms
-// next 2
-// done true
-aeroflow(new Promise(resolve => setTimeout(() => resolve(() => [1, 2]), 500))).flatten(1).dump().run();
-// next [1, 2]
-// done true
-```
 <a name="map"></a>
 ## map()
 aeroflow(1, 2).map('test').dump().run();
@@ -688,37 +743,6 @@ aeroflow(1, 2).map(value => value * 10).dump().run();
 **Kind**: global function  
 **Params**
 
-<a name="sort"></a>
-## sort()
-**Kind**: global function  
-**Params**
-
-**Example**  
-```js
-aeroflow(3, 2, 1).sort().dump().run();
-// next 1
-// next 2
-// next 3
-// done true
-aeroflow(1, 2, 3).sort('desc').dump().run();
-// next 3
-// next 2
-// next 1
-// done true
-aeroflow(
-  { country: 'Belarus', city: 'Brest' },
-  { country: 'Poland', city: 'Krakow' },
-  { country: 'Belarus', city: 'Minsk' },
-  { country: 'Belarus', city: 'Grodno' },
-  { country: 'Poland', city: 'Lodz' }
-).sort(value => value.country, value => value.city, 'desc').dump().run();
-// next Object {country: "Belarus", city: "Minsk"}
-// next Object {country: "Belarus", city: "Grodno"}
-// next Object {country: "Belarus", city: "Brest"}
-// next Object {country: "Poland", city: "Lodz"}
-// next Object {country: "Poland", city: "Krakow"}
-// done true
-```
 <a name="toString"></a>
 ## toString()
 **Kind**: global function  

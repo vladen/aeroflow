@@ -15,6 +15,7 @@ import { rangeEmitter } from './emitters/range';
 import { repeatEmitter } from './emitters/repeat';
 import { timerEmitter } from './emitters/timer';
 
+import { averageOperator } from './operators/average';
 import { countOperator } from './operators/count';
 import { delayOperator } from './operators/delay';
 import { dumpOperator } from './operators/dump';
@@ -29,6 +30,7 @@ import { minOperator } from './operators/min';
 import { reduceOperator } from './operators/reduce';
 import { reverseOperator } from './operators/reverse';
 import { skipOperator } from './operators/skip';
+import { sliceOperator } from './operators/slice';
 import { someOperator } from './operators/some';
 import { sortOperator } from './operators/sort';
 import { sumOperator } from './operators/sum';
@@ -75,6 +77,12 @@ aeroflow(1).append(2, [3, 4], new Promise(resolve => setTimeout(() => resolve(5)
 */
 function append(...sources) {
   return new Aeroflow(this.emitter, this.sources.concat(sources));
+}
+/**
+@alias Aeroflow#average
+*/
+function average() {
+  return this.chain(averageOperator());
 }
 /**
 @alias Aeroflow#bind
@@ -250,6 +258,8 @@ function group(...selectors) {
   return this.chain(groupOperator(selectors));
 }
 /**
+@alias Aeroflow#flatten
+
 @example
 aeroflow([[1, 2]]).flatten().dump().run();
 // next 1
@@ -474,6 +484,26 @@ function skip(condition) {
   return this.chain(skipOperator(condition));
 }
 /**
+@alias Aeroflow#slice
+
+@example
+aeroflow(1, 2, 3).slice(1).dump().run();
+// next 2
+// next 3
+// done true
+aeroflow(1, 2, 3).slice(1, 1).dump().run();
+// next 2
+// done false
+aeroflow(1, 2, 3).slice(-3, -1).dump().run();
+// next 1
+// next 2
+// done true
+*/
+function slice(start, end) {
+  return this.chain(sliceOperator(start, end));
+}
+
+/**
 Tests whether some value emitted by this flow passes the predicate test,
 returns flow emitting true if the predicate returns true for any emitted value; otherwise, false.
 
@@ -499,6 +529,8 @@ function some(condition) {
   return this.chain(someOperator(condition));
 }
 /**
+@alias Aeroflow#sort
+
 @example
 aeroflow(3, 2, 1).sort().dump().run();
 // next 1
@@ -627,6 +659,7 @@ function toString(condition, optional) {
   return this.chain(toStringOperator(condition, optional)); 
 }
 const operators = objectCreate(Object[PROTOTYPE], {
+  average: { value: average, writable: true },
   count: { value: count, writable: true },
   delay: { value: delay, writable: true },
   dump: { value: dump, writable: true },
@@ -641,6 +674,7 @@ const operators = objectCreate(Object[PROTOTYPE], {
   reduce: { value: reduce, writable: true },
   reverse: { value: reverse, writable: true },
   skip: { value: skip, writable: true },
+  slice: { value: slice, writable: true },
   some: { value: some, writable: true },
   sort: { value: sort, writable: true },
   sum: { value: sum, writable: true },

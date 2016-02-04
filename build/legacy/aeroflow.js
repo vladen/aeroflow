@@ -408,6 +408,14 @@
     } : isUndefined(seed) ? reduceAlongOperator(reducer) : optional ? reduceOptionalOperator(reducer, seed) : reduceGeneralOperator(reducer, seed);
   }
 
+  function averageOperator() {
+    var count = 0;
+    return reduceGeneralOperator(function (result, value) {
+      count++;
+      return (result * (count - 1) + value) / count;
+    }, 0);
+  }
+
   function countOperator(optional) {
     var reducer = optional ? reduceOptionalOperator : reduceGeneralOperator;
     return reducer(function (result) {
@@ -753,6 +761,37 @@
     }
   }
 
+  function sliceFromStartOperator(begin, end) {
+    return function (emitter) {
+      return function (next, done, context) {
+        var index = -1;
+        emitter(function (value) {
+          return ++index < begin || index <= end && next(value);
+        }, done, context);
+      };
+    };
+  }
+
+  function sliceFromEndOperator(begin, end) {
+    return function (emitter) {
+      return function (next, done, context) {
+        var array = undefined;
+        toArrayOperator()(emitter)(function (result) {
+          array = result;
+          return false;
+        }, function (result) {
+          if (isError$1(result)) done(result);else arrayEmitter$1(array.slice(begin, end))(next, done, context);
+        }, context);
+      };
+    };
+  }
+
+  function sliceOperator(begin, end) {
+    begin = toNumber(begin, 0);
+    end = toNumber(end, maxInteger);
+    return begin < 0 || end < 0 ? sliceFromEndOperator(begin, end) : sliceFromStartOperator(begin, end);
+  }
+
   function someOperator(condition) {
     var predicate = undefined;
 
@@ -983,6 +1022,10 @@
     return new Aeroflow(this.emitter, this.sources.concat(sources));
   }
 
+  function average() {
+    return this.chain(averageOperator());
+  }
+
   function bind() {
     for (var _len3 = arguments.length, sources = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
       sources[_key3] = arguments[_key3];
@@ -1090,6 +1133,10 @@
     return this.chain(skipOperator(condition));
   }
 
+  function slice(start, end) {
+    return this.chain(sliceOperator(start, end));
+  }
+
   function some(condition) {
     return this.chain(someOperator(condition));
   }
@@ -1131,6 +1178,10 @@
   }
 
   var operators = objectCreate(Object[PROTOTYPE], {
+    average: {
+      value: average,
+      writable: true
+    },
     count: {
       value: count,
       writable: true
@@ -1185,6 +1236,10 @@
     },
     skip: {
       value: skip,
+      writable: true
+    },
+    slice: {
+      value: slice,
       writable: true
     },
     some: {
