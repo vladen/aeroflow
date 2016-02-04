@@ -3,5 +3,8 @@
 import { reduceAlongOperator } from './reduce';
 
 export function maxOperator () {
-  return reduceAlongOperator((maximum, value) => value > maximum ? value : maximum);
+  return reduceAlongOperator(
+    (maximum, value) => value > maximum
+      ? value
+      : maximum);
 }

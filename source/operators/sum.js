@@ -1,7 +1,7 @@
 'use strict';
 
-import { reduceGeneralOperator } from './reduce';
+import { reduceAlongOperator } from './reduce';
 
 export function sumOperator() {
-  return reduceGeneralOperator((result, value) => result + value, 0);
+  return reduceAlongOperator((result, value) => result + value);
 }

@@ -421,7 +421,7 @@
           reduced = reducer(reduced, result, index++, context.data);
           return true;
         }, function (result) {
-          if (isError$1(error) || empty || !unsync$1(next(reduced), tie(done, result), done)) done(result);
+          if (isError$1(result) || empty || !unsync$1(next(reduced), tie(done, result), done)) done(result);
         }, context);
       };
     };
@@ -434,11 +434,9 @@
   }
 
   function averageOperator() {
-    var count = 0;
-    return reduceGeneralOperator(function (result, value) {
-      count++;
-      return (result * (count - 1) + value) / count;
-    }, 0);
+    return reduceAlongOperator(function (result, value, index) {
+      return (result * index + value) / (index + 1);
+    });
   }
 
   function catchOperator(alternative) {
@@ -974,9 +972,9 @@
   }
 
   function sumOperator() {
-    return reduceGeneralOperator(function (result, value) {
+    return reduceAlongOperator(function (result, value) {
       return result + value;
-    }, 0);
+    });
   }
 
   function takeFirstOperator(count) {
@@ -1312,8 +1310,8 @@
     return this.chain(toSetOperator());
   }
 
-  function toString(condition, optional) {
-    return this.chain(toStringOperator(condition, optional));
+  function toString(separator, optional) {
+    return this.chain(toStringOperator(separator, optional));
   }
 
   var operators = objectCreate(Object[PROTOTYPE], {
@@ -1469,7 +1467,7 @@
     return new Aeroflow(customEmitter(emitter));
   }
 
-  function error$1(message) {
+  function error(message) {
     return new Aeroflow(errorEmitter(message));
   }
 
@@ -1511,7 +1509,7 @@
       value: new Aeroflow(emptyEmitter())
     },
     error: {
-      value: error$1
+      value: error
     },
     expand: {
       value: expand
