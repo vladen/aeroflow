@@ -297,9 +297,6 @@ aeroflow(
 function group(...selectors) {
   return this.chain(groupOperator(selectors));
 }
-function join(flow, predicate) {
-  return this.chain(joinOperator(flow, predicate));
-}
 /**
 aeroflow(1, 2).map('test').dump().run();
 // next test
@@ -310,7 +307,6 @@ aeroflow(1, 2).map(value => value * 10).dump().run();
 // next 20
 // done true
 */
-
 function map(mapping) {
   return this.chain(mapOperator(mapping));
 }
