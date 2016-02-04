@@ -17,7 +17,7 @@
         value: true
     });
 
-    var staticFactory = function staticFactory(aeroflow, assert) {
+    var staticMethodsTests = function staticMethodsTests(aeroflow, assert) {
         return describe('aeroflow', function () {
             it('is function', function () {
                 return assert.isFunction(aeroflow);
@@ -300,7 +300,7 @@
     };
 
     var aeroflow = function aeroflow(_aeroflow, assert) {
-        staticFactory(_aeroflow, assert);
+        staticMethodsTests(_aeroflow, assert);
     };
 
     exports.default = aeroflow;

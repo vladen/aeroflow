@@ -2,7 +2,6 @@
 
 export default (aeroflow, assert) => describe('aeroflow', () => {
 
-
     it('is function', () => 
         assert.isFunction(aeroflow));
 

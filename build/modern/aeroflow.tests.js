@@ -4,8 +4,7 @@
     (global.aeroflowTests = factory());
 }(this, function () { 'use strict';
 
-    var staticFactory = (aeroflow, assert) => describe('aeroflow', () => {
-
+    var staticMethodsTests = (aeroflow, assert) => describe('aeroflow', () => {
 
         it('is function', () => 
             assert.isFunction(aeroflow));
@@ -318,7 +317,7 @@
     });
 
     var aeroflow = (aeroflow, assert) => {
-        staticFactory(aeroflow, assert);
+        staticMethodsTests(aeroflow, assert);
     };
 
     return aeroflow;

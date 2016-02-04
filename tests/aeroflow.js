@@ -1,7 +1,7 @@
 'use strict';
 
-import staticFactory from './staticFactory.js'
+import staticMethodsTests from './staticMethods.js'
 
 export default (aeroflow, assert) => {
-    staticFactory(aeroflow, assert);
+    staticMethodsTests(aeroflow, assert);
 };
