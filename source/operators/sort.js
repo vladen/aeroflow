@@ -39,20 +39,8 @@ export function sortOperator(parameters) {
       return result;
     }
     : (left, right) => compare(left, right, direction);
-  return emitter => (next, done, context) => {
-    let array;
-    toArrayOperator()(emitter)(
-      result => {
-        array = result;
-        return true;
-      },
-      result => {
-        if (isError(result)) done(result);
-        else {
-          array.sort(comparer);
-          arrayEmitter(array)(next, done, context);
-        }
-      },
-      context);
-  };
+  return emitter => (next, done, context) => toArrayOperator()(emitter)(
+    result => new Promise(resolve => arrayEmitter(result.sort(comparer))(next, resolve, context)),
+    done,
+    context);
 }

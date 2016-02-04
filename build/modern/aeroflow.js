@@ -8,6 +8,7 @@
   const ARRAY = 'Array';
   const BOOLEAN = 'Boolean';
   const CLASS = Symbol.toStringTag;
+  const CONTEXT = 'Aeroflow.Context';
   const DATE = 'Date';
   const ERROR = 'Error';
   const FUNCTION = 'Function';
@@ -21,6 +22,8 @@
   const SYMBOL = 'Symbol';
   const UNDEFINED = 'Undefined';
 
+  const primitives = new Set([BOOLEAN, DATE, ERROR, NULL, NUMBER, REGEXP, STRING, SYMBOL, UNDEFINED]);
+
   const dateNow = Date.now;
   const mathFloor = Math.floor;
   const mathPow = Math.pow;
@@ -29,6 +32,7 @@
   const maxInteger = Number.MAX_SAFE_INTEGER;
   const objectCreate = Object.create;
   const objectDefineProperties = Object.defineProperties;
+  const objectDefineProperty = Object.defineProperty;
   const objectToString = Object.prototype.toString;
 
   const compare = (left, right, direction) => left < right
@@ -62,6 +66,16 @@
   const toError = value => isError$1(value)
     ? value
     : new Error(value);
+
+  class Context {
+    constructor(data, flow) {
+      objectDefineProperties(this, {
+        data: { value: data },
+        flow: { value: flow }
+      });
+    }
+  }
+  objectDefineProperty(Context[PROTOTYPE], CLASS, { value: CONTEXT });
 
   function emptyEmitter() {
     return (next, done) => done();
@@ -101,9 +115,7 @@
     return (next, done, context) => {
       let index = -1;
       !function proceed() {
-        while (++index < source.length)
-          if (unsync$1(next(source[index]), proceed, done))
-            return;
+        while (++index < source.length) if (unsync$1(next(source[index]), proceed, done)) return;
         done(true);
       }();
     };
@@ -130,6 +142,10 @@
     [PROMISE]: { value: promiseEmitter, writable: true }
   });
 
+  function aeroflowEmitter(source) {
+    return (next, done, context) => source.emitter(next, done, new Context(context.data, source));
+  }
+
   function iterableEmitter(source) {
     return (next, done, context) => {
       let iteration, iterator = iterator = source[ITERATOR]();
@@ -142,19 +158,13 @@
     };
   }
 
-  const primitives = new Set([BOOLEAN, NULL, NUMBER, STRING, SYMBOL, UNDEFINED]);
-
   function adapterEmitter(source, scalar) {
     const cls = classOf(source);
-    if (cls === AEROFLOW)
-      return source.emitter;
+    if (cls === AEROFLOW) return aeroflowEmitter(source);
     const adapter = adapters[cls];
-    if (isFunction(adapter))
-      return adapter(source);
-    if (!primitives.has(cls) && ITERATOR in source)
-      return iterableEmitter(source);
-    if (scalar)
-      return scalarEmitter(source);
+    if (isFunction(adapter)) return adapter(source);
+    if (!primitives.has(cls) && ITERATOR in source) return iterableEmitter(source);
+    if (scalar) return scalarEmitter(source);
   }
 
   function customEmitter(emitter) {
@@ -563,8 +573,7 @@
           return true;
         },
         result => {
-          if (isError$1(result) || !unsync$1(next(array), tie(done, result), done)) 
-            done(result);
+          if (isError$1(result) || !unsync$1(next(array), tie(done, result), done)) done(result);
         },
         context);
     };
@@ -572,10 +581,10 @@
 
   function meanOperator() {
     return emitter => (next, done, context) => toArrayOperator()(emitter)(
-      values => {
-        if (!values.length) return;
-        values.sort();
-        next(values[mathFloor(values.length / 2)]);
+      result => {
+        if (!result.length) return true;
+        result.sort();
+        return next(result[mathFloor(result.length / 2)]);
       },
       done,
       context);
@@ -587,10 +596,7 @@
 
   function reverseOperator() {
     return emitter => (next, done, context) => toArrayOperator()(emitter)(
-      value => {
-        for (let index = value.length; index--;) next(value[index]);
-        return false;
-      },
+      result => next(result.reverse()),
       done,
       context);
   }
@@ -756,22 +762,10 @@
         return result;
       }
       : (left, right) => compare(left, right, direction);
-    return emitter => (next, done, context) => {
-      let array;
-      toArrayOperator()(emitter)(
-        result => {
-          array = result;
-          return true;
-        },
-        result => {
-          if (isError$1(result)) done(result);
-          else {
-            array.sort(comparer);
-            arrayEmitter$1(array)(next, done, context);
-          }
-        },
-        context);
-    };
+    return emitter => (next, done, context) => toArrayOperator()(emitter)(
+      result => new Promise(resolve => arrayEmitter$1(result.sort(comparer))(next, resolve, context)),
+      done,
+      context);
   }
 
   function sumOperator() {
@@ -789,19 +783,11 @@
   }
 
   function takeLastOperator(count) {
-    return emitter => (next, done, context) => {
-      let array;
-      toArrayOperator()(emitter)(
-        result => {
-          array = result;
-          return false;
-        },
-        result => {
-          if (isError(result)) done(result);
-          else arrayEmitter(array)(next, done, context);
-        }, 
-        context);
-    };
+    return emitter => (next, done, context) => toArrayOperator()(emitter)(
+      result => new Promise(resolve =>
+        arrayEmitter$1(result.slice(mathMax(result.length - count, 0)))(next, resolve, context)),
+      done, 
+      context);
   }
 
   function takeWhileOperator(predicate) {
@@ -867,8 +853,7 @@
           return true;
         },
         result => {
-          if (isError$1(result) || !desync(next(map), tie(done, result), done))
-            done(result);
+          if (isError$1(result) || !desync(next(map), tie(done, result), done)) done(result);
         },
         context);
     };
@@ -883,8 +868,7 @@
           return true;
         },
         result => {
-          if (isError$1(result) || !unsync$1(next(set), tie(done, result), done))
-            done(result);
+          if (isError$1(result) || !unsync$1(next(set), tie(done, result), done)) done(result);
         },
         context);
     };
@@ -1311,14 +1295,49 @@
   // done Error: test(…)
    */
   function run(next, done, data) {
-    if (!isFunction(done)) done = result => {
-      if (isError$1(result)) throw result;
-    };
-    if (!isFunction(next)) next = noop;
-    const context = objectDefineProperties({}, {
-      data: { value: data },
-      flow: { value: this }
-    });
+    if (isFunction(next)) {
+      if (!isFunction(done)) done = result => {
+        if (isError$1(result)) throw result;
+      };
+    }
+    else if (primitives.has(classOf(next))) data = next;
+    else if (isFunction(next.dispatchEvent)) {
+      const target = next;
+      data = done;
+      done = result => {
+        target.dispatchEvent(new CustomEvent('done', { detail: result }));
+        return true;
+      };
+      next = result => {
+        target.dispatchEvent(new CustomEvent('next', { detail: result }));
+        return true;
+      };
+    }
+    else if (isFunction(next.emit)) {
+      const emitter = next;
+      data = done;
+      done = result => {
+        emitter.emit('done', result);
+        return true;
+      };
+      next = result => {
+        emitter.emit('next', result);
+        return true;
+      };
+    }
+    else if (isFunction(next.onNext) && isFunction(next.onError) && isFunction(next.onCompleted)) {
+      const observer = next;
+      data = done;
+      done = result => {
+        (isError$1(result) ? observer.onError : observer.onCompleted)(result);
+        return true;
+      };
+      next = result => {
+        observer.onNext(result);
+        return true;
+      };
+    }
+    const context = new Context(data, this);
     setImmediate(() => context.flow.emitter(
       result => false !== next(result, data),
       result => done(result, data),
@@ -1440,11 +1459,26 @@
   @alias Aeroflow#sum
 
   @example
-  aeroflow([1, 2, 3]).sum().dump().run();
+  aeroflow(1, 2, 3).sum().dump().run();
+  // next 6
+  // done true
   */
   function sum() {
     return this.chain(sumOperator());
   }
+  /*
+  @alias Aeroflow#take
+
+  @example
+  aeroflow(1, 2, 3).take(2).dump().run();
+  // next 1
+  // next 2
+  // done false
+  aeroflow(1, 2, 3).take(-2).dump().run();
+  // next 2
+  // next 3
+  // done true
+  */
   function take(condition) {
     return this.chain(takeOperator(condition));
   }

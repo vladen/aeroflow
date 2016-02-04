@@ -4,6 +4,7 @@ export const AEROFLOW = 'Aeroflow';
 export const ARRAY = 'Array';
 export const BOOLEAN = 'Boolean';
 export const CLASS = Symbol.toStringTag;
+export const CONTEXT = 'Aeroflow.Context';
 export const DATE = 'Date';
 export const ERROR = 'Error';
 export const FUNCTION = 'Function';
