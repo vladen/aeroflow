@@ -18,6 +18,7 @@ import { repeatEmitter } from './emitters/repeat';
 import { timerEmitter } from './emitters/timer';
 
 import { averageOperator } from './operators/average';
+import { catchOperator } from './operators/catch';
 import { countOperator } from './operators/count';
 import { delayOperator } from './operators/delay';
 import { dumpOperator } from './operators/dump';
@@ -30,6 +31,7 @@ import { maxOperator } from './operators/max';
 import { meanOperator } from './operators/mean';
 import { minOperator } from './operators/min';
 import { reduceOperator } from './operators/reduce';
+import { retryOperator } from './operators/retry';
 import { reverseOperator } from './operators/reverse';
 import { skipOperator } from './operators/skip';
 import { sliceOperator } from './operators/slice';
@@ -103,6 +105,18 @@ aeroflow([1, 2, 3]).dump().bind([4, 5, 6]).run();
 */
 function bind(...sources) {
   return new Aeroflow(this.emitter, sources);
+}
+/**
+@alias Aeroflow#catch
+
+@example
+aeroflow.error('error').dump('before ').catch('success').dump('after ').run();
+// before done Error: error(…)
+// after next success
+// after done true
+*/
+function catch_(alternative) {
+  return this.chain(catchOperator(alternative));
 }
 function chain(operator) {
   return new Aeroflow(operator(this.emitter), this.sources);
@@ -406,18 +420,35 @@ function reduce(reducer, seed, optional) {
 /**
 @alias Aeroflow#reverse
 
- @example
- aeroflow(1, 2, 3).reverse().dump().run()
- // next 3
- // next 2
- // next 1
- // done
- aeroflow.range(1, 3).reverse().dump().run()
- // next 3
- // next 2
- // next 1
- // done
- */
+@example
+var attempt = 0; aeroflow(() => {
+  if (attempt++ % 2) return 'success';
+  else throw new Error('error');
+}).dump('before ').retry().dump('after ').run();
+// before done Error: error(…)
+// before next success
+// after next success
+// before done true
+// after done true
+*/
+function retry(attempts) {
+  return this.chain(retryOperator(attempts));
+}
+/**
+@alias Aeroflow#reverse
+
+@example
+aeroflow(1, 2, 3).reverse().dump().run()
+// next 3
+// next 2
+// next 1
+// done
+aeroflow.range(1, 3).reverse().dump().run()
+// next 3
+// next 2
+// next 1
+// done
+*/
 function reverse() {
   return this.chain(reverseOperator());
 }
@@ -449,9 +480,12 @@ aeroflow(Promise.reject('test')).dump().run(() => {}, () => {});
  */
 function run(next, done, data) {
   if (isFunction(next)) {
-    if (!isFunction(done)) done = result => {
-      if (isError(result)) throw result;
-    };
+    if (!isFunction(done)) {
+      data = done;
+      done = result => {
+        if (isError(result)) throw result;
+      };
+    }
   }
   else if (primitives.has(classOf(next))) {
     data = next;
@@ -730,6 +764,7 @@ function toString(condition, optional) {
 }
 const operators = objectCreate(Object[PROTOTYPE], {
   average: { value: average, writable: true },
+  catch: { value: catch_, writable: true },
   count: { value: count, writable: true },
   delay: { value: delay, writable: true },
   dump: { value: dump, writable: true },
@@ -742,6 +777,7 @@ const operators = objectCreate(Object[PROTOTYPE], {
   mean: { value: mean, writable: true },
   min: { value: min, writable: true },
   reduce: { value: reduce, writable: true },
+  retry: { value: retry, writable: true },
   reverse: { value: reverse, writable: true },
   skip: { value: skip, writable: true },
   slice: { value: slice, writable: true },

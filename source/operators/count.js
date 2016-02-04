@@ -7,4 +7,4 @@ export function countOperator(optional) {
     ? reduceOptionalOperator
     : reduceGeneralOperator;
   return reducer(result => result + 1, 0);
-} 
+}

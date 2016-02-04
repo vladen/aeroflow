@@ -111,6 +111,10 @@
     };
   }
 
+  function aeroflowEmitter(source) {
+    return (next, done, context) => source.emitter(next, done, new Context(context.data, source));
+  }
+
   function arrayEmitter$1(source) {
     return (next, done, context) => {
       let index = -1;
@@ -137,14 +141,11 @@
   }
 
   const adapters = objectCreate(null, {
+    [AEROFLOW]: { value: aeroflowEmitter },
     [ARRAY]: { value: arrayEmitter$1, writable: true },
     [FUNCTION]: { value: functionEmitter, writable: true },
     [PROMISE]: { value: promiseEmitter, writable: true }
   });
-
-  function aeroflowEmitter(source) {
-    return (next, done, context) => source.emitter(next, done, new Context(context.data, source));
-  }
 
   function iterableEmitter(source) {
     return (next, done, context) => {
@@ -159,9 +160,7 @@
   }
 
   function adapterEmitter(source, scalar) {
-    const cls = classOf(source);
-    if (cls === AEROFLOW) return aeroflowEmitter(source);
-    const adapter = adapters[cls];
+    const cls = classOf(source), adapter = adapters[cls];
     if (isFunction(adapter)) return adapter(source);
     if (!primitives.has(cls) && ITERATOR in source) return iterableEmitter(source);
     if (scalar) return scalarEmitter(source);
@@ -350,6 +349,16 @@
     	count++;
       return (result * (count - 1) + value) / count;
     }, 0);
+  }
+
+  function catchOperator(alternative) {
+    return emitter => (next, done, context) => emitter(
+      next,
+      result => {
+        if (isError$1(result)) adapterEmitter(alternative, true)(next, done, context);
+        else done(result);
+      },
+      context);
   }
 
   function countOperator(optional) {
@@ -592,6 +601,22 @@
 
   function minOperator() {
     return reduceAlongOperator((minimum, value) => value < minimum ? value : minimum);
+  }
+
+  function retryOperator(attempts) {
+    attempts = toNumber(attempts, 1);
+    if (!attempts) return identity;
+    return emitter => (next, done, context) => {
+      let attempt = 0;
+      proceed();
+      function proceed() {
+        emitter(next, retry, context);
+      }
+      function retry(result) {
+        if (++attempt <= attempts && isError$1(result)) proceed();
+        else done(result);
+      };
+    }
   }
 
   function reverseOperator() {
@@ -951,6 +976,15 @@
   function bind(...sources) {
     return new Aeroflow(this.emitter, sources);
   }
+  /**
+  @alias Aeroflow#catch
+
+  @example
+
+  */
+  function catch_(alternative) {
+    return this.chain(catchOperator(alternative));
+  }
   function chain(operator) {
     return new Aeroflow(operator(this.emitter), this.sources);
   }
@@ -1253,18 +1287,30 @@
   /**
   @alias Aeroflow#reverse
 
-   @example
-   aeroflow(1, 2, 3).reverse().dump().run()
-   // next 3
-   // next 2
-   // next 1
-   // done
-   aeroflow.range(1, 3).reverse().dump().run()
-   // next 3
-   // next 2
-   // next 1
-   // done
-   */
+  @example
+  var attempt = 0; aeroflow(() => {
+    if (attempt++) return 'success';
+    else throw new Error('error');
+  }).dump().retry().dump().run();
+  */
+  function retry(attempts) {
+    return this.chain(retryOperator(attempts));
+  }
+  /**
+  @alias Aeroflow#reverse
+
+  @example
+  aeroflow(1, 2, 3).reverse().dump().run()
+  // next 3
+  // next 2
+  // next 1
+  // done
+  aeroflow.range(1, 3).reverse().dump().run()
+  // next 3
+  // next 2
+  // next 1
+  // done
+  */
   function reverse() {
     return this.chain(reverseOperator());
   }
@@ -1296,9 +1342,12 @@
    */
   function run(next, done, data) {
     if (isFunction(next)) {
-      if (!isFunction(done)) done = result => {
-        if (isError$1(result)) throw result;
-      };
+      if (!isFunction(done)) {
+        data = done;
+        done = result => {
+          if (isError$1(result)) throw result;
+        };
+      }
     }
     else if (primitives.has(classOf(next))) {
       data = next;
@@ -1577,6 +1626,7 @@
   }
   const operators = objectCreate(Object[PROTOTYPE], {
     average: { value: average, writable: true },
+    catch: { value: catch_, writable: true },
     count: { value: count, writable: true },
     delay: { value: delay, writable: true },
     dump: { value: dump, writable: true },
@@ -1589,6 +1639,7 @@
     mean: { value: mean, writable: true },
     min: { value: min, writable: true },
     reduce: { value: reduce, writable: true },
+    retry: { value: retry, writable: true },
     reverse: { value: reverse, writable: true },
     skip: { value: skip, writable: true },
     slice: { value: slice, writable: true },

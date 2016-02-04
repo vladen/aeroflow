@@ -38,6 +38,7 @@ Aeroflow class.
     * [.append([...sources])](#Aeroflow+append) ⇒ <code>[Aeroflow](#Aeroflow)</code>
     * [.average()](#Aeroflow+average)
     * [.bind()](#Aeroflow+bind)
+    * [.catch()](#Aeroflow+catch)
     * [.count()](#Aeroflow+count)
     * [.delay([interval])](#Aeroflow+delay)
     * [.dump([prefix], [logger])](#Aeroflow+dump)
@@ -49,6 +50,7 @@ Aeroflow class.
     * [.min()](#Aeroflow+min) ⇒
     * [.prepend([...sources])](#Aeroflow+prepend)
     * [.reduce(reducer, initial)](#Aeroflow+reduce)
+    * [.reverse()](#Aeroflow+reverse)
     * [.reverse()](#Aeroflow+reverse)
     * [.run([next], [done], [data])](#Aeroflow+run)
     * [.skip([condition])](#Aeroflow+skip) ⇒ <code>[Aeroflow](#Aeroflow)</code>
@@ -103,6 +105,18 @@ aeroflow([1, 2, 3]).dump().bind([4, 5, 6]).run();
 // next 5
 // next 6
 // done true
+```
+<a name="Aeroflow+catch"></a>
+### aeroflow.catch()
+**Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
+**Params**
+
+**Example**  
+```js
+aeroflow.error('error').dump('before ').catch('success').dump('after ').run();
+// before done Error: error(…)
+// after next success
+// after done true
 ```
 <a name="Aeroflow+count"></a>
 ### aeroflow.count()
@@ -348,15 +362,32 @@ aeroflow(['a', 'b', 'c']).reduce((product, value, index) => product + value + in
 **Example**  
 ```js
 aeroflow(1, 2, 3).reverse().dump().run()
- // next 3
- // next 2
- // next 1
- // done
- aeroflow.range(1, 3).reverse().dump().run()
- // next 3
- // next 2
- // next 1
- // done
+// next 3
+// next 2
+// next 1
+// done
+aeroflow.range(1, 3).reverse().dump().run()
+// next 3
+// next 2
+// next 1
+// done
+```
+<a name="Aeroflow+reverse"></a>
+### aeroflow.reverse()
+**Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
+**Params**
+
+**Example**  
+```js
+var attempt = 0; aeroflow(() => {
+  if (attempt++ % 2) return 'success';
+  else throw new Error('error');
+}).dump('before ').retry().dump('after ').run();
+// before done Error: error(…)
+// before next success
+// after next success
+// before done true
+// after done true
 ```
 <a name="Aeroflow+run"></a>
 ### aeroflow.run([next], [done], [data])
