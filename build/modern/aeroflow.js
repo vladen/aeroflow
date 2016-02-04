@@ -1300,7 +1300,13 @@
         if (isError$1(result)) throw result;
       };
     }
-    else if (primitives.has(classOf(next))) data = next;
+    else if (primitives.has(classOf(next))) {
+      data = next;
+      next = noop;
+      done = result => {
+        if (isError$1(result)) throw result;
+      };
+    }
     else if (isFunction(next.dispatchEvent)) {
       const target = next;
       data = done;

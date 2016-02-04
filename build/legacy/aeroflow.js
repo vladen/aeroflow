@@ -1155,7 +1155,14 @@
       if (!isFunction(done)) done = function done(result) {
         if (isError$1(result)) throw result;
       };
-    } else if (primitives.has(classOf(next))) data = next;else if (isFunction(next.dispatchEvent)) {
+    } else if (primitives.has(classOf(next))) {
+      data = next;
+      next = noop;
+
+      done = function done(result) {
+        if (isError$1(result)) throw result;
+      };
+    } else if (isFunction(next.dispatchEvent)) {
       (function () {
         var target = next;
         data = done;
