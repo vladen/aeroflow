@@ -32,8 +32,7 @@
                         return result = value;
                     });
                     setImmediate(function () {
-                        assert.isUndefined(result);
-                        done();
+                        return done(assert.isUndefined(result));
                     });
                 });
             });
@@ -85,8 +84,7 @@
                             return actual = value;
                         });
                         setImmediate(function () {
-                            assert.strictEqual(actual, expected);
-                            done();
+                            return done(assert.strictEqual(actual, expected));
                         });
                     });
                 });
@@ -98,8 +96,7 @@
                             return actual = value;
                         });
                         setImmediate(function () {
-                            assert.strictEqual(actual, expected);
-                            done();
+                            return done(assert.strictEqual(actual, expected));
                         });
                     });
                 });

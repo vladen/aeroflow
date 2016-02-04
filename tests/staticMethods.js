@@ -13,10 +13,7 @@ export default (aeroflow, assert) => describe('aeroflow', () => {
             let result;
             aeroflow.empty
                     .run(value => result = value);
-            setImmediate(() => {
-                assert.isUndefined(result);
-                done();
-            });
+            setImmediate(() => done(assert.isUndefined(result)));
         });
     });
 
@@ -87,10 +84,7 @@ export default (aeroflow, assert) => describe('aeroflow', () => {
                 aeroflow.just(expected)
                         .run(value => actual = value );
                 
-                setImmediate(() => {
-                    assert.strictEqual(actual, expected);
-                    done();
-                });
+                setImmediate(() => done(assert.strictEqual(actual, expected)));
             });
         });
 
@@ -102,10 +96,7 @@ export default (aeroflow, assert) => describe('aeroflow', () => {
                 aeroflow.just(expected)
                         .run(value => actual = value );
 
-                setImmediate(() => {
-                    assert.strictEqual(actual, expected);
-                    done();
-                });
+                setImmediate(() => done(assert.strictEqual(actual, expected)));
             });
         });
     });
