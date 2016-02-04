@@ -45,6 +45,8 @@ const isUndefined = value => value === undefined;
 
 const tie = (func, ...args) => () => func(...args);
 
+const truthy = () => true;
+
 const toNumber = (value, def) => {
   if (!isNumber(value)) {
     value = +value;
@@ -530,24 +532,6 @@ function groupOperator(selectors) {
   };
 }
 
-function mapOperator(mapping) {
-  if (isUndefined(mapping)) return identity;
-  const mapper = isFunction(mapping)
-    ? mapping
-    : constant(mapping);
-  return emitter => (next, done, context) => {
-    let index = 0;
-    emitter(
-      value => next(mapper(value, index++, context.data)),
-      done,
-      context);
-  };
-}
-
-function maxOperator () {
-  return reduceAlongOperator((maximum, value) => value > maximum ? value : maximum);
-}
-
 function toArrayOperator() {
   return emitter => (next, done, context) => {
     let array = [];
@@ -562,6 +546,42 @@ function toArrayOperator() {
       },
       context);
   };
+}
+
+function mapOperator(mapping) {
+  if (isUndefined(mapping)) return identity;
+  const mapper = isFunction(mapping)
+    ? mapping
+    : constant(mapping);
+  return emitter => (next, done, context) => {
+    let index = 0;
+    emitter(
+      value => next(mapper(value, index++, context.data)),
+      done,
+      context);
+  };
+}
+
+function joinOperator(right, comparer) {
+  if (!isFunction(comparer)) comparer = truthy;
+  return emitter => (next, done, context) => toArrayOperator()(adapterEmitter(right, true))(
+    rightArray => new Promise(rightResolve => emitter(
+      leftResult => new Promise(leftResolve => {
+         const array = arrayEmitter$1(rightArray),
+          filter = filterOperator(rightResult => comparer(leftResult, rightResult)),
+          map = mapOperator(rightResult => [leftResult, rightResult]);
+        return map(filter(array))(next, leftResolve, context)
+      }
+      ),
+      rightResolve,
+      context)
+    ),
+    done,
+    context);
+}
+
+function maxOperator () {
+  return reduceAlongOperator((maximum, value) => value > maximum ? value : maximum);
 }
 
 function meanOperator() {
@@ -1155,6 +1175,9 @@ aeroflow(
 function group(...selectors) {
   return this.chain(groupOperator(selectors));
 }
+function join(flow, predicate) {
+  return this.chain(joinOperator(flow, predicate));
+}
 /**
 aeroflow(1, 2).map('test').dump().run();
 // next test
@@ -1165,6 +1188,7 @@ aeroflow(1, 2).map(value => value * 10).dump().run();
 // next 20
 // done true
 */
+
 function map(mapping) {
   return this.chain(mapOperator(mapping));
 }
@@ -1538,6 +1562,7 @@ const operators = objectCreate(Object[PROTOTYPE], {
   filter: { value: filter, writable: true },
   flatten: { value: flatten, writable: true },
   group: { value: group, writable: true },
+  join: { value: join, writable: true },
   map: { value: map, writable: true },
   max: { value: max, writable: true },
   mean: { value: mean, writable: true },

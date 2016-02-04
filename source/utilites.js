@@ -35,6 +35,8 @@ export const isUndefined = value => value === undefined;
 
 export const tie = (func, ...args) => () => func(...args);
 
+export const truthy = () => true;
+
 export const toNumber = (value, def) => {
   if (!isNumber(value)) {
     value = +value;

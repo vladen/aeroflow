@@ -111,6 +111,10 @@
     };
   };
 
+  var truthy = function truthy() {
+    return true;
+  };
+
   var toNumber = function toNumber(value, def) {
     if (!isNumber(value)) {
       value = +value;
@@ -637,6 +641,20 @@
     };
   }
 
+  function toArrayOperator() {
+    return function (emitter) {
+      return function (next, done, context) {
+        var array = [];
+        emitter(function (result) {
+          array.push(result);
+          return true;
+        }, function (result) {
+          if (isError$1(result) || !unsync$1(next(array), tie(done, result), done)) done(result);
+        }, context);
+      };
+    };
+  }
+
   function mapOperator(mapping) {
     if (isUndefined(mapping)) return identity;
     var mapper = isFunction(mapping) ? mapping : constant(mapping);
@@ -650,24 +668,34 @@
     };
   }
 
+  function joinOperator(right, comparer) {
+    if (!isFunction(comparer)) comparer = truthy;
+    return function (emitter) {
+      return function (next, done, context) {
+        return toArrayOperator()(adapterEmitter(right, true))(function (rightArray) {
+          return new Promise(function (rightResolve) {
+            return emitter(function (leftResult) {
+              return new Promise(function (leftResolve) {
+                var array = arrayEmitter$1(rightArray),
+                    filter = filterOperator(function (rightResult) {
+                  return comparer(leftResult, rightResult);
+                }),
+                    map = mapOperator(function (rightResult) {
+                  return [leftResult, rightResult];
+                });
+                return map(filter(array))(next, leftResolve, context);
+              });
+            }, rightResolve, context);
+          });
+        }, done, context);
+      };
+    };
+  }
+
   function maxOperator() {
     return reduceAlongOperator(function (maximum, value) {
       return value > maximum ? value : maximum;
     });
-  }
-
-  function toArrayOperator() {
-    return function (emitter) {
-      return function (next, done, context) {
-        var array = [];
-        emitter(function (result) {
-          array.push(result);
-          return true;
-        }, function (result) {
-          if (isError$1(result) || !unsync$1(next(array), tie(done, result), done)) done(result);
-        }, context);
-      };
-    };
   }
 
   function meanOperator() {
@@ -1073,6 +1101,10 @@
     return this.chain(groupOperator(selectors));
   }
 
+  function join(flow, predicate) {
+    return this.chain(joinOperator(flow, predicate));
+  }
+
   function map(mapping) {
     return this.chain(mapOperator(mapping));
   }
@@ -1207,6 +1239,10 @@
     },
     group: {
       value: group,
+      writable: true
+    },
+    join: {
+      value: join,
       writable: true
     },
     map: {

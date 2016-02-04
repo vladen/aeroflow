@@ -1,36 +1,26 @@
 'use strict';
 
-import { isError } from '../utilites';
+import { isError, isFunction, truthy} from '../utilites';
 import { arrayEmitter } from '../emitters/array';
 import { adapterEmitter } from '../emitters/adapter';
 import { toArrayOperator } from './toArray';
+import { filterOperator } from './filter';
+import { mapOperator } from './map';
 
-export function joinOperator(right, predicate) {
-  let array = [], source;
-
-  return emitter => (next, done, context) => {
-  let source, array = [];
-  var rightEmitter = adapterEmitter(right, true);
-  toArrayOperator()(rightEmitter)(
-      result => {
-        source = result;
-        return false;
-      },
-      result => {        
-        if (isError(result)) done(result);
-        else {          
-          context.flow.run(value => {
-              source
-                .filter(x => !predicate || predicate(x, value))
-                .map(x => array.push([x, value]));
-              }, 
-            () => { 
-              arrayEmitter(array)(next, done, context) 
-            }
-          );
-        }
-      },
-      context
-    );
-  }
+export function joinOperator(right, comparer) {
+  if (!isFunction(comparer)) comparer = truthy;
+  return emitter => (next, done, context) => toArrayOperator()(adapterEmitter(right, true))(
+    rightArray => new Promise(rightResolve => emitter(
+      leftResult => new Promise(leftResolve => {
+         const array = arrayEmitter(rightArray),
+          filter = filterOperator(rightResult => comparer(leftResult, rightResult)),
+          map = mapOperator(rightResult => [leftResult, rightResult]);
+        return map(filter(array))(next, leftResolve, context)
+      }
+      ),
+      rightResolve,
+      context)
+    ),
+    done,
+    context);
 }
