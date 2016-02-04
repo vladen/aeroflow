@@ -1,7 +1,7 @@
 'use strict';
 
 import { FUNCTION, REGEXP, UNDEFINED } from '../symbols';
-import { classOf, isUndefined } from '../utilites';
+import { classOf, isError } from '../utilites';
 
 export function someOperator(condition) {
   let predicate;

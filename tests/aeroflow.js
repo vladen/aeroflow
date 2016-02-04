@@ -1,3 +1,7 @@
 'use strict';
 
-export default (aeroflow, assert) => {};
+import staticMethodsTests from './staticMethods.js'
+
+export default (aeroflow, assert) => {
+    staticMethodsTests(aeroflow, assert);
+};

@@ -60,11 +60,15 @@
   var mathFloor = Math.floor;
   var mathPow = Math.pow;
   var mathRandom = Math.random;
-  var mathMax$1 = Math.max;
+  var mathMax = Math.max;
   var maxInteger = Number.MAX_SAFE_INTEGER;
   var objectCreate = Object.create;
   var objectDefineProperties = Object.defineProperties;
   var objectToString = Object.prototype.toString;
+
+  var compare = function compare(left, right, direction) {
+    return left < right ? -direction : left > right ? direction : 0;
+  };
 
   var constant = function constant(value) {
     return function () {
@@ -174,11 +178,7 @@
 
   function functionEmitter(source) {
     return function (next, done, context) {
-      try {
-        if (!unsync$1(next(source(context.data)), done, done)) done(true);
-      } catch (error) {
-        done(error);
-      }
+      if (!unsync$1(next(source(context.data)), done, done)) done(true);
     };
   }
 
@@ -195,26 +195,11 @@
   var adapters = objectCreate(null, (_objectCreate = {}, _defineProperty(_objectCreate, ARRAY, {
     value: arrayEmitter$1,
     writable: true
-  }), _defineProperty(_objectCreate, BOOLEAN, {
-    value: scalarEmitter,
-    writable: true
-  }), _defineProperty(_objectCreate, DATE, {
-    value: scalarEmitter,
-    writable: true
   }), _defineProperty(_objectCreate, FUNCTION, {
     value: functionEmitter,
     writable: true
-  }), _defineProperty(_objectCreate, NUMBER, {
-    value: scalarEmitter,
-    writable: true
   }), _defineProperty(_objectCreate, PROMISE, {
     value: promiseEmitter,
-    writable: true
-  }), _defineProperty(_objectCreate, REGEXP, {
-    value: scalarEmitter,
-    writable: true
-  }), _defineProperty(_objectCreate, STRING, {
-    value: scalarEmitter,
     writable: true
   }), _objectCreate));
 
@@ -291,7 +276,7 @@
       var index = 0,
           value = seed;
       !function proceed() {
-        while (!unsync$1(next(expander(value, index++, context.data))), proceed, done) {}
+        while (!unsync$1(next(value = expander(value, index++, context.data)), proceed, done)) {}
       }();
     };
   }
@@ -440,26 +425,33 @@
       return function (next, done, context) {
         var index = 0;
         return emitter(function (result) {
-          var interval = delayer(result, index++, context.data);
+          var delay = delayer(result, index++, context.data);
 
-          switch (classOf(interval)) {
+          switch (classOf(delay)) {
             case DATE:
-              interval = interval - dateNow();
+              delay = delay - dateNow();
               break;
 
             case NUMBER:
               break;
 
+            case ERROR:
+              return delay;
+
             default:
-              interval = +interval;
+              delay = +delay;
               break;
           }
 
-          if (interval < 0) interval = 0;
+          if (delay < 0) delay = 0;
           return new Promise(function (resolve, reject) {
             setTimeout(function () {
-              if (!unsync$1(next(result), resolve, reject)) resolve(true);
-            }, interval);
+              try {
+                if (!unsync$1(next(result), resolve, reject)) resolve(true);
+              } catch (error) {
+                reject(error);
+              }
+            }, delay);
           });
         }, done, context);
       };
@@ -580,6 +572,33 @@
         emitter(function (result) {
           return !predicate(result, index++, context.data) || next(result);
         }, done, context);
+      };
+    };
+  }
+
+  function flattenOperator(depth) {
+    depth = toNumber(depth, maxInteger);
+    if (depth < 1) return identity;
+    return function (emitter) {
+      return function (next, done, context) {
+        var level = 0;
+
+        var flatten = function flatten(result) {
+          if (level === depth) return next(result);
+          var adapter = adapterEmitter(result, false);
+
+          if (adapter) {
+            level++;
+            return new Promise(function (resolve) {
+              return adapter(flatten, function (adapterResult) {
+                level--;
+                resolve(adapterResult);
+              }, context);
+            });
+          } else return next(result);
+        };
+
+        emitter(flatten, done, context);
       };
     };
   }
@@ -710,7 +729,7 @@
           array = result;
           return false;
         }, function (result) {
-          if (isError(result)) done(result);else arrayEmitter(array.slice(mathMax$1(values.length - count, 0)))(next, done, context);
+          if (isError(result)) done(result);else arrayEmitter(array.slice(mathMax(values.length - count, 0)))(next, done, context);
         }, context);
       };
     };
@@ -745,18 +764,18 @@
     }
   }
 
-  function sliceWithPositiveIndexes(start, end) {
+  function sliceFromStartOperator(begin, end) {
     return function (emitter) {
       return function (next, done, context) {
-        var curr = -1;
+        var index = -1;
         emitter(function (value) {
-          return ++curr < start ? true : (!end || curr <= end) && next(value);
+          return ++index < begin || index <= end && next(value);
         }, done, context);
       };
     };
   }
 
-  function sliceWithNegativeIndexes(start, end) {
+  function sliceFromEndOperator(begin, end) {
     return function (emitter) {
       return function (next, done, context) {
         var array = undefined;
@@ -764,15 +783,16 @@
           array = result;
           return false;
         }, function (result) {
-          if (isError(result)) done(result);else arrayEmitter(array.slice(mathMax(values.length - count, 0)))(next, done, context);
+          if (isError$1(result)) done(result);else arrayEmitter$1(array.slice(begin, end))(next, done, context);
         }, context);
       };
     };
   }
 
-  function sliceOperator(start, end) {
-    if (classOf(start) !== NUMBER || end && classOf(end) !== NUMBER) return emptyEmitter;
-    return start >= 0 && (!end || end >= 0) ? sliceWithPositiveIndexes(start, end) : sliceWithNegativeIndexes(start, end);
+  function sliceOperator(begin, end) {
+    begin = toNumber(begin, 0);
+    end = toNumber(end, maxInteger);
+    return begin < 0 || end < 0 ? sliceFromEndOperator(begin, end) : sliceFromStartOperator(begin, end);
   }
 
   function someOperator(condition) {
@@ -813,7 +833,66 @@
           some = true;
           return false;
         }, function (result) {
-          if (isError(result) || !unsync(next(some), done, done)) done(result);
+          if (isError$1(result) || !unsync(next(some), done, done)) done(result);
+        }, context);
+      };
+    };
+  }
+
+  function sortOperator(parameters) {
+    var directions = [],
+        selectors = [];
+    var direction = 1;
+
+    for (var i = -1, l = parameters.length; ++i < l;) {
+      var parameter = parameters[i];
+
+      switch (classOf(parameter)) {
+        case FUNCTION:
+          selectors.push(parameter);
+          directions.push(direction);
+          continue;
+
+        case NUMBER:
+          parameter = parameter > 0 ? 1 : -1;
+          break;
+
+        case STRING:
+          parameter = parameter.toLowerCase() === 'desc' ? -1 : 1;
+          break;
+
+        default:
+          parameter = parameter ? 1 : -1;
+          break;
+      }
+
+      if (directions.length) directions[directions.length - 1] = parameter;else direction = parameter;
+    }
+
+    var comparer = selectors.length ? function (left, right) {
+      var result = undefined;
+
+      for (var _i = -1, _l = selectors.length; ++_i < _l;) {
+        var selector = selectors[_i];
+        result = compare(selector(left), selector(right), directions[_i]);
+        if (result) break;
+      }
+
+      return result;
+    } : function (left, right) {
+      return compare(left, right, direction);
+    };
+    return function (emitter) {
+      return function (next, done, context) {
+        var array = undefined;
+        toArrayOperator()(emitter)(function (result) {
+          array = result;
+          return true;
+        }, function (result) {
+          if (isError$1(result)) done(result);else {
+            array.sort(comparer);
+            arrayEmitter$1(array)(next, done, context);
+          }
         }, context);
       };
     };
@@ -962,7 +1041,7 @@
     return new Aeroflow(operator(this.emitter), this.sources);
   }
 
-  function count$1(optional) {
+  function count(optional) {
     return this.chain(countOperator(optional));
   }
 
@@ -980,6 +1059,10 @@
 
   function filter(condition) {
     return this.chain(filterOperator(condition));
+  }
+
+  function flatten(depth) {
+    return this.chain(flattenOperator(depth));
   }
 
   function group() {
@@ -1036,15 +1119,11 @@
       }
     });
     setImmediate(function () {
-      try {
-        context.flow.emitter(function (result) {
-          return false !== next(result, data);
-        }, function (result) {
-          return done(result, data);
-        }, context);
-      } catch (err) {
-        done(toError(err), data);
-      }
+      return context.flow.emitter(function (result) {
+        return false !== next(result, data);
+      }, function (result) {
+        return done(result, data);
+      }, context);
     });
     return this;
   }
@@ -1053,12 +1132,20 @@
     return this.chain(skipOperator(condition));
   }
 
-  function slice(start, end) {
-    return this.chain(sliceOperator(start, end));
+  function slice(begin, end) {
+    return this.chain(sliceOperator(begin, end));
   }
 
   function some(condition) {
     return this.chain(someOperator(condition));
+  }
+
+  function sort() {
+    for (var _len6 = arguments.length, parameters = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+      parameters[_key6] = arguments[_key6];
+    }
+
+    return this.chain(sortOperator(parameters));
   }
 
   function sum() {
@@ -1095,7 +1182,7 @@
       writable: true
     },
     count: {
-      value: count$1,
+      value: count,
       writable: true
     },
     delay: {
@@ -1112,6 +1199,10 @@
     },
     filter: {
       value: filter,
+      writable: true
+    },
+    flatten: {
+      value: flatten,
       writable: true
     },
     group: {
@@ -1152,6 +1243,10 @@
     },
     some: {
       value: some,
+      writable: true
+    },
+    sort: {
+      value: sort,
       writable: true
     },
     sum: {
@@ -1202,13 +1297,17 @@
         limit = sources.length;
     var index = -1;
     !function proceed(result) {
-      if (result !== true || ++index >= limit) done(result);else adapterEmitter(sources[index], true)(next, proceed, context);
+      if (result !== true || ++index >= limit) done(result);else try {
+        adapterEmitter(sources[index], true)(next, proceed, context);
+      } catch (err) {
+        done(err);
+      }
     }(true);
   }
 
   function aeroflow() {
-    for (var _len6 = arguments.length, sources = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
-      sources[_key6] = arguments[_key6];
+    for (var _len7 = arguments.length, sources = Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
+      sources[_key7] = arguments[_key7];
     }
 
     return new Aeroflow(emit, sources);

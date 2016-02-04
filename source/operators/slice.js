@@ -1,41 +1,39 @@
 'use strict';
 
-import { NUMBER } from '../symbols';
-import { classOf, isError } from '../utilites';
-import { arrayEmitter } from '../emitters/array'
-import { emptyEmitter } from '../emitters/empty';
+import { isError, maxInteger, toNumber } from '../utilites';
+import { arrayEmitter } from '../emitters/array';
 import { toArrayOperator } from './toArray';
 
-function sliceWithPositiveIndexes(start, end) {
-	return emitter => (next, done, context) => {
-    let curr = -1;
+function sliceFromStartOperator(begin, end) {
+  return emitter => (next, done, context) => {
+    let index = -1;
     emitter(
-      value => ++curr < start ? true : (!end || curr <= end) && next(value),
+      value => ++index < begin || (index <= end && next(value)),
       done,
       context);
   };
 }
 
-function sliceWithNegativeIndexes(start, end) {
-	return emitter => (next, done, context) => {
+function sliceFromEndOperator(begin, end) {
+  return emitter => (next, done, context) => {
     let array;
     toArrayOperator()(emitter)(
       result => {
         array = result;
         return false;
       },
-      result => {        
+      result => {
         if (isError(result)) done(result);
-        else arrayEmitter(array.slice(start, end))(next, done, context);
+        else arrayEmitter(array.slice(begin, end))(next, done, context);
       },
       context);
   }
 }
 
-export function sliceOperator(start, end) {
-	if (classOf(start) !== NUMBER || (end && classOf(end) !== NUMBER)) return emptyEmitter;
-
-  return start >= 0 && (!end || end >= 0) 
-  	? sliceWithPositiveIndexes(start, end)
-  	: sliceWithNegativeIndexes(start, end);
+export function sliceOperator(begin, end) {
+  begin = toNumber(begin, 0);
+  end = toNumber(end, maxInteger);
+  return begin < 0 || end < 0
+    ? sliceFromEndOperator(begin, end)
+    : sliceFromStartOperator(begin, end);
 }

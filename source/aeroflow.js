@@ -1,7 +1,7 @@
 'use strict';
 
 import { AEROFLOW, CLASS, PROTOTYPE } from './symbols';
-import { isError, isFunction, objectDefineProperties, objectCreate, noop, toError } from './utilites';
+import { isError, isFunction, objectDefineProperties, objectCreate, noop } from './utilites';
 
 import { emptyEmitter } from './emitters/empty';
 import { scalarEmitter } from './emitters/scalar';
@@ -21,6 +21,7 @@ import { delayOperator } from './operators/delay';
 import { dumpOperator } from './operators/dump';
 import { everyOperator } from './operators/every';
 import { filterOperator } from './operators/filter';
+import { flattenOperator } from './operators/flatten';
 import { groupOperator } from './operators/group';
 import { joinOperator } from './operators/join';
 import { mapOperator } from './operators/map';
@@ -32,6 +33,7 @@ import { reverseOperator } from './operators/reverse';
 import { skipOperator } from './operators/skip';
 import { sliceOperator } from './operators/slice';
 import { someOperator } from './operators/some';
+import { sortOperator } from './operators/sort';
 import { sumOperator } from './operators/sum';
 import { takeOperator } from './operators/take';
 import { tapOperator } from './operators/tap';
@@ -80,8 +82,8 @@ function append(...sources) {
 /**
 @alias Aeroflow#average
 */
-function average(optional) {
-  return this.chain(averageOperator(optional));
+function average() {
+  return this.chain(averageOperator());
 }
 /**
 @alias Aeroflow#bind
@@ -148,7 +150,10 @@ aeroflow(1, 2).delay((value, index) => 500 + 500 * index).dump().run();
 // next 1 // after 500ms
 // next 2 // after 1500ms
 // done true
-  */
+aeroflow(1, 2).delay(value => { throw new Error }).dump().run();
+// done Error(…)
+// Uncaught Error
+*/
 function delay(interval) {
   return this.chain(delayOperator(interval));
 }
@@ -166,10 +171,17 @@ name - The name of event emitted by this flow prepended with prefix.
 value - The value of event emitted by this flow.
 
 @example
+aeroflow(1, 2).dump(console.info.bind(console)).run();
+// next 1
+// next 2
+// done true
 aeroflow(1, 2).dump('test ', console.info.bind(console)).run();
 // test next 1
 // test next 2
 // test done true
+aeroflow(1, 2).dump(event => { if (event === 'next') throw new Error }).dump().run();
+// done Error(…)
+// Uncaught Error
 */
 function dump(prefix, logger) {
   return this.chain(dumpOperator(prefix, logger));
@@ -197,6 +209,9 @@ aeroflow('a', 'b').every('a').dump().run();
 aeroflow(1, 2).every(value => value > 0).dump().run();
 // next true
 // done true
+aeroflow(1, 2).every(value => { throw new Error }).dump().run();
+// done Error(…)
+// Uncaught Error
 */
 function every(condition) {
   return this.chain(everyOperator(condition));
@@ -230,9 +245,35 @@ aeroflow(1, 2, 3, 4, 5).filter(value => (value % 2) === 0).dump().run();
 // next 2
 // next 4
 // done true
+aeroflow(1, 2).filter(value => { throw new Error }).dump().run();
+// done Error: (…)
+// Uncaught Error
 */
 function filter(condition) {
   return this.chain(filterOperator(condition)); 
+}
+/**
+@alias Aeroflow#flatten
+
+@example
+aeroflow([[1, 2]]).flatten().dump().run();
+// next 1
+// next 2
+// done true
+aeroflow(() => [[1], [2]]).flatten(1).dump().run();
+// next [1]
+// next [2]
+// done true
+aeroflow(new Promise(resolve => setTimeout(() => resolve(() => [1, 2]), 500))).flatten().dump().run();
+// next 1 // after 500ms
+// next 2
+// done true
+aeroflow(new Promise(resolve => setTimeout(() => resolve(() => [1, 2]), 500))).flatten(1).dump().run();
+// next [1, 2]
+// done true
+*/
+function flatten(depth) {
+  return this.chain(flattenOperator(depth));
 }
 /*
 @alias Aeroflow#group
@@ -254,16 +295,24 @@ aeroflow(
 // done
 */
 function group(...selectors) {
-  return this.chain(groupOperator(selectors)); 
+  return this.chain(groupOperator(selectors));
 }
-/**
-@alias Aeroflow#join
-*/
 function join(flow, predicate) {
   return this.chain(joinOperator(flow, predicate));
 }
+/**
+aeroflow(1, 2).map('test').dump().run();
+// next test
+// next test
+// done true
+aeroflow(1, 2).map(value => value * 10).dump().run();
+// next 10
+// next 20
+// done true
+*/
+
 function map(mapping) {
-  return this.chain(mapOperator(mapping)); 
+  return this.chain(mapOperator(mapping));
 }
 /**
 Determines the maximum value emitted by this flow.
@@ -410,17 +459,10 @@ function run(next, done, data) {
     data: { value: data },
     flow: { value: this }
   });
-  setImmediate(() => {
-    try {
-      context.flow.emitter(
-        result => false !== next(result, data),
-        result => done(result, data),
-        context);
-    }
-    catch(err) {
-      done(toError(err), data);
-    }  
-  });
+  setImmediate(() => context.flow.emitter(
+    result => false !== next(result, data),
+    result => done(result, data),
+    context));
   return this;
 }
 /**
@@ -457,9 +499,22 @@ function skip(condition) {
 }
 /**
 @alias Aeroflow#slice
+
+@example
+aeroflow(1, 2, 3).slice(1).dump().run();
+// next 2
+// next 3
+// done true
+aeroflow(1, 2, 3).slice(1, 1).dump().run();
+// next 2
+// done false
+aeroflow(1, 2, 3).slice(-3, -1).dump().run();
+// next 1
+// next 2
+// done true
 */
-function slice(start, end) {
-  return this.chain(sliceOperator(start, end));
+function slice(begin, end) {
+  return this.chain(sliceOperator(begin, end));
 }
 
 /**
@@ -483,9 +538,43 @@ aeroflow.range(1, 3).some(2).dump().run();
 aeroflow.range(1, 3).some(value => value % 2).dump().run();
 // next true
 // done
+aeroflow(1, 2).some(value => { throw new Error }).dump().run();
+// done Error(…)
+// Uncaught Error
 */
 function some(condition) {
   return this.chain(someOperator(condition));
+}
+/**
+@alias Aeroflow#sort
+
+@example
+aeroflow(3, 2, 1).sort().dump().run();
+// next 1
+// next 2
+// next 3
+// done true
+aeroflow(1, 2, 3).sort('desc').dump().run();
+// next 3
+// next 2
+// next 1
+// done true
+aeroflow(
+  { country: 'Belarus', city: 'Brest' },
+  { country: 'Poland', city: 'Krakow' },
+  { country: 'Belarus', city: 'Minsk' },
+  { country: 'Belarus', city: 'Grodno' },
+  { country: 'Poland', city: 'Lodz' }
+).sort(value => value.country, value => value.city, 'desc').dump().run();
+// next Object {country: "Belarus", city: "Minsk"}
+// next Object {country: "Belarus", city: "Grodno"}
+// next Object {country: "Belarus", city: "Brest"}
+// next Object {country: "Poland", city: "Lodz"}
+// next Object {country: "Poland", city: "Krakow"}
+// done true
+*/
+function sort(...parameters) {
+  return this.chain(sortOperator(parameters));
 }
 /*
 @alias Aeroflow#sum
@@ -593,6 +682,7 @@ const operators = objectCreate(Object[PROTOTYPE], {
   dump: { value: dump, writable: true },
   every: { value: every, writable: true },
   filter: { value: filter, writable: true },
+  flatten: { value: flatten, writable: true },
   group: { value: group, writable: true },
   join: { value: join, writable: true },
   map: { value: map, writable: true },
@@ -604,6 +694,7 @@ const operators = objectCreate(Object[PROTOTYPE], {
   skip: { value: skip, writable: true },
   slice: { value: slice, writable: true },
   some: { value: some, writable: true },
+  sort: { value: sort, writable: true },
   sum: { value: sum, writable: true },
   take: { value: take, writable: true },
   tap: { value: tap, writable: true },
@@ -626,7 +717,12 @@ function emit(next, done, context) {
   let index = -1;
   !function proceed(result) {
     if (result !== true || ++index >= limit) done(result);
-    else adapterEmitter(sources[index], true)(next, proceed, context);
+    else try {
+      adapterEmitter(sources[index], true)(next, proceed, context);
+    }
+    catch (err) {
+      done(err);
+    }
   }(true);
 }
 
@@ -648,6 +744,9 @@ aeroflow(1, [2, 3], () => 4, new Promise(resolve => setTimeout(() => resolve(5),
 // next 4
 // next 5 // after 500ms
 // done true
+aeroflow(() => { throw new Error }).dump().run();
+// done Error(…)
+// Uncaught Error
 */
 export default function aeroflow(...sources) {
   return new Aeroflow(emit, sources);
@@ -691,6 +790,13 @@ function error(message) {
 }
 /**
 @alias aeroflow.expand
+
+@example
+aeroflow.expand(value => value * 2, 1).take(3).dump().run();
+// next 2
+// next 4
+// next 8
+// done false
 */
 function expand(expander, seed) {
   return new Aeroflow(expandEmitter(expander, seed));

@@ -1,6 +1,6 @@
 'use strict';
 
-import { DATE, ERROR, FUNCTION, NUMBER, PROMISE } from './symbols';
+import { DATE, ERROR, FUNCTION, NUMBER, PROMISE, STRING } from './symbols';
 
 export const dateNow = Date.now;
 export const mathFloor = Math.floor;
@@ -12,7 +12,11 @@ export const objectCreate = Object.create;
 export const objectDefineProperties = Object.defineProperties;
 export const objectToString = Object.prototype.toString;
 
-export const compare = (left, right) => left < right ? -1 : left > right ? 1 : 0;
+export const compare = (left, right, direction) => left < right
+  ? -direction
+  : left > right
+    ? direction
+    : 0;
 export const constant = value => () => value;
 export const identity = value => value;
 export const noop = () => {};
@@ -26,6 +30,7 @@ export const isFunction = classIs(FUNCTION);
 export const isInteger = Number.isInteger;
 export const isNumber = classIs(NUMBER);
 export const isPromise = classIs(PROMISE);
+export const isString = classIs(STRING);
 export const isUndefined = value => value === undefined;
 
 export const tie = (func, ...args) => () => func(...args);

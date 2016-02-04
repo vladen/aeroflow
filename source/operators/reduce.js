@@ -51,7 +51,7 @@ export function reduceOptionalOperator(reducer, seed) {
         return true;
       },
       result => {
-        if (isError(result) || empty || !unsync(next(reduced), tie(done, result), done))
+        if (isError(error) || empty || !unsync(next(reduced), tie(done, result), done))
           done(result);
       },
       context);
