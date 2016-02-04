@@ -23,17 +23,20 @@ export default (aeroflow, assert) => describe('aeroflow', () => {
         });
     });
 
-    describe('aeroflow(@Array)', () => {
+    describe('aeroflow(@Array)', (done) => {
         it('returns instance of Aeroflow', () => {
             assert.typeOf(aeroflow([1, 2]), 'Aeroflow');
         });
 
         describe('@Array', () => {
-            it('emitting array items', () => {
-                let expected = ['str', new Date(), {}, 1];
-                let index = 0;
+            it('emitting array items', (done) => {
+                let expected = ['str', new Date(), {}, 2]
+                    , actual = [];
+                
                 aeroflow(expected)
-                    .run(value => assert.strictEqual(value, expected[index++]));
+                    .run(value => actual.push(value));
+
+                setImmediate(() => done(assert.sameMembers(actual, expected)));
             });
         });
     });
@@ -44,11 +47,17 @@ export default (aeroflow, assert) => describe('aeroflow', () => {
         });
 
         describe('@Map', () => {
-            it('emitting map entries', () => {
-                let expected = [['a', 1], ['b', 2]];
-                let index = 0;
+            it('emitting map entries', (done) => {
+                let expected = [['a', 1], ['b', 2]]
+                    , actual = [];
+
                 aeroflow(new Map(expected))
-                    .run(value => assert.includeMembers(value, expected[index++]));
+                    .run(value => actual.push(value));
+
+                setImmediate(() => {
+                    expected.forEach((item, index) => assert.sameMembers(actual[index], expected[index]));
+                    done();
+                });
             });
         });
     });
@@ -59,11 +68,14 @@ export default (aeroflow, assert) => describe('aeroflow', () => {
         });
 
         describe('@Set', () => {
-            it('emitting set keys', () => {
-                let expected = ['a', 'b'];
-                let index = 0;
+            it('emitting set keys', (done) => {
+                let expected = ['a', 'b']
+                    , actual = [];
+
                 aeroflow(new Set(expected))
-                    .run(value => assert.strictEqual(value, expected[index++]));
+                    .run(value => actual.push(value));
+
+                setImmediate(() => done(assert.sameMembers(actual, expected)));
             });
         });
     });
@@ -74,10 +86,13 @@ export default (aeroflow, assert) => describe('aeroflow', () => {
         });
 
         describe('@Function', () => {
-            it('emitting scalar value returned by function', () => {
-                let expected = 'test tester';
+            it('emitting scalar value returned by function', (done) => {
+                let expected = 'test tester'
+                    , actual;
                 aeroflow(() => expected)
-                    .run(value => assert.strictEqual(value, expected));
+                    .run(value => actual = value);
+
+                setImmediate(() => done(assert.strictEqual(actual, expected)));
             });
         });
     });
@@ -88,17 +103,15 @@ export default (aeroflow, assert) => describe('aeroflow', () => {
         });
 
         describe('@Promise', () => {
-           it('emitting array resolved by promise', () => {
-                let expected = ['a', 'b'];
-                aeroflow(Promise.resolve(expected))
-                    .run( value => assert.strictEqual(value, expected));
-           });
+            it('emitting array resolved by promise', (done) => {
+                let expected = ['a', 'b']
+                    , actual
 
-           it('emitting scalar value resolved by promise returned by function asynchronously', () => {
-                let expected = ['a', 'b'];
-                aeroflow(() => new Promise(resolve => setTimeout(() => resolve(expected))))
-                    .run(value => assert.strictEqual(value, expected));
-           });
+                aeroflow(Promise.resolve(expected))
+                    .run( value => assert.strictEqual(value, expected), () => done());
+            });
+
+            //TODO: Promise tests pending
         });
     });
 });

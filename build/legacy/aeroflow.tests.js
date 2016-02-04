@@ -37,16 +37,19 @@
                     });
                 });
             });
-            describe('aeroflow(@Array)', function () {
+            describe('aeroflow(@Array)', function (done) {
                 it('returns instance of Aeroflow', function () {
                     assert.typeOf(aeroflow([1, 2]), 'Aeroflow');
                 });
                 describe('@Array', function () {
-                    it('emitting array items', function () {
-                        var expected = ['str', new Date(), {}, 1];
-                        var index = 0;
+                    it('emitting array items', function (done) {
+                        var expected = ['str', new Date(), {}, 2],
+                            actual = [];
                         aeroflow(expected).run(function (value) {
-                            return assert.strictEqual(value, expected[index++]);
+                            return actual.push(value);
+                        });
+                        setImmediate(function () {
+                            return done(assert.sameMembers(actual, expected));
                         });
                     });
                 });
@@ -56,11 +59,17 @@
                     assert.typeOf(aeroflow(new Map([[1, 2], [2, 1]])), 'Aeroflow');
                 });
                 describe('@Map', function () {
-                    it('emitting map entries', function () {
-                        var expected = [['a', 1], ['b', 2]];
-                        var index = 0;
+                    it('emitting map entries', function (done) {
+                        var expected = [['a', 1], ['b', 2]],
+                            actual = [];
                         aeroflow(new Map(expected)).run(function (value) {
-                            return assert.includeMembers(value, expected[index++]);
+                            return actual.push(value);
+                        });
+                        setImmediate(function () {
+                            expected.forEach(function (item, index) {
+                                return assert.sameMembers(actual[index], expected[index]);
+                            });
+                            done();
                         });
                     });
                 });
@@ -70,11 +79,14 @@
                     assert.typeOf(aeroflow(new Set([1, 2])), 'Aeroflow');
                 });
                 describe('@Set', function () {
-                    it('emitting set keys', function () {
-                        var expected = ['a', 'b'];
-                        var index = 0;
+                    it('emitting set keys', function (done) {
+                        var expected = ['a', 'b'],
+                            actual = [];
                         aeroflow(new Set(expected)).run(function (value) {
-                            return assert.strictEqual(value, expected[index++]);
+                            return actual.push(value);
+                        });
+                        setImmediate(function () {
+                            return done(assert.sameMembers(actual, expected));
                         });
                     });
                 });
@@ -86,12 +98,16 @@
                     }), 'Aeroflow');
                 });
                 describe('@Function', function () {
-                    it('emitting scalar value returned by function', function () {
-                        var expected = 'test tester';
+                    it('emitting scalar value returned by function', function (done) {
+                        var expected = 'test tester',
+                            actual = undefined;
                         aeroflow(function () {
                             return expected;
                         }).run(function (value) {
-                            return assert.strictEqual(value, expected);
+                            return actual = value;
+                        });
+                        setImmediate(function () {
+                            return done(assert.strictEqual(actual, expected));
                         });
                     });
                 });
@@ -101,22 +117,13 @@
                     assert.typeOf(aeroflow(Promise.resolve({})), 'Aeroflow');
                 });
                 describe('@Promise', function () {
-                    it('emitting array resolved by promise', function () {
-                        var expected = ['a', 'b'];
+                    it('emitting array resolved by promise', function (done) {
+                        var expected = ['a', 'b'],
+                            actual = undefined;
                         aeroflow(Promise.resolve(expected)).run(function (value) {
                             return assert.strictEqual(value, expected);
-                        });
-                    });
-                    it('emitting scalar value resolved by promise returned by function asynchronously', function () {
-                        var expected = ['a', 'b'];
-                        aeroflow(function () {
-                            return new Promise(function (resolve) {
-                                return setTimeout(function () {
-                                    return resolve(expected);
-                                });
-                            });
-                        }).run(function (value) {
-                            return assert.strictEqual(value, expected);
+                        }, function () {
+                            return done();
                         });
                     });
                 });
