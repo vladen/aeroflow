@@ -12,8 +12,7 @@ export function toArrayOperator() {
         return true;
       },
       result => {
-        if (isError(result) || !unsync(next(array), tie(done, result), done)) 
-          done(result);
+        if (isError(result) || !unsync(next(array), tie(done, result), done)) done(result);
       },
       context);
   };

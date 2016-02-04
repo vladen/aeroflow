@@ -24,8 +24,7 @@ export function toMapOperator(keyTransformation, valueTransformation) {
         return true;
       },
       result => {
-        if (isError(result) || !desync(next(map), tie(done, result), done))
-          done(result);
+        if (isError(result) || !desync(next(map), tie(done, result), done)) done(result);
       },
       context);
   };

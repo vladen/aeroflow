@@ -1,7 +1,9 @@
 'use strict';
 
 import { AEROFLOW, CLASS, PROTOTYPE } from './symbols';
-import { isError, isFunction, objectDefineProperties, objectCreate, noop } from './utilites';
+import { classOf, isError, isFunction, objectDefineProperties, primitives, objectCreate } from './utilites';
+
+import { Context } from './context';
 
 import { emptyEmitter } from './emitters/empty';
 import { scalarEmitter } from './emitters/scalar';
@@ -446,14 +448,49 @@ aeroflow(Promise.reject('test')).dump().run(() => {}, () => {});
 // done Error: test(…)
  */
 function run(next, done, data) {
-  if (!isFunction(done)) done = result => {
-    if (isError(result)) throw result;
-  };
-  if (!isFunction(next)) next = noop;
-  const context = objectDefineProperties({}, {
-    data: { value: data },
-    flow: { value: this }
-  });
+  if (isFunction(next)) {
+    if (!isFunction(done)) done = result => {
+      if (isError(result)) throw result;
+    };
+  }
+  else if (primitives.has(classOf(next))) data = next;
+  else if (isFunction(next.dispatchEvent)) {
+    const target = next;
+    data = done;
+    done = result => {
+      target.dispatchEvent(new CustomEvent('done', { detail: result }));
+      return true;
+    };
+    next = result => {
+      target.dispatchEvent(new CustomEvent('next', { detail: result }));
+      return true;
+    };
+  }
+  else if (isFunction(next.emit)) {
+    const emitter = next;
+    data = done;
+    done = result => {
+      emitter.emit('done', result);
+      return true;
+    };
+    next = result => {
+      emitter.emit('next', result);
+      return true;
+    };
+  }
+  else if (isFunction(next.onNext) && isFunction(next.onError) && isFunction(next.onCompleted)) {
+    const observer = next;
+    data = done;
+    done = result => {
+      (isError(result) ? observer.onError : observer.onCompleted)(result);
+      return true;
+    };
+    next = result => {
+      observer.onNext(result);
+      return true;
+    };
+  }
+  const context = new Context(data, this);
   setImmediate(() => context.flow.emitter(
     result => false !== next(result, data),
     result => done(result, data),
@@ -575,11 +612,26 @@ function sort(...parameters) {
 @alias Aeroflow#sum
 
 @example
-aeroflow([1, 2, 3]).sum().dump().run();
+aeroflow(1, 2, 3).sum().dump().run();
+// next 6
+// done true
 */
 function sum() {
   return this.chain(sumOperator());
 }
+/*
+@alias Aeroflow#take
+
+@example
+aeroflow(1, 2, 3).take(2).dump().run();
+// next 1
+// next 2
+// done false
+aeroflow(1, 2, 3).take(-2).dump().run();
+// next 2
+// next 3
+// done true
+*/
 function take(condition) {
   return this.chain(takeOperator(condition));
 }

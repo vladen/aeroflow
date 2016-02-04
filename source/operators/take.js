@@ -2,6 +2,7 @@
 
 import { FUNCTION, NUMBER } from '../symbols';
 import { classOf, identity, mathMax } from '../utilites';
+import { arrayEmitter } from '../emitters/array';
 import { emptyEmitter } from '../emitters/empty';
 import { toArrayOperator } from './toArray';
 
@@ -16,19 +17,11 @@ export function takeFirstOperator(count) {
 }
 
 export function takeLastOperator(count) {
-  return emitter => (next, done, context) => {
-    let array;
-    toArrayOperator()(emitter)(
-      result => {
-        array = result;
-        return false;
-      },
-      result => {
-        if (isError(result)) done(result);
-        else arrayEmitter(array)(next, done, context);
-      }, 
-      context);
-  };
+  return emitter => (next, done, context) => toArrayOperator()(emitter)(
+    result => new Promise(resolve =>
+      arrayEmitter(result.slice(mathMax(result.length - count, 0)))(next, resolve, context)),
+    done, 
+    context);
 }
 
 export function takeWhileOperator(predicate) {

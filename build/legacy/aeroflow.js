@@ -17,12 +17,6 @@
     value: true
   });
 
-  function _classCallCheck(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-      throw new TypeError("Cannot call a class as a function");
-    }
-  }
-
   var _objectCreate, _objectCreate2;
 
   function _defineProperty(obj, key, value) {
@@ -40,10 +34,17 @@
     return obj;
   }
 
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
+
   var AEROFLOW = 'Aeroflow';
   var ARRAY = 'Array';
   var BOOLEAN = 'Boolean';
   var CLASS = Symbol.toStringTag;
+  var CONTEXT = 'Aeroflow.Context';
   var DATE = 'Date';
   var ERROR = 'Error';
   var FUNCTION = 'Function';
@@ -56,6 +57,7 @@
   var STRING = 'String';
   var SYMBOL = 'Symbol';
   var UNDEFINED = 'Undefined';
+  var primitives = new Set([BOOLEAN, DATE, ERROR, NULL, NUMBER, REGEXP, STRING, SYMBOL, UNDEFINED]);
   var dateNow = Date.now;
   var mathFloor = Math.floor;
   var mathPow = Math.pow;
@@ -64,6 +66,7 @@
   var maxInteger = Number.MAX_SAFE_INTEGER;
   var objectCreate = Object.create;
   var objectDefineProperties = Object.defineProperties;
+  var objectDefineProperty = Object.defineProperty;
   var objectToString = Object.prototype.toString;
 
   var compare = function compare(left, right, direction) {
@@ -123,6 +126,23 @@
   var toError = function toError(value) {
     return isError$1(value) ? value : new Error(value);
   };
+
+  var Context = function Context(data, flow) {
+    _classCallCheck(this, Context);
+
+    objectDefineProperties(this, {
+      data: {
+        value: data
+      },
+      flow: {
+        value: flow
+      }
+    });
+  };
+
+  objectDefineProperty(Context[PROTOTYPE], CLASS, {
+    value: CONTEXT
+  });
 
   function emptyEmitter() {
     return function (next, done) {
@@ -203,6 +223,12 @@
     writable: true
   }), _objectCreate));
 
+  function aeroflowEmitter(source) {
+    return function (next, done, context) {
+      return source.emitter(next, done, new Context(context.data, source));
+    };
+  }
+
   function iterableEmitter(source) {
     return function (next, done, context) {
       var iteration = undefined,
@@ -217,11 +243,9 @@
     };
   }
 
-  var primitives = new Set([BOOLEAN, NULL, NUMBER, STRING, SYMBOL, UNDEFINED]);
-
   function adapterEmitter(source, scalar) {
     var cls = classOf(source);
-    if (cls === AEROFLOW) return source.emitter;
+    if (cls === AEROFLOW) return aeroflowEmitter(source);
     var adapter = adapters[cls];
     if (isFunction(adapter)) return adapter(source);
     if (!primitives.has(cls) && ITERATOR in source) return iterableEmitter(source);
@@ -673,10 +697,10 @@
   function meanOperator() {
     return function (emitter) {
       return function (next, done, context) {
-        return toArrayOperator()(emitter)(function (values) {
-          if (!values.length) return;
-          values.sort();
-          next(values[mathFloor(values.length / 2)]);
+        return toArrayOperator()(emitter)(function (result) {
+          if (!result.length) return true;
+          result.sort();
+          return next(result[mathFloor(result.length / 2)]);
         }, done, context);
       };
     };
@@ -691,12 +715,8 @@
   function reverseOperator() {
     return function (emitter) {
       return function (next, done, context) {
-        return toArrayOperator()(emitter)(function (value) {
-          for (var index = value.length; index--;) {
-            next(value[index]);
-          }
-
-          return false;
+        return toArrayOperator()(emitter)(function (result) {
+          return next(result.reverse());
         }, done, context);
       };
     };
@@ -884,16 +904,11 @@
     };
     return function (emitter) {
       return function (next, done, context) {
-        var array = undefined;
-        toArrayOperator()(emitter)(function (result) {
-          array = result;
-          return true;
-        }, function (result) {
-          if (isError$1(result)) done(result);else {
-            array.sort(comparer);
-            arrayEmitter$1(array)(next, done, context);
-          }
-        }, context);
+        return toArrayOperator()(emitter)(function (result) {
+          return new Promise(function (resolve) {
+            return arrayEmitter$1(result.sort(comparer))(next, resolve, context);
+          });
+        }, done, context);
       };
     };
   }
@@ -918,13 +933,11 @@
   function takeLastOperator(count) {
     return function (emitter) {
       return function (next, done, context) {
-        var array = undefined;
-        toArrayOperator()(emitter)(function (result) {
-          array = result;
-          return false;
-        }, function (result) {
-          if (isError(result)) done(result);else arrayEmitter(array)(next, done, context);
-        }, context);
+        return toArrayOperator()(emitter)(function (result) {
+          return new Promise(function (resolve) {
+            return arrayEmitter$1(result.slice(mathMax(result.length - count, 0)))(next, resolve, context);
+          });
+        }, done, context);
       };
     };
   }
@@ -1106,18 +1119,62 @@
   }
 
   function run(next, done, data) {
-    if (!isFunction(done)) done = function done(result) {
-      if (isError$1(result)) throw result;
-    };
-    if (!isFunction(next)) next = noop;
-    var context = objectDefineProperties({}, {
-      data: {
-        value: data
-      },
-      flow: {
-        value: this
-      }
-    });
+    if (isFunction(next)) {
+      if (!isFunction(done)) done = function done(result) {
+        if (isError$1(result)) throw result;
+      };
+    } else if (primitives.has(classOf(next))) data = next;else if (isFunction(next.dispatchEvent)) {
+      (function () {
+        var target = next;
+        data = done;
+
+        done = function done(result) {
+          target.dispatchEvent(new CustomEvent('done', {
+            detail: result
+          }));
+          return true;
+        };
+
+        next = function next(result) {
+          target.dispatchEvent(new CustomEvent('next', {
+            detail: result
+          }));
+          return true;
+        };
+      })();
+    } else if (isFunction(next.emit)) {
+      (function () {
+        var emitter = next;
+        data = done;
+
+        done = function done(result) {
+          emitter.emit('done', result);
+          return true;
+        };
+
+        next = function next(result) {
+          emitter.emit('next', result);
+          return true;
+        };
+      })();
+    } else if (isFunction(next.onNext) && isFunction(next.onError) && isFunction(next.onCompleted)) {
+      (function () {
+        var observer = next;
+        data = done;
+
+        done = function done(result) {
+          (isError$1(result) ? observer.onError : observer.onCompleted)(result);
+          return true;
+        };
+
+        next = function next(result) {
+          observer.onNext(result);
+          return true;
+        };
+      })();
+    }
+
+    var context = new Context(data, this);
     setImmediate(function () {
       return context.flow.emitter(function (result) {
         return false !== next(result, data);

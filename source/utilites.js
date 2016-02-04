@@ -1,6 +1,8 @@
 'use strict';
 
-import { DATE, ERROR, FUNCTION, NUMBER, PROMISE, STRING } from './symbols';
+import { BOOLEAN, DATE, ERROR, FUNCTION, NUMBER, NULL, PROMISE, REGEXP, STRING, SYMBOL, UNDEFINED } from './symbols';
+
+export const primitives = new Set([BOOLEAN, DATE, ERROR, NULL, NUMBER, REGEXP, STRING, SYMBOL, UNDEFINED]);
 
 export const dateNow = Date.now;
 export const mathFloor = Math.floor;
@@ -10,6 +12,7 @@ export const mathMax = Math.max;
 export const maxInteger = Number.MAX_SAFE_INTEGER;
 export const objectCreate = Object.create;
 export const objectDefineProperties = Object.defineProperties;
+export const objectDefineProperty = Object.defineProperty;
 export const objectToString = Object.prototype.toString;
 
 export const compare = (left, right, direction) => left < right
@@ -34,6 +37,8 @@ export const isString = classIs(STRING);
 export const isUndefined = value => value === undefined;
 
 export const tie = (func, ...args) => () => func(...args);
+
+export const truthy = () => true;
 
 export const toNumber = (value, def) => {
   if (!isNumber(value)) {
