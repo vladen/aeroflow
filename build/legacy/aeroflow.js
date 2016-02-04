@@ -66,6 +66,10 @@
   var objectDefineProperties = Object.defineProperties;
   var objectToString = Object.prototype.toString;
 
+  var compare = function compare(left, right, direction) {
+    return left < right ? -direction : left > right ? direction : 0;
+  };
+
   var constant = function constant(value) {
     return function () {
       return value;
@@ -793,6 +797,65 @@
     };
   }
 
+  function sortOperator(parameters) {
+    var directions = [],
+        selectors = [];
+    var direction = 1;
+
+    for (var i = -1, l = parameters.length; ++i < l;) {
+      var parameter = parameters[i];
+
+      switch (classOf(parameter)) {
+        case FUNCTION:
+          selectors.push(parameter);
+          directions.push(direction);
+          continue;
+
+        case NUMBER:
+          parameter = parameter > 0 ? 1 : -1;
+          break;
+
+        case STRING:
+          parameter = parameter.toLowerCase() === 'desc' ? -1 : 1;
+          break;
+
+        default:
+          parameter = parameter ? 1 : -1;
+          break;
+      }
+
+      if (directions.length) directions[directions.length - 1] = parameter;else direction = parameter;
+    }
+
+    var comparer = selectors.length ? function (left, right) {
+      var result = undefined;
+
+      for (var _i = -1, _l = selectors.length; ++_i < _l;) {
+        var selector = selectors[_i];
+        result = compare(selector(left), selector(right), directions[_i]);
+        if (result) break;
+      }
+
+      return result;
+    } : function (left, right) {
+      return compare(left, right, direction);
+    };
+    return function (emitter) {
+      return function (next, done, context) {
+        var array = undefined;
+        toArrayOperator()(emitter)(function (result) {
+          array = result;
+          return true;
+        }, function (result) {
+          if (isError$1(result)) done(result);else {
+            array.sort(comparer);
+            arrayEmitter$1(array)(next, done, context);
+          }
+        }, context);
+      };
+    };
+  }
+
   function sumOperator() {
     return reduceGeneralOperator(function (result, value) {
       return result + value;
@@ -1031,6 +1094,14 @@
     return this.chain(someOperator(condition));
   }
 
+  function sort() {
+    for (var _len6 = arguments.length, parameters = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+      parameters[_key6] = arguments[_key6];
+    }
+
+    return this.chain(sortOperator(parameters));
+  }
+
   function sum() {
     return this.chain(sumOperator());
   }
@@ -1120,6 +1191,10 @@
       value: some,
       writable: true
     },
+    sort: {
+      value: sort,
+      writable: true
+    },
     sum: {
       value: sum,
       writable: true
@@ -1173,8 +1248,8 @@
   }
 
   function aeroflow() {
-    for (var _len6 = arguments.length, sources = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
-      sources[_key6] = arguments[_key6];
+    for (var _len7 = arguments.length, sources = Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
+      sources[_key7] = arguments[_key7];
     }
 
     return new Aeroflow(emit, sources);

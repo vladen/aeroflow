@@ -25,6 +25,11 @@ const objectCreate = Object.create;
 const objectDefineProperties = Object.defineProperties;
 const objectToString = Object.prototype.toString;
 
+const compare = (left, right, direction) => left < right
+  ? -direction
+  : left > right
+    ? direction
+    : 0;
 const constant = value => () => value;
 const identity = value => value;
 const noop = () => {};
@@ -668,6 +673,58 @@ function someOperator(condition) {
   };
 }
 
+function sortOperator(parameters) {
+  const directions = [], selectors = [];
+  let direction = 1;
+  for (var i = -1, l = parameters.length; ++i < l;) {
+    let parameter = parameters[i];
+    switch (classOf(parameter)) {
+      case FUNCTION:
+        selectors.push(parameter);
+        directions.push(direction);
+        continue;
+      case NUMBER:
+        parameter = parameter > 0 ? 1 : -1;
+        break;
+      case STRING:
+        parameter = parameter.toLowerCase() === 'desc' ? -1 : 1;
+        break;
+      default:
+        parameter = parameter ? 1 : -1;
+        break;
+    }
+    if (directions.length) directions[directions.length - 1] = parameter;
+    else direction = parameter;
+  }
+  const comparer = selectors.length
+    ? (left, right) => {
+      let result;
+      for (let i = -1, l = selectors.length; ++i < l;) {
+        const selector = selectors[i];
+        result = compare(selector(left), selector(right), directions[i]);
+        if (result) break;
+      }
+      return result;
+    }
+    : (left, right) => compare(left, right, direction);
+  return emitter => (next, done, context) => {
+    let array;
+    toArrayOperator()(emitter)(
+      result => {
+        array = result;
+        return true;
+      },
+      result => {
+        if (isError$1(result)) done(result);
+        else {
+          array.sort(comparer);
+          arrayEmitter$1(array)(next, done, context);
+        }
+      },
+      context);
+  };
+}
+
 function sumOperator() {
   return reduceGeneralOperator((result, value) => result + value, 0);
 }
@@ -1259,6 +1316,35 @@ aeroflow.range(1, 3).some(value => value % 2).dump().run();
 function some(condition) {
   return this.chain(someOperator(condition));
 }
+/**
+@example
+aeroflow(3, 2, 1).sort().dump().run();
+// next 1
+// next 2
+// next 3
+// done true
+aeroflow(1, 2, 3).sort('desc').dump().run();
+// next 3
+// next 2
+// next 1
+// done true
+aeroflow(
+  { country: 'Belarus', city: 'Brest' },
+  { country: 'Poland', city: 'Krakow' },
+  { country: 'Belarus', city: 'Minsk' },
+  { country: 'Belarus', city: 'Grodno' },
+  { country: 'Poland', city: 'Lodz' }
+).sort(value => value.country, value => value.city, 'desc').dump().run();
+// next Object {country: "Belarus", city: "Minsk"}
+// next Object {country: "Belarus", city: "Grodno"}
+// next Object {country: "Belarus", city: "Brest"}
+// next Object {country: "Poland", city: "Lodz"}
+// next Object {country: "Poland", city: "Krakow"}
+// done true
+*/
+function sort(...parameters) {
+  return this.chain(sortOperator(parameters));
+}
 /*
 @alias Aeroflow#sum
 
@@ -1374,6 +1460,7 @@ const operators = objectCreate(Object[PROTOTYPE], {
   reverse: { value: reverse, writable: true },
   skip: { value: skip, writable: true },
   some: { value: some, writable: true },
+  sort: { value: sort, writable: true },
   sum: { value: sum, writable: true },
   take: { value: take, writable: true },
   tap: { value: tap, writable: true },

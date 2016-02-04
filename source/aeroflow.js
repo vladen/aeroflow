@@ -30,6 +30,7 @@ import { reduceOperator } from './operators/reduce';
 import { reverseOperator } from './operators/reverse';
 import { skipOperator } from './operators/skip';
 import { someOperator } from './operators/some';
+import { sortOperator } from './operators/sort';
 import { sumOperator } from './operators/sum';
 import { takeOperator } from './operators/take';
 import { tapOperator } from './operators/tap';
@@ -497,6 +498,35 @@ aeroflow.range(1, 3).some(value => value % 2).dump().run();
 function some(condition) {
   return this.chain(someOperator(condition));
 }
+/**
+@example
+aeroflow(3, 2, 1).sort().dump().run();
+// next 1
+// next 2
+// next 3
+// done true
+aeroflow(1, 2, 3).sort('desc').dump().run();
+// next 3
+// next 2
+// next 1
+// done true
+aeroflow(
+  { country: 'Belarus', city: 'Brest' },
+  { country: 'Poland', city: 'Krakow' },
+  { country: 'Belarus', city: 'Minsk' },
+  { country: 'Belarus', city: 'Grodno' },
+  { country: 'Poland', city: 'Lodz' }
+).sort(value => value.country, value => value.city, 'desc').dump().run();
+// next Object {country: "Belarus", city: "Minsk"}
+// next Object {country: "Belarus", city: "Grodno"}
+// next Object {country: "Belarus", city: "Brest"}
+// next Object {country: "Poland", city: "Lodz"}
+// next Object {country: "Poland", city: "Krakow"}
+// done true
+*/
+function sort(...parameters) {
+  return this.chain(sortOperator(parameters));
+}
 /*
 @alias Aeroflow#sum
 
@@ -612,6 +642,7 @@ const operators = objectCreate(Object[PROTOTYPE], {
   reverse: { value: reverse, writable: true },
   skip: { value: skip, writable: true },
   some: { value: some, writable: true },
+  sort: { value: sort, writable: true },
   sum: { value: sum, writable: true },
   take: { value: take, writable: true },
   tap: { value: tap, writable: true },

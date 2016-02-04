@@ -25,6 +25,8 @@ aeroflow(1, 2).map(value =&gt; value * 10).dump().run();
 // next 20
 // done true</p>
 </dd>
+<dt><a href="#sort">sort()</a></dt>
+<dd></dd>
 <dt><a href="#toString">toString()</a></dt>
 <dd></dd>
 </dl>
@@ -686,6 +688,37 @@ aeroflow(1, 2).map(value => value * 10).dump().run();
 **Kind**: global function  
 **Params**
 
+<a name="sort"></a>
+## sort()
+**Kind**: global function  
+**Params**
+
+**Example**  
+```js
+aeroflow(3, 2, 1).sort().dump().run();
+// next 1
+// next 2
+// next 3
+// done true
+aeroflow(1, 2, 3).sort('desc').dump().run();
+// next 3
+// next 2
+// next 1
+// done true
+aeroflow(
+  { country: 'Belarus', city: 'Brest' },
+  { country: 'Poland', city: 'Krakow' },
+  { country: 'Belarus', city: 'Minsk' },
+  { country: 'Belarus', city: 'Grodno' },
+  { country: 'Poland', city: 'Lodz' }
+).sort(value => value.country, value => value.city, 'desc').dump().run();
+// next Object {country: "Belarus", city: "Minsk"}
+// next Object {country: "Belarus", city: "Grodno"}
+// next Object {country: "Belarus", city: "Brest"}
+// next Object {country: "Poland", city: "Lodz"}
+// next Object {country: "Poland", city: "Krakow"}
+// done true
+```
 <a name="toString"></a>
 ## toString()
 **Kind**: global function  
