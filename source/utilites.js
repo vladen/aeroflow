@@ -28,6 +28,7 @@ export const classOf = value => objectToString.call(value).slice(8, -1);
 export const classIs = className => value => classOf(value) === className;
 
 export const isDate = classIs(DATE);
+export const isDefined = value => value !== undefined;
 export const isError = classIs(ERROR);
 export const isFunction = classIs(FUNCTION);
 export const isInteger = Number.isInteger;

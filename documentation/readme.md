@@ -13,17 +13,11 @@
 <dt><a href="#aeroflow">aeroflow(sources)</a></dt>
 <dd><p>Creates new flow emitting values from all provided data sources.</p>
 </dd>
-<dt><a href="#map">map()</a></dt>
-<dd><p>aeroflow(1, 2).map(&#39;test&#39;).dump().run();
-// next test
-// next test
-// done true
-aeroflow(1, 2).map(value =&gt; value * 10).dump().run();
-// next 10
-// next 20
-// done true</p>
-</dd>
-<dt><a href="#toString">toString()</a></dt>
+<dt><a href="#aeroflow.error
+
++param {string|error} [message]">aeroflow.error
+
+#param {string|error} [message]()</a></dt>
 <dd></dd>
 </dl>
 
@@ -32,35 +26,46 @@ aeroflow(1, 2).map(value =&gt; value * 10).dump().run();
 Aeroflow class.
 
 **Kind**: global class  
-**Access:** public  
+**Properties**
+
+- emitter <code>function</code>  
+- sources <code>array</code>  
+
 
 * [Aeroflow](#Aeroflow)
-    * [.append([...sources])](#Aeroflow+append) ⇒ <code>[Aeroflow](#Aeroflow)</code>
-    * [.average()](#Aeroflow+average)
-    * [.bind()](#Aeroflow+bind)
-    * [.catch()](#Aeroflow+catch)
-    * [.count()](#Aeroflow+count)
-    * [.delay([interval])](#Aeroflow+delay)
-    * [.dump([prefix], [logger])](#Aeroflow+dump)
-    * [.every([predicate])](#Aeroflow+every) ⇒ <code>[Aeroflow](#Aeroflow)</code>
-    * [.filter([predicate])](#Aeroflow+filter) ⇒ <code>[Aeroflow](#Aeroflow)</code>
-    * [.flatten()](#Aeroflow+flatten)
-    * [.max()](#Aeroflow+max) ⇒
-    * [.mean()](#Aeroflow+mean) ⇒
-    * [.min()](#Aeroflow+min) ⇒
-    * [.prepend([...sources])](#Aeroflow+prepend)
-    * [.reduce(reducer, initial)](#Aeroflow+reduce)
-    * [.reverse()](#Aeroflow+reverse)
-    * [.reverse()](#Aeroflow+reverse)
-    * [.run([next], [done], [data])](#Aeroflow+run)
-    * [.skip([condition])](#Aeroflow+skip) ⇒ <code>[Aeroflow](#Aeroflow)</code>
-    * [.slice()](#Aeroflow+slice)
-    * [.some([predicate])](#Aeroflow+some) ⇒ <code>[Aeroflow](#Aeroflow)</code>
-    * [.sort()](#Aeroflow+sort)
-    * [.tap([callback])](#Aeroflow+tap)
-    * [.toArray()](#Aeroflow+toArray) ⇒ <code>[Aeroflow](#Aeroflow)</code>
-    * [.toMap([keyTransformation], [valueTransformation])](#Aeroflow+toMap) ⇒ <code>[Aeroflow](#Aeroflow)</code>
-    * [.toSet()](#Aeroflow+toSet) ⇒ <code>[Aeroflow](#Aeroflow)</code>
+    * _instance_
+        * [.append([...sources])](#Aeroflow+append) ⇒ <code>[Aeroflow](#Aeroflow)</code>
+        * [.average()](#Aeroflow+average)
+        * [.bind([...sources])](#Aeroflow+bind)
+        * [.catch([alternative])](#Aeroflow+catch)
+        * [.chain([operator])](#Aeroflow+chain)
+        * [.count([optional])](#Aeroflow+count)
+        * [.delay([interval])](#Aeroflow+delay)
+        * [.distinct(untilChanged)](#Aeroflow+distinct)
+        * [.dump([prefix], [logger])](#Aeroflow+dump)
+        * [.every([predicate])](#Aeroflow+every) ⇒ <code>[Aeroflow](#Aeroflow)</code>
+        * [.filter([predicate])](#Aeroflow+filter) ⇒ <code>[Aeroflow](#Aeroflow)</code>
+        * [.flatten([depth])](#Aeroflow+flatten)
+    * _static_
+        * [.map([mapping])](#Aeroflow.map)
+    * _instance_
+        * [.max()](#Aeroflow+max) ⇒
+        * [.mean()](#Aeroflow+mean) ⇒
+        * [.min()](#Aeroflow+min) ⇒
+        * [.prepend([...sources])](#Aeroflow+prepend)
+        * [.reduce(reducer, seed, optional)](#Aeroflow+reduce)
+        * [.reverse(attempts)](#Aeroflow+reverse)
+        * [.reverse()](#Aeroflow+reverse)
+        * [.run([next], [done], [data])](#Aeroflow+run)
+        * [.skip([condition])](#Aeroflow+skip) ⇒ <code>[Aeroflow](#Aeroflow)</code>
+        * [.slice([begin], [end])](#Aeroflow+slice)
+        * [.some([predicate])](#Aeroflow+some) ⇒ <code>[Aeroflow](#Aeroflow)</code>
+        * [.sort([...parameters])](#Aeroflow+sort)
+        * [.tap([callback])](#Aeroflow+tap)
+        * [.toArray()](#Aeroflow+toArray) ⇒ <code>[Aeroflow](#Aeroflow)</code>
+        * [.toMap([keyTransformation], [valueTransformation])](#Aeroflow+toMap) ⇒ <code>[Aeroflow](#Aeroflow)</code>
+        * [.toSet()](#Aeroflow+toSet) ⇒ <code>[Aeroflow](#Aeroflow)</code>
+        * [.toString([separator], [optional])](#Aeroflow+toString)
 
 <a name="Aeroflow+append"></a>
 ### aeroflow.append([...sources]) ⇒ <code>[Aeroflow](#Aeroflow)</code>
@@ -89,9 +94,10 @@ aeroflow(1).append(2, [3, 4], new Promise(resolve => setTimeout(() => resolve(5)
 **Params**
 
 <a name="Aeroflow+bind"></a>
-### aeroflow.bind()
+### aeroflow.bind([...sources])
 **Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
 **Params**
+- [...sources] <code>any</code>
 
 **Example**  
 ```js
@@ -107,23 +113,33 @@ aeroflow([1, 2, 3]).dump().bind([4, 5, 6]).run();
 // done true
 ```
 <a name="Aeroflow+catch"></a>
-### aeroflow.catch()
+### aeroflow.catch([alternative])
 **Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
 **Params**
+- [alternative] <code>any</code>
 
 **Example**  
 ```js
+aeroflow.error('error').catch().dump().run();
+// done false
 aeroflow.error('error').dump('before ').catch('success').dump('after ').run();
 // before done Error: error(…)
 // after next success
 // after done true
 ```
+<a name="Aeroflow+chain"></a>
+### aeroflow.chain([operator])
+**Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
+**Params**
+- [operator] <code>function</code>
+
 <a name="Aeroflow+count"></a>
-### aeroflow.count()
+### aeroflow.count([optional])
 Counts the number of values emitted by this flow, returns new flow emitting only this value.
 
 **Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
 **Params**
+- [optional] <code>boolean</code>
 
 **Example**  
 ```js
@@ -164,6 +180,24 @@ Function is execute for each emitted value, with three arguments:
   context - The context object
 The result of condition function will be converted nu number and used as milliseconds interval.
 
+<a name="Aeroflow+distinct"></a>
+### aeroflow.distinct(untilChanged)
+**Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
+**Params**
+- untilChanged <code>boolean</code>
+
+**Example**  
+```js
+aeroflow(1, 1, 2, 2, 1, 1).distinct().dump().run();
+// next 1
+// next 2
+// done true
+aeroflow(1, 1, 2, 2, 1, 1).distinct(true).dump().run();
+// next 1
+// next 2
+// next 1
+// done true
+```
 <a name="Aeroflow+dump"></a>
 ### aeroflow.dump([prefix], [logger])
 Dumps all events (next, done) emitted by this flow to the logger with optional prefix.
@@ -248,9 +282,10 @@ aeroflow(1, 2).filter(value => { throw new Error }).dump().run();
 // Uncaught Error
 ```
 <a name="Aeroflow+flatten"></a>
-### aeroflow.flatten()
+### aeroflow.flatten([depth])
 **Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
 **Params**
+- [depth] <code>number</code>
 
 **Example**  
 ```js
@@ -268,6 +303,23 @@ aeroflow(new Promise(resolve => setTimeout(() => resolve(() => [1, 2]), 500))).f
 // done true
 aeroflow(new Promise(resolve => setTimeout(() => resolve(() => [1, 2]), 500))).flatten(1).dump().run();
 // next [1, 2]
+// done true
+```
+<a name="Aeroflow.map"></a>
+### Aeroflow.map([mapping])
+**Kind**: static method of <code>[Aeroflow](#Aeroflow)</code>  
+**Params**
+- [mapping] <code>function</code> | <code>any</code>
+
+**Example**  
+```js
+aeroflow(1, 2).map('test').dump().run();
+// next test
+// next test
+// done true
+aeroflow(1, 2).map(value => value * 10).dump().run();
+// next 10
+// next 20
 // done true
 ```
 <a name="Aeroflow+max"></a>
@@ -318,7 +370,7 @@ Returns new flow emitting the emissions from all provided sources and then from 
 
 **Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
 **Params**
-- [...sources] <code>any</code> - Values to concatenate with this flow.
+- [...sources] <code>Array.&lt;any&gt;</code> - Values to concatenate with this flow.
 
 **Example**  
 ```js
@@ -331,19 +383,20 @@ aeroflow(1).prepend(2, [3, 4], new Promise(resolve => setTimeout(() => resolve(5
 // done
 ```
 <a name="Aeroflow+reduce"></a>
-### aeroflow.reduce(reducer, initial)
+### aeroflow.reduce(reducer, seed, optional)
 Applies a function against an accumulator and each value emitted by this flow to reduce it to a single value,
 returns new flow emitting reduced value.
 
 **Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
 **Params**
 - reducer <code>function</code> | <code>any</code> - Function to execute on each emitted value, taking four arguments:
-  result - the value previously returned in the last invocation of the reducer, or seed, if supplied
-  value - the current value emitted by this flow
-  index - the index of the current value emitted by the flow
+  result - the value previously returned in the last invocation of the reducer, or seed, if supplied;
+  value - the current value emitted by this flow;
+  index - the index of the current value emitted by the flow;
   context.data.
-  If is not a function, a flow emitting just reducer value will be returned.
-- initial <code>any</code> - Value to use as the first argument to the first call of the reducer.
+  If is not a function, the returned flow will emit just reducer value.
+- seed <code>any</code> - Value to use as the first argument to the first call of the reducer.
+- optional <code>boolean</code>
 
 **Example**  
 ```js
@@ -353,6 +406,24 @@ aeroflow([2, 4, 8]).reduce((product, value) => product value, 1).dump().run();
 aeroflow(['a', 'b', 'c']).reduce((product, value, index) => product + value + index, '').dump().run();
 // next a0b1c2
 // done
+```
+<a name="Aeroflow+reverse"></a>
+### aeroflow.reverse(attempts)
+**Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
+**Params**
+- attempts <code>number</code>
+
+**Example**  
+```js
+var attempt = 0; aeroflow(() => {
+  if (attempt++ % 2) return 'success';
+  else throw new Error('error');
+}).dump('before ').retry().dump('after ').run();
+// before done Error: error(…)
+// before next success
+// after next success
+// before done true
+// after done true
 ```
 <a name="Aeroflow+reverse"></a>
 ### aeroflow.reverse()
@@ -372,23 +443,6 @@ aeroflow.range(1, 3).reverse().dump().run()
 // next 1
 // done
 ```
-<a name="Aeroflow+reverse"></a>
-### aeroflow.reverse()
-**Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
-**Params**
-
-**Example**  
-```js
-var attempt = 0; aeroflow(() => {
-  if (attempt++ % 2) return 'success';
-  else throw new Error('error');
-}).dump('before ').retry().dump('after ').run();
-// before done Error: error(…)
-// before next success
-// after next success
-// before done true
-// after done true
-```
 <a name="Aeroflow+run"></a>
 ### aeroflow.run([next], [done], [data])
 Runs this flow asynchronously, initiating source to emit values,
@@ -398,6 +452,9 @@ If no callbacks provided, runs this flow for its side-effects only.
 **Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
 **Params**
 - [next] <code>function</code> - Callback to execute for each emitted value, taking two arguments: value, context.
+Or EventEmitter object.
+Or EventTarget object.
+Or Observer object.
 - [done] <code>function</code> - Callback to execute as emission is complete, taking two arguments: error, context.
 - [data] <code>function</code> - Arbitrary value passed to each callback invoked by this flow as context.data.
 
@@ -449,9 +506,11 @@ aeroflow([1, 2, 3]).skip(value => value < 3).dump().run();
 // done
 ```
 <a name="Aeroflow+slice"></a>
-### aeroflow.slice()
+### aeroflow.slice([begin], [end])
 **Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
 **Params**
+- [begin] <code>number</code>
+- [end] <code>number</code>
 
 **Example**  
 ```js
@@ -475,8 +534,9 @@ returns flow emitting true if the predicate returns true for any emitted value; 
 **Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
 **Returns**: <code>[Aeroflow](#Aeroflow)</code> - New flow that emits true or false.  
 **Params**
-- [predicate] <code>function</code> | <code>regexp</code> | <code>any</code> - The predicate function or regular expression object used to test each emitted value,
-  or scalar value to compare emitted values with. If omitted, default (truthy) predicate is used.
+- [predicate] <code>function</code> | <code>regexp</code> | <code>any</code> - The predicate function or regular expression object used to test each emitted value.
+Or scalar value to compare emitted values with.
+If omitted, truthy predicate is used.
 
 **Example**  
 ```js
@@ -494,9 +554,10 @@ aeroflow(1, 2).some(value => { throw new Error }).dump().run();
 // Uncaught Error
 ```
 <a name="Aeroflow+sort"></a>
-### aeroflow.sort()
+### aeroflow.sort([...parameters])
 **Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
 **Params**
+- [...parameters] <code>function</code> | <code>boolean</code> | <code>Array.&lt;&#x27;desc&#x27;&gt;</code>
 
 **Example**  
 ```js
@@ -564,10 +625,10 @@ Collects all values emitted by this flow to ES6 map, returns flow emitting this 
 **Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
 **Returns**: <code>[Aeroflow](#Aeroflow)</code> - New flow that emits a map.  
 **Params**
-- [keyTransformation] <code>function</code> | <code>any</code> - The mapping function used to transform each emitted value to map key,
-  or scalar value to use as map key.
+- [keyTransformation] <code>function</code> | <code>any</code> - The mapping function used to transform each emitted value to map key.
+Or scalar value to use as map key.
 - [valueTransformation] <code>function</code> | <code>any</code> - The mapping function used to transform each emitted value to map value,
-  or scalar value to use as map value.
+Or scalar value to use as map value.
 
 **Example**  
 ```js
@@ -592,13 +653,32 @@ aeroflow(1, 2, 3).toSet().dump().run();
 // next Set {1, 2, 3}
 // done true
 ```
+<a name="Aeroflow+toString"></a>
+### aeroflow.toString([separator], [optional])
+**Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
+**Params**
+- [separator] <code>string</code> | <code>function</code>
+- [optional] <code>boolean</code>
+
+**Example**  
+```js
+aeroflow(1, 2, 3).toString().dump().run();
+// next 1,2,3
+// done true
+aeroflow(1, 2, 3).toString(';').dump().run();
+// next 1;2;3
+// done true
+aeroflow(1, 2, 3).toString((value, index) => '-'.repeat(index + 1)).dump().run();
+// next 1--2---3
+// done true
+```
 <a name="aeroflow"></a>
 ## aeroflow(sources)
 Creates new flow emitting values from all provided data sources.
 
 **Kind**: global function  
 **Params**
-- sources <code>any</code> - Data sources.
+- sources <code>Array.&lt;any&gt;</code> - Data sources.
 
 **Example**  
 ```js
@@ -618,13 +698,12 @@ aeroflow(() => { throw new Error }).dump().run();
 
 * [aeroflow(sources)](#aeroflow)
     * [.create(emitter)](#aeroflow.create) ⇒ <code>[Aeroflow](#Aeroflow)</code>
-    * [.error()](#aeroflow.error)
-    * [.expand()](#aeroflow.expand)
+    * [.expand(expander, [seed])](#aeroflow.expand)
     * [.just(value)](#aeroflow.just) ⇒ <code>[Aeroflow](#Aeroflow)</code>
-    * [.random()](#aeroflow.random) ⇒ <code>[Aeroflow](#Aeroflow)</code>
-    * [.range()](#aeroflow.range)
+    * [.random([minimum], [maximum])](#aeroflow.random) ⇒ <code>[Aeroflow](#Aeroflow)</code>
+    * [.range([start], [end], [step])](#aeroflow.range)
     * [.repeat(value)](#aeroflow.repeat) ⇒ <code>[Aeroflow](#Aeroflow)</code>
-    * [.timer()](#aeroflow.timer)
+    * [.timer([interval])](#aeroflow.timer)
 
 <a name="aeroflow.create"></a>
 ### aeroflow.create(emitter) ⇒ <code>[Aeroflow](#Aeroflow)</code>
@@ -649,20 +728,12 @@ aeroflow.create((next, done, context) => {
 // next 2
 // done true
 ```
-<a name="aeroflow.error"></a>
-### aeroflow.error()
-**Kind**: static method of <code>[aeroflow](#aeroflow)</code>  
-**Params**
-
-**Example**  
-```js
-aeroflow.error('test').run();
-// Uncaught Error: test
-```
 <a name="aeroflow.expand"></a>
-### aeroflow.expand()
+### aeroflow.expand(expander, [seed])
 **Kind**: static method of <code>[aeroflow](#aeroflow)</code>  
 **Params**
+- expander <code>function</code>
+- [seed] <code>any</code>
 
 **Example**  
 ```js
@@ -688,12 +759,14 @@ aeroflow.just([1, 2, 3]).dump().run();
 // done
 ```
 <a name="aeroflow.random"></a>
-### aeroflow.random() ⇒ <code>[Aeroflow](#Aeroflow)</code>
+### aeroflow.random([minimum], [maximum]) ⇒ <code>[Aeroflow](#Aeroflow)</code>
 Creates new flow emitting infinite sequence of random numbers.
 
 **Kind**: static method of <code>[aeroflow](#aeroflow)</code>  
 **Returns**: <code>[Aeroflow](#Aeroflow)</code> - The new flow emitting random numbers.  
 **Params**
+- [minimum] <code>number</code>
+- [maximum] <code>number</code>
 
 **Example**  
 ```js
@@ -714,9 +787,12 @@ next 4.398837305698544
 // done false
 ```
 <a name="aeroflow.range"></a>
-### aeroflow.range()
+### aeroflow.range([start], [end], [step])
 **Kind**: static method of <code>[aeroflow](#aeroflow)</code>  
 **Params**
+- [start] <code>number</code>
+- [end] <code>number</code>
+- [step] <code>number</code>
 
 **Example**  
 ```js
@@ -753,8 +829,8 @@ Creates flow repeating provided value.
 **Params**
 - value <code>function</code> | <code>any</code> - Arbitrary static value to repeat;
 or function providing dynamic values and invoked with two arguments:
-index - index of the value being emitted,
- data - contextual data.
+  index - index of the value being emitted,
+  data - contextual data.
 
 **Example**  
 ```js
@@ -773,9 +849,10 @@ aeroflow.repeat(index => Math.pow(2, index)).take(3).dump().run();
 // done false
 ```
 <a name="aeroflow.timer"></a>
-### aeroflow.timer()
+### aeroflow.timer([interval])
 **Kind**: static method of <code>[aeroflow](#aeroflow)</code>  
 **Params**
+- [interval] <code>number</code> | <code>function</code>
 
 **Example**  
 ```js
@@ -790,34 +867,17 @@ aeroflow.timer(index => 500 + index * 500).take(3).dump().run();
 // next Wed Feb 03 2016 02:37:38 ... // after 1500ms
 // done false
 ```
-<a name="map"></a>
-## map()
-aeroflow(1, 2).map('test').dump().run();
-// next test
-// next test
-// done true
-aeroflow(1, 2).map(value => value * 10).dump().run();
-// next 10
-// next 20
-// done true
+<a name="aeroflow.error
 
-**Kind**: global function  
-**Params**
++param {string|error} [message]"></a>
+## aeroflow.error
 
-<a name="toString"></a>
-## toString()
+#param {string|error} [message]()
 **Kind**: global function  
 **Params**
 
 **Example**  
 ```js
-aeroflow(1, 2, 3).toString().dump().run();
-// next 1,2,3
-// done true
-aeroflow(1, 2, 3).toString(';').dump().run();
-// next 1;2;3
-// done true
-aeroflow(1, 2, 3).toString((value, index) => '-'.repeat(index + 1)).dump().run();
-// next 1--2---3
-// done true
+aeroflow.error('test').run();
+// Uncaught Error: test
 ```

@@ -95,6 +95,10 @@
     };
   };
 
+  var isDefined = function isDefined(value) {
+    return value !== undefined;
+  };
+
   var isError$1 = classIs(ERROR);
   var isFunction = classIs(FUNCTION);
   var isInteger = Number.isInteger;
@@ -441,7 +445,9 @@
     return function (emitter) {
       return function (next, done, context) {
         return emitter(next, function (result) {
-          if (isError$1(result)) adapterEmitter(alternative, true)(next, done, context);else done(result);
+          if (isError$1(result)) {
+            if (isDefined(alternative)) adapterEmitter(alternative, true)(next, done, context);else done(false);
+          } else done(result);
         }, context);
       };
     };
@@ -488,6 +494,28 @@
               }
             }, delay);
           });
+        }, done, context);
+      };
+    };
+  }
+
+  function distinctOperator(untilChanged) {
+    return function (emitter) {
+      return untilChanged ? function (next, done, context) {
+        var idle = true,
+            last = undefined;
+        emitter(function (result) {
+          if (!idle && last === result) return true;
+          idle = false;
+          last = result;
+          return next(result);
+        }, done, context);
+      } : function (next, done, context) {
+        var set = new Set();
+        emitter(function (result) {
+          if (set.has(result)) return true;
+          set.add(result);
+          return next(result);
         }, done, context);
       };
     };
@@ -1098,6 +1126,10 @@
     return this.chain(delayOperator(interval));
   }
 
+  function distinct(untilChanged) {
+    return this.chain(distinctOperator(untilChanged));
+  }
+
   function dump(prefix, logger) {
     return this.chain(dumpOperator(prefix, logger));
   }
@@ -1299,6 +1331,10 @@
     },
     delay: {
       value: delay,
+      writable: true
+    },
+    distinct: {
+      value: distinct,
       writable: true
     },
     dump: {

@@ -47,6 +47,7 @@
   const classOf = value => objectToString.call(value).slice(8, -1);
   const classIs = className => value => classOf(value) === className;
 
+  const isDefined = value => value !== undefined;
   const isError$1 = classIs(ERROR);
   const isFunction = classIs(FUNCTION);
   const isInteger = Number.isInteger;
@@ -355,7 +356,9 @@
     return emitter => (next, done, context) => emitter(
       next,
       result => {
-        if (isError$1(result)) adapterEmitter(alternative, true)(next, done, context);
+        if (isError$1(result))
+          if (isDefined(alternative)) adapterEmitter(alternative, true)(next, done, context);
+          else done(false);
         else done(result);
       },
       context);
@@ -404,6 +407,33 @@
         done,
         context);
     }
+  }
+
+  function distinctOperator(untilChanged) {
+    return emitter => untilChanged
+      ? (next, done, context) => {
+          let idle = true, last;
+          emitter(
+            result => {
+              if (!idle && last === result) return true;
+              idle = false;
+              last = result;
+              return next(result);
+            },
+            done,
+            context);
+        }
+      : (next, done, context) => {
+          let set = new Set;
+          emitter(
+            result => {
+              if (set.has(result)) return true;
+              set.add(result);
+              return next(result);
+            },
+            done,
+            context);
+        };
   }
 
   function dumpToConsoleOperator(prefix) {
@@ -918,7 +948,10 @@
   /**
   Aeroflow class.
 
-  @public @class @alias Aeroflow
+  @alias Aeroflow
+
+  @property {function} emitter
+  @property {array} sources
   */
   class Aeroflow {
     constructor(emitter, sources) {
@@ -961,6 +994,8 @@
   /**
   @alias Aeroflow#bind
 
+  @param {any} [sources]
+
   @example
   aeroflow().dump().bind(1, 2, 3).run();
   // next 1
@@ -979,12 +1014,23 @@
   /**
   @alias Aeroflow#catch
 
-  @example
+  @param {any} [alternative]
 
+  @example
+  aeroflow.error('error').catch().dump().run();
+  aeroflow.error('error').dump('before ').catch('success').dump('after ').run();
+  // before done Error: error(…)
+  // after next success
+  // after done true
   */
   function catch_(alternative) {
     return this.chain(catchOperator(alternative));
   }
+  /**
+  @alias Aeroflow#chain
+
+  @param {function} [operator]
+  */
   function chain(operator) {
     return new Aeroflow(operator(this.emitter), this.sources);
   }
@@ -992,6 +1038,8 @@
   Counts the number of values emitted by this flow, returns new flow emitting only this value.
 
   @alias Aeroflow#count
+
+  @param {boolean} [optional]
 
   @example
   aeroflow().count().dump().run();
@@ -1038,6 +1086,25 @@
   */
   function delay(interval) {
     return this.chain(delayOperator(interval));
+  }
+  /**
+  @alias Aeroflow#distinct
+
+  @param {boolean} untilChanged
+
+  @example
+  aeroflow(1, 1, 2, 2, 1, 1).distinct().dump().run();
+  // next 1
+  // next 2
+  // done true
+  aeroflow(1, 1, 2, 2, 1, 1).distinct(true).dump().run();
+  // next 1
+  // next 2
+  // next 1
+  // done true
+  */
+  function distinct(untilChanged) {
+    return this.chain(distinctOperator(untilChanged));
   }
   /**
   Dumps all events (next, done) emitted by this flow to the logger with optional prefix.
@@ -1137,6 +1204,8 @@
   /**
   @alias Aeroflow#flatten
 
+  @param {number} [depth]
+
   @example
   aeroflow([[1, 2]]).flatten().dump().run();
   // next 1
@@ -1160,6 +1229,8 @@
   /*
   @alias Aeroflow#group
 
+  @param {function|any[]} [selectors]
+
   @example
   aeroflow.range(1, 10).group(value => (value % 2) ? 'odd' : 'even').dump().run();
   // next ["odd", Array[5]]
@@ -1180,6 +1251,11 @@
     return this.chain(groupOperator(selectors));
   }
   /**
+  @alias Aeroflow.map
+
+  @param {function|any} [mapping]
+
+  @example
   aeroflow(1, 2).map('test').dump().run();
   // next test
   // next test
@@ -1289,9 +1365,14 @@
 
   @example
   var attempt = 0; aeroflow(() => {
-    if (attempt++) return 'success';
+    if (attempt++ % 2) return 'success';
     else throw new Error('error');
-  }).dump().retry().dump().run();
+  }).dump('before ').retry().dump('after ').run();
+  // before done Error: error(…)
+  // before next success
+  // after next success
+  // before done true
+  // after done true
   */
   function retry(attempts) {
     return this.chain(retryOperator(attempts));
@@ -1629,6 +1710,7 @@
     catch: { value: catch_, writable: true },
     count: { value: count, writable: true },
     delay: { value: delay, writable: true },
+    distinct: { value: distinct, writable: true },
     dump: { value: dump, writable: true },
     every: { value: every, writable: true },
     filter: { value: filter, writable: true },
