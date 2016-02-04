@@ -300,6 +300,12 @@ function group(...selectors) {
   return this.chain(groupOperator(selectors));
 }
 /**
+@alias Aeroflow#join
+*/
+function join(right, comparer) {
+  return this.chain(joinOperator(right, comparer));
+}
+/**
 aeroflow(1, 2).map('test').dump().run();
 // next test
 // next test
