@@ -280,7 +280,7 @@
       var index = 0,
           value = seed;
       !function proceed() {
-        while (!unsync$1(next(expander(value, index++, context.data))), proceed, done) {}
+        while (!unsync$1(next(value = expander(value, index++, context.data)), proceed, done)) {}
       }();
     };
   }

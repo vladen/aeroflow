@@ -764,6 +764,13 @@ function error(message) {
 }
 /**
 @alias aeroflow.expand
+
+@example
+aeroflow.expand(value => value * 2, 1).take(3).dump().run();
+// next 2
+// next 4
+// next 8
+// done false
 */
 function expand(expander, seed) {
   return new Aeroflow(expandEmitter(expander, seed));

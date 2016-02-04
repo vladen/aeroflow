@@ -205,7 +205,7 @@
     return (next, done, context) => {
       let index = 0, value = seed;
       !function proceed() {
-        while (!unsync$1(next(expander(value, index++, context.data))), proceed, done);
+        while (!unsync$1(next(value = expander(value, index++, context.data)), proceed, done));
       }();
     };
   }
@@ -1628,6 +1628,13 @@
   }
   /**
   @alias aeroflow.expand
+
+  @example
+  aeroflow.expand(value => value * 2, 1).take(3).dump().run();
+  // next 2
+  // next 4
+  // next 8
+  // done false
   */
   function expand(expander, seed) {
     return new Aeroflow(expandEmitter(expander, seed));

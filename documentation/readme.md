@@ -611,6 +611,14 @@ aeroflow.error('test').run();
 **Kind**: static method of <code>[aeroflow](#aeroflow)</code>  
 **Params**
 
+**Example**  
+```js
+aeroflow.expand(value => value * 2, 1).take(3).dump().run();
+// next 2
+// next 4
+// next 8
+// done false
+```
 <a name="aeroflow.just"></a>
 ### aeroflow.just(value) ⇒ <code>[Aeroflow](#Aeroflow)</code>
 Creates new flow emitting the provided value only.
