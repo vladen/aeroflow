@@ -1005,7 +1005,7 @@ function create(emitter) {
 /**
 @alias aeroflow.error
 
-#param {string|error} [message]
+@param {string|error} [message]
 
 @return {Aeroflow}
 

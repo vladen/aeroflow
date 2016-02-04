@@ -13,12 +13,6 @@
 <dt><a href="#aeroflow">aeroflow(sources)</a> ⇒ <code><a href="#Aeroflow">Aeroflow</a></code></dt>
 <dd><p>Creates new flow emitting values from all provided data sources.</p>
 </dd>
-<dt><a href="#aeroflow.error
-
-+param {string|error} [message]">aeroflow.error
-
-#param {string|error} [message]()</a> ⇒ <code><a href="#Aeroflow">Aeroflow</a></code></dt>
-<dd></dd>
 </dl>
 
 <a name="Aeroflow"></a>
@@ -703,6 +697,7 @@ aeroflow(() => { throw new Error }).dump().run();
 
 * [aeroflow(sources)](#aeroflow) ⇒ <code>[Aeroflow](#Aeroflow)</code>
     * [.create(emitter)](#aeroflow.create) ⇒ <code>[Aeroflow](#Aeroflow)</code>
+    * [.error([message])](#aeroflow.error) ⇒ <code>[Aeroflow](#Aeroflow)</code>
     * [.expand(expander, [seed])](#aeroflow.expand) ⇒ <code>[Aeroflow](#Aeroflow)</code>
     * [.just(value)](#aeroflow.just) ⇒ <code>[Aeroflow](#Aeroflow)</code>
     * [.random([minimum], [maximum])](#aeroflow.random) ⇒ <code>[Aeroflow](#Aeroflow)</code>
@@ -732,6 +727,17 @@ aeroflow.create((next, done, context) => {
 // next 1
 // next 2
 // done true
+```
+<a name="aeroflow.error"></a>
+### aeroflow.error([message]) ⇒ <code>[Aeroflow](#Aeroflow)</code>
+**Kind**: static method of <code>[aeroflow](#aeroflow)</code>  
+**Params**
+- [message] <code>string</code> | <code>error</code>
+
+**Example**  
+```js
+aeroflow.error('test').run();
+// Uncaught Error: test
 ```
 <a name="aeroflow.expand"></a>
 ### aeroflow.expand(expander, [seed]) ⇒ <code>[Aeroflow](#Aeroflow)</code>
@@ -871,18 +877,4 @@ aeroflow.timer(index => 500 + index * 500).take(3).dump().run();
 // next Wed Feb 03 2016 02:37:37 ... // after 1000ms
 // next Wed Feb 03 2016 02:37:38 ... // after 1500ms
 // done false
-```
-<a name="aeroflow.error
-
-+param {string|error} [message]"></a>
-## aeroflow.error
-
-#param {string|error} [message]() ⇒ <code>[Aeroflow](#Aeroflow)</code>
-**Kind**: global function  
-**Params**
-
-**Example**  
-```js
-aeroflow.error('test').run();
-// Uncaught Error: test
 ```
