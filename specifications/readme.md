@@ -45,6 +45,9 @@
        - [@Function](#aeroflow-tapfunction-function)
      - [#toArray()](#aeroflow-toarray)
      - [#toMap()](#aeroflow-tomap)
+     - [#distinct()](#aeroflow-distinct)
+     - [#distinct(@Boolean)](#aeroflow-distinctboolean)
+       - [@Boolean](#aeroflow-distinctboolean-boolean)
 <a name=""></a>
  
 <a name="aeroflow"></a>
@@ -770,6 +773,12 @@ is instance method.
 return assert.isFunction(aeroflow.empty.toArray);
 ```
 
+returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow([1, 2, 3, 4]).toArray(), 'Aeroflow');
+```
+
 emitting single array containing all values.
 
 ```js
@@ -793,6 +802,12 @@ is instance method.
 return assert.isFunction(aeroflow.empty.toMap);
 ```
 
+returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow([1, 2, 3, 4]).toMap(), 'Aeroflow');
+```
+
 emitting single map containing all values.
 
 ```js
@@ -805,6 +820,103 @@ setImmediate(function () {
     assert.typeOf(actual, 'Map');
     assert.includeMembers(Array.from(actual.keys()), expected);
     assert.includeMembers(Array.from(actual.values()), expected);
+    done();
+});
+```
+
+<a name="aeroflow-distinct"></a>
+## #distinct()
+is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.distinct);
+```
+
+returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow([1, 2, 3, 4]).distinct(), 'Aeroflow');
+```
+
+emitting only unique values in sources with a same type.
+
+```js
+var values = [1, 1, 1, 2, 2],
+    expected = [1, 2],
+    actual = [];
+aeroflow.apply(undefined, values).distinct().run(function (value) {
+    return actual.push(value);
+});
+setImmediate(function () {
+    assert.strictEqual(actual.length, expected.length);
+    assert.sameMembers(actual, expected);
+    done();
+});
+```
+
+emitting only unique values in sources with different types.
+
+```js
+var values = ['a', 'b', 1, new Date(), 2],
+    actual = [];
+aeroflow.apply(undefined, values).distinct().run(function (value) {
+    return actual.push(value);
+});
+setImmediate(function () {
+    assert.strictEqual(actual.length, values.length);
+    assert.sameMembers(actual, values);
+    done();
+});
+```
+
+emitting only unique values if passed like one source.
+
+```js
+var values = [1, 1, 1, 2, 2],
+    expected = [1, 2],
+    actual = [];
+aeroflow(values).distinct().run(function (value) {
+    return actual.push(value);
+});
+setImmediate(function () {
+    assert.strictEqual(actual.length, expected.length);
+    assert.sameMembers(actual, expected);
+    done();
+});
+```
+
+<a name="aeroflow-distinctboolean"></a>
+## #distinct(@Boolean)
+<a name="aeroflow-distinctboolean-boolean"></a>
+### @Boolean
+emitting unique values until it changed if true passed.
+
+```js
+var values = [1, 1, 1, 2, 2, 1, 1],
+    expected = [1, 2, 1],
+    actual = [];
+aeroflow.apply(undefined, values).distinct(true).run(function (value) {
+    return actual.push(value);
+});
+setImmediate(function () {
+    assert.strictEqual(actual.length, expected.length);
+    assert.sameMembers(actual, expected);
+    done();
+});
+```
+
+emitting unique values until it changed if false passed.
+
+```js
+var values = [1, 1, 1, 2, 2, 1, 1],
+    expected = [1, 2],
+    actual = [];
+aeroflow.apply(undefined, values).distinct(false).run(function (value) {
+    return actual.push(value);
+});
+setImmediate(function () {
+    assert.strictEqual(actual.length, expected.length);
+    assert.sameMembers(actual, expected);
     done();
 });
 ```

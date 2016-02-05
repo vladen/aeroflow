@@ -39,6 +39,7 @@ Aeroflow class.
     * [.every([predicate])](#Aeroflow+every) ⇒ <code>[Aeroflow](#Aeroflow)</code>
     * [.filter([predicate])](#Aeroflow+filter) ⇒ <code>[Aeroflow](#Aeroflow)</code>
     * [.flatten([depth])](#Aeroflow+flatten) ⇒ <code>[Aeroflow](#Aeroflow)</code>
+    * [.join(right, comparer)](#Aeroflow+join) ⇒ <code>[Aeroflow](#Aeroflow)</code>
     * [.map([mapping])](#Aeroflow+map) ⇒ <code>[Aeroflow](#Aeroflow)</code>
     * [.max()](#Aeroflow+max) ⇒ <code>[Aeroflow](#Aeroflow)</code>
     * [.mean()](#Aeroflow+mean) ⇒ <code>[Aeroflow](#Aeroflow)</code>
@@ -313,6 +314,36 @@ aeroflow(new Promise(resolve => setTimeout(() => resolve(() => [1, 2]), 500))).f
 // next [1, 2]
 // done true
 ```
+<a name="Aeroflow+join"></a>
+### aeroflow.join(right, comparer) ⇒ <code>[Aeroflow](#Aeroflow)</code>
+**Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
+**Params**
+
+- right <code>any</code>
+- comparer <code>function</code>
+
+**Example**  
+```js
+aeroflow(['a','b']).join([1, 2]).dump().run();
+// next ["a", 1]
+// next ["a", 2]
+// next ["b", 1]
+// next ["b", 2]
+aeroflow([
+  { country: 'USA', capital: 'Washington' },
+  { country: 'Russia', capital: 'Moskow' }
+]).join([
+  { country: 'USA', currency: 'US Dollar' },
+  { country: 'Russia', currency: 'Russian Ruble' }
+], (left, right) => left.country === right.country)
+.map(result => (
+  { country: result[0].country, capital: result[0].capital, currency: result[1].currency }
+))
+.dump().run();
+// next Object {country: "USA", capital: "Washington", currency: "US Dollar"}
+// next Object {country: "Russia", capital: "Moskow", currency: "Russian Ruble"}
+// done true
+```
 <a name="Aeroflow+map"></a>
 ### aeroflow.map([mapping]) ⇒ <code>[Aeroflow](#Aeroflow)</code>
 **Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
@@ -497,19 +528,19 @@ returns flow emitting remaining values.
 
 **Example**  
 ```js
-aeroflow([1, 2, 3]).skip().dump().run();
-// done
-aeroflow([1, 2, 3]).skip(1).dump().run();
+aeroflow(1, 2, 3).skip().dump().run();
+// done true
+aeroflow(1, 2, 3).skip(1).dump().run();
 // next 2
 // next 3
-// done
-aeroflow([1, 2, 3]).skip(-1).dump().run();
+// done true
+aeroflow(1, 2, 3).skip(-1).dump().run();
 // next 1
 // next 2
-// done
-aeroflow([1, 2, 3]).skip(value => value < 3).dump().run();
+// done true
+aeroflow(1, 2, 3).skip(value => value < 3).dump().run();
 // next 3
-// done
+// done true
 ```
 <a name="Aeroflow+slice"></a>
 ### aeroflow.slice([begin], [end]) ⇒ <code>[Aeroflow](#Aeroflow)</code>
@@ -521,13 +552,22 @@ aeroflow([1, 2, 3]).skip(value => value < 3).dump().run();
 
 **Example**  
 ```js
+aeroflow(1, 2, 3).slice().dump().run();
+// next 1
+// next 2
+// next 3
+// done true
 aeroflow(1, 2, 3).slice(1).dump().run();
 // next 2
 // next 3
 // done true
-aeroflow(1, 2, 3).slice(1, 1).dump().run();
+aeroflow(1, 2, 3).slice(1, 2).dump().run();
 // next 2
 // done false
+aeroflow(1, 2, 3).slice(-2).dump().run();
+// next 2
+// next 3
+// done true
 aeroflow(1, 2, 3).slice(-3, -1).dump().run();
 // next 1
 // next 2
@@ -712,8 +752,7 @@ aeroflow(() => { throw new Error }).dump().run();
     * [.just(value)](#aeroflow.just) ⇒ <code>[Aeroflow](#Aeroflow)</code>
     * [.random([minimum], [maximum])](#aeroflow.random) ⇒ <code>[Aeroflow](#Aeroflow)</code>
     * [.range([start], [end], [step])](#aeroflow.range) ⇒ <code>[Aeroflow](#Aeroflow)</code>
-    * [.repeat(value)](#aeroflow.repeat) ⇒ <code>[Aeroflow](#Aeroflow)</code>
-    * [.timer([interval])](#aeroflow.timer) ⇒ <code>[Aeroflow](#Aeroflow)</code>
+    * [.repeat([value], [interval])](#aeroflow.repeat) ⇒ <code>[Aeroflow](#Aeroflow)</code>
 
 <a name="aeroflow.create"></a>
 ### aeroflow.create(emitter) ⇒ <code>[Aeroflow](#Aeroflow)</code>
@@ -848,17 +887,18 @@ aeroflow.range(5, 0, -2).dump().run();
 // done true
 ```
 <a name="aeroflow.repeat"></a>
-### aeroflow.repeat(value) ⇒ <code>[Aeroflow](#Aeroflow)</code>
+### aeroflow.repeat([value], [interval]) ⇒ <code>[Aeroflow](#Aeroflow)</code>
 Creates flow repeating provided value.
 
 **Kind**: static method of <code>[aeroflow](#aeroflow)</code>  
 **Returns**: <code>[Aeroflow](#Aeroflow)</code> - The new flow emitting repeated values.  
 **Params**
 
-- value <code>function</code> | <code>any</code> - Arbitrary static value to repeat;
+- [value] <code>function</code> | <code>any</code> - Arbitrary static value to repeat;
 or function providing dynamic values and invoked with two arguments:
   index - index of the value being emitted,
   data - contextual data.
+- [interval] <code>number</code> | <code>function</code>
 
 **Example**  
 ```js
@@ -875,24 +915,14 @@ aeroflow.repeat(index => Math.pow(2, index)).take(3).dump().run();
 // next 2
 // next 4
 // done false
-```
-<a name="aeroflow.timer"></a>
-### aeroflow.timer([interval]) ⇒ <code>[Aeroflow](#Aeroflow)</code>
-**Kind**: static method of <code>[aeroflow](#aeroflow)</code>  
-**Params**
-
-- [interval] <code>number</code> | <code>function</code>
-
-**Example**  
-```js
-aeroflow.timer().take(3).dump().run();
-// next Wed Feb 03 2016 02:35:45 ... // after 1s
-// next Wed Feb 03 2016 02:35:46 ... // after 2s
-// next Wed Feb 03 2016 02:35:47 ... // after 2s
+aeroflow.repeat('ping', 500).take(3).dump().run();
+// next ping // after 500ms
+// next ping // after 500ms
+// next ping // after 500ms
 // done false
-aeroflow.timer(index => 500 + index * 500).take(3).dump().run();
-// next Wed Feb 03 2016 02:37:36 ... // after 500ms
-// next Wed Feb 03 2016 02:37:37 ... // after 1000ms
-// next Wed Feb 03 2016 02:37:38 ... // after 1500ms
+aeroflow.repeat(index => index, index => 500 + 500 * index).take(3).dump().run();
+// next ping // after 500ms
+// next ping // after 1000ms
+// next ping // after 1500ms
 // done false
 ```

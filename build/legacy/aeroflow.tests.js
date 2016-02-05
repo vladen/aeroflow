@@ -577,6 +577,9 @@
                 it('is instance method', function () {
                     return assert.isFunction(aeroflow.empty.toArray);
                 });
+                it('returns instance of Aeroflow', function () {
+                    return assert.typeOf(aeroflow([1, 2, 3, 4]).toArray(), 'Aeroflow');
+                });
                 it('emitting single array containing all values', function (done) {
                     var expected = [1, 2, 3],
                         actual = undefined;
@@ -594,6 +597,9 @@
                 it('is instance method', function () {
                     return assert.isFunction(aeroflow.empty.toMap);
                 });
+                it('returns instance of Aeroflow', function () {
+                    return assert.typeOf(aeroflow([1, 2, 3, 4]).toMap(), 'Aeroflow');
+                });
                 it('emitting single map containing all values', function (done) {
                     var expected = [1, 2, 3],
                         actual = undefined;
@@ -605,6 +611,82 @@
                         assert.includeMembers(Array.from(actual.keys()), expected);
                         assert.includeMembers(Array.from(actual.values()), expected);
                         done();
+                    });
+                });
+            });
+            describe('#distinct()', function () {
+                it('is instance method', function () {
+                    return assert.isFunction(aeroflow.empty.distinct);
+                });
+                it('returns instance of Aeroflow', function () {
+                    return assert.typeOf(aeroflow([1, 2, 3, 4]).distinct(), 'Aeroflow');
+                });
+                it('emitting only unique values in sources with a same type', function (done) {
+                    var values = [1, 1, 1, 2, 2],
+                        expected = [1, 2],
+                        actual = [];
+                    aeroflow.apply(undefined, values).distinct().run(function (value) {
+                        return actual.push(value);
+                    });
+                    setImmediate(function () {
+                        assert.strictEqual(actual.length, expected.length);
+                        assert.sameMembers(actual, expected);
+                        done();
+                    });
+                });
+                it('emitting only unique values in sources with different types', function (done) {
+                    var values = ['a', 'b', 1, new Date(), 2],
+                        actual = [];
+                    aeroflow.apply(undefined, values).distinct().run(function (value) {
+                        return actual.push(value);
+                    });
+                    setImmediate(function () {
+                        assert.strictEqual(actual.length, values.length);
+                        assert.sameMembers(actual, values);
+                        done();
+                    });
+                });
+                it('emitting only unique values if passed like one source', function (done) {
+                    var values = [1, 1, 1, 2, 2],
+                        expected = [1, 2],
+                        actual = [];
+                    aeroflow(values).distinct().run(function (value) {
+                        return actual.push(value);
+                    });
+                    setImmediate(function () {
+                        assert.strictEqual(actual.length, expected.length);
+                        assert.sameMembers(actual, expected);
+                        done();
+                    });
+                });
+            });
+            describe('#distinct(@Boolean)', function () {
+                describe('@Boolean', function () {
+                    it('emitting unique values until it changed if true passed', function (done) {
+                        var values = [1, 1, 1, 2, 2, 1, 1],
+                            expected = [1, 2, 1],
+                            actual = [];
+                        aeroflow.apply(undefined, values).distinct(true).run(function (value) {
+                            return actual.push(value);
+                        });
+                        setImmediate(function () {
+                            assert.strictEqual(actual.length, expected.length);
+                            assert.sameMembers(actual, expected);
+                            done();
+                        });
+                    });
+                    it('emitting unique values until it changed if false passed', function (done) {
+                        var values = [1, 1, 1, 2, 2, 1, 1],
+                            expected = [1, 2],
+                            actual = [];
+                        aeroflow.apply(undefined, values).distinct(false).run(function (value) {
+                            return actual.push(value);
+                        });
+                        setImmediate(function () {
+                            assert.strictEqual(actual.length, expected.length);
+                            assert.sameMembers(actual, expected);
+                            done();
+                        });
                     });
                 });
             });
