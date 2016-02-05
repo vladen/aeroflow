@@ -1,7 +1,7 @@
 'use strict';
 
 import { AEROFLOW, CLASS, PROTOTYPE } from './symbols';
-import { classOf, isError, isFunction, objectDefineProperties, primitives, noop, objectCreate } from './utilites';
+import { classOf, isError, isFunction, objectDefineProperties, primitives, noop, objectCreate, toError } from './utilites';
 
 import { Context } from './context';
 
