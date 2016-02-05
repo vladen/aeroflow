@@ -165,7 +165,7 @@
     return value;
   };
 
-  var toError$1 = function toError$1(value) {
+  var toError = function toError(value) {
     return isError(value) ? value : new Error(value);
   };
 
@@ -192,7 +192,7 @@
     };
   }
 
-  function unsync$1(result, next, done) {
+  function unsync(result, next, done) {
     switch (result) {
       case true:
         return false;
@@ -205,9 +205,9 @@
     switch (classOf(result)) {
       case PROMISE:
         result.then(function (promiseResult) {
-          if (!unsync$1(promiseResult, next, done)) next(true);
+          if (!unsync(promiseResult, next, done)) next(true);
         }, function (promiseError) {
-          return done(toError$1(promiseError));
+          return done(toError(promiseError));
         });
         break;
 
@@ -221,7 +221,7 @@
 
   function scalarEmitter(value) {
     return function (next, done) {
-      if (!unsync$1(next(value), done, done)) done(true);
+      if (!unsync(next(value), done, done)) done(true);
     };
   }
 
@@ -236,7 +236,7 @@
       var index = -1;
       !function proceed() {
         while (++index < source.length) {
-          if (unsync$1(next(source[index]), proceed, done)) return;
+          if (unsync(next(source[index]), proceed, done)) return;
         }
 
         done(true);
@@ -246,16 +246,16 @@
 
   function functionEmitter(source) {
     return function (next, done, context) {
-      if (!unsync$1(next(source(context.data)), done, done)) done(true);
+      if (!unsync(next(source(context.data)), done, done)) done(true);
     };
   }
 
   function promiseEmitter(source) {
     return function (next, done, context) {
       return source.then(function (result) {
-        if (!unsync$1(next(result), done, done)) done(true);
+        if (!unsync(next(result), done, done)) done(true);
       }, function (result) {
-        return done(toError$1(result));
+        return done(toError(result));
       });
     };
   }
@@ -279,7 +279,7 @@
           iterator = iterator = source[ITERATOR]();
       !function proceed() {
         while (!(iteration = iterator.next()).done) {
-          if (unsync$1(next(iteration.value), proceed, done)) return;
+          if (unsync(next(iteration.value), proceed, done)) return;
         }
 
         done(true);
@@ -322,7 +322,7 @@
         waiting = false;
 
         while (buffer.length) {
-          if (unsync$1(next(buffer.shift()), proceed, finish)) {
+          if (unsync(next(buffer.shift()), proceed, finish)) {
             waiting = true;
             return;
           }
@@ -337,7 +337,7 @@
       var index = 0,
           value = seed;
       !function proceed() {
-        while (!unsync$1(next(value = expander(value, index++, context.data)), proceed, done)) {}
+        while (!unsync(next(value = expander(value, index++, context.data)), proceed, done)) {}
       }();
     };
   }
@@ -349,7 +349,7 @@
     var rounder = isInteger(minimum) && isInteger(maximum) ? mathFloor : identity;
     return function (next, done) {
       !function proceed() {
-        while (!unsync$1(next(rounder(minimum + maximum * mathRandom())), proceed, done)) {}
+        while (!unsync(next(rounder(minimum + maximum * mathRandom())), proceed, done)) {}
       }();
     };
   }
@@ -377,7 +377,7 @@
       var value = start - step;
       !function proceed() {
         while (limiter(value += step)) {
-          if (unsync$1(next(value), proceed, done)) return;
+          if (unsync(next(value), proceed, done)) return;
         }
 
         done(true);
@@ -390,7 +390,7 @@
       var index = -1;
       !function proceed(result) {
         setTimeout(function () {
-          if (!unsync$1(next(repeater(index, context.data)), proceed, done)) proceed();
+          if (!unsync(next(repeater(index, context.data)), proceed, done)) proceed();
         }, toDelay(delayer(++index, context.data), 1000));
       }();
     };
@@ -400,7 +400,7 @@
     return function (next, done, context) {
       var index = 0;
       !function proceed() {
-        while (!unsync$1(next(repeater(index++, context.data)), proceed, done)) {}
+        while (!unsync(next(repeater(index++, context.data)), proceed, done)) {}
       }();
     };
   }
@@ -424,7 +424,7 @@
 
           return true;
         }, function (result) {
-          if (isError(result) || empty || !unsync$1(next(reduced), tie(done, result), done)) done(result);
+          if (isError(result) || empty || !unsync(next(reduced), tie(done, result), done)) done(result);
         }, context);
       };
     };
@@ -439,7 +439,7 @@
           reduced = reducer(reduced, result, index++, context.data);
           return true;
         }, function (result) {
-          if (isError(result) || !unsync$1(next(reduced), tie(done, result), done)) done(result);
+          if (isError(result) || !unsync(next(reduced), tie(done, result), done)) done(result);
         }, context);
       };
     };
@@ -456,7 +456,7 @@
           reduced = reducer(reduced, result, index++, context.data);
           return true;
         }, function (result) {
-          if (isError(result) || empty || !unsync$1(next(reduced), tie(done, result), done)) done(result);
+          if (isError(result) || empty || !unsync(next(reduced), tie(done, result), done)) done(result);
         }, context);
       };
     };
@@ -464,7 +464,7 @@
 
   function reduceOperator(reducer, seed, optional) {
     return isUndefined(reducer) ? function () {
-      return scalarEmitter(false);
+      return emptyEmitter(false);
     } : !isFunction(reducer) ? function () {
       return scalarEmitter(reducer);
     } : isUndefined(seed) ? reduceAlongOperator(reducer) : optional ? reduceOptionalOperator(reducer, seed) : reduceGeneralOperator(reducer, seed);
@@ -505,7 +505,7 @@
           return new Promise(function (resolve, reject) {
             setTimeout(function () {
               try {
-                if (!unsync$1(next(result), resolve, reject)) resolve(true);
+                if (!unsync(next(result), resolve, reject)) resolve(true);
               } catch (error) {
                 reject(error);
               }
@@ -610,7 +610,7 @@
           every = false;
           return false;
         }, function (result) {
-          if (isError(result) || !unsync$1(next(every || empty), done, done)) done(result);
+          if (isError(result) || !unsync(next(every || empty), done, done)) done(result);
         }, context);
       };
     };
@@ -725,7 +725,7 @@
           array.push(result);
           return true;
         }, function (result) {
-          if (isError(result) || !unsync$1(next(array), tie(done, result), done)) done(result);
+          if (isError(result) || !unsync(next(array), tie(done, result), done)) done(result);
         }, context);
       };
     };
@@ -818,7 +818,14 @@
     return function (emitter) {
       return function (next, done, context) {
         return toArrayOperator()(emitter)(function (result) {
-          return next(result.reverse());
+          return new Promise(function (resolve) {
+            var index = result.length;
+            !function proceed() {
+              while (--index >= 0 && !unsync(next(result[index]), proceed, resolve)) {}
+
+              resolve(true);
+            }();
+          });
         }, done, context);
       };
     };
@@ -851,7 +858,7 @@
             var index = 0,
                 limit = result.length - count;
             !function proceed() {
-              while (!unsync$1(next(result[index++]), proceed, resolve) && index < limit) {}
+              while (!unsync(next(result[index++]), proceed, resolve) && index < limit) {}
 
               resolve(true);
             }();
@@ -903,7 +910,7 @@
           if (limit < 0) limit = 0;
           return index >= limit || new Promise(function (resolve) {
             !function proceed() {
-              while (!unsync$1(next(result[index++]), proceed, resolve) && index < limit) {}
+              while (!unsync(next(result[index++]), proceed, resolve) && index < limit) {}
 
               resolve(true);
             }();
@@ -1048,7 +1055,7 @@
                 index = limit - count;
             if (index < 0) index = 0;
             !function proceed() {
-              while (!unsync$1(next(result[index++]), proceed, resolve) && index < limit) {}
+              while (!unsync(next(result[index++]), proceed, resolve) && index < limit) {}
 
               resolve(true);
             }();
@@ -1109,7 +1116,7 @@
           map.set(keyTransformer(result, index++, context.data), valueTransformer(result, index++, context.data));
           return true;
         }, function (result) {
-          if (isError(result) || !unsync$1(next(map), tie(done, result), done)) done(result);
+          if (isError(result) || !unsync(next(map), tie(done, result), done)) done(result);
         }, context);
       };
     };
@@ -1123,7 +1130,7 @@
           set.add(result);
           return true;
         }, function (result) {
-          if (isError(result) || !unsync$1(next(set), tie(done, result), done)) done(result);
+          if (isError(result) || !unsync(next(set), tie(done, result), done)) done(result);
         }, context);
       };
     };

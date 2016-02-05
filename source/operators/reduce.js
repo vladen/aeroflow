@@ -60,7 +60,7 @@ export function reduceOptionalOperator(reducer, seed) {
 
 export function reduceOperator(reducer, seed, optional) {
   return isUndefined(reducer)
-    ? () => scalarEmitter(false)
+    ? () => emptyEmitter(false)
     : !isFunction(reducer)
       ? () => scalarEmitter(reducer)
       : isUndefined(seed)
