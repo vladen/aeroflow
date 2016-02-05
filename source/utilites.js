@@ -1,6 +1,8 @@
 'use strict';
 
-import { BOOLEAN, DATE, ERROR, FUNCTION, NUMBER, NULL, PROMISE, REGEXP, STRING, SYMBOL, UNDEFINED } from './symbols';
+import {
+  BOOLEAN, DATE, ERROR, NUMBER, NULL, PROMISE, REGEXP, STRING, SYMBOL, UNDEFINED
+} from './symbols';
 
 export const primitives = new Set([BOOLEAN, DATE, ERROR, NULL, NUMBER, REGEXP, STRING, SYMBOL, UNDEFINED]);
 
@@ -9,6 +11,7 @@ export const mathFloor = Math.floor;
 export const mathPow = Math.pow;
 export const mathRandom = Math.random;
 export const mathMax = Math.max;
+export const mathMin = Math.min;
 export const maxInteger = Number.MAX_SAFE_INTEGER;
 export const objectCreate = Object.create;
 export const objectDefineProperties = Object.defineProperties;

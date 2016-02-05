@@ -683,19 +683,19 @@ The number or predicate function used to determine how many values to skip.
 New flow emitting remaining values.
 
 @example
-aeroflow([1, 2, 3]).skip().dump().run();
-// done
-aeroflow([1, 2, 3]).skip(1).dump().run();
+aeroflow(1, 2, 3).skip().dump().run();
+// done true
+aeroflow(1, 2, 3).skip(1).dump().run();
 // next 2
 // next 3
-// done
-aeroflow([1, 2, 3]).skip(-1).dump().run();
+// done true
+aeroflow(1, 2, 3).skip(-1).dump().run();
 // next 1
 // next 2
-// done
-aeroflow([1, 2, 3]).skip(value => value < 3).dump().run();
+// done true
+aeroflow(1, 2, 3).skip(value => value < 3).dump().run();
 // next 3
-// done
+// done true
   */
 function skip(condition) {
   return this.chain(skipOperator(condition));
@@ -713,9 +713,13 @@ aeroflow(1, 2, 3).slice(1).dump().run();
 // next 2
 // next 3
 // done true
-aeroflow(1, 2, 3).slice(1, 1).dump().run();
+aeroflow(1, 2, 3).slice(1, 2).dump().run();
 // next 2
 // done false
+aeroflow(1, 2, 3).slice(-2).dump().run();
+// next 2
+// next 3
+// done true
 aeroflow(1, 2, 3).slice(-3, -1).dump().run();
 // next 1
 // next 2

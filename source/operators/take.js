@@ -2,6 +2,7 @@
 
 import { FUNCTION, NUMBER } from '../symbols';
 import { classOf, falsey, identity, isBoolean, isPromise, mathMax } from '../utilites';
+import { unsync } from '../unsync';
 import { arrayEmitter } from '../emitters/array';
 import { emptyEmitter } from '../emitters/empty';
 import { toArrayOperator } from './toArray';
@@ -24,8 +25,14 @@ export function takeFirstOperator(count) {
 
 export function takeLastOperator(count) {
   return emitter => (next, done, context) => toArrayOperator()(emitter)(
-    result => new Promise(resolve =>
-      arrayEmitter(result.slice(mathMax(result.length - count, 0)))(next, resolve, context)),
+    result => !result.length || new Promise(resolve => {
+      let limit = result.length, index = limit - count;
+      if (index < 0) index = 0;
+      !function proceed() {
+        while (!unsync(next(result[index++]), proceed, resolve) && index < limit);
+        resolve(true);
+      }();
+    }),
     done, 
     context);
 }
