@@ -42,7 +42,7 @@ const classOf = value => objectToString.call(value).slice(8, -1);
 const classIs = className => value => classOf(value) === className;
 
 const isDefined = value => value !== undefined;
-const isError$1 = classIs(ERROR);
+const isError = classIs(ERROR);
 const isFunction = classIs(FUNCTION);
 const isInteger = Number.isInteger;
 const isNumber = classIs(NUMBER);
@@ -58,7 +58,7 @@ const toNumber = (value, def) => {
   return value;
 };
 
-const toError = value => isError$1(value)
+const toError = value => isError(value)
   ? value
   : new Error(value);
 
@@ -110,7 +110,7 @@ function aeroflowEmitter(source) {
   return (next, done, context) => source.emitter(next, done, new Context(context.data, source));
 }
 
-function arrayEmitter$1(source) {
+function arrayEmitter(source) {
   return (next, done, context) => {
     let index = -1;
     !function proceed() {
@@ -137,7 +137,7 @@ function promiseEmitter(source) {
 
 const adapters = objectCreate(null, {
   [AEROFLOW]: { value: aeroflowEmitter },
-  [ARRAY]: { value: arrayEmitter$1, writable: true },
+  [ARRAY]: { value: arrayEmitter, writable: true },
   [FUNCTION]: { value: functionEmitter, writable: true },
   [PROMISE]: { value: promiseEmitter, writable: true }
 });
@@ -191,7 +191,7 @@ function customEmitter(emitter) {
 }
 
 function errorEmitter(message) {
-  return (next, done) => done(isError$1(message)
+  return (next, done) => done(isError(message)
     ? message
     : new Error(message));
 }
@@ -286,7 +286,7 @@ function reduceAlongOperator(reducer) {
         return true;
       },
       result => {
-        if (isError$1(result) || empty || !unsync$1(next(reduced), tie(done, result), done))
+        if (isError(result) || empty || !unsync$1(next(reduced), tie(done, result), done))
           done(result);
       },
       context);
@@ -302,7 +302,7 @@ function reduceGeneralOperator(reducer, seed) {
         return true;
       },
       result => {
-        if (isError$1(result) || !unsync$1(next(reduced), tie(done, result), done))
+        if (isError(result) || !unsync$1(next(reduced), tie(done, result), done))
           done(result);
       },
       context);
@@ -319,7 +319,7 @@ function reduceOptionalOperator(reducer, seed) {
         return true;
       },
       result => {
-        if (isError$1(result) || empty || !unsync$1(next(reduced), tie(done, result), done))
+        if (isError(result) || empty || !unsync$1(next(reduced), tie(done, result), done))
           done(result);
       },
       context);
@@ -347,7 +347,7 @@ function catchOperator(alternative) {
   return emitter => (next, done, context) => emitter(
     next,
     result => {
-      if (isError$1(result))
+      if (isError(result))
         if (isDefined(alternative)) adapterEmitter(alternative, true)(next, done, context);
         else done(false);
       else done(result);
@@ -434,7 +434,7 @@ function dumpToConsoleOperator(prefix) {
       return next(result);
     },
     result => {
-      console[isError$1(result) ? 'error' : 'log'](prefix + 'done', result);
+      console[isError(result) ? 'error' : 'log'](prefix + 'done', result);
       done(result);
     },
     context);
@@ -489,7 +489,7 @@ function everyOperator(condition) {
         return false;
       },
       result => {
-        if (isError$1(result) || !unsync$1(next(every || empty), done, done)) done(result);
+        if (isError(result) || !unsync$1(next(every || empty), done, done)) done(result);
       },
       context);
   };
@@ -569,7 +569,7 @@ function groupOperator(selectors) {
         return true;
       },
       result => {
-        if (isError$1(result)) done(result);
+        if (isError(result)) done(result);
         else iterableEmitter(groups)(next, tie(done, result), context);
       },
       context);
@@ -606,7 +606,7 @@ function toArrayOperator() {
         return true;
       },
       result => {
-        if (isError$1(result) || !unsync$1(next(array), tie(done, result), done)) done(result);
+        if (isError(result) || !unsync$1(next(array), tie(done, result), done)) done(result);
       },
       context);
   };
@@ -640,7 +640,7 @@ function retryOperator(attempts) {
       emitter(next, retry, context);
     }
     function retry(result) {
-      if (++attempt <= attempts && isError$1(result)) proceed();
+      if (++attempt <= attempts && isError(result)) proceed();
       else done(result);
     };
   }
@@ -677,7 +677,7 @@ function skipLastOperator(count) {
       },
       result => {
         if (isError(result)) done(result);
-        else arrayEmitter(array.slice(mathMax(values.length - count, 0)))(next, done, context);
+        else arrayEmitter(array.slice(mathMax(result.length - count, 0)))(next, done, context);
       },
       context);
   }
@@ -734,8 +734,8 @@ function sliceFromEndOperator(begin, end) {
         return false;
       },
       result => {
-        if (isError$1(result)) done(result);
-        else arrayEmitter$1(array.slice(begin, end))(next, done, context);
+        if (isError(result)) done(result);
+        else arrayEmitter(array.slice(begin, end))(next, done, context);
       },
       context);
   }
@@ -774,7 +774,7 @@ function someOperator(condition) {
         return false;
       },
       result => {
-        if (isError$1(result) || !unsync(next(some), done, done)) done(result);
+        if (isError(result) || !unsync(next(some), done, done)) done(result);
       },
       context);
   };
@@ -815,7 +815,7 @@ function sortOperator(parameters) {
     }
     : (left, right) => compare(left, right, direction);
   return emitter => (next, done, context) => toArrayOperator()(emitter)(
-    result => new Promise(resolve => arrayEmitter$1(result.sort(comparer))(next, resolve, context)),
+    result => new Promise(resolve => arrayEmitter(result.sort(comparer))(next, resolve, context)),
     done,
     context);
 }
@@ -837,7 +837,7 @@ function takeFirstOperator(count) {
 function takeLastOperator(count) {
   return emitter => (next, done, context) => toArrayOperator()(emitter)(
     result => new Promise(resolve =>
-      arrayEmitter$1(result.slice(mathMax(result.length - count, 0)))(next, resolve, context)),
+      arrayEmitter(result.slice(mathMax(result.length - count, 0)))(next, resolve, context)),
     done, 
     context);
 }
@@ -905,7 +905,7 @@ function toMapOperator(keyTransformation, valueTransformation) {
         return true;
       },
       result => {
-        if (isError$1(result) || !desync(next(map), tie(done, result), done)) done(result);
+        if (isError(result) || !unsync$1(next(map), tie(done, result), done)) done(result);
       },
       context);
   };
@@ -920,7 +920,7 @@ function toSetOperator() {
         return true;
       },
       result => {
-        if (isError$1(result) || !unsync$1(next(set), tie(done, result), done)) done(result);
+        if (isError(result) || !unsync$1(next(set), tie(done, result), done)) done(result);
       },
       context);
   };
@@ -1475,7 +1475,7 @@ function run(next, done, data) {
     if (!isFunction(done)) {
       data = done;
       done = result => {
-        if (isError$1(result)) throw result;
+        if (isError(result)) throw result;
       };
     }
   }
@@ -1483,7 +1483,7 @@ function run(next, done, data) {
     data = next;
     next = noop;
     done = result => {
-      if (isError$1(result)) throw result;
+      if (isError(result)) throw result;
     };
   }
   else if (isFunction(next.dispatchEvent)) {
@@ -1514,7 +1514,7 @@ function run(next, done, data) {
     const observer = next;
     data = done;
     done = result => {
-      (isError$1(result) ? observer.onError : observer.onCompleted)(result);
+      (isError(result) ? observer.onError : observer.onCompleted)(result);
       return true;
     };
     next = result => {
@@ -1901,7 +1901,7 @@ function create(emitter) {
 /**
 @alias aeroflow.error
 
-#param {string|error} [message]
+@param {string|error} [message]
 
 @return {Aeroflow}
 

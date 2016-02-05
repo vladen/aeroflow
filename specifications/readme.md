@@ -1,8 +1,22 @@
 # TOC
    - [aeroflow](#aeroflow)
+     - [aeroflow()](#aeroflow-aeroflow)
+       - [#sources](#aeroflow-aeroflow-sources)
+       - [#emitter](#aeroflow-aeroflow-emitter)
+     - [aeroflow(@Array)](#aeroflow-aeroflowarray)
+       - [@Array](#aeroflow-aeroflowarray-array)
+     - [aeroflow(@Map)](#aeroflow-aeroflowmap)
+       - [@Map](#aeroflow-aeroflowmap-map)
+     - [aerflow(@Set)](#aeroflow-aerflowset)
+       - [@Set](#aeroflow-aerflowset-set)
+     - [aeroflow(@Function)](#aeroflow-aeroflowfunction)
+       - [@Function](#aeroflow-aeroflowfunction-function)
+     - [Aeroflow(@Promise)](#aeroflow-aeroflowpromise)
+       - [@Promise](#aeroflow-aeroflowpromise-promise)
      - [#empty](#aeroflow-empty)
      - [#expand()](#aeroflow-expand)
      - [#expand(@function)](#aeroflow-expandfunction)
+       - [@function](#aeroflow-expandfunction-function)
      - [#just()](#aeroflow-just)
      - [#just(@*)](#aeroflow-just)
        - [@function](#aeroflow-just-function)
@@ -18,8 +32,168 @@
      - [#repeat()](#aeroflow-repeat)
      - [#repeat(@function)](#aeroflow-repeatfunction)
        - [@function](#aeroflow-repeatfunction-function)
+   - [Aeroflow](#aeroflow)
+     - [#max()](#aeroflow-max)
+     - [#skip()](#aeroflow-skip)
+     - [#skip(@Number)](#aeroflow-skipnumber)
+       - [@Number](#aeroflow-skipnumber-number)
+         - [skipps provided number of values from start](#aeroflow-skipnumber-number-skipps-provided-number-of-values-from-start)
+     - [#skip(@Function)](#aeroflow-skipfunction)
+       - [@Function](#aeroflow-skipfunction-function)
+     - [#tap()](#aeroflow-tap)
+     - [#tap(@Function)](#aeroflow-tapfunction)
+       - [@Function](#aeroflow-tapfunction-function)
+     - [#toArray()](#aeroflow-toarray)
+     - [#toMap()](#aeroflow-tomap)
 <a name=""></a>
  
+<a name="aeroflow"></a>
+# aeroflow
+<a name="aeroflow-aeroflow"></a>
+## aeroflow()
+returns instance of Aeroflow.
+
+```js
+assert.typeOf(aeroflow(), 'Aeroflow');
+```
+
+<a name="aeroflow-aeroflow-sources"></a>
+### #sources
+is initially empty array.
+
+```js
+assert.strictEqual(aeroflow().sources.length, 0);
+```
+
+<a name="aeroflow-aeroflow-emitter"></a>
+### #emitter
+is function.
+
+```js
+assert.isFunction(aeroflow().emitter);
+```
+
+<a name="aeroflow-aeroflowarray"></a>
+## aeroflow(@Array)
+returns instance of Aeroflow.
+
+```js
+assert.typeOf(aeroflow([1, 2]), 'Aeroflow');
+```
+
+<a name="aeroflow-aeroflowarray-array"></a>
+### @Array
+emitting array items.
+
+```js
+var expected = ['str', new Date(), {}, 2],
+    actual = [];
+aeroflow(expected).run(function (value) {
+    return actual.push(value);
+});
+setImmediate(function () {
+    return done(assert.sameMembers(actual, expected));
+});
+```
+
+<a name="aeroflow-aeroflowmap"></a>
+## aeroflow(@Map)
+returns instance of Aeroflow.
+
+```js
+assert.typeOf(aeroflow(new Map([[1, 2], [2, 1]])), 'Aeroflow');
+```
+
+<a name="aeroflow-aeroflowmap-map"></a>
+### @Map
+emitting map entries.
+
+```js
+var expected = [['a', 1], ['b', 2]],
+    actual = [];
+aeroflow(new Map(expected)).run(function (value) {
+    return actual.push(value);
+});
+setImmediate(function () {
+    expected.forEach(function (item, index) {
+        return assert.sameMembers(actual[index], expected[index]);
+    });
+    done();
+});
+```
+
+<a name="aeroflow-aerflowset"></a>
+## aerflow(@Set)
+returns instance of Aeroflow.
+
+```js
+assert.typeOf(aeroflow(new Set([1, 2])), 'Aeroflow');
+```
+
+<a name="aeroflow-aerflowset-set"></a>
+### @Set
+emitting set keys.
+
+```js
+var expected = ['a', 'b'],
+    actual = [];
+aeroflow(new Set(expected)).run(function (value) {
+    return actual.push(value);
+});
+setImmediate(function () {
+    return done(assert.sameMembers(actual, expected));
+});
+```
+
+<a name="aeroflow-aeroflowfunction"></a>
+## aeroflow(@Function)
+returns instance of Aeroflow.
+
+```js
+assert.typeOf(aeroflow(function () {
+    return true;
+}), 'Aeroflow');
+```
+
+<a name="aeroflow-aeroflowfunction-function"></a>
+### @Function
+emitting scalar value returned by function.
+
+```js
+var expected = 'test tester',
+    actual = undefined;
+aeroflow(function () {
+    return expected;
+}).run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.strictEqual(actual, expected));
+});
+```
+
+<a name="aeroflow-aeroflowpromise"></a>
+## Aeroflow(@Promise)
+returns instance of Aeroflow.
+
+```js
+assert.typeOf(aeroflow(Promise.resolve({})), 'Aeroflow');
+```
+
+<a name="aeroflow-aeroflowpromise-promise"></a>
+### @Promise
+emitting array resolved by promise.
+
+```js
+var expected = ['a', 'b'],
+    actual = undefined;
+aeroflow(Promise.resolve(expected)).run(function (value) {
+    return assert.strictEqual(value, expected);
+}, function () {
+    return done();
+});
+```
+
 <a name="aeroflow"></a>
 # aeroflow
 is function.
@@ -70,6 +244,29 @@ returns instance of Aeroflow.
 return assert.typeOf(aeroflow.expand(function () {
     return true;
 }, 1), 'Aeroflow');
+```
+
+<a name="aeroflow-expandfunction-function"></a>
+### @function
+emitting geometric progression.
+
+```js
+var expander = function expander(value) {
+    return value * 2;
+},
+    actual = [],
+    seed = 1,
+    expected = [2, 4, 8],
+    index = 0;
+aeroflow.expand(expander, seed).take(expected.length).run(function (value) {
+    actual.push(value);
+});
+setImmediate(function () {
+    actual.forEach(function (item, index) {
+        return assert.strictEqual(item, expected[index]);
+    });
+    done();
+});
 ```
 
 <a name="aeroflow-just"></a>
@@ -377,6 +574,237 @@ setImmediate(function () {
     actual.forEach(function (item, index) {
         return assert.strictEqual(item, expected[index]);
     });
+    done();
+});
+```
+
+<a name="aeroflow"></a>
+# Aeroflow
+<a name="aeroflow-max"></a>
+## #max()
+is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.max);
+```
+
+returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow().max(), 'Aeroflow');
+```
+
+emitting undefined if empty flow.
+
+```js
+var actual = undefined;
+aeroflow().max().run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.isUndefined(actual));
+});
+```
+
+emitting valid result for non-empty flow.
+
+```js
+var _Math;
+var values = [1, 9, 2, 8, 3, 7, 4, 6, 5],
+    expected = (_Math = Math).max.apply(_Math, values),
+    actual = undefined;
+aeroflow(values).max().run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.strictEqual(actual, expected));
+});
+```
+
+<a name="aeroflow-skip"></a>
+## #skip()
+is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.skip);
+```
+
+emitting undefined if called without param.
+
+```js
+var actual = undefined;
+aeroflow([1, 2, 3, 4]).skip().run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.isUndefined(actual));
+});
+```
+
+<a name="aeroflow-skipnumber"></a>
+## #skip(@Number)
+returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow([1, 2, 3, 4]).skip(), 'Aeroflow');
+```
+
+<a name="aeroflow-skipnumber-number"></a>
+### @Number
+emitting values skipped provided number of values from end.
+
+```js
+var values = [1, 2, 3, 4],
+    skip = 2,
+    actual = [];
+aeroflow(values).skip(-skip).run(function (value) {
+    return actual.push(value);
+});
+setImmediate(function () {
+    actual.forEach(function (item, i) {
+        return assert.strictEqual(item, values[i]);
+    });
+    done();
+});
+```
+
+<a name="aeroflow-skipnumber-number-skipps-provided-number-of-values-from-start"></a>
+#### skipps provided number of values from start
+values passed as single source.
+
+```js
+var values = [1, 2, 3, 4],
+    skip = 2,
+    actual = [];
+aeroflow(values).skip(skip).run(function (value) {
+    return actual.push(value);
+});
+setImmediate(function () {
+    actual.forEach(function (item, i) {
+        return assert.strictEqual(item, values[skip + i]);
+    });
+    done();
+});
+```
+
+values passed as separate sources.
+
+```js
+var expected = [1, 2, 3, 4],
+    skip = 2,
+    actual = [];
+aeroflow(1, 2, 3, 4).skip(skip).run(function (value) {
+    return actual.push(value);
+});
+setImmediate(function () {
+    actual.forEach(function (item, i) {
+        return assert.strictEqual(item, values[skip + i]);
+    });
+    done();
+});
+```
+
+<a name="aeroflow-skipfunction"></a>
+## #skip(@Function)
+<a name="aeroflow-skipfunction-function"></a>
+### @Function
+emitting remained values when provided function returns false.
+
+```js
+var values = [1, 2, 3, 4],
+    skip = Math.floor(values.length / 2),
+    limiter = function limiter(value, index) {
+    return index < skip;
+},
+    actual = [];
+aeroflow(values).skip(skip).run(function (value) {
+    return actual.push(value);
+});
+setImmediate(function () {
+    actual.forEach(function (item, i) {
+        return assert.strictEqual(item, values[skip + i]);
+    });
+    done();
+});
+```
+
+<a name="aeroflow-tap"></a>
+## #tap()
+is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.tap);
+```
+
+returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow([1, 2, 3, 4]).tap(), 'Aeroflow');
+```
+
+<a name="aeroflow-tapfunction"></a>
+## #tap(@Function)
+<a name="aeroflow-tapfunction-function"></a>
+### @Function
+intercepts each emitted value.
+
+```js
+var expected = [0, 1, 2],
+    actual = [];
+aeroflow(expected).tap(function (value) {
+    return actual.push(value);
+}).run();
+setImmediate(function () {
+    actual.forEach(function (item, i) {
+        return assert.strictEqual(item, expected[i]);
+    });
+    done();
+});
+```
+
+<a name="aeroflow-toarray"></a>
+## #toArray()
+is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.toArray);
+```
+
+emitting single array containing all values.
+
+```js
+var expected = [1, 2, 3],
+    actual = undefined;
+aeroflow.apply(undefined, expected).toArray().run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    assert.isArray(actual);
+    assert.sameMembers(actual, expected);
+    done();
+});
+```
+
+<a name="aeroflow-tomap"></a>
+## #toMap()
+is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.toMap);
+```
+
+emitting single map containing all values.
+
+```js
+var expected = [1, 2, 3],
+    actual = undefined;
+aeroflow.apply(undefined, expected).toMap().run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    assert.typeOf(actual, 'Map');
+    assert.includeMembers(Array.from(actual.keys()), expected);
+    assert.includeMembers(Array.from(actual.values()), expected);
     done();
 });
 ```

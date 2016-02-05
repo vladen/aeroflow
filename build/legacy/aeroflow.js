@@ -99,7 +99,7 @@
     return value !== undefined;
   };
 
-  var isError$1 = classIs(ERROR);
+  var isError = classIs(ERROR);
   var isFunction = classIs(FUNCTION);
   var isInteger = Number.isInteger;
   var isNumber = classIs(NUMBER);
@@ -128,7 +128,7 @@
   };
 
   var toError = function toError(value) {
-    return isError$1(value) ? value : new Error(value);
+    return isError(value) ? value : new Error(value);
   };
 
   var Context = function Context(data, flow) {
@@ -193,7 +193,7 @@
     };
   }
 
-  function arrayEmitter$1(source) {
+  function arrayEmitter(source) {
     return function (next, done, context) {
       var index = -1;
       !function proceed() {
@@ -225,7 +225,7 @@
   var adapters = objectCreate(null, (_objectCreate = {}, _defineProperty(_objectCreate, AEROFLOW, {
     value: aeroflowEmitter
   }), _defineProperty(_objectCreate, ARRAY, {
-    value: arrayEmitter$1,
+    value: arrayEmitter,
     writable: true
   }), _defineProperty(_objectCreate, FUNCTION, {
     value: functionEmitter,
@@ -295,7 +295,7 @@
 
   function errorEmitter(message) {
     return function (next, done) {
-      return done(isError$1(message) ? message : new Error(message));
+      return done(isError(message) ? message : new Error(message));
     };
   }
 
@@ -389,7 +389,7 @@
 
           return true;
         }, function (result) {
-          if (isError$1(result) || empty || !unsync$1(next(reduced), tie(done, result), done)) done(result);
+          if (isError(result) || empty || !unsync$1(next(reduced), tie(done, result), done)) done(result);
         }, context);
       };
     };
@@ -404,7 +404,7 @@
           reduced = reducer(reduced, result, index++, context.data);
           return true;
         }, function (result) {
-          if (isError$1(result) || !unsync$1(next(reduced), tie(done, result), done)) done(result);
+          if (isError(result) || !unsync$1(next(reduced), tie(done, result), done)) done(result);
         }, context);
       };
     };
@@ -421,7 +421,7 @@
           reduced = reducer(reduced, result, index++, context.data);
           return true;
         }, function (result) {
-          if (isError$1(result) || empty || !unsync$1(next(reduced), tie(done, result), done)) done(result);
+          if (isError(result) || empty || !unsync$1(next(reduced), tie(done, result), done)) done(result);
         }, context);
       };
     };
@@ -443,7 +443,7 @@
     return function (emitter) {
       return function (next, done, context) {
         return emitter(next, function (result) {
-          if (isError$1(result)) {
+          if (isError(result)) {
             if (isDefined(alternative)) adapterEmitter(alternative, true)(next, done, context);else done(false);
           } else done(result);
         }, context);
@@ -526,7 +526,7 @@
           console.log(prefix + 'next', result);
           return next(result);
         }, function (result) {
-          console[isError$1(result) ? 'error' : 'log'](prefix + 'done', result);
+          console[isError(result) ? 'error' : 'log'](prefix + 'done', result);
           done(result);
         }, context);
       };
@@ -591,7 +591,7 @@
           every = false;
           return false;
         }, function (result) {
-          if (isError$1(result) || !unsync$1(next(every || empty), done, done)) done(result);
+          if (isError(result) || !unsync$1(next(every || empty), done, done)) done(result);
         }, context);
       };
     };
@@ -692,7 +692,7 @@
           current.push(value);
           return true;
         }, function (result) {
-          if (isError$1(result)) done(result);else iterableEmitter(groups)(next, tie(done, result), context);
+          if (isError(result)) done(result);else iterableEmitter(groups)(next, tie(done, result), context);
         }, context);
       };
     };
@@ -725,7 +725,7 @@
           array.push(result);
           return true;
         }, function (result) {
-          if (isError$1(result) || !unsync$1(next(array), tie(done, result), done)) done(result);
+          if (isError(result) || !unsync$1(next(array), tie(done, result), done)) done(result);
         }, context);
       };
     };
@@ -762,7 +762,7 @@
         }
 
         function retry(result) {
-          if (++attempt <= attempts && isError$1(result)) proceed();else done(result);
+          if (++attempt <= attempts && isError(result)) proceed();else done(result);
         }
 
         ;
@@ -807,7 +807,7 @@
           array = result;
           return false;
         }, function (result) {
-          if (isError(result)) done(result);else arrayEmitter(array.slice(mathMax(values.length - count, 0)))(next, done, context);
+          if (isError(result)) done(result);else arrayEmitter(array.slice(mathMax(result.length - count, 0)))(next, done, context);
         }, context);
       };
     };
@@ -861,7 +861,7 @@
           array = result;
           return false;
         }, function (result) {
-          if (isError$1(result)) done(result);else arrayEmitter$1(array.slice(begin, end))(next, done, context);
+          if (isError(result)) done(result);else arrayEmitter(array.slice(begin, end))(next, done, context);
         }, context);
       };
     };
@@ -911,7 +911,7 @@
           some = true;
           return false;
         }, function (result) {
-          if (isError$1(result) || !unsync(next(some), done, done)) done(result);
+          if (isError(result) || !unsync(next(some), done, done)) done(result);
         }, context);
       };
     };
@@ -964,7 +964,7 @@
       return function (next, done, context) {
         return toArrayOperator()(emitter)(function (result) {
           return new Promise(function (resolve) {
-            return arrayEmitter$1(result.sort(comparer))(next, resolve, context);
+            return arrayEmitter(result.sort(comparer))(next, resolve, context);
           });
         }, done, context);
       };
@@ -993,7 +993,7 @@
       return function (next, done, context) {
         return toArrayOperator()(emitter)(function (result) {
           return new Promise(function (resolve) {
-            return arrayEmitter$1(result.slice(mathMax(result.length - count, 0)))(next, resolve, context);
+            return arrayEmitter(result.slice(mathMax(result.length - count, 0)))(next, resolve, context);
           });
         }, done, context);
       };
@@ -1047,7 +1047,7 @@
           map.set(keyTransformer(result, index++, context.data), valueTransformer(result, index++, context.data));
           return true;
         }, function (result) {
-          if (isError$1(result) || !desync(next(map), tie(done, result), done)) done(result);
+          if (isError(result) || !unsync$1(next(map), tie(done, result), done)) done(result);
         }, context);
       };
     };
@@ -1061,7 +1061,7 @@
           set.add(result);
           return true;
         }, function (result) {
-          if (isError$1(result) || !unsync$1(next(set), tie(done, result), done)) done(result);
+          if (isError(result) || !unsync$1(next(set), tie(done, result), done)) done(result);
         }, context);
       };
     };
@@ -1194,7 +1194,7 @@
         data = done;
 
         done = function done(result) {
-          if (isError$1(result)) throw result;
+          if (isError(result)) throw result;
         };
       }
     } else if (primitives.has(classOf(next))) {
@@ -1202,7 +1202,7 @@
       next = noop;
 
       done = function done(result) {
-        if (isError$1(result)) throw result;
+        if (isError(result)) throw result;
       };
     } else if (isFunction(next.dispatchEvent)) {
       (function () {
@@ -1244,7 +1244,7 @@
         data = done;
 
         done = function done(result) {
-          (isError$1(result) ? observer.onError : observer.onCompleted)(result);
+          (isError(result) ? observer.onError : observer.onCompleted)(result);
           return true;
         };
 
