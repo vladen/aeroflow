@@ -15,7 +15,6 @@ import { expandEmitter } from './emitters/expand';
 import { randomEmitter } from './emitters/random';
 import { rangeEmitter } from './emitters/range';
 import { repeatEmitter } from './emitters/repeat';
-import { timerEmitter } from './emitters/timer';
 
 import { averageOperator } from './operators/average';
 import { catchOperator } from './operators/catch';
@@ -27,6 +26,7 @@ import { everyOperator } from './operators/every';
 import { filterOperator } from './operators/filter';
 import { flattenOperator } from './operators/flatten';
 import { groupOperator } from './operators/group';
+import { joinOperator } from './operators/join';
 import { mapOperator } from './operators/map';
 import { maxOperator } from './operators/max';
 import { meanOperator } from './operators/mean';
@@ -378,6 +378,38 @@ aeroflow(
 */
 function group(...selectors) {
   return this.chain(groupOperator(selectors));
+}
+/**
+@alias Aeroflow#join
+
+@param {any} right
+@param {function} comparer
+
+@return {Aeroflow}
+
+@example
+aeroflow(['a','b']).join([1, 2]).dump().run();
+// next ["a", 1]
+// next ["a", 2]
+// next ["b", 1]
+// next ["b", 2]
+aeroflow([
+  { country: 'USA', capital: 'Washington' },
+  { country: 'Russia', capital: 'Moskow' }
+]).join([
+  { country: 'USA', currency: 'US Dollar' },
+  { country: 'Russia', currency: 'Russian Ruble' }
+], (left, right) => left.country === right.country)
+.map(result => (
+  { country: result[0].country, capital: result[0].capital, currency: result[1].currency }
+))
+.dump().run();
+// next Object {country: "USA", capital: "Washington", currency: "US Dollar"}
+// next Object {country: "Russia", capital: "Moskow", currency: "Russian Ruble"}
+// done true
+*/
+function join(right, comparer) {
+  return this.chain(joinOperator(right, comparer));
 }
 /**
 @alias Aeroflow#map
@@ -906,6 +938,7 @@ const operators = objectCreate(Object[PROTOTYPE], {
   filter: { value: filter, writable: true },
   flatten: { value: flatten, writable: true },
   group: { value: group, writable: true },
+  join: { value: join, writable: true },
   map: { value: map, writable: true },
   max: { value: max, writable: true },
   mean: { value: mean, writable: true },
@@ -1126,11 +1159,12 @@ Creates flow repeating provided value.
 
 @alias aeroflow.repeat
 
-@param {function|any} value
+@param {function|any} [value]
 Arbitrary static value to repeat;
 or function providing dynamic values and invoked with two arguments:
   index - index of the value being emitted,
   data - contextual data.
+@param {number|function} [interval]
 
 @return {Aeroflow}
 The new flow emitting repeated values.
@@ -1149,31 +1183,19 @@ aeroflow.repeat(index => Math.pow(2, index)).take(3).dump().run();
 // next 2
 // next 4
 // done false
+aeroflow.repeat('ping', 500).take(3).dump().run();
+// next ping // after 500ms
+// next ping // after 500ms
+// next ping // after 500ms
+// done false
+aeroflow.repeat(index => index, index => 500 + 500 * index).take(3).dump().run();
+// next ping // after 500ms
+// next ping // after 1000ms
+// next ping // after 1500ms
+// done false
   */
-function repeat(value) {
-  return new Aeroflow(repeatEmitter(value));
-}
-/**
-@alias aeroflow.timer
-
-@param {number|function} [interval]
-
-@return {Aeroflow}
-
-@example
-aeroflow.timer().take(3).dump().run();
-// next Wed Feb 03 2016 02:35:45 ... // after 1s
-// next Wed Feb 03 2016 02:35:46 ... // after 2s
-// next Wed Feb 03 2016 02:35:47 ... // after 2s
-// done false
-aeroflow.timer(index => 500 + index * 500).take(3).dump().run();
-// next Wed Feb 03 2016 02:37:36 ... // after 500ms
-// next Wed Feb 03 2016 02:37:37 ... // after 1000ms
-// next Wed Feb 03 2016 02:37:38 ... // after 1500ms
-// done false
-*/
-function timer(interval) {
-  return new Aeroflow(timerEmitter(interval));
+function repeat(value, interval) {
+  return new Aeroflow(repeatEmitter(value, interval));
 }
 objectDefineProperties(aeroflow, {
   adapters: { get: () => adapters },
@@ -1185,6 +1207,5 @@ objectDefineProperties(aeroflow, {
   operators: { get: () => operators },
   random: { value: random },
   range: { value: range },
-  repeat: { value: repeat },
-  timer: { value: timer }
+  repeat: { value: repeat }
 });

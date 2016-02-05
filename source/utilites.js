@@ -27,10 +27,11 @@ export const noop = () => {};
 export const classOf = value => objectToString.call(value).slice(8, -1);
 export const classIs = className => value => classOf(value) === className;
 
+export const isBoolean = value => value === true || value === false;
 export const isDate = classIs(DATE);
 export const isDefined = value => value !== undefined;
 export const isError = classIs(ERROR);
-export const isFunction = classIs(FUNCTION);
+export const isFunction = value => typeof value == 'function';
 export const isInteger = Number.isInteger;
 export const isNumber = classIs(NUMBER);
 export const isPromise = classIs(PROMISE);
@@ -39,7 +40,26 @@ export const isUndefined = value => value === undefined;
 
 export const tie = (func, ...args) => () => func(...args);
 
+export const falsey = () => false;
 export const truthy = () => true;
+
+export const toDelay = (value, def) => {
+  switch (classOf(value)) {
+    case DATE:
+      value = value - dateNow();
+      break;
+    case NUMBER:
+      break;
+    default:
+      value = +value;
+      break;
+  }
+  return isNaN(value) ? def : value < 0 ? 0 : value;
+}
+
+export const toFunction = (value, def) => isFunction(value)
+  ? value
+  : def;
 
 export const toNumber = (value, def) => {
   if (!isNumber(value)) {

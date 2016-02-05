@@ -1,16 +1,22 @@
 'use strict';
 
 import { FUNCTION, NUMBER } from '../symbols';
-import { classOf, identity, mathMax } from '../utilites';
+import { classOf, falsey, identity, isBoolean, isPromise, mathMax } from '../utilites';
 import { arrayEmitter } from '../emitters/array';
 import { emptyEmitter } from '../emitters/empty';
 import { toArrayOperator } from './toArray';
 
 export function takeFirstOperator(count) {
   return emitter => (next, done, context) => {
-    let index = -1;
+    let index = 0;
     emitter(
-      result => ++index < count && next(result),
+      result => {
+        if (++index < count) return next(result);
+        result = next(result);
+        if (isBoolean(result)) return false;
+        if (isPromise(result)) return result.then(falsey);
+        return result;
+      },
       done,
       context);
   };

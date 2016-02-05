@@ -47,14 +47,37 @@
   const classOf = value => objectToString.call(value).slice(8, -1);
   const classIs = className => value => classOf(value) === className;
 
+  const isBoolean = value => value === true || value === false;
   const isDefined = value => value !== undefined;
   const isError$1 = classIs(ERROR);
-  const isFunction = classIs(FUNCTION);
+  const isFunction = value => typeof value == 'function';
   const isInteger = Number.isInteger;
   const isNumber = classIs(NUMBER);
+  const isPromise = classIs(PROMISE);
   const isUndefined = value => value === undefined;
 
   const tie = (func, ...args) => () => func(...args);
+
+  const falsey = () => false;
+  const truthy = () => true;
+
+  const toDelay = (value, def) => {
+    switch (classOf(value)) {
+      case DATE:
+        value = value - dateNow();
+        break;
+      case NUMBER:
+        break;
+      default:
+        value = +value;
+        break;
+    }
+    return isNaN(value) ? def : value < 0 ? 0 : value;
+  }
+
+  const toFunction = (value, def) => isFunction(value)
+    ? value
+    : def;
 
   const toNumber = (value, def) => {
     if (!isNumber(value)) {
@@ -255,10 +278,18 @@
     };
   }
 
-  function repeatEmitter(value) {
-    const repeater = isFunction(value)
-      ? value
-      : constant(value);
+  function repeatDeferredEmitter(repeater, delayer) {
+    return (next, done, context) => {
+      let index = -1;
+      !function proceed(result) {
+        setTimeout(() => {
+          if (!unsync$1(next(repeater(index, context.data)), proceed, done)) proceed();
+        }, toDelay(delayer(++index, context.data), 1000));
+      }();
+    };
+  }
+
+  function repeatImmediateEmitter(repeater) {
     return (next, done, context) => {
       let index = 0;
       !function proceed() {
@@ -267,16 +298,11 @@
     };
   }
 
-  function timerEmitter(interval) {
-    if (!isFunction(interval)) interval = constant(interval);
-    return (next, done, context) => {
-      let index = 0;
-      !function proceed(result) {
-        setTimeout(() => {
-          if (!unsync$1(next(new Date), proceed, done)) proceed();
-        }, toNumber(interval(index++), 1000));
-      }();
-    };
+  function repeatEmitter(value, interval) {
+    const repeater = toFunction(value, constant(value));
+    return isDefined(interval)
+      ? repeatDeferredEmitter(repeater, toFunction(interval, constant(interval)))
+      : repeatImmediateEmitter(repeater);
   }
 
   function reduceAlongOperator(reducer) {
@@ -350,14 +376,14 @@
   }
 
   function catchOperator(alternative) {
+    const regressor = isDefined(alternative)
+      ? adapterEmitter(alternative, true)
+      : (next, done) => done(false);
     return emitter => (next, done, context) => emitter(
       next,
-      result => {
-        if (isError$1(result))
-          if (isDefined(alternative)) adapterEmitter(alternative, true)(next, done, context);
-          else done(false);
-        else done(result);
-      },
+      result => isError$1(result)
+        ? regressor(next, done, context)
+        : done(result),
       context);
   }
 
@@ -369,38 +395,20 @@
   }
 
   function delayOperator(interval) {
-    const delayer = isFunction(interval)
-      ? interval
-      : constant(interval);
+    const delayer = toFunction(interval, constant(interval));
     return emitter => (next, done, context) => {
       let index = 0;
       return emitter(
-        result => {
-          let delay = delayer(result, index++, context.data);
-          switch (classOf(delay)) {
-            case DATE:
-              delay = delay - dateNow();
-              break;
-            case NUMBER:
-              break;
-            case ERROR:
-              return delay;
-            default:
-              delay = +delay;
-              break;
-          }
-          if (delay < 0) delay = 0;
-          return new Promise((resolve, reject) => {
-            setTimeout(() => {
-              try {
-                if (!unsync$1(next(result), resolve, reject)) resolve(true);
-              }
-              catch (error) {
-                reject(error);
-              }
-            }, delay);
-          });
-        },
+        result => new Promise((resolve, reject) => {
+          setTimeout(() => {
+            try {
+              if (!unsync$1(next(result), resolve, reject)) resolve(true);
+            }
+            catch (error) {
+              reject(error);
+            }
+          }, toDelay(delayer(result, index++, context.data), 1000));
+        }),
         done,
         context);
     }
@@ -582,6 +590,21 @@
     };
   }
 
+  function toArrayOperator() {
+    return emitter => (next, done, context) => {
+      let array = [];
+      emitter(
+        result => {
+          array.push(result);
+          return true;
+        },
+        result => {
+          if (isError$1(result) || !unsync$1(next(array), tie(done, result), done)) done(result);
+        },
+        context);
+    };
+  }
+
   function mapOperator(mapping) {
     if (isUndefined(mapping)) return identity;
     const mapper = isFunction(mapping)
@@ -596,26 +619,31 @@
     };
   }
 
+  function joinOperator(right, condition) {
+    const
+      comparer = toFunction(condition, truthy),
+      toArray = toArrayOperator()(adapterEmitter(right, true));
+    return emitter => (next, done, context) => toArray(
+      rightArray => new Promise(rightResolve => emitter(
+        leftResult => new Promise(leftResolve => {
+           const
+            array = arrayEmitter$1(rightArray),
+            filter = filterOperator(rightResult => comparer(leftResult, rightResult)),
+            map = mapOperator(rightResult => [leftResult, rightResult]);
+          return map(filter(array))(next, leftResolve, context);
+        }),
+        rightResolve,
+        context)
+      ),
+      done,
+      context);
+  }
+
   function maxOperator () {
     return reduceAlongOperator(
       (maximum, value) => value > maximum
         ? value
         : maximum);
-  }
-
-  function toArrayOperator() {
-    return emitter => (next, done, context) => {
-      let array = [];
-      emitter(
-        result => {
-          array.push(result);
-          return true;
-        },
-        result => {
-          if (isError$1(result) || !unsync$1(next(array), tie(done, result), done)) done(result);
-        },
-        context);
-    };
   }
 
   function meanOperator() {
@@ -832,9 +860,15 @@
 
   function takeFirstOperator(count) {
     return emitter => (next, done, context) => {
-      let index = -1;
+      let index = 0;
       emitter(
-        result => ++index < count && next(result),
+        result => {
+          if (++index < count) return next(result);
+          result = next(result);
+          if (isBoolean(result)) return false;
+          if (isPromise(result)) return result.then(falsey);
+          return result;
+        },
         done,
         context);
     };
@@ -1280,6 +1314,38 @@
   */
   function group(...selectors) {
     return this.chain(groupOperator(selectors));
+  }
+  /**
+  @alias Aeroflow#join
+
+  @param {any} right
+  @param {function} comparer
+
+  @return {Aeroflow}
+
+  @example
+  aeroflow(['a','b']).join([1, 2]).dump().run();
+  // next ["a", 1]
+  // next ["a", 2]
+  // next ["b", 1]
+  // next ["b", 2]
+  aeroflow([
+    { country: 'USA', capital: 'Washington' },
+    { country: 'Russia', capital: 'Moskow' }
+  ]).join([
+    { country: 'USA', currency: 'US Dollar' },
+    { country: 'Russia', currency: 'Russian Ruble' }
+  ], (left, right) => left.country === right.country)
+  .map(result => (
+    { country: result[0].country, capital: result[0].capital, currency: result[1].currency }
+  ))
+  .dump().run();
+  // next Object {country: "USA", capital: "Washington", currency: "US Dollar"}
+  // next Object {country: "Russia", capital: "Moskow", currency: "Russian Ruble"}
+  // done true
+  */
+  function join(right, comparer) {
+    return this.chain(joinOperator(right, comparer));
   }
   /**
   @alias Aeroflow#map
@@ -1808,6 +1874,7 @@
     filter: { value: filter, writable: true },
     flatten: { value: flatten, writable: true },
     group: { value: group, writable: true },
+    join: { value: join, writable: true },
     map: { value: map, writable: true },
     max: { value: max, writable: true },
     mean: { value: mean, writable: true },
@@ -1907,7 +1974,7 @@
   /**
   @alias aeroflow.error
 
-  #param {string|error} [message]
+  @param {string|error} [message]
 
   @return {Aeroflow}
 
@@ -2028,11 +2095,12 @@
 
   @alias aeroflow.repeat
 
-  @param {function|any} value
+  @param {function|any} [value]
   Arbitrary static value to repeat;
   or function providing dynamic values and invoked with two arguments:
     index - index of the value being emitted,
     data - contextual data.
+  @param {number|function} [interval]
 
   @return {Aeroflow}
   The new flow emitting repeated values.
@@ -2051,31 +2119,19 @@
   // next 2
   // next 4
   // done false
+  aeroflow.repeat('ping', 500).take(3).dump().run();
+  // next ping // after 500ms
+  // next ping // after 500ms
+  // next ping // after 500ms
+  // done false
+  aeroflow.repeat(index => index, index => 500 + 500 * index).take(3).dump().run();
+  // next ping // after 500ms
+  // next ping // after 1000ms
+  // next ping // after 1500ms
+  // done false
     */
-  function repeat(value) {
-    return new Aeroflow(repeatEmitter(value));
-  }
-  /**
-  @alias aeroflow.timer
-
-  @param {number|function} [interval]
-
-  @return {Aeroflow}
-
-  @example
-  aeroflow.timer().take(3).dump().run();
-  // next Wed Feb 03 2016 02:35:45 ... // after 1s
-  // next Wed Feb 03 2016 02:35:46 ... // after 2s
-  // next Wed Feb 03 2016 02:35:47 ... // after 2s
-  // done false
-  aeroflow.timer(index => 500 + index * 500).take(3).dump().run();
-  // next Wed Feb 03 2016 02:37:36 ... // after 500ms
-  // next Wed Feb 03 2016 02:37:37 ... // after 1000ms
-  // next Wed Feb 03 2016 02:37:38 ... // after 1500ms
-  // done false
-  */
-  function timer(interval) {
-    return new Aeroflow(timerEmitter(interval));
+  function repeat(value, interval) {
+    return new Aeroflow(repeatEmitter(value, interval));
   }
   objectDefineProperties(aeroflow, {
     adapters: { get: () => adapters },
@@ -2087,8 +2143,7 @@
     operators: { get: () => operators },
     random: { value: random },
     range: { value: range },
-    repeat: { value: repeat },
-    timer: { value: timer }
+    repeat: { value: repeat }
   });
 
   return aeroflow;

@@ -95,14 +95,23 @@
     };
   };
 
+  var isBoolean = function isBoolean(value) {
+    return value === true || value === false;
+  };
+
   var isDefined = function isDefined(value) {
     return value !== undefined;
   };
 
   var isError$1 = classIs(ERROR);
-  var isFunction = classIs(FUNCTION);
+
+  var isFunction = function isFunction(value) {
+    return typeof value == 'function';
+  };
+
   var isInteger = Number.isInteger;
   var isNumber = classIs(NUMBER);
+  var isPromise = classIs(PROMISE);
 
   var isUndefined = function isUndefined(value) {
     return value === undefined;
@@ -116,6 +125,35 @@
     return function () {
       return func.apply(undefined, args);
     };
+  };
+
+  var falsey = function falsey() {
+    return false;
+  };
+
+  var truthy = function truthy() {
+    return true;
+  };
+
+  var toDelay = function toDelay(value, def) {
+    switch (classOf(value)) {
+      case DATE:
+        value = value - dateNow();
+        break;
+
+      case NUMBER:
+        break;
+
+      default:
+        value = +value;
+        break;
+    }
+
+    return isNaN(value) ? def : value < 0 ? 0 : value;
+  };
+
+  var toFunction = function toFunction(value, def) {
+    return isFunction(value) ? value : def;
   };
 
   var toNumber = function toNumber(value, def) {
@@ -353,8 +391,18 @@
     };
   }
 
-  function repeatEmitter(value) {
-    var repeater = isFunction(value) ? value : constant(value);
+  function repeatDeferredEmitter(repeater, delayer) {
+    return function (next, done, context) {
+      var index = -1;
+      !function proceed(result) {
+        setTimeout(function () {
+          if (!unsync$1(next(repeater(index, context.data)), proceed, done)) proceed();
+        }, toDelay(delayer(++index, context.data), 1000));
+      }();
+    };
+  }
+
+  function repeatImmediateEmitter(repeater) {
     return function (next, done, context) {
       var index = 0;
       !function proceed() {
@@ -363,16 +411,9 @@
     };
   }
 
-  function timerEmitter(interval) {
-    if (!isFunction(interval)) interval = constant(interval);
-    return function (next, done, context) {
-      var index = 0;
-      !function proceed(result) {
-        setTimeout(function () {
-          if (!unsync$1(next(new Date()), proceed, done)) proceed();
-        }, toNumber(interval(index++), 1000));
-      }();
-    };
+  function repeatEmitter(value, interval) {
+    var repeater = toFunction(value, constant(value));
+    return isDefined(interval) ? repeatDeferredEmitter(repeater, toFunction(interval, constant(interval))) : repeatImmediateEmitter(repeater);
   }
 
   function reduceAlongOperator(reducer) {
@@ -440,12 +481,13 @@
   }
 
   function catchOperator(alternative) {
+    var regressor = isDefined(alternative) ? adapterEmitter(alternative, true) : function (next, done) {
+      return done(false);
+    };
     return function (emitter) {
       return function (next, done, context) {
         return emitter(next, function (result) {
-          if (isError$1(result)) {
-            if (isDefined(alternative)) adapterEmitter(alternative, true)(next, done, context);else done(false);
-          } else done(result);
+          return isError$1(result) ? regressor(next, done, context) : done(result);
         }, context);
       };
     };
@@ -459,30 +501,11 @@
   }
 
   function delayOperator(interval) {
-    var delayer = isFunction(interval) ? interval : constant(interval);
+    var delayer = toFunction(interval, constant(interval));
     return function (emitter) {
       return function (next, done, context) {
         var index = 0;
         return emitter(function (result) {
-          var delay = delayer(result, index++, context.data);
-
-          switch (classOf(delay)) {
-            case DATE:
-              delay = delay - dateNow();
-              break;
-
-            case NUMBER:
-              break;
-
-            case ERROR:
-              return delay;
-
-            default:
-              delay = +delay;
-              break;
-          }
-
-          if (delay < 0) delay = 0;
           return new Promise(function (resolve, reject) {
             setTimeout(function () {
               try {
@@ -490,7 +513,7 @@
               } catch (error) {
                 reject(error);
               }
-            }, delay);
+            }, toDelay(delayer(result, index++, context.data), 1000));
           });
         }, done, context);
       };
@@ -698,6 +721,20 @@
     };
   }
 
+  function toArrayOperator() {
+    return function (emitter) {
+      return function (next, done, context) {
+        var array = [];
+        emitter(function (result) {
+          array.push(result);
+          return true;
+        }, function (result) {
+          if (isError$1(result) || !unsync$1(next(array), tie(done, result), done)) done(result);
+        }, context);
+      };
+    };
+  }
+
   function mapOperator(mapping) {
     if (isUndefined(mapping)) return identity;
     var mapper = isFunction(mapping) ? mapping : constant(mapping);
@@ -711,24 +748,35 @@
     };
   }
 
+  function joinOperator(right, condition) {
+    var comparer = toFunction(condition, truthy),
+        toArray = toArrayOperator()(adapterEmitter(right, true));
+    return function (emitter) {
+      return function (next, done, context) {
+        return toArray(function (rightArray) {
+          return new Promise(function (rightResolve) {
+            return emitter(function (leftResult) {
+              return new Promise(function (leftResolve) {
+                var array = arrayEmitter$1(rightArray),
+                    filter = filterOperator(function (rightResult) {
+                  return comparer(leftResult, rightResult);
+                }),
+                    map = mapOperator(function (rightResult) {
+                  return [leftResult, rightResult];
+                });
+                return map(filter(array))(next, leftResolve, context);
+              });
+            }, rightResolve, context);
+          });
+        }, done, context);
+      };
+    };
+  }
+
   function maxOperator() {
     return reduceAlongOperator(function (maximum, value) {
       return value > maximum ? value : maximum;
     });
-  }
-
-  function toArrayOperator() {
-    return function (emitter) {
-      return function (next, done, context) {
-        var array = [];
-        emitter(function (result) {
-          array.push(result);
-          return true;
-        }, function (result) {
-          if (isError$1(result) || !unsync$1(next(array), tie(done, result), done)) done(result);
-        }, context);
-      };
-    };
   }
 
   function meanOperator() {
@@ -980,9 +1028,13 @@
   function takeFirstOperator(count) {
     return function (emitter) {
       return function (next, done, context) {
-        var index = -1;
+        var index = 0;
         emitter(function (result) {
-          return ++index < count && next(result);
+          if (++index < count) return next(result);
+          result = next(result);
+          if (isBoolean(result)) return false;
+          if (isPromise(result)) return result.then(falsey);
+          return result;
         }, done, context);
       };
     };
@@ -1150,6 +1202,10 @@
     }
 
     return this.chain(groupOperator(selectors));
+  }
+
+  function join(right, comparer) {
+    return this.chain(joinOperator(right, comparer));
   }
 
   function map(mapping) {
@@ -1355,6 +1411,10 @@
       value: group,
       writable: true
     },
+    join: {
+      value: join,
+      writable: true
+    },
     map: {
       value: map,
       writable: true
@@ -1487,12 +1547,8 @@
     return new Aeroflow(rangeEmitter(start, end, step));
   }
 
-  function repeat(value) {
-    return new Aeroflow(repeatEmitter(value));
-  }
-
-  function timer(interval) {
-    return new Aeroflow(timerEmitter(interval));
+  function repeat(value, interval) {
+    return new Aeroflow(repeatEmitter(value, interval));
   }
 
   objectDefineProperties(aeroflow, {
@@ -1530,9 +1586,6 @@
     },
     repeat: {
       value: repeat
-    },
-    timer: {
-      value: timer
     }
   });
   exports.default = aeroflow;
