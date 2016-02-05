@@ -1,14 +1,15 @@
 'use strict';
 
 import { FUNCTION, NUMBER, UNDEFINED } from '../symbols';
-import { classOf, identity, mathMax, noop } from '../utilites';
+import { classOf, identity, mathMax, isError, truthy } from '../utilites';
+import { unsync } from '../unsync';
 import { toArrayOperator } from './toArray';
 
-export function skipAllOperator() {
-  return emitter => (next, done, context) => emitter(noop, done, context);
+function skipAllOperator() {
+  return emitter => (next, done, context) => emitter(truthy, done, context);
 }
 
-export function skipFirstOperator(count) {
+function skipFirstOperator(count) {
   return emitter => (next, done, context) => {
     let index = -1;
     emitter(
@@ -19,19 +20,16 @@ export function skipFirstOperator(count) {
 }
 
 export function skipLastOperator(count) {
-  return emitter => (next, done, context) => {
-    let array;
-    toArrayOperator()(emitter)(
-      result => {
-        array = result;
-        return false;
-      },
-      result => {
-        if (isError(result)) done(result);
-        else arrayEmitter(array.slice(mathMax(values.length - count, 0)))(next, done, context);
-      },
-      context);
-  }
+  return emitter => (next, done, context) => toArrayOperator()(emitter)(
+    result => result.length <= count || new Promise(resolve => {
+      let index = 0, limit = result.length - count;
+      !function proceed() {
+        while (!unsync(next(result[index++]), proceed, resolve) && index < limit);
+        resolve(true);
+      }();
+    }),
+    done,
+    context);
 }
 
 export function skipWhileOperator(predicate) {

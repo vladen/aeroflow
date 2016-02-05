@@ -6,10 +6,8 @@ import { emptyEmitter } from './empty';
 import { scalarEmitter } from './scalar';
 
 export function customEmitter(emitter) {
-  if (isUndefined(emitter))
-    return emptyEmitter();
-  if (!isFunction(emitter))
-    return scalarEmitter(emitter);
+  if (isUndefined(emitter)) return emptyEmitter(true);
+  if (!isFunction(emitter)) return scalarEmitter(emitter);
   return (next, done, context) => {
     let buffer = [], completed = false, finalizer, waiting = false;
     finalizer = emitter(accept, finish, context);
