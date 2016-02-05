@@ -39,6 +39,7 @@ Aeroflow class.
     * [.every([predicate])](#Aeroflow+every) ⇒ <code>[Aeroflow](#Aeroflow)</code>
     * [.filter([predicate])](#Aeroflow+filter) ⇒ <code>[Aeroflow](#Aeroflow)</code>
     * [.flatten([depth])](#Aeroflow+flatten) ⇒ <code>[Aeroflow](#Aeroflow)</code>
+    * [.group([...selectors])](#Aeroflow+group) ⇒ <code>[Aeroflow](#Aeroflow)</code>
     * [.join(right, comparer)](#Aeroflow+join) ⇒ <code>[Aeroflow](#Aeroflow)</code>
     * [.map([mapping])](#Aeroflow+map) ⇒ <code>[Aeroflow](#Aeroflow)</code>
     * [.max()](#Aeroflow+max) ⇒ <code>[Aeroflow](#Aeroflow)</code>
@@ -46,13 +47,15 @@ Aeroflow class.
     * [.min()](#Aeroflow+min) ⇒ <code>[Aeroflow](#Aeroflow)</code>
     * [.prepend([...sources])](#Aeroflow+prepend) ⇒ <code>[Aeroflow](#Aeroflow)</code>
     * [.reduce(reducer, seed, optional)](#Aeroflow+reduce) ⇒ <code>[Aeroflow](#Aeroflow)</code>
-    * [.reverse(attempts)](#Aeroflow+reverse) ⇒ <code>[Aeroflow](#Aeroflow)</code>
+    * [.retry(attempts)](#Aeroflow+retry) ⇒ <code>[Aeroflow](#Aeroflow)</code>
     * [.reverse()](#Aeroflow+reverse) ⇒ <code>[Aeroflow](#Aeroflow)</code>
     * [.run([next], [done], [data])](#Aeroflow+run) ⇒ <code>[Aeroflow](#Aeroflow)</code>
     * [.skip([condition])](#Aeroflow+skip) ⇒ <code>[Aeroflow](#Aeroflow)</code>
     * [.slice([begin], [end])](#Aeroflow+slice) ⇒ <code>[Aeroflow](#Aeroflow)</code>
     * [.some([predicate])](#Aeroflow+some) ⇒ <code>[Aeroflow](#Aeroflow)</code>
     * [.sort([...parameters])](#Aeroflow+sort) ⇒ <code>[Aeroflow](#Aeroflow)</code> &#124; <code>[Aeroflow](#Aeroflow)</code>
+    * [.sum()](#Aeroflow+sum) ⇒ <code>[Aeroflow](#Aeroflow)</code>
+    * [.take([condition])](#Aeroflow+take) ⇒ <code>[Aeroflow](#Aeroflow)</code>
     * [.tap([callback])](#Aeroflow+tap) ⇒ <code>[Aeroflow](#Aeroflow)</code>
     * [.toArray()](#Aeroflow+toArray) ⇒ <code>[Aeroflow](#Aeroflow)</code>
     * [.toMap([keyTransformation], [valueTransformation])](#Aeroflow+toMap) ⇒ <code>[Aeroflow](#Aeroflow)</code>
@@ -322,6 +325,30 @@ aeroflow(new Promise(resolve => setTimeout(() => resolve(() => [1, 2]), 500)))
 // next [1, 2] // after 500ms
 // done true
 ```
+<a name="Aeroflow+group"></a>
+### aeroflow.group([...selectors]) ⇒ <code>[Aeroflow](#Aeroflow)</code>
+**Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
+**Params**
+
+- [...selectors] <code>function</code> | <code>Array.&lt;any&gt;</code>
+
+**Example**  
+```js
+aeroflow.range(1, 10).group(value => (value % 2) ? 'odd' : 'even').dump().run();
+// next ["odd", Array[5]]
+// next ["even", Array[5]]
+// done true
+aeroflow(
+  { country: 'Belarus', city: 'Brest' },
+  { country: 'Poland', city: 'Krakow' },
+  { country: 'Belarus', city: 'Minsk' },
+  { country: 'Belarus', city: 'Grodno' },
+  { country: 'Poland', city: 'Lodz' }
+).group(value => value.country, value => value.city).dump().run();
+// next ["Belarus", {{"Brest" => Array[1]}, {"Minsk" => Array[1]}, {"Grodno" => Array[1]}}]
+// next ["Poland", {{"Krakow" => Array[1]}, {"Lodz" => Array[1]}}]
+// done
+```
 <a name="Aeroflow+join"></a>
 ### aeroflow.join(right, comparer) ⇒ <code>[Aeroflow](#Aeroflow)</code>
 **Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
@@ -475,8 +502,8 @@ aeroflow(['a', 'b', 'c'])
 // next a0b1c2
 // done
 ```
-<a name="Aeroflow+reverse"></a>
-### aeroflow.reverse(attempts) ⇒ <code>[Aeroflow](#Aeroflow)</code>
+<a name="Aeroflow+retry"></a>
+### aeroflow.retry(attempts) ⇒ <code>[Aeroflow](#Aeroflow)</code>
 **Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
 **Params**
 
@@ -668,6 +695,36 @@ aeroflow(
 // next Object {country: "Belarus", city: "Brest"}
 // next Object {country: "Poland", city: "Lodz"}
 // next Object {country: "Poland", city: "Krakow"}
+// done true
+```
+<a name="Aeroflow+sum"></a>
+### aeroflow.sum() ⇒ <code>[Aeroflow](#Aeroflow)</code>
+**Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
+**Example**  
+```js
+// TODO: edge cases
+aeroflow().sum().dump().run();
+// done true
+aeroflow(1, 2, 3).sum().dump().run();
+// next 6
+// done true
+```
+<a name="Aeroflow+take"></a>
+### aeroflow.take([condition]) ⇒ <code>[Aeroflow](#Aeroflow)</code>
+**Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
+**Params**
+
+- [condition] <code>function</code> | <code>number</code>
+
+**Example**  
+```js
+aeroflow(1, 2, 3).take().dump().run();
+// done false
+aeroflow(1, 2, 3).take(1).dump().run();
+// next 1
+// done false
+aeroflow(1, 2, 3).take(-1).dump().run();
+// next 3
 // done true
 ```
 <a name="Aeroflow+tap"></a>

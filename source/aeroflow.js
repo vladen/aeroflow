@@ -362,7 +362,7 @@ aeroflow(new Promise(resolve => setTimeout(() => resolve(() => [1, 2]), 500)))
 function flatten(depth) {
   return this.chain(flattenOperator(depth));
 }
-/*
+/**
 @alias Aeroflow#group
 
 @param {function|any[]} [selectors]
@@ -565,7 +565,7 @@ function reduce(reducer, seed, optional) {
   return this.chain(reduceOperator(reducer, seed, optional));
 }
 /**
-@alias Aeroflow#reverse
+@alias Aeroflow#retry
 
 @param {number} attempts
 
@@ -770,7 +770,6 @@ aeroflow(1, 2, 3).slice(-3, -1).dump().run();
 function slice(begin, end) {
   return this.chain(sliceOperator(begin, end));
 }
-
 /**
 Tests whether some value emitted by this flow passes the predicate test,
 returns flow emitting true if the predicate returns true for any emitted value; otherwise, false.
@@ -839,7 +838,7 @@ aeroflow(
 function sort(...parameters) {
   return this.chain(sortOperator(parameters));
 }
-/*
+/**
 @alias Aeroflow#sum
 
 @return {Aeroflow}
@@ -855,7 +854,7 @@ aeroflow(1, 2, 3).sum().dump().run();
 function sum() {
   return this.chain(sumOperator());
 }
-/*
+/**
 @alias Aeroflow#take
 
 @param {function|number} [condition]
@@ -910,7 +909,7 @@ New flow that emits an array.
 aeroflow(1, 2, 3).toArray().dump().run();
 // next [1, 2, 3]
 // done
-  */
+*/
 function toArray() {
   return this.chain(toArrayOperator());
 }
@@ -936,7 +935,7 @@ aeroflow(1, 2, 3).toMap(v => 'key' + v, true).dump().run();
 aeroflow(1, 2, 3).toMap(v => 'key' + v, v => v 10).dump().run();
 // next Map {"key1" => 10, "key2" => 20, "key3" => 30}
 // done
-  */
+*/
 function toMap(keyTransformation, valueTransformation) {
    return this.chain(toMapOperator(keyTransformation, valueTransformation));
 }
@@ -952,7 +951,7 @@ New flow that emits a set.
 aeroflow(1, 2, 3).toSet().dump().run();
 // next Set {1, 2, 3}
 // done true
-  */
+*/
 function toSet() {
   return this.chain(toSetOperator()); 
 }
@@ -1029,7 +1028,6 @@ function emit(next, done, context) {
     }
   }(true);
 }
-
 /**
 Creates new flow emitting values from all provided data sources.
 
@@ -1131,7 +1129,7 @@ The new flow emitting provided value.
 aeroflow.just([1, 2, 3]).dump().run();
 // next [1, 2, 3]
 // done
-  */
+*/
 function just(value) {
   return new Aeroflow(scalarEmitter(value));
 }
@@ -1162,7 +1160,7 @@ next 4.398837305698544
 // next 2.287970747705549
 // next 3.430788825778291
 // done false
-  */
+*/
 function random(minimum, maximum) {
   return new Aeroflow(randomEmitter(minimum, maximum));
 }
@@ -1242,7 +1240,7 @@ aeroflow.repeat(index => index, index => 500 + 500 * index).take(3).dump().run()
 // next ping // after 1000ms
 // next ping // after 1500ms
 // done false
-  */
+*/
 function repeat(value, interval) {
   return new Aeroflow(repeatEmitter(value, interval));
 }
