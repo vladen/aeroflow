@@ -1,8 +1,9 @@
 'use strict';
 
 import { FUNCTION, NUMBER, UNDEFINED } from '../symbols';
-import { classOf, identity, mathMax, noop } from '../utilites';
+import { classOf, identity, mathMax, noop, isError } from '../utilites';
 import { toArrayOperator } from './toArray';
+import { arrayEmitter } from '../emitters/array';
 
 export function skipAllOperator() {
   return emitter => (next, done, context) => emitter(noop, done, context);
@@ -28,7 +29,7 @@ export function skipLastOperator(count) {
       },
       result => {
         if (isError(result)) done(result);
-        else arrayEmitter(array.slice(mathMax(values.length - count, 0)))(next, done, context);
+        else arrayEmitter(array.slice(mathMax(result.length - count, 0)))(next, done, context);
       },
       context);
   }
