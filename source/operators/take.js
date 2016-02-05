@@ -54,12 +54,12 @@ export function takeOperator(condition) {
         ? takeFirstOperator(condition)
         : condition < 0
           ? takeLastOperator(-condition)
-          : emptyEmitter();
+          : () => emptyEmitter(false)
     case FUNCTION:
       return takeWhileOperator(condition);
     default:
       return condition
         ? identity
-        : emptyEmitter();
+        : () => emptyEmitter(false);
   }
 }

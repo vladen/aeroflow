@@ -81,7 +81,7 @@ const toNumber = (value, def) => {
   return value;
 };
 
-const toError = value => isError(value)
+const toError$1 = value => isError(value)
   ? value
   : new Error(value);
 
@@ -95,8 +95,8 @@ class Context {
 }
 objectDefineProperty(Context[PROTOTYPE], CLASS, { value: CONTEXT });
 
-function emptyEmitter() {
-  return (next, done) => done();
+function emptyEmitter(result) {
+  return (next, done) => done(result);
 }
 
 function unsync$1(result, next, done) {
@@ -113,7 +113,7 @@ function unsync$1(result, next, done) {
         promiseResult => {
           if (!unsync$1(promiseResult, next, done)) next(true);
         },
-        promiseError => done(toError(promiseError)));
+        promiseError => done(toError$1(promiseError)));
       break;
     case ERROR:
       done(result);
@@ -124,8 +124,7 @@ function unsync$1(result, next, done) {
 
 function scalarEmitter(value) {
   return (next, done) => {
-    if (!unsync$1(next(value), done, done))
-      done(true);
+    if (!unsync$1(next(value), done, done)) done(true);
   };
 }
 
@@ -155,7 +154,7 @@ function promiseEmitter(source) {
       if (!unsync$1(next(result), done, done))
         done(true);
     },
-    result => done(toError(result)));
+    result => done(toError$1(result)));
 }
 
 const adapters = objectCreate(null, {
@@ -185,10 +184,8 @@ function adapterEmitter(source, scalar) {
 }
 
 function customEmitter(emitter) {
-  if (isUndefined(emitter))
-    return emptyEmitter();
-  if (!isFunction(emitter))
-    return scalarEmitter(emitter);
+  if (isUndefined(emitter)) return emptyEmitter(true);
+  if (!isFunction(emitter)) return scalarEmitter(emitter);
   return (next, done, context) => {
     let buffer = [], completed = false, finalizer, waiting = false;
     finalizer = emitter(accept, finish, context);
@@ -211,12 +208,6 @@ function customEmitter(emitter) {
       }
     }
   };
-}
-
-function errorEmitter(message) {
-  return (next, done) => done(isError(message)
-    ? message
-    : new Error(message));
 }
 
 function expandEmitter(expanding, seed) {
@@ -354,7 +345,7 @@ function reduceOptionalOperator(reducer, seed) {
 
 function reduceOperator(reducer, seed, optional) {
   return isUndefined(reducer)
-    ? emptyEmitter
+    ? () => scalarEmitter(false)
     : !isFunction(reducer)
       ? () => scalarEmitter(reducer)
       : isUndefined(seed)
@@ -891,13 +882,13 @@ function takeOperator(condition) {
         ? takeFirstOperator(condition)
         : condition < 0
           ? takeLastOperator(-condition)
-          : emptyEmitter();
+          : () => emptyEmitter(false)
     case FUNCTION:
       return takeWhileOperator(condition);
     default:
       return condition
         ? identity
-        : emptyEmitter();
+        : () => emptyEmitter(false);
   }
 }
 
@@ -1637,6 +1628,11 @@ function skip(condition) {
 @return {Aeroflow}
 
 @example
+aeroflow(1, 2, 3).slice().dump().run();
+// next 1
+// next 2
+// next 3
+// done true
 aeroflow(1, 2, 3).slice(1).dump().run();
 // next 2
 // next 3
@@ -1645,7 +1641,9 @@ aeroflow(1, 2, 3).slice(1, 2).dump().run();
 // next 2
 // done false
 aeroflow(1, 2, 3).slice(-2).dump().run();
-
+// next 2
+// next 3
+// done true
 aeroflow(1, 2, 3).slice(-3, -1).dump().run();
 // next 1
 // next 2
@@ -1744,6 +1742,8 @@ function sum() {
 @return {Aeroflow}
 
 @example
+aeroflow(1, 2, 3).take().dump().run();
+
 aeroflow(1, 2, 3).take(2).dump().run();
 // next 1
 // next 2
@@ -1977,7 +1977,7 @@ aeroflow.error('test').run();
 // Uncaught Error: test
 */
 function error(message) {
-  return new Aeroflow(errorEmitter(message));
+  return new Aeroflow(emptyEmitter(toError(message)));
 }
 /**
 @alias aeroflow.expand
@@ -2130,7 +2130,7 @@ function repeat(value, interval) {
 objectDefineProperties(aeroflow, {
   adapters: { get: () => adapters },
   create: { value: create },
-  empty: { enumerable: true, value: new Aeroflow(emptyEmitter()) },
+  empty: { enumerable: true, value: new Aeroflow(emptyEmitter(true)) },
   error: { value: error },
   expand: { value: expand },
   just: { value: just },

@@ -552,6 +552,11 @@ aeroflow(1, 2, 3).skip(value => value < 3).dump().run();
 
 **Example**  
 ```js
+aeroflow(1, 2, 3).slice().dump().run();
+// next 1
+// next 2
+// next 3
+// done true
 aeroflow(1, 2, 3).slice(1).dump().run();
 // next 2
 // next 3

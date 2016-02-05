@@ -165,7 +165,7 @@
     return value;
   };
 
-  var toError = function toError(value) {
+  var toError$1 = function toError$1(value) {
     return isError(value) ? value : new Error(value);
   };
 
@@ -186,9 +186,9 @@
     value: CONTEXT
   });
 
-  function emptyEmitter() {
+  function emptyEmitter(result) {
     return function (next, done) {
-      return done();
+      return done(result);
     };
   }
 
@@ -207,7 +207,7 @@
         result.then(function (promiseResult) {
           if (!unsync$1(promiseResult, next, done)) next(true);
         }, function (promiseError) {
-          return done(toError(promiseError));
+          return done(toError$1(promiseError));
         });
         break;
 
@@ -255,7 +255,7 @@
       return source.then(function (result) {
         if (!unsync$1(next(result), done, done)) done(true);
       }, function (result) {
-        return done(toError(result));
+        return done(toError$1(result));
       });
     };
   }
@@ -296,7 +296,7 @@
   }
 
   function customEmitter(emitter) {
-    if (isUndefined(emitter)) return emptyEmitter();
+    if (isUndefined(emitter)) return emptyEmitter(true);
     if (!isFunction(emitter)) return scalarEmitter(emitter);
     return function (next, done, context) {
       var buffer = [],
@@ -328,12 +328,6 @@
           }
         }
       }
-    };
-  }
-
-  function errorEmitter(message) {
-    return function (next, done) {
-      return done(isError(message) ? message : new Error(message));
     };
   }
 
@@ -469,7 +463,9 @@
   }
 
   function reduceOperator(reducer, seed, optional) {
-    return isUndefined(reducer) ? emptyEmitter : !isFunction(reducer) ? function () {
+    return isUndefined(reducer) ? function () {
+      return scalarEmitter(false);
+    } : !isFunction(reducer) ? function () {
       return scalarEmitter(reducer);
     } : isUndefined(seed) ? reduceAlongOperator(reducer) : optional ? reduceOptionalOperator(reducer, seed) : reduceGeneralOperator(reducer, seed);
   }
@@ -1076,13 +1072,17 @@
   function takeOperator(condition) {
     switch (classOf(condition)) {
       case NUMBER:
-        return condition > 0 ? takeFirstOperator(condition) : condition < 0 ? takeLastOperator(-condition) : emptyEmitter();
+        return condition > 0 ? takeFirstOperator(condition) : condition < 0 ? takeLastOperator(-condition) : function () {
+          return emptyEmitter(false);
+        };
 
       case FUNCTION:
         return takeWhileOperator(condition);
 
       default:
-        return condition ? identity : emptyEmitter();
+        return condition ? identity : function () {
+          return emptyEmitter(false);
+        };
     }
   }
 
@@ -1538,7 +1538,7 @@
   }
 
   function error(message) {
-    return new Aeroflow(errorEmitter(message));
+    return new Aeroflow(emptyEmitter(toError(message)));
   }
 
   function expand(expander, seed) {
@@ -1572,7 +1572,7 @@
     },
     empty: {
       enumerable: true,
-      value: new Aeroflow(emptyEmitter())
+      value: new Aeroflow(emptyEmitter(true))
     },
     error: {
       value: error

@@ -10,7 +10,6 @@ import { scalarEmitter } from './emitters/scalar';
 import { adapters } from './emitters/adapters';
 import { adapterEmitter } from './emitters/adapter';
 import { customEmitter } from './emitters/custom';
-import { errorEmitter } from './emitters/error';
 import { expandEmitter } from './emitters/expand';
 import { randomEmitter } from './emitters/random';
 import { rangeEmitter } from './emitters/range';
@@ -709,6 +708,11 @@ function skip(condition) {
 @return {Aeroflow}
 
 @example
+aeroflow(1, 2, 3).slice().dump().run();
+// next 1
+// next 2
+// next 3
+// done true
 aeroflow(1, 2, 3).slice(1).dump().run();
 // next 2
 // next 3
@@ -818,12 +822,12 @@ function sum() {
 @return {Aeroflow}
 
 @example
-aeroflow(1, 2, 3).take(2).dump().run();
-// next 1
-// next 2
+aeroflow(1, 2, 3).take().dump().run();
 // done false
-aeroflow(1, 2, 3).take(-2).dump().run();
-// next 2
+aeroflow(1, 2, 3).take(1).dump().run();
+// next 1
+// done false
+aeroflow(1, 2, 3).take(-1).dump().run();
 // next 3
 // done true
 */
@@ -1051,7 +1055,7 @@ aeroflow.error('test').run();
 // Uncaught Error: test
 */
 function error(message) {
-  return new Aeroflow(errorEmitter(message));
+  return new Aeroflow(emptyEmitter(toError(message)));
 }
 /**
 @alias aeroflow.expand
@@ -1204,7 +1208,7 @@ function repeat(value, interval) {
 objectDefineProperties(aeroflow, {
   adapters: { get: () => adapters },
   create: { value: create },
-  empty: { enumerable: true, value: new Aeroflow(emptyEmitter()) },
+  empty: { enumerable: true, value: new Aeroflow(emptyEmitter(true)) },
   error: { value: error },
   expand: { value: expand },
   just: { value: just },
