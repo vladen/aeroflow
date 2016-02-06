@@ -13,6 +13,7 @@ export const mathRandom = Math.random;
 export const mathMax = Math.max;
 export const mathMin = Math.min;
 export const maxInteger = Number.MAX_SAFE_INTEGER;
+export const minInteger = Number.MIN_SAFE_INTEGER;
 export const objectCreate = Object.create;
 export const objectDefineProperties = Object.defineProperties;
 export const objectDefineProperty = Object.defineProperty;

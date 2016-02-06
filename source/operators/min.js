@@ -1,10 +1,7 @@
 'use strict';
 
-import { reduceAlongOperator } from './reduce';
+import { reduceOperator } from './reduce';
 
-export function minOperator() {
-  return reduceAlongOperator(
-    (minimum, value) => value < minimum
-      ? value
-      : minimum);
+export function minOperator(optional) {
+  return reduceOperator((minimum, result) => minimum > result ? result : minimum);
 }

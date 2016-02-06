@@ -1,10 +1,7 @@
 'use strict';
 
-import { reduceAlongOperator } from './reduce';
+import { reduceOperator } from './reduce';
 
-export function maxOperator () {
-  return reduceAlongOperator(
-    (maximum, value) => value > maximum
-      ? value
-      : maximum);
+export function maxOperator (optional) {
+  return reduceOperator((maximum, result) => maximum < result ? result : maximum);
 }

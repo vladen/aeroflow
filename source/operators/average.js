@@ -1,8 +1,7 @@
 'use strict';
 
-import { reduceAlongOperator } from './reduce';
+import { reduceOperator } from './reduce';
 
 export function averageOperator() {
-  return reduceAlongOperator(
-    (result, value, index) => (result * index + value) / (index + 1));
+  return reduceOperator((average, result, index) => (average * index + result) / (index + 1));
 }

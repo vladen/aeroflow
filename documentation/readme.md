@@ -11,7 +11,7 @@
 
 <dl>
 <dt><a href="#aeroflow">aeroflow(sources)</a> ⇒ <code><a href="#Aeroflow">Aeroflow</a></code></dt>
-<dd><p>Creates new flow emitting values from all provided data sources.</p>
+<dd><p>Creates new flow emitting values from all provided data sources in series.</p>
 </dd>
 </dl>
 
@@ -93,10 +93,8 @@ aeroflow(1)
 ```js
 aeroflow().average().dump().run();
 // done true
-aeroflow(1, 2, 3).average().dump().run();
-// next 2
-// done true
-aeroflow().average().dump().run();
+aeroflow(1, 2, 6).average().dump().run();
+// next 3
 // done true
 ```
 <a name="Aeroflow+bind"></a>
@@ -420,8 +418,13 @@ Determines the maximum value emitted by this flow.
 **Returns**: <code>[Aeroflow](#Aeroflow)</code> - New flow emitting the maximum value only.  
 **Example**  
 ```js
-aeroflow(1, 3, 2).max().dump().run();
+aeroflow().max().dump().run();
+// done true
+aeroflow(3, 1, 2).max().dump().run();
 // next 3
+// done true
+aeroflow('b', 'a', 'c').max().dump().run();
+// next c
 // done true
 ```
 <a name="Aeroflow+mean"></a>
@@ -432,8 +435,13 @@ Determines the mean value emitted by this flow.
 **Returns**: <code>[Aeroflow](#Aeroflow)</code> - New flow emitting the mean value only.  
 **Example**  
 ```js
-aeroflow(1, 1, 2, 3, 5, 7, 9).mean().dump().run();
-// next 3
+aeroflow().mean().dump().run();
+// done true
+aeroflow(3, 1, 2).mean().dump().run();
+// next 2
+// done true
+aeroflow('a', 'd', 'f', 'm').mean().dump().run();
+// next f
 // done true
 ```
 <a name="Aeroflow+min"></a>
@@ -444,8 +452,13 @@ Determines the minimum value emitted by this flow.
 **Returns**: <code>[Aeroflow](#Aeroflow)</code> - New flow emitting the minimum value only.  
 **Example**  
 ```js
-aeroflow(2, 1, 3).min().dump().run();
+aeroflow().min().dump().run();
+// done true
+aeroflow(3, 1, 2).min().dump().run();
 // next 1
+// done true
+aeroflow('b', 'a', 'c').min().dump().run();
+// next a
 // done true
 ```
 <a name="Aeroflow+prepend"></a>
@@ -702,8 +715,10 @@ aeroflow(
 **Kind**: instance method of <code>[Aeroflow](#Aeroflow)</code>  
 **Example**  
 ```js
-// TODO: edge cases
 aeroflow().sum().dump().run();
+// done true
+aeroflow('test').sum().dump().run();
+// next NaN
 // done true
 aeroflow(1, 2, 3).sum().dump().run();
 // next 6
@@ -755,9 +770,15 @@ Collects all values emitted by this flow to array, returns flow emitting this ar
 **Returns**: <code>[Aeroflow](#Aeroflow)</code> - New flow that emits an array.  
 **Example**  
 ```js
+aeroflow().toArray().dump().run();
+// next []
+// done true
+aeroflow('test').toArray().dump().run();
+// next ["test"]
+// done true
 aeroflow(1, 2, 3).toArray().dump().run();
 // next [1, 2, 3]
-// done
+// done true
 ```
 <a name="Aeroflow+toMap"></a>
 ### aeroflow.toMap([keyTransformation], [valueTransformation]) ⇒ <code>[Aeroflow](#Aeroflow)</code>
@@ -774,12 +795,18 @@ Or scalar value to use as map value.
 
 **Example**  
 ```js
+aeroflow().toMap().dump().run();
+// next Map {}
+// done true
+aeroflow('test').toMap().dump().run();
+// next Map {"test" => "test"}
+done true
 aeroflow(1, 2, 3).toMap(v => 'key' + v, true).dump().run();
 // next Map {"key1" => true, "key2" => true, "key3" => true}
-// done
-aeroflow(1, 2, 3).toMap(v => 'key' + v, v => v 10).dump().run();
+// done true
+aeroflow(1, 2, 3).toMap(v => 'key' + v, v => 10 * v).dump().run();
 // next Map {"key1" => 10, "key2" => 20, "key3" => 30}
-// done
+// done true
 ```
 <a name="Aeroflow+toSet"></a>
 ### aeroflow.toSet() ⇒ <code>[Aeroflow](#Aeroflow)</code>
@@ -789,6 +816,9 @@ Collects all values emitted by this flow to ES6 set, returns flow emitting this 
 **Returns**: <code>[Aeroflow](#Aeroflow)</code> - New flow that emits a set.  
 **Example**  
 ```js
+aeroflow().toSet().dump().run();
+// next Set {}
+// done true
 aeroflow(1, 2, 3).toSet().dump().run();
 // next Set {1, 2, 3}
 // done true
@@ -803,6 +833,12 @@ aeroflow(1, 2, 3).toSet().dump().run();
 
 **Example**  
 ```js
+aeroflow().toString().dump().run();
+// next
+// done true
+aeroflow('test').toString().dump().run();
+// next test
+// done true
 aeroflow(1, 2, 3).toString().dump().run();
 // next 1,2,3
 // done true
@@ -815,27 +851,52 @@ aeroflow(1, 2, 3).toString((value, index) => '-'.repeat(index + 1)).dump().run()
 ```
 <a name="aeroflow"></a>
 ## aeroflow(sources) ⇒ <code>[Aeroflow](#Aeroflow)</code>
-Creates new flow emitting values from all provided data sources.
+Creates new flow emitting values from all provided data sources in series.
 
 **Kind**: global function  
 **Params**
 
 - sources <code>Array.&lt;any&gt;</code> - Data sources.
 
+**Properties**
+
+- adapters <code>object</code>  
+- adapters <code>operators</code>  
+
 **Example**  
 ```js
 aeroflow().dump().run();
 // done true
-aeroflow(1, [2, 3], () => 4, new Promise(resolve => setTimeout(() => resolve(5), 500)))).dump().run();
+aeroflow(
+  1,
+  [2, 3],
+  new Set([4, 5]),
+  () => 6,
+  Promise.resolve(7),
+  new Promise(resolve => setTimeout(() => resolve(8), 500))
+).dump().run();
 // next 1
 // next 2
 // next 3
 // next 4
-// next 5 // after 500ms
+// next 5
+// next 6
+// next 7
+// next 8 // after 500ms
 // done true
 aeroflow(() => { throw new Error }).dump().run();
 // done Error(…)
 // Uncaught Error
+aeroflow("test").dump().run();
+// next test
+// done true
+aeroflow.adapters['String'] = aeroflow.adapters['Array'];
+aeroflow("test").dump().run();
+// next t
+// next e
+// next s
+// next t
+// done true
 ```
 
 * [aeroflow(sources)](#aeroflow) ⇒ <code>[Aeroflow](#Aeroflow)</code>

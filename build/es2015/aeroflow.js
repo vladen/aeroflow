@@ -157,11 +157,11 @@ function promiseEmitter(source) {
     result => done(toError(result)));
 }
 
-const adapters = objectCreate(null, {
+const adapters = objectCreate(Object[PROTOTYPE], {
   [AEROFLOW]: { value: aeroflowEmitter },
-  [ARRAY]: { value: arrayEmitter, writable: true },
-  [FUNCTION]: { value: functionEmitter, writable: true },
-  [PROMISE]: { value: promiseEmitter, writable: true }
+  [ARRAY]: { configurable: true, value: arrayEmitter, writable: true },
+  [FUNCTION]: { configurable: true, value: functionEmitter, writable: true },
+  [PROMISE]: { configurable: true, value: promiseEmitter, writable: true }
 });
 
 function iterableEmitter(source) {
@@ -346,18 +346,17 @@ function reduceOptionalOperator(reducer, seed) {
 function reduceOperator(reducer, seed, optional) {
   return isUndefined(reducer)
     ? () => emptyEmitter(false)
-    : !isFunction(reducer)
-      ? () => scalarEmitter(reducer)
-      : isUndefined(seed)
+    : isFunction(reducer)
+      ? isUndefined(seed)
         ? reduceAlongOperator(reducer)
         : optional
           ? reduceOptionalOperator(reducer, seed)
-          : reduceGeneralOperator(reducer, seed);
+          : reduceGeneralOperator(reducer, seed)
+      : () => scalarEmitter(reducer);
 }
 
 function averageOperator() {
-  return reduceAlongOperator(
-    (result, value, index) => (result * index + value) / (index + 1));
+  return reduceOperator((average, result, index) => (average * index + result) / (index + 1));
 }
 
 function catchOperator(alternative) {
@@ -372,11 +371,8 @@ function catchOperator(alternative) {
     context);
 }
 
-function countOperator(optional) {
-  const reducer = optional
-    ? reduceOptionalOperator
-    : reduceGeneralOperator;
-  return reducer(result => result + 1, 0);
+function countOperator() {
+  return reduceOperator(count => count + 1, 0);
 }
 
 function delayOperator(interval) {
@@ -624,11 +620,8 @@ function joinOperator(right, condition) {
     context);
 }
 
-function maxOperator () {
-  return reduceAlongOperator(
-    (maximum, value) => value > maximum
-      ? value
-      : maximum);
+function maxOperator (optional) {
+  return reduceOperator((maximum, result) => maximum < result ? result : maximum);
 }
 
 function meanOperator() {
@@ -642,11 +635,8 @@ function meanOperator() {
     context);
 }
 
-function minOperator() {
-  return reduceAlongOperator(
-    (minimum, value) => value < minimum
-      ? value
-      : minimum);
+function minOperator(optional) {
+  return reduceOperator((minimum, result) => minimum > result ? result : minimum);
 }
 
 function retryOperator(attempts) {
@@ -838,7 +828,7 @@ function sortOperator(parameters) {
 }
 
 function sumOperator() {
-  return reduceAlongOperator((result, value) => result + value);
+  return reduceOperator((sum, result) => +result + sum, 0, true);
 }
 
 function takeFirstOperator(count) {
@@ -955,20 +945,12 @@ function toSetOperator() {
   };
 }
 
-function toStringOperator(separator, optional) {
+function toStringOperator(separator) {
   const joiner = isUndefined(separator)
     ? constant(',')
-    : isFunction(separator)
-      ? separator
-      : constant(separator);
-  const reducer = optional
-    ? reduceOptionalOperator
-    : reduceGeneralOperator;
-  return reducer((result, value, index, data) =>
-    result.length
-      ? result + joiner(value, index, data) + value
-      : '' + value,
-    '');
+    : toFunction(separator, constant(separator));
+  return reduceOperator((string, result, index, data) =>
+    string + joiner(result, index, data) + result, undefined, false);
 }
 
 /**
@@ -1021,10 +1003,8 @@ function append(...sources) {
 @example
 aeroflow().average().dump().run();
 // done true
-aeroflow(1, 2, 3).average().dump().run();
-// next 2
-// done true
-aeroflow().average().dump().run();
+aeroflow(1, 2, 6).average().dump().run();
+// next 3
 // done true
 */
 function average() {
@@ -1286,7 +1266,7 @@ aeroflow(new Promise(resolve => setTimeout(() => resolve(() => [1, 2]), 500)))
 function flatten(depth) {
   return this.chain(flattenOperator(depth));
 }
-/*
+/**
 @alias Aeroflow#group
 
 @param {function|any[]} [selectors]
@@ -1388,8 +1368,13 @@ Determines the maximum value emitted by this flow.
 New flow emitting the maximum value only.
 
 @example
-aeroflow(1, 3, 2).max().dump().run();
+aeroflow().max().dump().run();
+// done true
+aeroflow(3, 1, 2).max().dump().run();
 // next 3
+// done true
+aeroflow('b', 'a', 'c').max().dump().run();
+// next c
 // done true
 */
 function max() {
@@ -1404,8 +1389,13 @@ Determines the mean value emitted by this flow.
 New flow emitting the mean value only.
 
 @example
-aeroflow(1, 1, 2, 3, 5, 7, 9).mean().dump().run();
-// next 3
+aeroflow().mean().dump().run();
+// done true
+aeroflow(3, 1, 2).mean().dump().run();
+// next 2
+// done true
+aeroflow('a', 'd', 'f', 'm').mean().dump().run();
+// next f
 // done true
 */
 function mean() {
@@ -1420,8 +1410,13 @@ Determines the minimum value emitted by this flow.
 New flow emitting the minimum value only.
 
 @example
-aeroflow(2, 1, 3).min().dump().run();
+aeroflow().min().dump().run();
+// done true
+aeroflow(3, 1, 2).min().dump().run();
 // next 1
+// done true
+aeroflow('b', 'a', 'c').min().dump().run();
+// next a
 // done true
 */
 function min() {
@@ -1489,7 +1484,7 @@ function reduce(reducer, seed, optional) {
   return this.chain(reduceOperator(reducer, seed, optional));
 }
 /**
-@alias Aeroflow#reverse
+@alias Aeroflow#retry
 
 @param {number} attempts
 
@@ -1694,7 +1689,6 @@ aeroflow(1, 2, 3).slice(-3, -1).dump().run();
 function slice(begin, end) {
   return this.chain(sliceOperator(begin, end));
 }
-
 /**
 Tests whether some value emitted by this flow passes the predicate test,
 returns flow emitting true if the predicate returns true for any emitted value; otherwise, false.
@@ -1710,16 +1704,16 @@ If omitted, truthy predicate is used.
 New flow that emits true or false.
 
 @example
-aeroflow(0).some().dump().run();
+aeroflow().some().dump().run();
 // next false
-// done
-aeroflow.range(1, 3).some(2).dump().run();
+// done true
+aeroflow(1, 2, 3).some(2).dump().run();
 // next true
-// done
-aeroflow.range(1, 3).some(value => value % 2).dump().run();
+// done false
+aeroflow(1, 2, 3).some(value => value % 2).dump().run();
 // next true
-// done
-aeroflow(1, 2).some(value => { throw new Error }).dump().run();
+// done false
+aeroflow(1, 2, 3).some(value => { throw new Error }).dump().run();
 // done Error(…)
 // Uncaught Error
 */
@@ -1736,12 +1730,12 @@ function some(condition) {
 @return {Aeroflow}
 
 @example
-aeroflow(3, 2, 1).sort().dump().run();
+aeroflow(3, 1, 2).sort().dump().run();
 // next 1
 // next 2
 // next 3
 // done true
-aeroflow(1, 2, 3).sort('desc').dump().run();
+aeroflow(2, 1, 3).sort('desc').dump().run();
 // next 3
 // next 2
 // next 1
@@ -1763,12 +1757,17 @@ aeroflow(
 function sort(...parameters) {
   return this.chain(sortOperator(parameters));
 }
-/*
+/**
 @alias Aeroflow#sum
 
 @return {Aeroflow}
 
 @example
+aeroflow().sum().dump().run();
+// done true
+aeroflow('test').sum().dump().run();
+// next NaN
+// done true
 aeroflow(1, 2, 3).sum().dump().run();
 // next 6
 // done true
@@ -1776,7 +1775,7 @@ aeroflow(1, 2, 3).sum().dump().run();
 function sum() {
   return this.chain(sumOperator());
 }
-/*
+/**
 @alias Aeroflow#take
 
 @param {function|number} [condition]
@@ -1828,10 +1827,16 @@ Collects all values emitted by this flow to array, returns flow emitting this ar
 New flow that emits an array.
 
 @example
+aeroflow().toArray().dump().run();
+// next []
+// done true
+aeroflow('test').toArray().dump().run();
+// next ["test"]
+// done true
 aeroflow(1, 2, 3).toArray().dump().run();
 // next [1, 2, 3]
-// done
-  */
+// done true
+*/
 function toArray() {
   return this.chain(toArrayOperator());
 }
@@ -1851,13 +1856,19 @@ Or scalar value to use as map value.
 New flow that emits a map.
 
 @example
+aeroflow().toMap().dump().run();
+// next Map {}
+// done true
+aeroflow('test').toMap().dump().run();
+// next Map {"test" => "test"}
+done true
 aeroflow(1, 2, 3).toMap(v => 'key' + v, true).dump().run();
 // next Map {"key1" => true, "key2" => true, "key3" => true}
-// done
-aeroflow(1, 2, 3).toMap(v => 'key' + v, v => v 10).dump().run();
+// done true
+aeroflow(1, 2, 3).toMap(v => 'key' + v, v => 10 * v).dump().run();
 // next Map {"key1" => 10, "key2" => 20, "key3" => 30}
-// done
-  */
+// done true
+*/
 function toMap(keyTransformation, valueTransformation) {
    return this.chain(toMapOperator(keyTransformation, valueTransformation));
 }
@@ -1870,10 +1881,13 @@ Collects all values emitted by this flow to ES6 set, returns flow emitting this 
 New flow that emits a set.
 
 @example
+aeroflow().toSet().dump().run();
+// next Set {}
+// done true
 aeroflow(1, 2, 3).toSet().dump().run();
 // next Set {1, 2, 3}
 // done true
-  */
+*/
 function toSet() {
   return this.chain(toSetOperator()); 
 }
@@ -1884,6 +1898,12 @@ function toSet() {
 @param {boolean} [optional]
 
 @example
+aeroflow().toString().dump().run();
+// next
+// done true
+aeroflow('test').toString().dump().run();
+// next test
+// done true
 aeroflow(1, 2, 3).toString().dump().run();
 // next 1,2,3
 // done true
@@ -1950,9 +1970,8 @@ function emit(next, done, context) {
     }
   }(true);
 }
-
 /**
-Creates new flow emitting values from all provided data sources.
+Creates new flow emitting values from all provided data sources in series.
 
 @alias aeroflow
 
@@ -1961,19 +1980,42 @@ Data sources.
 
 @return {Aeroflow}
 
+@property {object} adapters
+@property {operators} adapters
+
 @example
 aeroflow().dump().run();
 // done true
-aeroflow(1, [2, 3], () => 4, new Promise(resolve => setTimeout(() => resolve(5), 500)))).dump().run();
+aeroflow(
+  1,
+  [2, 3],
+  new Set([4, 5]),
+  () => 6,
+  Promise.resolve(7),
+  new Promise(resolve => setTimeout(() => resolve(8), 500))
+).dump().run();
 // next 1
 // next 2
 // next 3
 // next 4
-// next 5 // after 500ms
+// next 5
+// next 6
+// next 7
+// next 8 // after 500ms
 // done true
 aeroflow(() => { throw new Error }).dump().run();
 // done Error(…)
 // Uncaught Error
+aeroflow("test").dump().run();
+// next test
+// done true
+aeroflow.adapters['String'] = aeroflow.adapters['Array'];
+aeroflow("test").dump().run();
+// next t
+// next e
+// next s
+// next t
+// done true
 */
 function aeroflow(...sources) {
   return new Aeroflow(emit, sources);
@@ -2052,7 +2094,7 @@ The new flow emitting provided value.
 aeroflow.just([1, 2, 3]).dump().run();
 // next [1, 2, 3]
 // done
-  */
+*/
 function just(value) {
   return new Aeroflow(scalarEmitter(value));
 }
@@ -2083,7 +2125,7 @@ next 4.398837305698544
 // next 2.287970747705549
 // next 3.430788825778291
 // done false
-  */
+*/
 function random(minimum, maximum) {
   return new Aeroflow(randomEmitter(minimum, maximum));
 }
@@ -2163,18 +2205,18 @@ aeroflow.repeat(index => index, index => 500 + 500 * index).take(3).dump().run()
 // next ping // after 1000ms
 // next ping // after 1500ms
 // done false
-  */
+*/
 function repeat(value, interval) {
   return new Aeroflow(repeatEmitter(value, interval));
 }
 objectDefineProperties(aeroflow, {
-  adapters: { get: () => adapters },
+  adapters: { value: adapters },
   create: { value: create },
   empty: { enumerable: true, value: new Aeroflow(emptyEmitter(true)) },
   error: { value: error },
   expand: { value: expand },
   just: { value: just },
-  operators: { get: () => operators },
+  operators: { value: operators },
   random: { value: random },
   range: { value: range },
   repeat: { value: repeat }

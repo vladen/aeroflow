@@ -260,15 +260,18 @@
     };
   }
 
-  var adapters = objectCreate(null, (_objectCreate = {}, _defineProperty(_objectCreate, AEROFLOW, {
+  var adapters = objectCreate(Object[PROTOTYPE], (_objectCreate = {}, _defineProperty(_objectCreate, AEROFLOW, {
     value: aeroflowEmitter
   }), _defineProperty(_objectCreate, ARRAY, {
+    configurable: true,
     value: arrayEmitter,
     writable: true
   }), _defineProperty(_objectCreate, FUNCTION, {
+    configurable: true,
     value: functionEmitter,
     writable: true
   }), _defineProperty(_objectCreate, PROMISE, {
+    configurable: true,
     value: promiseEmitter,
     writable: true
   }), _objectCreate));
@@ -465,14 +468,14 @@
   function reduceOperator(reducer, seed, optional) {
     return isUndefined(reducer) ? function () {
       return emptyEmitter(false);
-    } : !isFunction(reducer) ? function () {
+    } : isFunction(reducer) ? isUndefined(seed) ? reduceAlongOperator(reducer) : optional ? reduceOptionalOperator(reducer, seed) : reduceGeneralOperator(reducer, seed) : function () {
       return scalarEmitter(reducer);
-    } : isUndefined(seed) ? reduceAlongOperator(reducer) : optional ? reduceOptionalOperator(reducer, seed) : reduceGeneralOperator(reducer, seed);
+    };
   }
 
   function averageOperator() {
-    return reduceAlongOperator(function (result, value, index) {
-      return (result * index + value) / (index + 1);
+    return reduceOperator(function (average, result, index) {
+      return (average * index + result) / (index + 1);
     });
   }
 
@@ -489,10 +492,9 @@
     };
   }
 
-  function countOperator(optional) {
-    var reducer = optional ? reduceOptionalOperator : reduceGeneralOperator;
-    return reducer(function (result) {
-      return result + 1;
+  function countOperator() {
+    return reduceOperator(function (count) {
+      return count + 1;
     }, 0);
   }
 
@@ -769,9 +771,9 @@
     };
   }
 
-  function maxOperator() {
-    return reduceAlongOperator(function (maximum, value) {
-      return value > maximum ? value : maximum;
+  function maxOperator(optional) {
+    return reduceOperator(function (maximum, result) {
+      return maximum < result ? result : maximum;
     });
   }
 
@@ -787,9 +789,9 @@
     };
   }
 
-  function minOperator() {
-    return reduceAlongOperator(function (minimum, value) {
-      return value < minimum ? value : minimum;
+  function minOperator(optional) {
+    return reduceOperator(function (minimum, result) {
+      return minimum > result ? result : minimum;
     });
   }
 
@@ -1026,9 +1028,9 @@
   }
 
   function sumOperator() {
-    return reduceAlongOperator(function (result, value) {
-      return result + value;
-    });
+    return reduceOperator(function (sum, result) {
+      return +result + sum;
+    }, 0, true);
   }
 
   function takeFirstOperator(count) {
@@ -1136,12 +1138,11 @@
     };
   }
 
-  function toStringOperator(separator, optional) {
-    var joiner = isUndefined(separator) ? constant(',') : isFunction(separator) ? separator : constant(separator);
-    var reducer = optional ? reduceOptionalOperator : reduceGeneralOperator;
-    return reducer(function (result, value, index, data) {
-      return result.length ? result + joiner(value, index, data) + value : '' + value;
-    }, '');
+  function toStringOperator(separator) {
+    var joiner = isUndefined(separator) ? constant(',') : toFunction(separator, constant(separator));
+    return reduceOperator(function (string, result, index, data) {
+      return string + joiner(result, index, data) + result;
+    }, undefined, false);
   }
 
   var Aeroflow = function Aeroflow(emitter, sources) {
@@ -1570,9 +1571,7 @@
 
   objectDefineProperties(aeroflow, {
     adapters: {
-      get: function get() {
-        return adapters;
-      }
+      value: adapters
     },
     create: {
       value: create
@@ -1591,9 +1590,7 @@
       value: just
     },
     operators: {
-      get: function get() {
-        return operators;
-      }
+      value: operators
     },
     random: {
       value: random

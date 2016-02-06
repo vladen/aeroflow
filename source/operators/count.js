@@ -1,10 +1,7 @@
 'use strict';
 
-import { reduceGeneralOperator, reduceOptionalOperator } from './reduce';
+import { reduceOperator } from './reduce';
 
-export function countOperator(optional) {
-  const reducer = optional
-    ? reduceOptionalOperator
-    : reduceGeneralOperator;
-  return reducer(result => result + 1, 0);
+export function countOperator() {
+  return reduceOperator(count => count + 1, 0);
 }

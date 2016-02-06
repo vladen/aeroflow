@@ -5,7 +5,7 @@ import { unsync } from '../unsync';
 import { emptyEmitter } from '../emitters/empty';
 import { scalarEmitter } from '../emitters/scalar';
 
-export function reduceAlongOperator(reducer) {
+function reduceAlongOperator(reducer) {
   return emitter => (next, done, context) => {
     let empty = true, index = 1, reduced;
     emitter(
@@ -25,7 +25,7 @@ export function reduceAlongOperator(reducer) {
   };
 }
 
-export function reduceGeneralOperator(reducer, seed) {
+function reduceGeneralOperator(reducer, seed) {
   return emitter => (next, done, context) => {
     let index = 0, reduced = seed;
     emitter(
@@ -41,7 +41,7 @@ export function reduceGeneralOperator(reducer, seed) {
   };
 }
 
-export function reduceOptionalOperator(reducer, seed) {
+function reduceOptionalOperator(reducer, seed) {
   return emitter => (next, done, context) => {
     let empty = true, index = 0, reduced = seed;
     emitter(
@@ -61,11 +61,11 @@ export function reduceOptionalOperator(reducer, seed) {
 export function reduceOperator(reducer, seed, optional) {
   return isUndefined(reducer)
     ? () => emptyEmitter(false)
-    : !isFunction(reducer)
-      ? () => scalarEmitter(reducer)
-      : isUndefined(seed)
+    : isFunction(reducer)
+      ? isUndefined(seed)
         ? reduceAlongOperator(reducer)
         : optional
           ? reduceOptionalOperator(reducer, seed)
-          : reduceGeneralOperator(reducer, seed);
+          : reduceGeneralOperator(reducer, seed)
+      : () => scalarEmitter(reducer);
 }

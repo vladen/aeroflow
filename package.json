@@ -1,10 +1,10 @@
 {
   "name": "aeroflow",
-  "description": "Truly lazily computed reactive data flows with rich set of pure functional operators and async support.",
-  "keywords": "ES6, fluent, async, reactive, functional, FRP, LINQ",
+  "description": "Truly lazily computed reactive data flows with rich set of pure functional operators.",
+  "keywords": "functional, reactive, async, fluent, FRP, LINQ, ES2015",
   "license": "MIT",
   "version": "0.1.0",
-  "main": "index.js",
+  "main": "./index.js",
   "files": [
     "index.js",
     "build"
@@ -39,6 +39,10 @@
     "validate:library": "eslint source/*.js",
     "validate:tests": "eslint source/tests/*.js"
   },
+  "pre-commit": {
+    "run": "validate:library, test:library",
+    "silent": true
+  },
   "dependencies": {
     "core-js": "^2.0.3"
   },
@@ -55,8 +59,5 @@
     "pre-commit": "^1.1.2",
     "rollup": "^0.25.0",
     "uglify-js": "^2.6.1"
-  },
-  "pre-commit": [
-    "test:library"
-  ]
+  }
 }

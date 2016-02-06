@@ -1,3 +1,6 @@
-require('core-js');
-
-require('./lib/aeroflow.js');
+try {
+  module.exports = require('./build/modern');
+}
+catch(error) {
+  module.exports = require('./build/legacy');
+}
