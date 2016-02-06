@@ -2,12 +2,12 @@
 
 import { isFunction, isUndefined } from '../utilites';
 import { unsync } from '../unsync';
+import { scalarAdapter } from '../adapters/scalar';
 import { emptyEmitter } from './empty';
-import { scalarEmitter } from './scalar';
 
 export function customEmitter(emitter) {
   if (isUndefined(emitter)) return emptyEmitter(true);
-  if (!isFunction(emitter)) return scalarEmitter(emitter);
+  if (!isFunction(emitter)) return scalarAdapter(emitter);
   return (next, done, context) => {
     let buffer = [], completed = false, finalizer, waiting = false;
     finalizer = emitter(accept, finish, context);

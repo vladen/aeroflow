@@ -2,20 +2,20 @@
 
 import { isNumber, maxInteger, toNumber } from '../utilites';
 import { unsync } from '../unsync';
-import { scalarEmitter } from './scalar';
+import { scalarAdapter } from '../adapters/scalar';
 
 export function rangeEmitter(start, end, step) {
   end = toNumber(end, maxInteger);
   start = toNumber(start, 0);
-  if (start === end) return scalarEmitter(start);
+  if (start === end) return scalarAdapter(start);
   const down = start < end;
   if (down) {
     step = toNumber(step, 1);
-    if (step < 1) return scalarEmitter(start);
+    if (step < 1) return scalarAdapter(start);
   }
   else {
     step = toNumber(step, -1);
-    if (step > -1) return scalarEmitter(start);
+    if (step > -1) return scalarAdapter(start);
   }
   const limiter = down
     ? value => value <= end

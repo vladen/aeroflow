@@ -2,8 +2,8 @@
 
 import { isError, isFunction, isUndefined, tie } from '../utilites';
 import { unsync } from '../unsync';
+import { scalarAdapter } from '../adapters/scalar';
 import { emptyEmitter } from '../emitters/empty';
-import { scalarEmitter } from '../emitters/scalar';
 
 function reduceAlongOperator(reducer) {
   return emitter => (next, done, context) => {
@@ -67,5 +67,5 @@ export function reduceOperator(reducer, seed, optional) {
         : optional
           ? reduceOptionalOperator(reducer, seed)
           : reduceGeneralOperator(reducer, seed)
-      : () => scalarEmitter(reducer);
+      : () => scalarAdapter(reducer);
 }

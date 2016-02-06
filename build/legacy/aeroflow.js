@@ -44,7 +44,6 @@
   var ARRAY = 'Array';
   var BOOLEAN = 'Boolean';
   var CLASS = Symbol.toStringTag;
-  var CONTEXT = 'Aeroflow.Context';
   var DATE = 'Date';
   var ERROR = 'Error';
   var FUNCTION = 'Function';
@@ -57,7 +56,6 @@
   var STRING = 'String';
   var SYMBOL = 'Symbol';
   var UNDEFINED = 'Undefined';
-  var primitives = new Set([BOOLEAN, DATE, ERROR, NULL, NUMBER, REGEXP, STRING, SYMBOL, UNDEFINED]);
   var dateNow = Date.now;
   var mathFloor = Math.floor;
   var mathPow = Math.pow;
@@ -65,7 +63,7 @@
   var mathMin = Math.min;
   var maxInteger = Number.MAX_SAFE_INTEGER;
   var objectCreate = Object.create;
-  var objectDefineProperties = Object.defineProperties;
+  var objectDefineProperties$1 = Object.defineProperties;
   var objectDefineProperty = Object.defineProperty;
   var objectToString = Object.prototype.toString;
 
@@ -103,7 +101,7 @@
     return value !== undefined;
   };
 
-  var isError = classIs(ERROR);
+  var isError$1 = classIs(ERROR);
 
   var isFunction = function isFunction(value) {
     return typeof value == 'function';
@@ -166,31 +164,8 @@
   };
 
   var toError = function toError(value) {
-    return isError(value) ? value : new Error(value);
+    return isError$1(value) ? value : new Error(value);
   };
-
-  var Context = function Context(data, flow) {
-    _classCallCheck(this, Context);
-
-    objectDefineProperties(this, {
-      data: {
-        value: data
-      },
-      flow: {
-        value: flow
-      }
-    });
-  };
-
-  objectDefineProperty(Context[PROTOTYPE], CLASS, {
-    value: CONTEXT
-  });
-
-  function emptyEmitter(result) {
-    return function (next, done) {
-      return done(result);
-    };
-  }
 
   function unsync(result, next, done) {
     switch (result) {
@@ -219,19 +194,43 @@
     return true;
   }
 
-  function scalarEmitter(value) {
+  function scalarAdapter(value) {
     return function (next, done) {
       if (!unsync(next(value), done, done)) done(true);
     };
   }
 
-  function aeroflowEmitter(source) {
+  var Context = function Context(data, sources) {
+    _classCallCheck(this, Context);
+
+    objectDefineProperties$1(this, {
+      data: {
+        value: data
+      },
+      sources: {
+        value: sources
+      }
+    });
+  };
+
+  objectDefineProperty(Context[PROTOTYPE], CLASS, {
+    value: AEROFLOW + '.Context'
+  });
+
+  function flowAdapter(flow) {
     return function (next, done, context) {
-      return source.emitter(next, done, new Context(context.data, source));
+      return flow.emitter(next, done, objectDefineProperties({}, {
+        data: {
+          value: context.data
+        },
+        sources: {
+          value: flow.sources
+        }
+      }));
     };
   }
 
-  function arrayEmitter(source) {
+  function arrayAdapter(source) {
     return function (next, done, context) {
       var index = -1;
       !function proceed() {
@@ -244,39 +243,13 @@
     };
   }
 
-  function functionEmitter(source) {
+  function functionAdapter(source) {
     return function (next, done, context) {
       if (!unsync(next(source(context.data)), done, done)) done(true);
     };
   }
 
-  function promiseEmitter(source) {
-    return function (next, done, context) {
-      return source.then(function (result) {
-        if (!unsync(next(result), done, done)) done(true);
-      }, function (result) {
-        return done(toError(result));
-      });
-    };
-  }
-
-  var adapters = objectCreate(Object[PROTOTYPE], (_objectCreate = {}, _defineProperty(_objectCreate, AEROFLOW, {
-    value: aeroflowEmitter
-  }), _defineProperty(_objectCreate, ARRAY, {
-    configurable: true,
-    value: arrayEmitter,
-    writable: true
-  }), _defineProperty(_objectCreate, FUNCTION, {
-    configurable: true,
-    value: functionEmitter,
-    writable: true
-  }), _defineProperty(_objectCreate, PROMISE, {
-    configurable: true,
-    value: promiseEmitter,
-    writable: true
-  }), _objectCreate));
-
-  function iterableEmitter(source) {
+  function iterableAdapter(source) {
     return function (next, done, context) {
       var iteration = undefined,
           iterator = iterator = source[ITERATOR]();
@@ -290,17 +263,166 @@
     };
   }
 
-  function adapterEmitter(source, scalar) {
-    var cls = classOf(source),
-        adapter = adapters[cls];
-    if (isFunction(adapter)) return adapter(source);
-    if (!primitives.has(cls) && ITERATOR in source) return iterableEmitter(source);
-    if (scalar) return scalarEmitter(source);
+  function promiseAdapter(source) {
+    return function (next, done, context) {
+      return source.then(function (result) {
+        if (!unsync(next(result), done, done)) done(true);
+      }, function (result) {
+        return done(toError(result));
+      });
+    };
+  }
+
+  var adapters = objectCreate(Object[PROTOTYPE], (_objectCreate = {}, _defineProperty(_objectCreate, AEROFLOW, {
+    value: flowAdapter
+  }), _defineProperty(_objectCreate, ARRAY, {
+    configurable: true,
+    value: arrayAdapter,
+    writable: true
+  }), _defineProperty(_objectCreate, FUNCTION, {
+    configurable: true,
+    value: functionAdapter,
+    writable: true
+  }), _defineProperty(_objectCreate, PROMISE, {
+    configurable: true,
+    value: promiseAdapter,
+    writable: true
+  }), _objectCreate));
+
+  function adapt(source, scalar) {
+    var sourceClass = classOf(source);
+
+    switch (sourceClass) {
+      case BOOLEAN:
+      case NULL:
+      case NUMBER:
+      case SYMBOL:
+      case UNDEFINED:
+        break;
+
+      default:
+        var adapter = adapters[sourceClass];
+        if (isFunction(adapter)) return adapter(source);
+        if (ITERATOR in source) return iterableAdapter(source);
+        break;
+    }
+
+    if (scalar) return scalarAdapter(source);
+  }
+
+  function customConsumer(parameters) {
+    var next = parameters[0];
+    if (!isFunction(next)) return;
+    parameters.shift();
+    var done = isFunction(parameters[0]) ? parameters.shift() : function (result) {
+      if (isError$1(result)) throw result;
+    };
+    return {
+      done: done,
+      next: next
+    };
+  }
+
+  function eventEmitterConsumer(parameters) {
+    var eventEmitter = parameters[0];
+    if (!isFunction(eventEmitter.emit)) return;
+    parameters.shift();
+    return {
+      next: fire('next'),
+      done: fire('done')
+    };
+
+    function fire(event) {
+      return function (result) {
+        eventEmitter.emit(event, result);
+        return true;
+      };
+    }
+  }
+
+  function eventTargetConsumer(parameters) {
+    var eventTarget = parameters[0];
+    if (!isFunction(eventTarget.dispatchEvent)) return;
+    parameters.shift();
+    return {
+      next: fire('next'),
+      done: fire('done')
+    };
+
+    function fire(event) {
+      return function (result) {
+        eventTarget.dispatchEvent(new CustomEvent(event, {
+          detail: result
+        }));
+        return true;
+      };
+    }
+  }
+
+  function observerConsumer(parameters) {
+    var observer = parameters[0];
+    if (!isFunction(observer.onNext) || !isFunction(observer.onError) || !isFunction(observer.onCompleted)) return;
+    parameters.shift();
+    return {
+      done: function done(result) {
+        (isError(result) ? observer.onError : observer.onCompleted)(result);
+        return true;
+      },
+      next: function next(result) {
+        observer.onNext(result);
+        return true;
+      }
+    };
+  }
+
+  var consumers = [customConsumer, eventEmitterConsumer, eventTargetConsumer, observerConsumer];
+
+  function consume(flow, parameters) {
+    var consumer = undefined;
+
+    switch (classOf(parameters[0])) {
+      case BOOLEAN:
+      case NULL:
+      case NUMBER:
+      case SYMBOL:
+      case UNDEFINED:
+        break;
+
+      default:
+        for (var i = -1, l = consumers.length; !consumer && ++i < l;) {
+          consumer = consumers[i](parameters);
+        }
+
+        break;
+    }
+
+    if (!consumer) consumer = customConsumer([noop]);
+    var context = objectDefineProperties$1({}, {
+      data: {
+        value: parameters[0]
+      },
+      sources: {
+        value: flow.sources
+      }
+    });
+    setImmediate(function () {
+      return flow.emitter(function (result) {
+        return false !== consumer.next(result, context.data);
+      }, function (result) {
+        return consumer.done(result, context.data);
+      }, context);
+    });
+  }
+
+  function emptyEmitter(result) {
+    return function (next, done) {
+      return done(result);
+    };
   }
 
   function customEmitter(emitter) {
     if (isUndefined(emitter)) return emptyEmitter(true);
-    if (!isFunction(emitter)) return scalarEmitter(emitter);
+    if (!isFunction(emitter)) return scalarAdapter(emitter);
     return function (next, done, context) {
       var buffer = [],
           completed = false,
@@ -360,15 +482,15 @@
   function rangeEmitter(start, end, step) {
     end = toNumber(end, maxInteger);
     start = toNumber(start, 0);
-    if (start === end) return scalarEmitter(start);
+    if (start === end) return scalarAdapter(start);
     var down = start < end;
 
     if (down) {
       step = toNumber(step, 1);
-      if (step < 1) return scalarEmitter(start);
+      if (step < 1) return scalarAdapter(start);
     } else {
       step = toNumber(step, -1);
-      if (step > -1) return scalarEmitter(start);
+      if (step > -1) return scalarAdapter(start);
     }
 
     var limiter = down ? function (value) {
@@ -427,7 +549,7 @@
 
           return true;
         }, function (result) {
-          if (isError(result) || empty || !unsync(next(reduced), tie(done, result), done)) done(result);
+          if (isError$1(result) || empty || !unsync(next(reduced), tie(done, result), done)) done(result);
         }, context);
       };
     };
@@ -442,7 +564,7 @@
           reduced = reducer(reduced, result, index++, context.data);
           return true;
         }, function (result) {
-          if (isError(result) || !unsync(next(reduced), tie(done, result), done)) done(result);
+          if (isError$1(result) || !unsync(next(reduced), tie(done, result), done)) done(result);
         }, context);
       };
     };
@@ -459,7 +581,7 @@
           reduced = reducer(reduced, result, index++, context.data);
           return true;
         }, function (result) {
-          if (isError(result) || empty || !unsync(next(reduced), tie(done, result), done)) done(result);
+          if (isError$1(result) || empty || !unsync(next(reduced), tie(done, result), done)) done(result);
         }, context);
       };
     };
@@ -469,7 +591,7 @@
     return isUndefined(reducer) ? function () {
       return emptyEmitter(false);
     } : isFunction(reducer) ? isUndefined(seed) ? reduceAlongOperator(reducer) : optional ? reduceOptionalOperator(reducer, seed) : reduceGeneralOperator(reducer, seed) : function () {
-      return scalarEmitter(reducer);
+      return scalarAdapter(reducer);
     };
   }
 
@@ -480,13 +602,13 @@
   }
 
   function catchOperator(alternative) {
-    var regressor = isDefined(alternative) ? adapterEmitter(alternative, true) : function (next, done) {
+    var regressor = isDefined(alternative) ? adapt(alternative, true) : function (next, done) {
       return done(false);
     };
     return function (emitter) {
       return function (next, done, context) {
         return emitter(next, function (result) {
-          return isError(result) ? regressor(next, done, context) : done(result);
+          return isError$1(result) ? regressor(next, done, context) : done(result);
         }, context);
       };
     };
@@ -547,7 +669,7 @@
           console.log(prefix + 'next', result);
           return next(result);
         }, function (result) {
-          console[isError(result) ? 'error' : 'log'](prefix + 'done', result);
+          console[isError$1(result) ? 'error' : 'log'](prefix + 'done', result);
           done(result);
         }, context);
       };
@@ -612,7 +734,7 @@
           every = false;
           return false;
         }, function (result) {
-          if (isError(result) || !unsync(next(every || empty), done, done)) done(result);
+          if (isError$1(result) || !unsync(next(every || empty), done, done)) done(result);
         }, context);
       };
     };
@@ -667,7 +789,7 @@
 
         var flatten = function flatten(result) {
           if (level === depth) return next(result);
-          var adapter = adapterEmitter(result, false);
+          var adapter = adapt(result, false);
 
           if (adapter) {
             level++;
@@ -713,7 +835,7 @@
           current.push(value);
           return true;
         }, function (result) {
-          if (isError(result)) done(result);else iterableEmitter(groups)(next, tie(done, result), context);
+          if (isError$1(result)) done(result);else iterableAdapter(groups)(next, tie(done, result), context);
         }, context);
       };
     };
@@ -727,7 +849,7 @@
           array.push(result);
           return true;
         }, function (result) {
-          if (isError(result) || !unsync(next(array), tie(done, result), done)) done(result);
+          if (isError$1(result) || !unsync(next(array), tie(done, result), done)) done(result);
         }, context);
       };
     };
@@ -748,14 +870,14 @@
 
   function joinOperator(right, condition) {
     var comparer = toFunction(condition, truthy),
-        toArray = toArrayOperator()(adapterEmitter(right, true));
+        toArray = toArrayOperator()(adapt(right, true));
     return function (emitter) {
       return function (next, done, context) {
         return toArray(function (rightArray) {
           return new Promise(function (rightResolve) {
             return emitter(function (leftResult) {
               return new Promise(function (leftResolve) {
-                var array = arrayEmitter(rightArray),
+                var array = arrayAdapter(rightArray),
                     filter = filterOperator(function (rightResult) {
                   return comparer(leftResult, rightResult);
                 }),
@@ -808,7 +930,7 @@
         }
 
         function retry(result) {
-          if (++attempt <= attempts && isError(result)) proceed();else done(result);
+          if (++attempt <= attempts && isError$1(result)) proceed();else done(result);
         }
 
         ;
@@ -967,7 +1089,7 @@
           some = true;
           return false;
         }, function (result) {
-          if (isError(result) || !unsync(next(some), done, done)) done(result);
+          if (isError$1(result) || !unsync(next(some), done, done)) done(result);
         }, context);
       };
     };
@@ -1020,7 +1142,7 @@
       return function (next, done, context) {
         return toArrayOperator()(emitter)(function (result) {
           return new Promise(function (resolve) {
-            return arrayEmitter(result.sort(comparer))(next, resolve, context);
+            return arrayAdapter(result.sort(comparer))(next, resolve, context);
           });
         }, done, context);
       };
@@ -1118,7 +1240,7 @@
           map.set(keyTransformer(result, index++, context.data), valueTransformer(result, index++, context.data));
           return true;
         }, function (result) {
-          if (isError(result) || !unsync(next(map), tie(done, result), done)) done(result);
+          if (isError$1(result) || !unsync(next(map), tie(done, result), done)) done(result);
         }, context);
       };
     };
@@ -1132,7 +1254,7 @@
           set.add(result);
           return true;
         }, function (result) {
-          if (isError(result) || !unsync(next(set), tie(done, result), done)) done(result);
+          if (isError$1(result) || !unsync(next(set), tie(done, result), done)) done(result);
         }, context);
       };
     };
@@ -1145,15 +1267,11 @@
     }, undefined, false);
   }
 
-  var Flow = undefined;
-
   function emit(next, done, context) {
-    var sources = context.flow.sources,
-        limit = sources.length;
     var index = -1;
     !function proceed(result) {
-      if (result !== true || ++index >= limit) done(result);else try {
-        adapterEmitter(sources[index], true)(next, proceed, context);
+      if (result !== true || ++index >= context.sources.length) done(result);else try {
+        adapt(context.sources[index], true)(next, proceed, context);
       } catch (err) {
         done(err);
       }
@@ -1181,7 +1299,7 @@
   }
 
   function just(value) {
-    return new Flow(scalarEmitter(value));
+    return new Flow(scalarAdapter(value));
   }
 
   function random(minimum, maximum) {
@@ -1196,10 +1314,8 @@
     return new Flow(repeatEmitter(value, interval));
   }
 
-  Flow = function Flow(emitter, sources) {
-    _classCallCheck(this, Flow);
-
-    objectDefineProperties(this, {
+  function Flow(emitter, sources) {
+    objectDefineProperties$1(this, {
       emitter: {
         value: emitter
       },
@@ -1207,7 +1323,7 @@
         value: sources
       }
     });
-  };
+  }
 
   function append() {
     for (var _len3 = arguments.length, sources = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
@@ -1313,81 +1429,12 @@
     return this.chain(reverseOperator());
   }
 
-  function run(next, done, data) {
-    if (isFunction(next)) {
-      if (!isFunction(done)) {
-        data = done;
-
-        done = function done(result) {
-          if (isError(result)) throw result;
-        };
-      }
-    } else if (primitives.has(classOf(next))) {
-      data = next;
-      next = noop;
-
-      done = function done(result) {
-        if (isError(result)) throw result;
-      };
-    } else if (isFunction(next.dispatchEvent)) {
-      (function () {
-        var target = next;
-        data = done;
-
-        done = function done(result) {
-          target.dispatchEvent(new CustomEvent('done', {
-            detail: result
-          }));
-          return true;
-        };
-
-        next = function next(result) {
-          target.dispatchEvent(new CustomEvent('next', {
-            detail: result
-          }));
-          return true;
-        };
-      })();
-    } else if (isFunction(next.emit)) {
-      (function () {
-        var emitter = next;
-        data = done;
-
-        done = function done(result) {
-          emitter.emit('done', result);
-          return true;
-        };
-
-        next = function next(result) {
-          emitter.emit('next', result);
-          return true;
-        };
-      })();
-    } else if (isFunction(next.onNext) && isFunction(next.onError) && isFunction(next.onCompleted)) {
-      (function () {
-        var observer = next;
-        data = done;
-
-        done = function done(result) {
-          (isError(result) ? observer.onError : observer.onCompleted)(result);
-          return true;
-        };
-
-        next = function next(result) {
-          observer.onNext(result);
-          return true;
-        };
-      })();
+  function run() {
+    for (var _len7 = arguments.length, parameters = Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
+      parameters[_key7] = arguments[_key7];
     }
 
-    var context = new Context(data, this);
-    setImmediate(function () {
-      return context.flow.emitter(function (result) {
-        return false !== next(result, data);
-      }, function (result) {
-        return done(result, data);
-      }, context);
-    });
+    consume(this, parameters);
     return this;
   }
 
@@ -1404,8 +1451,8 @@
   }
 
   function sort() {
-    for (var _len7 = arguments.length, parameters = Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
-      parameters[_key7] = arguments[_key7];
+    for (var _len8 = arguments.length, parameters = Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
+      parameters[_key8] = arguments[_key8];
     }
 
     return this.chain(sortOperator(parameters));
@@ -1570,7 +1617,7 @@
   }), _defineProperty(_objectCreate2, 'run', {
     value: run
   }), _objectCreate2));
-  objectDefineProperties(aeroflow, {
+  objectDefineProperties$1(aeroflow, {
     adapters: {
       value: adapters
     },

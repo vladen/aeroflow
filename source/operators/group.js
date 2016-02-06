@@ -1,7 +1,7 @@
 'use strict';
 
 import { constant, isError, isFunction, tie } from '../utilites';
-import { iterableEmitter } from '../emitters/iterable';
+import { iterableAdapter } from '../adapters/iterable';
 
 export function groupOperator(selectors) {
   selectors = selectors.length
@@ -29,7 +29,7 @@ export function groupOperator(selectors) {
       },
       result => {
         if (isError(result)) done(result);
-        else iterableEmitter(groups)(next, tie(done, result), context);
+        else iterableAdapter(groups)(next, tie(done, result), context);
       },
       context);
   };

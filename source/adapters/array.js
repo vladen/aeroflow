@@ -2,7 +2,7 @@
 
 import { unsync } from '../unsync';
 
-export function arrayEmitter(source) {
+export function arrayAdapter(source) {
   return (next, done, context) => {
     let index = -1;
     !function proceed() {

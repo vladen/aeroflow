@@ -3,7 +3,7 @@
 import { toError } from '../utilites';
 import { unsync } from '../unsync';
 
-export function promiseEmitter(source) {
+export function promiseAdapter(source) {
   return (next, done, context) => source.then(
     result => {
       if (!unsync(next(result), done, done))

@@ -10,7 +10,8 @@ Creates new flow emitting values extracted from all provided data sources in ser
 **Properties**
 
 - adapters <code>object</code>  
-- adapters <code>operators</code>  
+- consumers <code>array</code>  
+- operators <code>object</code>  
 
 **Example**  
 ```js
@@ -288,14 +289,20 @@ and then all provided values.
 
 **Example**  
 ```js
-aeroflow(1)
-  .append(2, [3, 4], new Promise(resolve => setTimeout(() => resolve(5), 500)))
-  .dump().run();
+aeroflow(1).append(
+  2,
+  [3, 4],
+  () => 5,
+  Promise.resolve(6),
+  new Promise(resolve => setTimeout(() => resolve(7), 500))
+).dump().run();
 // next 1
 // next 2
 // next 3
 // next 4
-// next 5 // after 500ms
+// next 5
+// next 6
+// next 7 // after 500ms
 // done
 ```
 <a name="Flow+average"></a>
@@ -680,13 +687,19 @@ Returns new flow emitting the emissions from all provided sources and then from 
 
 **Example**  
 ```js
-aeroflow(1)
-  .prepend(2, [3, 4], new Promise(resolve => setTimeout(() => resolve(5), 500)))
-  .dump().run();
+aeroflow(1).prepend(
+  2,
+  [3, 4],
+  () => 5,
+  Promise.resolve(6),
+  new Promise(resolve => setTimeout(() => resolve(7), 500))
+).dump().run();
 // next 2
 // next 3
 // next 4
-// next 5 // after 500ms
+// next 5
+// next 6
+// next 7 // after 500ms
 // next 1
 // done
 ```
@@ -768,8 +781,10 @@ If no callbacks provided, runs this flow for its side-effects only.
 Or EventEmitter object.
 Or EventTarget object.
 Or Observer object.
-- [done] <code>function</code> - Callback to execute as emission is complete, taking two arguments: result, context.
-- [data] <code>function</code> - Arbitrary value passed to each callback invoked by this flow as context.data.
+- [done] <code>function</code> - If next parameter is callback,
+then callback to execute as emission is complete, taking two arguments: result, context.
+Or data parameter.
+- [data] <code>function</code> - Arbitrary value passed to each callback invoked by this flow as the last argument.
 
 **Example**  
 ```js

@@ -2,7 +2,7 @@
 
 import { FUNCTION, NUMBER, STRING } from '../symbols';
 import { classOf, compare, isError, tie } from '../utilites';
-import { arrayEmitter } from '../emitters/array';
+import { arrayAdapter } from '../adapters/array';
 import { toArrayOperator } from './toArray';
 
 export function sortOperator(parameters) {
@@ -40,7 +40,8 @@ export function sortOperator(parameters) {
     }
     : (left, right) => compare(left, right, direction);
   return emitter => (next, done, context) => toArrayOperator()(emitter)(
-    result => new Promise(resolve => arrayEmitter(result.sort(comparer))(next, resolve, context)),
+    result => new Promise(resolve =>
+      arrayAdapter(result.sort(comparer))(next, resolve, context)),
     done,
     context);
 }

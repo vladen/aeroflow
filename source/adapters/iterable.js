@@ -3,7 +3,7 @@
 import { ITERATOR } from '../symbols';
 import { unsync } from '../unsync';
 
-export function iterableEmitter(source) {
+export function iterableAdapter(source) {
   return (next, done, context) => {
     let iteration, iterator = iterator = source[ITERATOR]();
     !function proceed() {

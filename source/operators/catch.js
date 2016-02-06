@@ -1,11 +1,11 @@
 'use strict';
 
 import { isDefined, isError } from '../utilites';
-import { adapterEmitter } from '../emitters/adapter';
+import { adapt } from '../adapt';
 
 export function catchOperator(alternative) {
   const regressor = isDefined(alternative)
-    ? adapterEmitter(alternative, true)
+    ? adapt(alternative, true)
     : (next, done) => done(false);
   return emitter => (next, done, context) => emitter(
     next,

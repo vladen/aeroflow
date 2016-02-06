@@ -3,7 +3,6 @@
 import { FUNCTION, NUMBER } from '../symbols';
 import { classOf, falsey, identity, isBoolean, isPromise, mathMax } from '../utilites';
 import { unsync } from '../unsync';
-import { arrayEmitter } from '../emitters/array';
 import { emptyEmitter } from '../emitters/empty';
 import { toArrayOperator } from './toArray';
 

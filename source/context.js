@@ -1,14 +1,14 @@
 'use strict';
 
-import { CLASS, CONTEXT, PROTOTYPE } from './symbols';
+import { AEROFLOW, CLASS, PROTOTYPE } from './symbols';
 import { objectDefineProperties, objectDefineProperty } from './utilites';
 
 export class Context {
-  constructor(data, flow) {
+  constructor(data, sources) {
     objectDefineProperties(this, {
       data: { value: data },
-      flow: { value: flow }
+      sources: { value: sources }
     });
   }
 }
-objectDefineProperty(Context[PROTOTYPE], CLASS, { value: CONTEXT });
+objectDefineProperty(Context[PROTOTYPE], CLASS, { value: `${AEROFLOW}.Context` });
