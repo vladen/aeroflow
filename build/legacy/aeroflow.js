@@ -1145,8 +1145,59 @@
     }, undefined, false);
   }
 
-  var Aeroflow = function Aeroflow(emitter, sources) {
-    _classCallCheck(this, Aeroflow);
+  var Flow = undefined;
+
+  function emit(next, done, context) {
+    var sources = context.flow.sources,
+        limit = sources.length;
+    var index = -1;
+    !function proceed(result) {
+      if (result !== true || ++index >= limit) done(result);else try {
+        adapterEmitter(sources[index], true)(next, proceed, context);
+      } catch (err) {
+        done(err);
+      }
+    }(true);
+  }
+
+  function aeroflow() {
+    for (var _len2 = arguments.length, sources = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+      sources[_key2] = arguments[_key2];
+    }
+
+    return new Flow(emit, sources);
+  }
+
+  function create(emitter) {
+    return new Flow(customEmitter(emitter));
+  }
+
+  function error(message) {
+    return new Flow(emptyEmitter(toError(message)));
+  }
+
+  function expand(expander, seed) {
+    return new Flow(expandEmitter(expander, seed));
+  }
+
+  function just(value) {
+    return new Flow(scalarEmitter(value));
+  }
+
+  function random(minimum, maximum) {
+    return new Flow(randomEmitter(minimum, maximum));
+  }
+
+  function range(start, end, step) {
+    return new Flow(rangeEmitter(start, end, step));
+  }
+
+  function repeat(value, interval) {
+    return new Flow(repeatEmitter(value, interval));
+  }
+
+  Flow = function Flow(emitter, sources) {
+    _classCallCheck(this, Flow);
 
     objectDefineProperties(this, {
       emitter: {
@@ -1159,11 +1210,11 @@
   };
 
   function append() {
-    for (var _len2 = arguments.length, sources = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-      sources[_key2] = arguments[_key2];
+    for (var _len3 = arguments.length, sources = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+      sources[_key3] = arguments[_key3];
     }
 
-    return new Aeroflow(this.emitter, this.sources.concat(sources));
+    return new Flow(this.emitter, this.sources.concat(sources));
   }
 
   function average() {
@@ -1171,11 +1222,11 @@
   }
 
   function bind() {
-    for (var _len3 = arguments.length, sources = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-      sources[_key3] = arguments[_key3];
+    for (var _len4 = arguments.length, sources = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+      sources[_key4] = arguments[_key4];
     }
 
-    return new Aeroflow(this.emitter, sources);
+    return new Flow(this.emitter, sources);
   }
 
   function catch_(alternative) {
@@ -1183,11 +1234,11 @@
   }
 
   function chain(operator) {
-    return new Aeroflow(operator(this.emitter), this.sources);
+    return new Flow(operator(this.emitter), this.sources);
   }
 
-  function count(optional) {
-    return this.chain(countOperator(optional));
+  function count() {
+    return this.chain(countOperator());
   }
 
   function delay(interval) {
@@ -1215,8 +1266,8 @@
   }
 
   function group() {
-    for (var _len4 = arguments.length, selectors = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-      selectors[_key4] = arguments[_key4];
+    for (var _len5 = arguments.length, selectors = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+      selectors[_key5] = arguments[_key5];
     }
 
     return this.chain(groupOperator(selectors));
@@ -1243,11 +1294,11 @@
   }
 
   function prepend() {
-    for (var _len5 = arguments.length, sources = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-      sources[_key5] = arguments[_key5];
+    for (var _len6 = arguments.length, sources = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+      sources[_key6] = arguments[_key6];
     }
 
-    return new Aeroflow(this.emitter, sources.concat(this.sources));
+    return new Flow(this.emitter, sources.concat(this.sources));
   }
 
   function reduce(reducer, seed, optional) {
@@ -1353,8 +1404,8 @@
   }
 
   function sort() {
-    for (var _len6 = arguments.length, parameters = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
-      parameters[_key6] = arguments[_key6];
+    for (var _len7 = arguments.length, parameters = Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
+      parameters[_key7] = arguments[_key7];
     }
 
     return this.chain(sortOperator(parameters));
@@ -1384,8 +1435,8 @@
     return this.chain(toSetOperator());
   }
 
-  function toString(separator, optional) {
-    return this.chain(toStringOperator(separator, optional));
+  function toString(separator) {
+    return this.chain(toStringOperator(separator));
   }
 
   var operators = objectCreate(Object[PROTOTYPE], {
@@ -1506,7 +1557,7 @@
       writable: true
     }
   });
-  Aeroflow[PROTOTYPE] = objectCreate(operators, (_objectCreate2 = {}, _defineProperty(_objectCreate2, CLASS, {
+  Flow[PROTOTYPE] = objectCreate(operators, (_objectCreate2 = {}, _defineProperty(_objectCreate2, CLASS, {
     value: AEROFLOW
   }), _defineProperty(_objectCreate2, 'append', {
     value: append
@@ -1519,56 +1570,6 @@
   }), _defineProperty(_objectCreate2, 'run', {
     value: run
   }), _objectCreate2));
-
-  function emit(next, done, context) {
-    var sources = context.flow.sources,
-        limit = sources.length;
-    var index = -1;
-    !function proceed(result) {
-      if (result !== true || ++index >= limit) done(result);else try {
-        adapterEmitter(sources[index], true)(next, proceed, context);
-      } catch (err) {
-        done(err);
-      }
-    }(true);
-  }
-
-  function aeroflow() {
-    for (var _len7 = arguments.length, sources = Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
-      sources[_key7] = arguments[_key7];
-    }
-
-    return new Aeroflow(emit, sources);
-  }
-
-  function create(emitter) {
-    return new Aeroflow(customEmitter(emitter));
-  }
-
-  function error(message) {
-    return new Aeroflow(emptyEmitter(toError(message)));
-  }
-
-  function expand(expander, seed) {
-    return new Aeroflow(expandEmitter(expander, seed));
-  }
-
-  function just(value) {
-    return new Aeroflow(scalarEmitter(value));
-  }
-
-  function random(minimum, maximum) {
-    return new Aeroflow(randomEmitter(minimum, maximum));
-  }
-
-  function range(start, end, step) {
-    return new Aeroflow(rangeEmitter(start, end, step));
-  }
-
-  function repeat(value, interval) {
-    return new Aeroflow(repeatEmitter(value, interval));
-  }
-
   objectDefineProperties(aeroflow, {
     adapters: {
       value: adapters
@@ -1578,7 +1579,7 @@
     },
     empty: {
       enumerable: true,
-      value: new Aeroflow(emptyEmitter(true))
+      value: new Flow(emptyEmitter(true))
     },
     error: {
       value: error
