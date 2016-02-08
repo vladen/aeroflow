@@ -1,10 +1,6 @@
 'use strict';
 
 export default (aeroflow, assert) => describe('aeroflow', () => {
-    it('is function', () => {
-        assert.isFunction(aeroflow);
-    });
-
     describe('aeroflow()', () => {
         it('returns instance of Aeroflow', () => {
             assert.typeOf(aeroflow(), 'Aeroflow');

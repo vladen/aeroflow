@@ -29,27 +29,27 @@ export default (aeroflow, assert) => describe('aeroflow', () => {
         it('returns instance of Aeroflow', () =>
             assert.typeOf(aeroflow.expand(() => true, 1), 'Aeroflow'));
 
-        // describe('@function', () => {
-        //     it('emitting geometric progression', (done)=> {
-        //         let expander = value => value * 2
-        //             , actual = []
-        //             , seed = 1
-        //             , expected = [2, 4, 8]
-        //             , index = 0;
+        describe('@function', () => {
+            it('emitting geometric progression', (done)=> {
+                let expander = value => value * 2
+                    , actual = []
+                    , seed = 1
+                    , expected = [2, 4, 8]
+                    , index = 0;
 
-        //         aeroflow
-        //             .expand(expander, seed)
-        //             .take(expected.length)
-        //             .run(value => {
-        //                 actual.push(value);
-        //             });
+                aeroflow
+                    .expand(expander, seed)
+                    .take(expected.length)
+                    .run(value => {
+                        actual.push(value);
+                    });
 
-        //         setImmediate(() => {
-        //             assert.strictEqual(actual, expected);
-        //             //done();
-        //         });
-        //     });
-        // });
+                setImmediate(() => {
+                    actual.forEach((item, index) => assert.strictEqual(item, expected[index]));
+                    done();
+                });
+            });
+        });
     });
 
     describe('#just()', () => {

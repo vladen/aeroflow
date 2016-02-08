@@ -27,27 +27,27 @@ var staticMethodsTests = (aeroflow, assert) => describe('aeroflow', () => {
         it('returns instance of Aeroflow', () =>
             assert.typeOf(aeroflow.expand(() => true, 1), 'Aeroflow'));
 
-        // describe('@function', () => {
-        //     it('emitting geometric progression', (done)=> {
-        //         let expander = value => value * 2
-        //             , actual = []
-        //             , seed = 1
-        //             , expected = [2, 4, 8]
-        //             , index = 0;
+        describe('@function', () => {
+            it('emitting geometric progression', (done)=> {
+                let expander = value => value * 2
+                    , actual = []
+                    , seed = 1
+                    , expected = [2, 4, 8]
+                    , index = 0;
 
-        //         aeroflow
-        //             .expand(expander, seed)
-        //             .take(expected.length)
-        //             .run(value => {
-        //                 actual.push(value);
-        //             });
+                aeroflow
+                    .expand(expander, seed)
+                    .take(expected.length)
+                    .run(value => {
+                        actual.push(value);
+                    });
 
-        //         setImmediate(() => {
-        //             assert.strictEqual(actual, expected);
-        //             //done();
-        //         });
-        //     });
-        // });
+                setImmediate(() => {
+                    actual.forEach((item, index) => assert.strictEqual(item, expected[index]));
+                    done();
+                });
+            });
+        });
     });
 
     describe('#just()', () => {
@@ -301,8 +301,382 @@ var staticMethodsTests = (aeroflow, assert) => describe('aeroflow', () => {
     });
 });
 
+var factoryTests = (aeroflow, assert) => describe('aeroflow', () => {
+    describe('aeroflow()', () => {
+        it('returns instance of Aeroflow', () => {
+            assert.typeOf(aeroflow(), 'Aeroflow');
+        });
+
+        describe('#sources', () => {
+            it('is initially empty array', () => {
+                assert.strictEqual(aeroflow().sources.length, 0);
+            });
+        });
+
+        describe('#emitter', () => {
+            it('is function', () => {
+                assert.isFunction(aeroflow().emitter);
+            });
+        });
+    });
+
+    describe('aeroflow(@Array)', (done) => {
+        it('returns instance of Aeroflow', () => {
+            assert.typeOf(aeroflow([1, 2]), 'Aeroflow');
+        });
+
+        describe('@Array', () => {
+            it('emitting array items', (done) => {
+                let expected = ['str', new Date(), {}, 2]
+                    , actual = [];
+                
+                aeroflow(expected)
+                    .run(value => actual.push(value));
+
+                setImmediate(() => done(assert.sameMembers(actual, expected)));
+            });
+        });
+    });
+
+    describe('aeroflow(@Map)', () => {
+        it('returns instance of Aeroflow', () => {
+            assert.typeOf(aeroflow(new Map([[1,2], [2, 1]])), 'Aeroflow');
+        });
+
+        describe('@Map', () => {
+            it('emitting map entries', (done) => {
+                let expected = [['a', 1], ['b', 2]]
+                    , actual = [];
+
+                aeroflow(new Map(expected))
+                    .run(value => actual.push(value));
+
+                setImmediate(() => {
+                    expected.forEach((item, index) => assert.sameMembers(actual[index], expected[index]));
+                    done();
+                });
+            });
+        });
+    });
+
+    describe('aerflow(@Set)', () => {
+        it('returns instance of Aeroflow', () => {
+            assert.typeOf(aeroflow(new Set([1, 2])), 'Aeroflow');
+        });
+
+        describe('@Set', () => {
+            it('emitting set keys', (done) => {
+                let expected = ['a', 'b']
+                    , actual = [];
+
+                aeroflow(new Set(expected))
+                    .run(value => actual.push(value));
+
+                setImmediate(() => done(assert.sameMembers(actual, expected)));
+            });
+        });
+    });
+
+    describe('aeroflow(@Function)', () => {
+        it('returns instance of Aeroflow', () => {
+            assert.typeOf(aeroflow(() => true), 'Aeroflow');
+        });
+
+        describe('@Function', () => {
+            it('emitting scalar value returned by function', (done) => {
+                let expected = 'test tester'
+                    , actual;
+                aeroflow(() => expected)
+                    .run(value => actual = value);
+
+                setImmediate(() => done(assert.strictEqual(actual, expected)));
+            });
+        });
+    });
+
+    describe('Aeroflow(@Promise)', () => {
+        it('returns instance of Aeroflow', () => {
+            assert.typeOf(aeroflow(Promise.resolve({})), 'Aeroflow');
+        });
+
+        describe('@Promise', () => {
+            it('emitting array resolved by promise', (done) => {
+                let expected = ['a', 'b']
+                    , actual
+
+                aeroflow(Promise.resolve(expected))
+                    .run( value => assert.strictEqual(value, expected), () => done());
+            });
+
+            //TODO: Promise tests pending
+        });
+    });
+});
+
+var instanceTests = (aeroflow, assert) => describe('Aeroflow', () => {
+    describe('#max()', ()=> {
+        it('is instance method', () =>
+            assert.isFunction(aeroflow.empty.max));
+
+        it('returns instance of Aeroflow', () =>
+            assert.typeOf(aeroflow().max(), 'Aeroflow'));
+
+        it('emitting undefined if empty flow', (done) => {
+            let actual;
+            aeroflow().max()
+                    .run(value => actual = value);
+
+            setImmediate(() => done(assert.isUndefined(actual)));
+        });
+
+        it('emitting valid result for non-empty flow', (done) => {
+            let values = [1, 9, 2, 8, 3, 7, 4, 6, 5]
+                , expected = Math.max(...values)
+                , actual;
+
+            aeroflow(values).max()
+                    .run(value => actual = value);
+
+            setImmediate(() => done(assert.strictEqual(actual, expected)));
+        });
+    });
+
+    describe('#skip()', () => {
+        it('is instance method', () =>
+            assert.isFunction(aeroflow.empty.skip));
+
+        it('emitting undefined if called without param', (done) => {
+            let actual;
+            aeroflow([1, 2, 3, 4]).skip()
+                    .run(value => actual = value);
+
+            setImmediate(() => done(assert.isUndefined(actual)));
+        });
+    });
+
+    describe('#skip(@Number)', () => {
+        it('returns instance of Aeroflow', () =>
+            assert.typeOf(aeroflow([1 ,2 ,3, 4]).skip(), 'Aeroflow'));
+
+        describe('@Number', () => {
+
+            describe('skipps provided number of values from start', () => {
+                it('values passed as single source', (done) => {
+                    let values = [1, 2, 3, 4],
+                        skip = 2,
+                        actual = [];
+
+                    aeroflow(values).skip(skip)
+                        .run(value => actual.push(value));
+
+                    setImmediate(() => {
+                        actual.forEach((item, i) => assert.strictEqual(item, values[skip + i]));
+                        done();
+                    });
+                });
+
+                it('values passed as separate sources', () => {
+                    let expected = [1, 2, 3, 4],
+                        skip = 2,
+                        actual = [];
+
+                    aeroflow(1, 2, 3, 4).skip(skip)
+                        .run(value => actual.push(value));
+
+                    setImmediate(() => {
+                        actual.forEach((item, i) => assert.strictEqual(item, values[skip + i]));
+                        done();
+                    });
+                });
+            });
+
+            it('emitting values skipped provided number of values from end', (done) => {
+                let values = [1, 2, 3, 4]
+                    , skip = 2
+                    , actual = [];
+
+                aeroflow(values).skip(-skip)
+                                .run(value => actual.push(value));
+                setImmediate(() => {
+                    actual.forEach((item, i) => assert.strictEqual(item, values[i]));
+                    done();
+                });
+            });
+        });
+    });
+
+    describe('#skip(@Function)', () => {
+        describe('@Function', () => {
+            it('emitting remained values when provided function returns false', (done) => {
+                let values = [1, 2, 3, 4]
+                    , skip = Math.floor(values.length / 2)
+                    , limiter = (value, index) => index < skip
+                    , actual = [];
+
+                aeroflow(values).skip(skip)
+                                .run(value => actual.push(value));
+
+                setImmediate(() => {
+                    actual.forEach((item, i) => assert.strictEqual(item, values[skip + i]));
+                    done();
+                });
+            });
+        });
+    });
+
+    describe('#tap()', () => {
+         it('is instance method', () =>
+            assert.isFunction(aeroflow.empty.tap));
+
+         it('returns instance of Aeroflow', () =>
+            assert.typeOf(aeroflow([1 ,2 ,3, 4]).tap(), 'Aeroflow'));
+    });
+
+    describe('#tap(@Function)', () => {
+        describe('@Function', () => {
+            it('intercepts each emitted value', done => {
+                let expected = [0, 1, 2]
+                    , actual = [];
+
+                aeroflow(expected).tap(value => actual.push(value)).run();
+
+                setImmediate(() => {
+                    actual.forEach((item, i) => assert.strictEqual(item, expected[i]));
+                    done();
+                });
+            });
+        });
+    });
+
+    describe('#toArray()', () => {
+        it('is instance method', () =>
+            assert.isFunction(aeroflow.empty.toArray));
+
+        it('returns instance of Aeroflow', () =>
+            assert.typeOf(aeroflow([1 ,2 ,3, 4]).toArray(), 'Aeroflow'));
+
+        it('emitting single array containing all values', done => {
+            let expected = [1, 2, 3]
+                , actual;
+
+            aeroflow(...expected).toArray().run(value => actual = value);
+
+            setImmediate(() => {
+                assert.isArray(actual);
+                assert.sameMembers(actual, expected);
+                done();
+            });
+        });
+    });
+
+    describe('#toMap()', () => {
+        it('is instance method', () =>
+            assert.isFunction(aeroflow.empty.toMap));
+
+        it('returns instance of Aeroflow', () =>
+            assert.typeOf(aeroflow([1 ,2 ,3, 4]).toMap(), 'Aeroflow'));
+
+        it('emitting single map containing all values', done => {
+            let expected = [1, 2, 3]
+                , actual;
+
+            aeroflow(...expected).toMap().run(value => actual = value);
+
+            setImmediate(() => {
+                assert.typeOf(actual, 'Map');
+                assert.includeMembers(Array.from(actual.keys()), expected);
+                assert.includeMembers(Array.from(actual.values()), expected);
+                done();
+            });
+        });
+    });
+
+    describe('#distinct()', () => {
+        it('is instance method', () =>
+            assert.isFunction(aeroflow.empty.distinct));
+
+        it('returns instance of Aeroflow', () =>
+            assert.typeOf(aeroflow([1 ,2 ,3, 4]).distinct(), 'Aeroflow'));
+
+        it('emitting only unique values in sources with a same type', done => {
+            let values = [1, 1, 1, 2, 2]
+                , expected = [1, 2]
+                , actual = [];
+
+            aeroflow(...values).distinct().run(value => actual.push(value));
+
+            setImmediate(() => {
+                assert.strictEqual(actual.length, expected.length);
+                assert.sameMembers(actual, expected);
+                done();
+            });
+        });
+
+        it('emitting only unique values in sources with different types', done => {
+            let values = ['a', 'b', 1, new Date(), 2]
+                , actual = [];
+
+            aeroflow(...values).distinct().run(value => actual.push(value));
+
+            setImmediate(() => {
+                assert.strictEqual(actual.length, values.length);
+                assert.sameMembers(actual, values);
+                done();
+            });
+        });
+
+        it('emitting only unique values if passed like one source', done => {
+             let values = [1, 1, 1, 2, 2]
+                , expected = [1, 2]
+                , actual = [];
+
+            aeroflow(values).distinct().run(value => actual.push(value));
+
+            setImmediate(() => {
+                assert.strictEqual(actual.length, expected.length);
+                assert.sameMembers(actual, expected);
+                done();
+            });
+        });
+    });
+
+    describe('#distinct(@Boolean)', () => {
+        describe('@Boolean', () => {
+            it('emitting unique values until it changed if true passed', done => {
+                 let values = [1, 1, 1, 2, 2, 1, 1]
+                    , expected = [1, 2, 1]
+                    , actual = [];
+
+                aeroflow(...values).distinct(true).run(value => actual.push(value));
+
+                setImmediate(() => {
+                    assert.strictEqual(actual.length, expected.length);
+                    assert.sameMembers(actual, expected);
+                    done();
+                });
+            });
+
+            it('emitting unique values until it changed if false passed', done => {
+                 let values = [1, 1, 1, 2, 2, 1, 1]
+                    , expected = [1, 2]
+                    , actual = [];
+
+                aeroflow(...values).distinct(false).run(value => actual.push(value));
+
+                setImmediate(() => {
+                    assert.strictEqual(actual.length, expected.length);
+                    assert.sameMembers(actual, expected);
+                    done();
+                });
+            });
+        });
+    });
+});
+
 var aeroflow = (aeroflow, assert) => {
+    factoryTests(aeroflow, assert);
     staticMethodsTests(aeroflow, assert);
+    instanceTests(aeroflow, assert);
 };
 
 export default aeroflow;
