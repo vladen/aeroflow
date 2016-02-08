@@ -110,9 +110,9 @@ function unsync(result, next, done) {
 
 function arrayAdapter(source) {
   return (next, done, context) => {
-    let index = -1;
+    let index = -1, length = source.length;
     !function proceed() {
-      while (++index < source.length) if (unsync(next(source[index]), proceed, done)) return;
+      while (++index < length) if (unsync(next(source[index]), proceed, done)) return;
       done(true);
     }();
   };
@@ -645,6 +645,43 @@ function meanOperator() {
 
 function minOperator(optional) {
   return reduceOperator((minimum, result) => minimum > result ? result : minimum);
+}
+
+function replayOperator(delay, timing) {
+  const delayer = toFunction(delay, constant(delay));
+  return emitter => (next, done, context) => {
+    let past = dateNow();
+    const chronicles = [], chronicler = timing
+      ? result => {
+          const now = dateNow(), chronicle = { delay: now - past, result };
+          past = now;
+          return chronicle;
+        }
+      : result => ({ delay: 0, result });
+    emitter(
+      result => {
+        chronicles.push(chronicler(result));
+        return next(result);
+      },
+      result => {
+        if (isError(result)) done(result);
+        else {
+          let index = -1;
+          const length = chronicles.length;
+          !function proceed(proceedResult) {
+            if (unsync(proceedResult, proceed, tie(done, proceedResult))) return;
+            index = (index + 1) % length;
+            const chronicle = chronicles[index], interval = index
+              ? chronicle.delay
+              : chronicle.delay + toNumber(delayer(context.data), 0);
+            (interval ? setTimeout : setImmediate)(() => {
+              if (!unsync(next(chronicle.result), proceed, proceed)) proceed(true);
+            }, interval);
+          }(true);
+        }
+      },
+      context);
+  };
 }
 
 function retryOperator(attempts) {
@@ -1748,6 +1785,10 @@ function reduce(reducer, seed, optional) {
   return this.chain(reduceOperator(reducer, seed, optional));
 }
 
+function replay(delay, timing) {
+  return this.chain(replayOperator(delay, timing));
+}
+
 /**
 @alias Flow#retry
 
@@ -2180,6 +2221,7 @@ const operators = objectCreate(Object[PROTOTYPE], {
   mean: { value: mean, writable: true },
   min: { value: min, writable: true },
   reduce: { value: reduce, writable: true },
+  replay: { value: replay, writable: true },
   retry: { value: retry, writable: true },
   reverse: { value: reverse, writable: true },
   skip: { value: skip, writable: true },

@@ -190,9 +190,10 @@
 
   function arrayAdapter(source) {
     return function (next, done, context) {
-      var index = -1;
+      var index = -1,
+          length = source.length;
       !function proceed() {
-        while (++index < source.length) {
+        while (++index < length) {
           if (unsync(next(source[index]), proceed, done)) return;
         }
 
@@ -790,6 +791,50 @@
     });
   }
 
+  function replayOperator(delay, timing) {
+    var delayer = toFunction(delay, constant(delay));
+    return function (emitter) {
+      return function (next, done, context) {
+        var past = dateNow();
+        var chronicles = [],
+            chronicler = timing ? function (result) {
+          var now = dateNow(),
+              chronicle = {
+            delay: now - past,
+            result: result
+          };
+          past = now;
+          return chronicle;
+        } : function (result) {
+          return {
+            delay: 0,
+            result: result
+          };
+        };
+        emitter(function (result) {
+          chronicles.push(chronicler(result));
+          return next(result);
+        }, function (result) {
+          if (isError(result)) done(result);else {
+            (function () {
+              var index = -1;
+              var length = chronicles.length;
+              !function proceed(proceedResult) {
+                if (unsync(proceedResult, proceed, tie(done, proceedResult))) return;
+                index = (index + 1) % length;
+                var chronicle = chronicles[index],
+                    interval = index ? chronicle.delay : chronicle.delay + toNumber(delayer(context.data), 0);
+                (interval ? setTimeout : setImmediate)(function () {
+                  if (!unsync(next(chronicle.result), proceed, proceed)) proceed(true);
+                }, interval);
+              }(true);
+            })();
+          }
+        }, context);
+      };
+    };
+  }
+
   function retryOperator(attempts) {
     attempts = toNumber(attempts, 1);
     if (!attempts) return identity;
@@ -1274,6 +1319,10 @@
     return this.chain(reduceOperator(reducer, seed, optional));
   }
 
+  function replay(delay, timing) {
+    return this.chain(replayOperator(delay, timing));
+  }
+
   function retry(attempts) {
     return this.chain(retryOperator(attempts));
   }
@@ -1429,6 +1478,10 @@
     },
     reduce: {
       value: reduce,
+      writable: true
+    },
+    replay: {
+      value: replay,
       writable: true
     },
     retry: {

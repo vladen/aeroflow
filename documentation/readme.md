@@ -251,6 +251,7 @@ aeroflow.repeat(index => index, index => 500 + 500 * index).take(3).dump().run()
     * [.mean()](#Flow+mean) ⇒ <code>[Flow](#Flow)</code>
     * [.min()](#Flow+min) ⇒ <code>[Flow](#Flow)</code>
     * [.reduce(reducer, seed, optional)](#Flow+reduce) ⇒ <code>[Flow](#Flow)</code>
+    * [.replay(delay, timing)](#Flow+replay) ⇒ <code>[Flow](#Flow)</code>
     * [.retry(attempts)](#Flow+retry) ⇒ <code>[Flow](#Flow)</code>
     * [.reverse()](#Flow+reverse) ⇒ <code>[Flow](#Flow)</code>
     * [.run([next], [done], [data])](#Flow+run) ⇒ <code>Promise</code>
@@ -699,6 +700,35 @@ aeroflow(['a', 'b', 'c'])
   .dump().run();
 // next a0b1c2
 // done
+```
+<a name="Flow+replay"></a>
+### flow.replay(delay, timing) ⇒ <code>[Flow](#Flow)</code>
+**Kind**: instance method of <code>[Flow](#Flow)</code>  
+**Params**
+
+- delay <code>number</code> | <code>function</code>
+- timing <code>boolean</code>
+
+**Example**  
+```js
+aeroflow(1, 2).replay(1000).take(4).dump().run();
+// next 1
+// next 2
+// next 1 // after 1000ms
+// next 2
+// done false
+aeroflow(1, 2).delay(500).replay(1000).take(4).dump().run();
+// next 1
+// next 2 // after 500ms
+// next 1 // after 1000ms
+// next 2
+// done false
+aeroflow(1, 2).delay(500).replay(1000, true).take(4).dump().run();
+// next 1
+// next 2 // after 500ms
+// next 1 // after 1000ms
+// next 2 // after 500ms
+// done false
 ```
 <a name="Flow+retry"></a>
 ### flow.retry(attempts) ⇒ <code>[Flow](#Flow)</code>
