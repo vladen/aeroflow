@@ -1,7 +1,6 @@
 'use strict';
 
-import { DATE, ERROR, FUNCTION, NUMBER } from '../symbols';
-import { classOf, constant, dateNow, mathMax, toDelay, toFunction } from '../utilites';
+import { constant, toDelay, toFunction } from '../utilites';
 import { unsync } from '../unsync';
 
 export function delayOperator(interval) {

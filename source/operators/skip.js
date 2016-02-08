@@ -1,9 +1,8 @@
 'use strict';
 
 import { FUNCTION, NUMBER, UNDEFINED } from '../symbols';
-import { classOf, identity, mathMax, isError, truthy } from '../utilites';
-import { unsync } from '../unsync';
-import { toArrayOperator } from './toArray';
+import { classOf, identity, isError, truthy } from '../utilites';
+import { arrayAdapter } from '../adapters/array';
 
 function skipAllOperator() {
   return emitter => (next, done, context) => emitter(truthy, done, context);
@@ -20,16 +19,20 @@ function skipFirstOperator(count) {
 }
 
 export function skipLastOperator(count) {
-  return emitter => (next, done, context) => toArrayOperator()(emitter)(
-    result => result.length <= count || new Promise(resolve => {
-      let index = 0, limit = result.length - count;
-      !function proceed() {
-        while (!unsync(next(result[index++]), proceed, resolve) && index < limit);
-        resolve(true);
-      }();
-    }),
-    done,
-    context);
+  return emitter => (next, done, context) => {
+    let buffer = [];
+    emitter(
+      result => {
+        buffer.push(result);
+        return true;
+      },
+      result => {
+        if (isError(result)) done(result);
+        else if (count >= buffer.length) done(result);
+        else arrayAdapter(buffer.slice(0, -count))(next, done, context);
+      },
+      context)
+  };
 }
 
 export function skipWhileOperator(predicate) {

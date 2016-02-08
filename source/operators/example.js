@@ -1,5 +1,7 @@
 'use strict';
 
+import aeroflow from '../aeroflow';
+
 // example extension
 aeroflow.operators.test = function() {
   return this.chain(emitter => (next, done, context) => emitter(

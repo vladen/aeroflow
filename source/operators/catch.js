@@ -1,12 +1,14 @@
 'use strict';
 
 import { isDefined, isError } from '../utilites';
-import { adapt } from '../adapt';
+import { adapterSelector } from '../adapters/index';
+import { scalarAdapter } from '../adapters/scalar';
+import { emptyEmitter } from '../emitters/empty';
 
 export function catchOperator(alternative) {
-  const regressor = isDefined(alternative)
-    ? adapt(alternative, true)
-    : (next, done) => done(false);
+  const regressor = isDefined(alternative) 
+    ? adapterSelector(alternative, scalarAdapter(alternative))
+    : emptyEmitter(false);
   return emitter => (next, done, context) => emitter(
     next,
     result => isError(result)

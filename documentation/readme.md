@@ -34,9 +34,12 @@ aeroflow(
 // next 7
 // next 8 // after 500ms
 // done true
+aeroflow(new Error('test')).dump().run();
+// done Error: test(…)
+// Uncaught (in promise) Error: test(…)
 aeroflow(() => { throw new Error }).dump().run();
-// done Error(…)
-// Uncaught Error
+// done Error: test(…)
+// Uncaught (in promise) Error: test(…)
 aeroflow("test").dump().run();
 // next test
 // done true
@@ -51,7 +54,6 @@ aeroflow("test").dump().run();
 
 * [aeroflow(...sources)](#aeroflow) ⇒ <code>[Flow](#Flow)</code>
     * [.create(emitter)](#aeroflow.create) ⇒ <code>[Flow](#Flow)</code>
-    * [.error([message])](#aeroflow.error) ⇒ <code>[Flow](#Flow)</code>
     * [.expand(expander, [seed])](#aeroflow.expand) ⇒ <code>[Flow](#Flow)</code>
     * [.just(value)](#aeroflow.just) ⇒ <code>[Flow](#Flow)</code>
     * [.random([minimum], [maximum])](#aeroflow.random) ⇒ <code>[Flow](#Flow)</code>
@@ -74,25 +76,18 @@ context - the execution context.
 **Example**  
 ```js
 aeroflow.create((next, done, context) => {
-  next(1);
-  next(2);
+  next('test');
   done();
 }).dump().run();
-// next 1
-// next 2
+// next test
 // done true
-```
-<a name="aeroflow.error"></a>
-### aeroflow.error([message]) ⇒ <code>[Flow](#Flow)</code>
-**Kind**: static method of <code>[aeroflow](#aeroflow)</code>  
-**Params**
-
-- [message] <code>string</code> | <code>error</code>
-
-**Example**  
-```js
-aeroflow.error('test').run();
-// Uncaught Error: test
+aeroflow.create((next, done, context) => {
+  window.addEventListener('click', next);
+  return () => window.removeEventListener('click', next);
+}).take(2).dump().run();
+// next MouseEvent {...}
+// next MouseEvent {...}
+// done false
 ```
 <a name="aeroflow.expand"></a>
 ### aeroflow.expand(expander, [seed]) ⇒ <code>[Flow](#Flow)</code>
@@ -139,20 +134,17 @@ Creates new flow emitting infinite sequence of random numbers.
 
 **Example**  
 ```js
-aeroflow.random().take(3).dump().run();
+aeroflow.random().take(2).dump().run();
 // next 0.07417976693250232
 // next 0.5904422281309957
-// next 0.792132444214075
 // done false
-aeroflow.random(1, 9).take(3).dump().run();
+aeroflow.random(1, 9).take(2).dump().run();
 // next 7
 // next 2
-// next 8
 // done false
-aeroflow.random(1.1, 8.9).take(3).dump().run();
-next 4.398837305698544
+aeroflow.random(1.1, 8.9).take(2).dump().run();
+// next 4.398837305698544
 // next 2.287970747705549
-// next 3.430788825778291
 // done false
 ```
 <a name="aeroflow.range"></a>
@@ -240,11 +232,11 @@ aeroflow.repeat(index => index, index => 500 + 500 * index).take(3).dump().run()
 
 
 * [Flow](#Flow)
-    * [.average([...sources])](#Flow+average) ⇒ <code>[Flow](#Flow)</code>
     * [.average()](#Flow+average) ⇒ <code>[Flow](#Flow)</code>
     * [.bind([...sources])](#Flow+bind) ⇒ <code>[Flow](#Flow)</code>
     * [.catch([alternative])](#Flow+catch) ⇒ <code>[Flow](#Flow)</code>
     * [.chain([operator])](#Flow+chain) ⇒ <code>[Flow](#Flow)</code>
+    * [.concat([...sources])](#Flow+concat) ⇒ <code>[Flow](#Flow)</code>
     * [.count()](#Flow+count) ⇒ <code>[Flow](#Flow)</code>
     * [.delay([interval])](#Flow+delay) ⇒ <code>[Flow](#Flow)</code>
     * [.distinct(untilChanged)](#Flow+distinct) ⇒ <code>[Flow](#Flow)</code>
@@ -258,11 +250,10 @@ aeroflow.repeat(index => index, index => 500 + 500 * index).take(3).dump().run()
     * [.max()](#Flow+max) ⇒ <code>[Flow](#Flow)</code>
     * [.mean()](#Flow+mean) ⇒ <code>[Flow](#Flow)</code>
     * [.min()](#Flow+min) ⇒ <code>[Flow](#Flow)</code>
-    * [.prepend([...sources])](#Flow+prepend) ⇒ <code>[Flow](#Flow)</code>
     * [.reduce(reducer, seed, optional)](#Flow+reduce) ⇒ <code>[Flow](#Flow)</code>
     * [.retry(attempts)](#Flow+retry) ⇒ <code>[Flow](#Flow)</code>
     * [.reverse()](#Flow+reverse) ⇒ <code>[Flow](#Flow)</code>
-    * [.run([next], [done], [data])](#Flow+run) ⇒ <code>[Flow](#Flow)</code>
+    * [.run([next], [done], [data])](#Flow+run) ⇒ <code>Promise</code>
     * [.skip([condition])](#Flow+skip) ⇒ <code>[Flow](#Flow)</code>
     * [.slice([begin], [end])](#Flow+slice) ⇒ <code>[Flow](#Flow)</code>
     * [.some([predicate])](#Flow+some) ⇒ <code>[Flow](#Flow)</code>
@@ -275,36 +266,6 @@ aeroflow.repeat(index => index, index => 500 + 500 * index).take(3).dump().run()
     * [.toSet()](#Flow+toSet) ⇒ <code>[Flow](#Flow)</code>
     * [.toString([separator])](#Flow+toString) ⇒ <code>[Flow](#Flow)</code>
 
-<a name="Flow+average"></a>
-### flow.average([...sources]) ⇒ <code>[Flow](#Flow)</code>
-Returns new flow emitting values from this flow first 
-and then from all provided sources in series.
-
-**Kind**: instance method of <code>[Flow](#Flow)</code>  
-**Returns**: <code>[Flow](#Flow)</code> - New flow emitting all values emitted by this flow first
-and then all provided values.  
-**Params**
-
-- [...sources] <code>any</code> - Data sources to append to this flow.
-
-**Example**  
-```js
-aeroflow(1).append(
-  2,
-  [3, 4],
-  () => 5,
-  Promise.resolve(6),
-  new Promise(resolve => setTimeout(() => resolve(7), 500))
-).dump().run();
-// next 1
-// next 2
-// next 3
-// next 4
-// next 5
-// next 6
-// next 7 // after 500ms
-// done
-```
 <a name="Flow+average"></a>
 ### flow.average() ⇒ <code>[Flow](#Flow)</code>
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
@@ -325,15 +286,15 @@ aeroflow(1, 2, 6).average().dump().run();
 
 **Example**  
 ```js
-aeroflow().dump().bind(1, 2, 3).run();
+aeroflow().dump().bind().run();
+// done true
+aeroflow().dump().bind(1, 2).run();
 // next 1
 // next 2
-// next 3
 // done true
-aeroflow(1, 2, 3).dump().bind(4, 5, 6).run();
+aeroflow(1, 2).dump().bind(4, 5).run();
 // next 4
 // next 5
-// next 6
 // done true
 ```
 <a name="Flow+catch"></a>
@@ -345,10 +306,10 @@ aeroflow(1, 2, 3).dump().bind(4, 5, 6).run();
 
 **Example**  
 ```js
-aeroflow.error('error').catch().dump().run();
+aeroflow(new Error('test')).catch().dump().run();
 // done false
-aeroflow.error('error').dump('before ').catch('success').dump('after ').run();
-// before done Error: error(…)
+aeroflow(new Error('test')).dump('before ').catch('success').dump('after ').run();
+// before done Error: test(…)
 // after next success
 // after done true
 ```
@@ -359,6 +320,36 @@ aeroflow.error('error').dump('before ').catch('success').dump('after ').run();
 
 - [operator] <code>function</code>
 
+<a name="Flow+concat"></a>
+### flow.concat([...sources]) ⇒ <code>[Flow](#Flow)</code>
+Returns new flow emitting values from this flow first 
+and then from all provided sources in series.
+
+**Kind**: instance method of <code>[Flow](#Flow)</code>  
+**Returns**: <code>[Flow](#Flow)</code> - New flow emitting all values emitted by this flow first
+and then all provided values.  
+**Params**
+
+- [...sources] <code>any</code> - Data sources to append to this flow.
+
+**Example**  
+```js
+aeroflow(1).concat(
+  2,
+  [3, 4],
+  () => 5,
+  Promise.resolve(6),
+  new Promise(resolve => setTimeout(() => resolve(7), 500))
+).dump().run();
+// next 1
+// next 2
+// next 3
+// next 4
+// next 5
+// next 6
+// next 7 // after 500ms
+// done
+```
 <a name="Flow+count"></a>
 ### flow.count() ⇒ <code>[Flow](#Flow)</code>
 Counts the number of values emitted by this flow, returns new flow emitting only this value.
@@ -392,7 +383,7 @@ aeroflow(1, 2).delay((value, index) => 500 + 500 * index).dump().run();
 // done true
 aeroflow(1, 2).delay(value => { throw new Error }).dump().run();
 // done Error(…)
-// Uncaught Error  
+// Uncaught (in promise) Error: test(…)  
 **Params**
 
 - [interval] <code>number</code> | <code>date</code> | <code>function</code> - The condition used to determine delay for each subsequent emission.
@@ -447,7 +438,7 @@ aeroflow(1, 2).dump('test ', console.info.bind(console)).run();
 // test done true
 aeroflow(1, 2).dump(event => { if (event === 'next') throw new Error }).dump().run();
 // done Error(…)
-// Uncaught Error
+// Uncaught (in promise) Error: test(…)
 ```
 <a name="Flow+every"></a>
 ### flow.every([predicate]) ⇒ <code>[Flow](#Flow)</code>
@@ -474,7 +465,7 @@ aeroflow(1, 2).every(value => value > 0).dump().run();
 // done true
 aeroflow(1, 2).every(value => { throw new Error }).dump().run();
 // done Error(…)
-// Uncaught Error
+// Uncaught (in promise) Error: test(…)
 ```
 <a name="Flow+filter"></a>
 ### flow.filter([predicate]) ⇒ <code>[Flow](#Flow)</code>
@@ -509,7 +500,7 @@ aeroflow(1, 2, 3, 4, 5).filter(value => (value % 2) === 0).dump().run();
 // done true
 aeroflow(1, 2).filter(value => { throw new Error }).dump().run();
 // done Error: (…)
-// Uncaught Error
+// Uncaught (in promise) Error: test(…)
 ```
 <a name="Flow+flatten"></a>
 ### flow.flatten([depth]) ⇒ <code>[Flow](#Flow)</code>
@@ -676,33 +667,6 @@ aeroflow('b', 'a', 'c').min().dump().run();
 // next a
 // done true
 ```
-<a name="Flow+prepend"></a>
-### flow.prepend([...sources]) ⇒ <code>[Flow](#Flow)</code>
-Returns new flow emitting the emissions from all provided sources and then from this flow without interleaving them.
-
-**Kind**: instance method of <code>[Flow](#Flow)</code>  
-**Params**
-
-- [...sources] <code>Array.&lt;any&gt;</code> - Values to prepend to this flow.
-
-**Example**  
-```js
-aeroflow(1).prepend(
-  2,
-  [3, 4],
-  () => 5,
-  Promise.resolve(6),
-  new Promise(resolve => setTimeout(() => resolve(7), 500))
-).dump().run();
-// next 2
-// next 3
-// next 4
-// next 5
-// next 6
-// next 7 // after 500ms
-// next 1
-// done
-```
 <a name="Flow+reduce"></a>
 ### flow.reduce(reducer, seed, optional) ⇒ <code>[Flow](#Flow)</code>
 Applies a function against an accumulator and each value emitted by this flow to reduce it to a single value,
@@ -769,12 +733,13 @@ aeroflow(1, 2, 3).reverse().dump().run();
 // done true
 ```
 <a name="Flow+run"></a>
-### flow.run([next], [done], [data]) ⇒ <code>[Flow](#Flow)</code>
+### flow.run([next], [done], [data]) ⇒ <code>Promise</code>
 Runs this flow asynchronously, initiating source to emit values,
 applying declared operators to emitted values and invoking provided callbacks.
 If no callbacks provided, runs this flow for its side-effects only.
 
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
+**Returns**: <code>Promise</code> - A promise resolving when this flow completes successfully or rejecting otherwise.  
 **Params**
 
 - [next] <code>function</code> - Callback to execute for each emitted value, taking two arguments: result, context.
@@ -800,14 +765,7 @@ aeroflow(1, 2, 3).dump().run(() => false);
 // done false
 aeroflow(Promise.reject('test')).dump().run();
 // done Error: test(…)
-// Uncaught Error
-aeroflow(Promise.reject('test')).dump().run(() => {}, () => {});
-// done Error: test(…)
-window.addEventListener('next', event => console.log(event));
-window.addEventListener('done', event => console.log(event));
-aeroflow('test').run(window);
-// CustomEvent {detail: "test", type: "next", ...
-// CustomEvent {detail: "true", type: "done", ...
+// Uncaught (in promise) Error: test(…)
 ```
 <a name="Flow+skip"></a>
 ### flow.skip([condition]) ⇒ <code>[Flow](#Flow)</code>
@@ -898,7 +856,7 @@ aeroflow(1, 2, 3).some(value => value % 2).dump().run();
 // done false
 aeroflow(1, 2, 3).some(value => { throw new Error }).dump().run();
 // done Error(…)
-// Uncaught Error
+// Uncaught (in promise) Error: test(…)
 ```
 <a name="Flow+sort"></a>
 ### flow.sort([...parameters]) ⇒ <code>[Flow](#Flow)</code> &#124; <code>[Flow](#Flow)</code>

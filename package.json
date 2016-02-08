@@ -36,8 +36,8 @@
     "transpile:library": "babel build/es2015/aeroflow.js --out-file build/legacy/aeroflow.js --presets es2015 --plugins add-module-exports,transform-es2015-modules-umd",
     "transpile:tests": "babel build/es2015/aeroflow.tests.js --out-file build/legacy/aeroflow.tests.js --presets es2015 --plugins add-module-exports,transform-es2015-modules-umd",
     "validate": "npm run validate:library && npm run validate:tests",
-    "validate:library": "eslint source/*.js",
-    "validate:tests": "eslint source/tests/*.js"
+    "validate:library": "eslint source/**",
+    "validate:tests": "eslint source/tests/**"
   },
   "pre-commit": {
     "run": "validate:library, test:library",

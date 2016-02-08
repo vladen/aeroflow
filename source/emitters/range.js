@@ -1,6 +1,6 @@
 'use strict';
 
-import { isNumber, maxInteger, toNumber } from '../utilites';
+import { maxInteger, toNumber } from '../utilites';
 import { unsync } from '../unsync';
 import { scalarAdapter } from '../adapters/scalar';
 

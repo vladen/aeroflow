@@ -15,6 +15,10 @@ const STRING = 'String';
 const SYMBOL = 'Symbol';
 const UNDEFINED = 'Undefined';
 
+const primitives = new Set([
+  BOOLEAN, NULL, NUMBER, REGEXP, STRING, SYMBOL, UNDEFINED
+]);
+
 const dateNow = Date.now;
 const mathFloor = Math.floor;
 const mathPow = Math.pow;
@@ -22,8 +26,7 @@ const mathRandom = Math.random;
 const mathMin = Math.min;
 const maxInteger = Number.MAX_SAFE_INTEGER;
 const objectCreate = Object.create;
-const objectDefineProperties$1 = Object.defineProperties;
-const objectDefineProperty = Object.defineProperty;
+const objectDefineProperties = Object.defineProperties;
 const objectToString = Object.prototype.toString;
 
 const compare = (left, right, direction) => left < right
@@ -40,7 +43,7 @@ const classIs = className => value => classOf(value) === className;
 
 const isBoolean = value => value === true || value === false;
 const isDefined = value => value !== undefined;
-const isError$1 = classIs(ERROR);
+const isError = classIs(ERROR);
 const isFunction = value => typeof value == 'function';
 const isInteger = Number.isInteger;
 const isNumber = classIs(NUMBER);
@@ -78,7 +81,7 @@ const toNumber = (value, def) => {
   return value;
 };
 
-const toError = value => isError$1(value)
+const toError = value => isError(value)
   ? value
   : new Error(value);
 
@@ -105,21 +108,21 @@ function unsync(result, next, done) {
   return true;
 }
 
-function scalarAdapter(value) {
-  return (next, done) => {
-    if (!unsync(next(value), done, done)) done(true);
+function arrayAdapter(source) {
+  return (next, done, context) => {
+    let index = -1;
+    !function proceed() {
+      while (++index < source.length) if (unsync(next(source[index]), proceed, done)) return;
+      done(true);
+    }();
   };
 }
 
-class Context {
-  constructor(data, sources) {
-    objectDefineProperties$1(this, {
-      data: { value: data },
-      sources: { value: sources }
-    });
-  }
+function errorAdapter(error) {
+  return (next, done) => {
+    done(error);
+  };
 }
-objectDefineProperty(Context[PROTOTYPE], CLASS, { value: `${AEROFLOW}.Context` });
 
 function flowAdapter(flow) {
   return (next, done, context) => flow.emitter(
@@ -131,32 +134,23 @@ function flowAdapter(flow) {
     }));
 }
 
-function arrayAdapter(source) {
-  return (next, done, context) => {
-    let index = -1;
-    !function proceed() {
-      while (++index < source.length) if (unsync(next(source[index]), proceed, done)) return;
-      done(true);
-    }();
-  };
-}
-
 function functionAdapter(source) {
   return (next, done, context) => {
     if (!unsync(next(source(context.data)), done, done)) done(true);
   };
 }
 
-function iterableAdapter(source) {
-  return (next, done, context) => {
-    let iteration, iterator = iterator = source[ITERATOR]();
-    !function proceed() {
-      while (!(iteration = iterator.next()).done)
-        if (unsync(next(iteration.value), proceed, done))
-          return;
-      done(true);
-    }();
-  };
+function iterableAdapter(source, sourceClass) {
+  if (!primitives.has(sourceClass) && ITERATOR in source)
+    return (next, done, context) => {
+      let iteration, iterator = iterator = source[ITERATOR]();
+      !function proceed() {
+        while (!(iteration = iterator.next()).done)
+          if (unsync(next(iteration.value), proceed, done))
+            return;
+        done(true);
+      }();
+    };
 }
 
 function promiseAdapter(source) {
@@ -168,122 +162,29 @@ function promiseAdapter(source) {
     result => done(toError(result)));
 }
 
-const adapters = objectCreate(Object[PROTOTYPE], {
+const adapters = objectDefineProperties([iterableAdapter], {
   [AEROFLOW]: { value: flowAdapter },
   [ARRAY]: { configurable: true, value: arrayAdapter, writable: true },
+  [ERROR]: { configurable: true, value: errorAdapter, writable: true },
   [FUNCTION]: { configurable: true, value: functionAdapter, writable: true },
   [PROMISE]: { configurable: true, value: promiseAdapter, writable: true }
 });
 
-function adapt(source, scalar) {
+function adapterSelector(source, def) {
   const sourceClass = classOf(source);
-  switch (sourceClass) {
-    case BOOLEAN:
-    case NULL:
-    case NUMBER:
-    case SYMBOL:
-    case UNDEFINED:
-      break;
-    default:
-      const adapter = adapters[sourceClass];
-      if (isFunction(adapter)) return adapter(source);
-      if (ITERATOR in source) return iterableAdapter(source);
-      break;
+  let adapter = adapters[sourceClass];
+  if (isFunction(adapter)) return adapter(source);
+  for (let i = -1, l = adapters.length; ++i < l;) {
+    adapter = adapters[i](source, sourceClass);
+    if (isFunction(adapter)) return adapter;
   }
-  if (scalar) return scalarAdapter(source);
+  return def;
 }
 
-function customConsumer(parameters) {
-  const next = parameters[0];
-  if (!isFunction(next)) return;
-  parameters.shift();
-  const done = isFunction(parameters[0])
-    ? parameters.shift()
-    : result => {
-        if (isError$1(result)) throw result;
-      };
-  return { done, next };
-}
-
-function eventEmitterConsumer(parameters) {
-  const eventEmitter = parameters[0];
-  if (!isFunction(eventEmitter.emit)) return;
-  parameters.shift();
-  return {
-    next: fire('next'),
-    done: fire('done')
+function scalarAdapter(value) {
+  return (next, done) => {
+    if (!unsync(next(value), done, done)) done(true);
   };
-  function fire(event) {
-    return result => {
-      eventEmitter.emit(event, result);
-      return true;
-    }
-  }
-}
-
-function eventTargetConsumer(parameters) {
-  const eventTarget = parameters[0];
-  if (!isFunction(eventTarget.dispatchEvent)) return;
-  parameters.shift();
-  return {
-    next: fire('next'),
-    done: fire('done')
-  };
-  function fire(event) {
-    return result => {
-      eventTarget.dispatchEvent(new CustomEvent(event, { detail: result }));
-      return true;
-    }
-  }
-}
-
-function observerConsumer(parameters) {
-  const observer = parameters[0];
-  if (!isFunction(observer.onNext) || !isFunction(observer.onError) || !isFunction(observer.onCompleted))
-    return;
-  parameters.shift();
-  return {
-    done: result => {
-      (isError(result) ? observer.onError : observer.onCompleted)(result);
-      return true;
-    },
-    next: result => {
-      observer.onNext(result);
-      return true;
-    }
-  };
-}
-
-const consumers = [
-  customConsumer,
-  eventEmitterConsumer,
-  eventTargetConsumer,
-  observerConsumer
-];
-
-function consume(flow, parameters) {
-  let consumer;
-  switch (classOf(parameters[0])) {
-    case BOOLEAN:
-    case NULL:
-    case NUMBER:
-    case SYMBOL:
-    case UNDEFINED:
-      break;
-    default:
-      for (var i = -1, l = consumers.length; !consumer && ++i < l;)
-        consumer = consumers[i](parameters);
-      break;
-  }
-  if (!consumer) consumer = customConsumer([noop]);
-  const context = objectDefineProperties$1({}, {
-    data: { value: parameters[0] },
-    sources: { value: flow.sources }
-  });
-  setImmediate(() => flow.emitter(
-    result => false !== consumer.next(result, context.data),
-    result => consumer.done(result, context.data),
-    context));
 }
 
 function emptyEmitter(result) {
@@ -410,7 +311,7 @@ function reduceAlongOperator(reducer) {
         return true;
       },
       result => {
-        if (isError$1(result) || empty || !unsync(next(reduced), tie(done, result), done))
+        if (isError(result) || empty || !unsync(next(reduced), tie(done, result), done))
           done(result);
       },
       context);
@@ -426,7 +327,7 @@ function reduceGeneralOperator(reducer, seed) {
         return true;
       },
       result => {
-        if (isError$1(result) || !unsync(next(reduced), tie(done, result), done))
+        if (isError(result) || !unsync(next(reduced), tie(done, result), done))
           done(result);
       },
       context);
@@ -443,7 +344,7 @@ function reduceOptionalOperator(reducer, seed) {
         return true;
       },
       result => {
-        if (isError$1(result) || empty || !unsync(next(reduced), tie(done, result), done))
+        if (isError(result) || empty || !unsync(next(reduced), tie(done, result), done))
           done(result);
       },
       context);
@@ -467,12 +368,12 @@ function averageOperator() {
 }
 
 function catchOperator(alternative) {
-  const regressor = isDefined(alternative)
-    ? adapt(alternative, true)
-    : (next, done) => done(false);
+  const regressor = isDefined(alternative) 
+    ? adapterSelector(alternative, scalarAdapter(alternative))
+    : emptyEmitter(false);
   return emitter => (next, done, context) => emitter(
     next,
-    result => isError$1(result)
+    result => isError(result)
       ? regressor(next, done, context)
       : done(result),
     context);
@@ -536,7 +437,7 @@ function dumpToConsoleOperator(prefix) {
       return next(result);
     },
     result => {
-      console[isError$1(result) ? 'error' : 'log'](prefix + 'done', result);
+      console[isError(result) ? 'error' : 'log'](prefix + 'done', result);
       done(result);
     },
     context);
@@ -591,7 +492,7 @@ function everyOperator(condition) {
         return false;
       },
       result => {
-        if (isError$1(result) || !unsync(next(every || empty), done, done)) done(result);
+        if (isError(result) || !unsync(next(every || empty), done, done)) done(result);
       },
       context);
   };
@@ -629,7 +530,7 @@ function flattenOperator(depth) {
     let level = 0;
     const flatten = result => {
       if (level === depth) return next(result);
-      const adapter = adapt(result, false);
+      const adapter = adapterSelector(result);
       if (adapter) {
         level++;
         return new Promise(resolve => adapter(
@@ -671,7 +572,7 @@ function groupOperator(selectors) {
         return true;
       },
       result => {
-        if (isError$1(result)) done(result);
+        if (isError(result)) done(result);
         else iterableAdapter(groups)(next, tie(done, result), context);
       },
       context);
@@ -687,7 +588,7 @@ function toArrayOperator() {
         return true;
       },
       result => {
-        if (isError$1(result) || !unsync(next(array), tie(done, result), done)) done(result);
+        if (isError(result) || !unsync(next(array), tie(done, result), done)) done(result);
       },
       context);
   };
@@ -710,7 +611,7 @@ function mapOperator(mapping) {
 function joinOperator(right, condition) {
   const
     comparer = toFunction(condition, truthy),
-    toArray = toArrayOperator()(adapt(right, true));
+    toArray = toArrayOperator()(adapterSelector(right, scalarAdapter(right)));
   return emitter => (next, done, context) => toArray(
     rightArray => new Promise(rightResolve => emitter(
       leftResult => new Promise(leftResolve => {
@@ -756,9 +657,9 @@ function retryOperator(attempts) {
       emitter(next, retry, context);
     }
     function retry(result) {
-      if (++attempt <= attempts && isError$1(result)) proceed();
+      if (++attempt <= attempts && isError(result)) proceed();
       else done(result);
-    };
+    }
   }
 }
 
@@ -790,16 +691,20 @@ function skipFirstOperator(count) {
 }
 
 function skipLastOperator(count) {
-  return emitter => (next, done, context) => toArrayOperator()(emitter)(
-    result => result.length <= count || new Promise(resolve => {
-      let index = 0, limit = result.length - count;
-      !function proceed() {
-        while (!unsync(next(result[index++]), proceed, resolve) && index < limit);
-        resolve(true);
-      }();
-    }),
-    done,
-    context);
+  return emitter => (next, done, context) => {
+    let buffer = [];
+    emitter(
+      result => {
+        buffer.push(result);
+        return true;
+      },
+      result => {
+        if (isError(result)) done(result);
+        else if (count >= buffer.length) done(result);
+        else arrayAdapter(buffer.slice(0, -count))(next, done, context);
+      },
+      context)
+  };
 }
 
 function skipWhileOperator(predicate) {
@@ -888,7 +793,7 @@ function someOperator(condition) {
         return false;
       },
       result => {
-        if (isError$1(result) || !unsync(next(some), done, done)) done(result);
+        if (isError(result) || !unsync(next(some), done, done)) done(result);
       },
       context);
   };
@@ -897,7 +802,7 @@ function someOperator(condition) {
 function sortOperator(parameters) {
   const directions = [], selectors = [];
   let direction = 1;
-  for (var i = -1, l = parameters.length; ++i < l;) {
+  for (let i = -1, l = parameters.length; ++i < l;) {
     let parameter = parameters[i];
     switch (classOf(parameter)) {
       case FUNCTION:
@@ -956,17 +861,20 @@ function takeFirstOperator(count) {
 }
 
 function takeLastOperator(count) {
-  return emitter => (next, done, context) => toArrayOperator()(emitter)(
-    result => !result.length || new Promise(resolve => {
-      let limit = result.length, index = limit - count;
-      if (index < 0) index = 0;
-      !function proceed() {
-        while (!unsync(next(result[index++]), proceed, resolve) && index < limit);
-        resolve(true);
-      }();
-    }),
-    done, 
-    context);
+  return emitter => (next, done, context) => {
+    let buffer = [];
+    emitter(
+      result => {
+        if (buffer.length >= count) buffer.shift();
+        buffer.push(result);
+        return true;
+      },
+      result => {
+        if (isError(result)) done(result);
+        else arrayAdapter(buffer)(next, done, context);
+      },
+      context)
+  };
 }
 
 function takeWhileOperator(predicate) {
@@ -1032,7 +940,7 @@ function toMapOperator(keyTransformation, valueTransformation) {
         return true;
       },
       result => {
-        if (isError$1(result) || !unsync(next(map), tie(done, result), done)) done(result);
+        if (isError(result) || !unsync(next(map), tie(done, result), done)) done(result);
       },
       context);
   };
@@ -1047,7 +955,7 @@ function toSetOperator() {
         return true;
       },
       result => {
-        if (isError$1(result) || !unsync(next(set), tie(done, result), done)) done(result);
+        if (isError(result) || !unsync(next(set), tie(done, result), done)) done(result);
       },
       context);
   };
@@ -1066,7 +974,9 @@ function emit(next, done, context) {
   !function proceed(result) {
     if (result !== true || ++index >= context.sources.length) done(result);
     else try {
-      adapt(context.sources[index], true)(next, proceed, context);
+      const source = context.sources[index];
+      let adapter = adapterSelector(source, scalarAdapter(source));
+      adapter(next, proceed, context);
     }
     catch (err) {
       done(err);
@@ -1083,7 +993,8 @@ Data sources.
 @return {Flow}
 
 @property {object} adapters
-@property {operators} adapters
+@property {array} consumers
+@property {object} operators
 
 @example
 aeroflow().dump().run();
@@ -1105,9 +1016,12 @@ aeroflow(
 // next 7
 // next 8 // after 500ms
 // done true
+aeroflow(new Error('test')).dump().run();
+// done Error: test(…)
+// Uncaught (in promise) Error: test(…)
 aeroflow(() => { throw new Error }).dump().run();
-// done Error(…)
-// Uncaught Error
+// done Error: test(…)
+// Uncaught (in promise) Error: test(…)
 aeroflow("test").dump().run();
 // next test
 // done true
@@ -1140,31 +1054,21 @@ The new flow emitting values generated by emitter function.
 
 @example
 aeroflow.create((next, done, context) => {
-  next(1);
-  next(2);
+  next('test');
   done();
 }).dump().run();
-// next 1
-// next 2
+// next test
 // done true
+aeroflow.create((next, done, context) => {
+  window.addEventListener('click', next);
+  return () => window.removeEventListener('click', next);
+}).take(2).dump().run();
+// next MouseEvent {...}
+// next MouseEvent {...}
+// done false
 */
 function create(emitter) {
   return new Flow(customEmitter(emitter));
-}
-
-/**
-@alias aeroflow.error
-
-@param {string|error} [message]
-
-@return {Flow}
-
-@example
-aeroflow.error('test').run();
-// Uncaught Error: test
-*/
-function error(message) {
-  return new Flow(emptyEmitter(toError(message)));
 }
 
 /**
@@ -1218,20 +1122,17 @@ Creates new flow emitting infinite sequence of random numbers.
 The new flow emitting random numbers.
 
 @example
-aeroflow.random().take(3).dump().run();
+aeroflow.random().take(2).dump().run();
 // next 0.07417976693250232
 // next 0.5904422281309957
-// next 0.792132444214075
 // done false
-aeroflow.random(1, 9).take(3).dump().run();
+aeroflow.random(1, 9).take(2).dump().run();
 // next 7
 // next 2
-// next 8
 // done false
-aeroflow.random(1.1, 8.9).take(3).dump().run();
-next 4.398837305698544
+aeroflow.random(1.1, 8.9).take(2).dump().run();
+// next 4.398837305698544
 // next 2.287970747705549
-// next 3.430788825778291
 // done false
 */
 function random(minimum, maximum) {
@@ -1327,44 +1228,10 @@ function repeat(value, interval) {
 @property {array} sources
 */
 function Flow(emitter, sources) {
-  objectDefineProperties$1(this, {
+  objectDefineProperties(this, {
     emitter: { value: emitter },
     sources: { value: sources }
   });
-}
-
-/**
-Returns new flow emitting values from this flow first 
-and then from all provided sources in series.
-
-@alias Flow#average
-
-@param {any} [sources]
-Data sources to append to this flow.
-
-@return {Flow}
-New flow emitting all values emitted by this flow first
-and then all provided values.
-
-@example
-aeroflow(1).append(
-  2,
-  [3, 4],
-  () => 5,
-  Promise.resolve(6),
-  new Promise(resolve => setTimeout(() => resolve(7), 500))
-).dump().run();
-// next 1
-// next 2
-// next 3
-// next 4
-// next 5
-// next 6
-// next 7 // after 500ms
-// done
-*/
-function append(...sources) {
-  return new Flow(this.emitter, this.sources.concat(sources));
 }
 
 /**
@@ -1391,15 +1258,15 @@ function average() {
 @return {Flow}
 
 @example
-aeroflow().dump().bind(1, 2, 3).run();
+aeroflow().dump().bind().run();
+// done true
+aeroflow().dump().bind(1, 2).run();
 // next 1
 // next 2
-// next 3
 // done true
-aeroflow(1, 2, 3).dump().bind(4, 5, 6).run();
+aeroflow(1, 2).dump().bind(4, 5).run();
 // next 4
 // next 5
-// next 6
 // done true
 */
 function bind(...sources) {
@@ -1414,10 +1281,10 @@ function bind(...sources) {
 @return {Flow}
 
 @example
-aeroflow.error('error').catch().dump().run();
+aeroflow(new Error('test')).catch().dump().run();
 // done false
-aeroflow.error('error').dump('before ').catch('success').dump('after ').run();
-// before done Error: error(…)
+aeroflow(new Error('test')).dump('before ').catch('success').dump('after ').run();
+// before done Error: test(…)
 // after next success
 // after done true
 */
@@ -1434,6 +1301,40 @@ function catch_(alternative) {
 */
 function chain(operator) {
   return new Flow(operator(this.emitter), this.sources);
+}
+
+/**
+Returns new flow emitting values from this flow first 
+and then from all provided sources in series.
+
+@alias Flow#concat
+
+@param {any} [sources]
+Data sources to append to this flow.
+
+@return {Flow}
+New flow emitting all values emitted by this flow first
+and then all provided values.
+
+@example
+aeroflow(1).concat(
+  2,
+  [3, 4],
+  () => 5,
+  Promise.resolve(6),
+  new Promise(resolve => setTimeout(() => resolve(7), 500))
+).dump().run();
+// next 1
+// next 2
+// next 3
+// next 4
+// next 5
+// next 6
+// next 7 // after 500ms
+// done
+*/
+function concat(...sources) {
+  return new Flow(this.emitter, this.sources.concat(sources));
 }
 
 /**
@@ -1487,7 +1388,7 @@ aeroflow(1, 2).delay((value, index) => 500 + 500 * index).dump().run();
 // done true
 aeroflow(1, 2).delay(value => { throw new Error }).dump().run();
 // done Error(…)
-// Uncaught Error
+// Uncaught (in promise) Error: test(…)
 */
 function delay(interval) {
   return this.chain(delayOperator(interval));
@@ -1541,7 +1442,7 @@ aeroflow(1, 2).dump('test ', console.info.bind(console)).run();
 // test done true
 aeroflow(1, 2).dump(event => { if (event === 'next') throw new Error }).dump().run();
 // done Error(…)
-// Uncaught Error
+// Uncaught (in promise) Error: test(…)
 */
 function dump(prefix, logger) {
   return this.chain(dumpOperator(prefix, logger));
@@ -1572,7 +1473,7 @@ aeroflow(1, 2).every(value => value > 0).dump().run();
 // done true
 aeroflow(1, 2).every(value => { throw new Error }).dump().run();
 // done Error(…)
-// Uncaught Error
+// Uncaught (in promise) Error: test(…)
 */
 function every(condition) {
   return this.chain(everyOperator(condition));
@@ -1611,7 +1512,7 @@ aeroflow(1, 2, 3, 4, 5).filter(value => (value % 2) === 0).dump().run();
 // done true
 aeroflow(1, 2).filter(value => { throw new Error }).dump().run();
 // done Error: (…)
-// Uncaught Error
+// Uncaught (in promise) Error: test(…)
 */
 function filter(condition) {
   return this.chain(filterOperator(condition)); 
@@ -1810,37 +1711,6 @@ function min() {
 }
 
 /**
-Returns new flow emitting the emissions from all provided sources and then from this flow without interleaving them.
-
-@alias Flow#prepend
-
-@param {any[]} [sources]
-Values to prepend to this flow.
-
-@return {Flow}
-
-@example
-aeroflow(1).prepend(
-  2,
-  [3, 4],
-  () => 5,
-  Promise.resolve(6),
-  new Promise(resolve => setTimeout(() => resolve(7), 500))
-).dump().run();
-// next 2
-// next 3
-// next 4
-// next 5
-// next 6
-// next 7 // after 500ms
-// next 1
-// done
-*/
-function prepend(...sources) {
-  return new Flow(this.emitter, sources.concat(this.sources));
-}
-
-/**
 Applies a function against an accumulator and each value emitted by this flow to reduce it to a single value,
 returns new flow emitting reduced value.
 
@@ -1937,7 +1807,8 @@ Or data parameter.
 @param {function} [data]
 Arbitrary value passed to each callback invoked by this flow as the last argument.
 
-@return {Flow}
+@return {Promise}
+A promise resolving when this flow completes successfully or rejecting otherwise.
 
 @example
 aeroflow(1, 2, 3).run(
@@ -1952,18 +1823,35 @@ aeroflow(1, 2, 3).dump().run(() => false);
 // done false
 aeroflow(Promise.reject('test')).dump().run();
 // done Error: test(…)
-// Uncaught Error
-aeroflow(Promise.reject('test')).dump().run(() => {}, () => {});
-// done Error: test(…)
-window.addEventListener('next', event => console.log(event));
-window.addEventListener('done', event => console.log(event));
-aeroflow('test').run(window);
-// CustomEvent {detail: "test", type: "next", ...
-// CustomEvent {detail: "true", type: "done", ...
- */
-function run(...parameters) {
-  consume(this, parameters);
-  return this;
+// Uncaught (in promise) Error: test(…)
+*/
+function run(next, done, data) {
+  if (isFunction(next)) {
+    if (!isFunction(done)) {
+      data = done;
+      done = noop;
+    }
+  }
+  else {
+    data = next;
+    done = next = noop;
+  }
+  const context = objectDefineProperties({}, {
+    data: { value: data },
+    sources: { value: this.sources }
+  });
+  return new Promise((resolve, reject) => this.emitter(
+    result => false !== next(result, data),
+    result => {
+      try {
+        done(result, data);
+      }
+      catch (err) {
+        result = err;
+      }
+      (isError(result) ? reject : resolve)(result);
+    },
+    context));
 }
 
 /**
@@ -2062,7 +1950,7 @@ aeroflow(1, 2, 3).some(value => value % 2).dump().run();
 // done false
 aeroflow(1, 2, 3).some(value => { throw new Error }).dump().run();
 // done Error(…)
-// Uncaught Error
+// Uncaught (in promise) Error: test(…)
 */
 function some(condition) {
   return this.chain(someOperator(condition));
@@ -2309,18 +2197,16 @@ const operators = objectCreate(Object[PROTOTYPE], {
 
 Flow[PROTOTYPE] = objectCreate(operators, {
   [CLASS]: { value: AEROFLOW },
-  append: { value: append },
   bind: { value: bind },
   chain: { value: chain },
-  prepend: { value: prepend },
+  concat: { value: concat },
   run: { value: run }
 });
 
-objectDefineProperties$1(aeroflow, {
+objectDefineProperties(aeroflow, {
   adapters: { value: adapters },
   create: { value: create },
   empty: { enumerable: true, value: new Flow(emptyEmitter(true)) },
-  error: { value: error },
   expand: { value: expand },
   just: { value: just },
   operators: { value: operators },

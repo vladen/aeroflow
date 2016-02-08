@@ -1,6 +1,6 @@
 'use strict';
 
-import { Context } from '../context';
+import { objectDefineProperties } from '../utilites';
 
 export function flowAdapter(flow) {
   return (next, done, context) => flow.emitter(

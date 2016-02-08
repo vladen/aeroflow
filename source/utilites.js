@@ -5,7 +5,7 @@ import {
 } from './symbols';
 
 export const primitives = new Set([
-  BOOLEAN, DATE, ERROR, NULL, NUMBER, REGEXP, STRING, SYMBOL, UNDEFINED
+  BOOLEAN, NULL, NUMBER, REGEXP, STRING, SYMBOL, UNDEFINED
 ]);
 
 export const dateNow = Date.now;

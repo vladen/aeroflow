@@ -1,7 +1,5 @@
 'use strict';
 
-import { isError } from '../utilites';
-
 export function distinctOperator(untilChanged) {
   return emitter => untilChanged
     ? (next, done, context) => {

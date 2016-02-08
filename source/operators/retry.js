@@ -14,6 +14,6 @@ export function retryOperator(attempts) {
     function retry(result) {
       if (++attempt <= attempts && isError(result)) proceed();
       else done(result);
-    };
+    }
   }
 } 

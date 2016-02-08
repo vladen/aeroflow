@@ -1,10 +1,9 @@
 'use strict';
 
 import { FUNCTION, NUMBER } from '../symbols';
-import { classOf, falsey, identity, isBoolean, isPromise, mathMax } from '../utilites';
-import { unsync } from '../unsync';
+import { classOf, falsey, identity, isBoolean, isError, isPromise } from '../utilites';
 import { emptyEmitter } from '../emitters/empty';
-import { toArrayOperator } from './toArray';
+import { arrayAdapter } from '../adapters/array';
 
 export function takeFirstOperator(count) {
   return emitter => (next, done, context) => {
@@ -23,17 +22,20 @@ export function takeFirstOperator(count) {
 }
 
 export function takeLastOperator(count) {
-  return emitter => (next, done, context) => toArrayOperator()(emitter)(
-    result => !result.length || new Promise(resolve => {
-      let limit = result.length, index = limit - count;
-      if (index < 0) index = 0;
-      !function proceed() {
-        while (!unsync(next(result[index++]), proceed, resolve) && index < limit);
-        resolve(true);
-      }();
-    }),
-    done, 
-    context);
+  return emitter => (next, done, context) => {
+    let buffer = [];
+    emitter(
+      result => {
+        if (buffer.length >= count) buffer.shift();
+        buffer.push(result);
+        return true;
+      },
+      result => {
+        if (isError(result)) done(result);
+        else arrayAdapter(buffer)(next, done, context);
+      },
+      context)
+  };
 }
 
 export function takeWhileOperator(predicate) {
