@@ -701,7 +701,7 @@ aeroflow(1, 2, 3, 4).skip(skip).run(function (value) {
 });
 setImmediate(function () {
     actual.forEach(function (item, i) {
-        return assert.strictEqual(item, values[skip + i]);
+        return assert.strictEqual(item, expected[skip + i]);
     });
     done();
 });
