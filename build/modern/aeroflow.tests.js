@@ -481,7 +481,7 @@
                         });
                     });
 
-                    it('values passed as separate sources', () => {
+                    it('values passed as separate sources', (done) => {
                         let expected = [1, 2, 3, 4],
                             skip = 2,
                             actual = [];
@@ -490,7 +490,7 @@
                             .run(value => actual.push(value));
 
                         setImmediate(() => {
-                            actual.forEach((item, i) => assert.strictEqual(item, values[skip + i]));
+                            actual.forEach((item, i) => assert.strictEqual(item, expected[skip + i]));
                             done();
                         });
                     });

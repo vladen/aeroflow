@@ -495,7 +495,7 @@
                                 done();
                             });
                         });
-                        it('values passed as separate sources', function () {
+                        it('values passed as separate sources', function (done) {
                             var expected = [1, 2, 3, 4],
                                 skip = 2,
                                 actual = [];
@@ -504,7 +504,7 @@
                             });
                             setImmediate(function () {
                                 actual.forEach(function (item, i) {
-                                    return assert.strictEqual(item, values[skip + i]);
+                                    return assert.strictEqual(item, expected[skip + i]);
                                 });
                                 done();
                             });
