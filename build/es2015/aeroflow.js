@@ -1785,6 +1785,34 @@ function reduce(reducer, seed, optional) {
   return this.chain(reduceOperator(reducer, seed, optional));
 }
 
+/**
+@alias Flow#replay
+
+@param {number|function} delay
+@param {boolean} timing
+
+@return {Flow}
+
+@example
+aeroflow(1, 2).replay(1000).take(4).dump().run();
+// next 1
+// next 2
+// next 1 // after 1000ms
+// next 2
+// done false
+aeroflow(1, 2).delay(500).replay(1000).take(4).dump().run();
+// next 1
+// next 2 // after 500ms
+// next 1 // after 1000ms
+// next 2
+// done false
+aeroflow(1, 2).delay(500).replay(1000, true).take(4).dump().run();
+// next 1
+// next 2 // after 500ms
+// next 1 // after 1000ms
+// next 2 // after 500ms
+// done false
+*/
 function replay(delay, timing) {
   return this.chain(replayOperator(delay, timing));
 }
