@@ -56,24 +56,6 @@ aeroflow(number).toString().run(function (result) {
 });
 ```
 
-emits @strings concatenated via "," separator from a flow emitting @strings.
-
-```js
-var strings = ['a', 'b'];
-aeroflow(strings).toString().run(function (result) {
-  return done(assert.strictEqual(result, strings.join(',')));
-});
-```
-
-emits @numbers converted to strings and concatenated via "," separator from a flow emitting @numbers.
-
-```js
-var numbers = [100, 500];
-aeroflow(numbers).toString().run(function (result) {
-  return done(assert.strictEqual(result, numbers.join(',')));
-});
-```
-
 <a name="aeroflowtostring-true"></a>
 ## (true)
 emits nothing from an empty flow.

@@ -1155,20 +1155,21 @@
     var joiner = undefined;
 
     switch (classOf(separator)) {
-      case STRING:
-        joiner = constant(separator);
-        break;
-
       case FUNCTION:
         joiner = separator;
         break;
 
       case BOOLEAN:
         optional = separator;
+
+      case UNDEFINED:
+        separator = ',';
+
+      default:
+        joiner = constant(separator);
         break;
     }
 
-    if (!joiner) joiner = constant(',');
     return reduceOperator(function (string, result, index, data) {
       return string.length ? string + joiner(result, index, data) + result : '' + result;
     }, optional ? undefined : '');

@@ -982,17 +982,17 @@ function toSetOperator() {
 function toStringOperator(separator, optional) {
   let joiner;
   switch (classOf(separator)) {
-    case STRING:
-      joiner = constant(separator);
-      break;
     case FUNCTION:
       joiner = separator;
       break;
     case BOOLEAN:
       optional = separator;
+    case UNDEFINED:
+      separator = ',';
+    default:
+      joiner = constant(separator);
       break;
   }
-  if (!joiner) joiner = constant(',');
   return reduceOperator((string, result, index, data) =>
     string.length
       ? string + joiner(result, index, data) + result
@@ -2198,10 +2198,21 @@ function toSet() {
 }
 
 /**
+Returns new flow joining all values emitted by this flow into a string
+and emitting this string.
+
 @alias Flow#toString
 
-@param {string|function} [separator]
+@param {string|function|boolean} [separator]
+Optional. Specifies a string to separate each value emitted by this flow.
+The separator is converted to a string if necessary.
+If omitted, the array elements are separated with a comma.
+If separator is an empty string, all values are joined without any characters in between them.
+If separator is a boolean value, it is used instead a second parameter of this method.
 @param {boolean} [optional=true]
+Optional. Defines whether to emit an empty string value from empty flow or not.
+When true, an empty flow will emit 'done' event only.
+Otherwise an empty flow will emit 'next' event with an empty result and then 'done' event.
 
 @return {Flow}
 New flow emitting string representation of this flow.
