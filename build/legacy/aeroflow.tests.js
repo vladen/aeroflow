@@ -840,13 +840,264 @@
                     });
                 });
             });
+            describe('#bind()', function () {
+                it('is instance method', function () {
+                    return assert.isFunction(aeroflow.empty.bind);
+                });
+                it('returns instance of Aeroflow', function () {
+                    return assert.typeOf(aeroflow().bind(), 'Aeroflow');
+                });
+                it('does not invoke if no arguments passed', function (done) {
+                    var invoked = false;
+                    aeroflow(1, 2).bind().run(function (value) {
+                        return invoked = true;
+                    });
+                    setImmediate(function () {
+                        return done(assert.isFalse(invoked));
+                    });
+                });
+            });
+            describe('#bind(@sources)', function () {
+                it('emitting binded values', function (done) {
+                    var _aeroflow;
+
+                    var initialSources = [1, 2, 3],
+                        bindedSources = [7, 8],
+                        actual = [];
+
+                    (_aeroflow = aeroflow.apply(undefined, initialSources)).bind.apply(_aeroflow, bindedSources).run(function (value) {
+                        return actual.push(value);
+                    });
+
+                    setImmediate(function () {
+                        return done(assert.sameMembers(actual, bindedSources));
+                    });
+                });
+            });
+            describe('#concat()', function () {
+                it('is instance method', function () {
+                    return assert.isFunction(aeroflow.empty.concat);
+                });
+                it('returns instance of Aeroflow', function () {
+                    return assert.typeOf(aeroflow().concat(), 'Aeroflow');
+                });
+                it('emitting same values if no arguments passed', function (done) {
+                    var sources = [1, 2],
+                        actual = [];
+                    aeroflow(sources).concat().run(function (value) {
+                        return actual.push(value);
+                    });
+                    setImmediate(function () {
+                        return done(assert.sameMembers(actual, sources));
+                    });
+                });
+            });
+            describe('#concat(@sources)', function () {
+                it('emitting initial values with concatenated as one flow', function (done) {
+                    var sources = ['a', 1, new Date()],
+                        additional = [3, 4],
+                        actual = [];
+                    aeroflow.apply(undefined, sources).concat(additional).run(function (value) {
+                        return actual.push(value);
+                    });
+                    setImmediate(function () {
+                        return done(assert.sameMembers(actual, sources.concat(additional)));
+                    });
+                });
+            });
+            describe('#every()', function () {
+                it('is instance method', function () {
+                    return assert.isFunction(aeroflow.empty.every);
+                });
+                it('returns instance of Aeroflow', function () {
+                    return assert.typeOf(aeroflow().every(), 'Aeroflow');
+                });
+                it('emitting true if no arguments passed', function (done) {
+                    var actual = undefined;
+                    aeroflow(1, 2).every().run(function (value) {
+                        return actual = value;
+                    });
+                    setImmediate(function () {
+                        return done(assert.isTrue(actual));
+                    });
+                });
+            });
+            describe('#every(@Function)', function () {
+                it('emitting a result of matching provided function to all sources', function (done) {
+                    var sources = [2, 4, 6, 8, 12, 14],
+                        isEven = function isEven(value) {
+                        return value % 2 === 0;
+                    },
+                        expected = sources.every(isEven),
+                        actual = undefined;
+
+                    aeroflow(sources).every(isEven).run(function (value) {
+                        return actual = value;
+                    });
+                    setImmediate(function () {
+                        return done(assert.strictEqual(actual, expected));
+                    });
+                });
+            });
+            describe('#every(@RegExp)', function () {
+                it('emitting a result of matching provided RegExp to all sources', function (done) {
+                    var sources = ['a', 'b', '6'],
+                        reqexp = /^([a-z0-9])$/,
+                        expected = sources.every(function (item) {
+                        return reqexp.test(item);
+                    }),
+                        actual = undefined;
+                    aeroflow(sources).every(reqexp).run(function (value) {
+                        return actual = value;
+                    });
+                    setImmediate(function () {
+                        return done(assert.strictEqual(actual, expected));
+                    });
+                });
+            });
+            describe('#every(@Primitive)', function () {
+                it('emitting result whether all sources equal to passed string', function (done) {
+                    var values = ['a', 'a'],
+                        every = values[0],
+                        expected = values.every(function (i) {
+                        return i === every;
+                    }),
+                        actual = undefined;
+                    aeroflow(values).every(every).run(function (value) {
+                        return actual = value;
+                    });
+                    setImmediate(function () {
+                        return done(assert.strictEqual(actual, expected));
+                    });
+                });
+                it('emitting result whether all sources equal to passed integer', function (done) {
+                    var values = [0, 1, 2, 3],
+                        every = values[0],
+                        expected = values.every(function (i) {
+                        return i === every;
+                    }),
+                        actual = undefined;
+                    aeroflow(values).every(every).run(function (value) {
+                        return actual = value;
+                    });
+                    setImmediate(function () {
+                        return done(assert.strictEqual(actual, expected));
+                    });
+                });
+            });
+            describe('#some()', function () {
+                it('is instance method', function () {
+                    return assert.isFunction(aeroflow.empty.some);
+                });
+                it('returns instance of Aeroflow', function () {
+                    return assert.typeOf(aeroflow().some(), 'Aeroflow');
+                });
+                it('emitting true if no arguments passed', function (done) {
+                    var actual = undefined;
+                    aeroflow(1, 2).some().run(function (value) {
+                        return actual = value;
+                    });
+                    setImmediate(function () {
+                        return done(assert.isTrue(actual));
+                    });
+                });
+            });
+            describe('#some(@Function)', function () {
+                it('emitting result if at least one source matches to provided function', function (done) {
+                    var sources = [3, 4, 5, 6],
+                        isEven = function isEven(value) {
+                        return value % 2 === 0;
+                    },
+                        expected = sources.filter(isEven).length !== 0,
+                        actual = undefined;
+
+                    aeroflow(sources).some(isEven).run(function (value) {
+                        return actual = value;
+                    });
+                    setImmediate(function () {
+                        return done(assert.strictEqual(actual, expected));
+                    });
+                });
+            });
+            describe('#some(@RegExp)', function () {
+                it('emitting result if at least one source matches to provided ReqExp', function (done) {
+                    var sources = ['*', 2, '6'],
+                        reqexp = /^([a-z0-9])$/,
+                        expected = sources.filter(function (item) {
+                        return reqexp.test(item);
+                    }).length !== 0,
+                        actual = undefined;
+                    aeroflow(sources).some(reqexp).run(function (value) {
+                        return actual = value;
+                    });
+                    setImmediate(function () {
+                        return done(assert.strictEqual(actual, expected));
+                    });
+                });
+            });
+            describe('#some(@Primitive)', function () {
+                it('emitting result whether at least one source equal to passed string', function (done) {
+                    var values = ['a', 'b'],
+                        some = values[0],
+                        expected = values.indexOf(some) >= 0,
+                        actual = undefined;
+                    aeroflow.apply(undefined, values).some(some).run(function (value) {
+                        return actual = value;
+                    });
+                    setImmediate(function () {
+                        return done(assert.strictEqual(actual, expected));
+                    });
+                });
+                it('emitting result whether at least one source equal to passed integer', function (done) {
+                    var values = [0, 1, 2, 3],
+                        some = values[0],
+                        expected = values.indexOf(some) >= 0,
+                        actual = undefined;
+                    aeroflow(values).some(some).run(function (value) {
+                        return actual = value;
+                    });
+                    setImmediate(function () {
+                        return done(assert.strictEqual(actual, expected));
+                    });
+                });
+            });
+            describe('#mean()', function () {
+                it('is instance method', function () {
+                    return assert.isFunction(aeroflow.empty.mean);
+                });
+                it('returns instance of Aeroflow', function () {
+                    return assert.typeOf(aeroflow().mean(), 'Aeroflow');
+                });
+                it('emitting mean value of flow with integers', function (done) {
+                    var sources = [3, 4, 6, 7],
+                        expected = 6,
+                        actual = undefined;
+                    aeroflow.apply(undefined, sources).mean().run(function (value) {
+                        return actual = value;
+                    });
+                    setImmediate(function () {
+                        return done(assert.strictEqual(actual, expected));
+                    });
+                });
+                it('emitting mean value of flow with strings', function (done) {
+                    var sources = ['a', 'b', 'c'],
+                        expected = 'b',
+                        actual = undefined;
+                    aeroflow.apply(undefined, sources).mean().run(function (value) {
+                        return actual = value;
+                    });
+                    setImmediate(function () {
+                        return done(assert.strictEqual(actual, expected));
+                    });
+                });
+            });
         });
     };
 
-    var aeroflow = function aeroflow(_aeroflow, assert) {
-        factoryTests(_aeroflow, assert);
-        staticMethodsTests(_aeroflow, assert);
-        instanceTests(_aeroflow, assert);
+    var aeroflow = function aeroflow(_aeroflow2, assert) {
+        factoryTests(_aeroflow2, assert);
+        staticMethodsTests(_aeroflow2, assert);
+        instanceTests(_aeroflow2, assert);
     };
 
     exports.default = aeroflow;

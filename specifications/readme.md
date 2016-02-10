@@ -48,6 +48,19 @@
      - [#average()](#aeroflow-average)
      - [#count()](#aeroflow-count)
      - [#sum()](#aeroflow-sum)
+     - [#bind()](#aeroflow-bind)
+     - [#bind(@sources)](#aeroflow-bindsources)
+     - [#concat()](#aeroflow-concat)
+     - [#concat(@sources)](#aeroflow-concatsources)
+     - [#every()](#aeroflow-every)
+     - [#every(@Function)](#aeroflow-everyfunction)
+     - [#every(@RegExp)](#aeroflow-everyregexp)
+     - [#every(@Primitive)](#aeroflow-everyprimitive)
+     - [#some()](#aeroflow-some)
+     - [#some(@Function)](#aeroflow-somefunction)
+     - [#some(@RegExp)](#aeroflow-someregexp)
+     - [#some(@Primitive)](#aeroflow-someprimitive)
+     - [#mean()](#aeroflow-mean)
 <a name=""></a>
  
 <a name="aeroflow"></a>
@@ -1128,6 +1141,330 @@ var values = [1, 4, 7, 8],
 }, 0),
     actual = undefined;
 aeroflow.apply(undefined, values).sum().run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.strictEqual(actual, expected));
+});
+```
+
+<a name="aeroflow-bind"></a>
+## #bind()
+is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.bind);
+```
+
+returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow().bind(), 'Aeroflow');
+```
+
+does not invoke if no arguments passed.
+
+```js
+var invoked = false;
+aeroflow(1, 2).bind().run(function (value) {
+    return invoked = true;
+});
+setImmediate(function () {
+    return done(assert.isFalse(invoked));
+});
+```
+
+<a name="aeroflow-bindsources"></a>
+## #bind(@sources)
+emitting binded values.
+
+```js
+var _aeroflow;
+var initialSources = [1, 2, 3],
+    bindedSources = [7, 8],
+    actual = [];
+(_aeroflow = aeroflow.apply(undefined, initialSources)).bind.apply(_aeroflow, bindedSources).run(function (value) {
+    return actual.push(value);
+});
+setImmediate(function () {
+    return done(assert.sameMembers(actual, bindedSources));
+});
+```
+
+<a name="aeroflow-concat"></a>
+## #concat()
+is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.concat);
+```
+
+returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow().concat(), 'Aeroflow');
+```
+
+emitting same values if no arguments passed.
+
+```js
+var sources = [1, 2],
+    actual = [];
+aeroflow(sources).concat().run(function (value) {
+    return actual.push(value);
+});
+setImmediate(function () {
+    return done(assert.sameMembers(actual, sources));
+});
+```
+
+<a name="aeroflow-concatsources"></a>
+## #concat(@sources)
+emitting initial values with concatenated as one flow.
+
+```js
+var sources = ['a', 1, new Date()],
+    additional = [3, 4],
+    actual = [];
+aeroflow.apply(undefined, sources).concat(additional).run(function (value) {
+    return actual.push(value);
+});
+setImmediate(function () {
+    return done(assert.sameMembers(actual, sources.concat(additional)));
+});
+```
+
+<a name="aeroflow-every"></a>
+## #every()
+is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.every);
+```
+
+returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow().every(), 'Aeroflow');
+```
+
+emitting true if no arguments passed.
+
+```js
+var actual = undefined;
+aeroflow(1, 2).every().run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.isTrue(actual));
+});
+```
+
+<a name="aeroflow-everyfunction"></a>
+## #every(@Function)
+emitting a result of matching provided function to all sources.
+
+```js
+var sources = [2, 4, 6, 8, 12, 14],
+    isEven = function isEven(value) {
+    return value % 2 === 0;
+},
+    expected = sources.every(isEven),
+    actual = undefined;
+aeroflow(sources).every(isEven).run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.strictEqual(actual, expected));
+});
+```
+
+<a name="aeroflow-everyregexp"></a>
+## #every(@RegExp)
+emitting a result of matching provided RegExp to all sources.
+
+```js
+var sources = ['a', 'b', '6'],
+    reqexp = /^([a-z0-9])$/,
+    expected = sources.every(function (item) {
+    return reqexp.test(item);
+}),
+    actual = undefined;
+aeroflow(sources).every(reqexp).run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.strictEqual(actual, expected));
+});
+```
+
+<a name="aeroflow-everyprimitive"></a>
+## #every(@Primitive)
+emitting result whether all sources equal to passed string.
+
+```js
+var values = ['a', 'a'],
+    every = values[0],
+    expected = values.every(function (i) {
+    return i === every;
+}),
+    actual = undefined;
+aeroflow(values).every(every).run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.strictEqual(actual, expected));
+});
+```
+
+emitting result whether all sources equal to passed integer.
+
+```js
+var values = [0, 1, 2, 3],
+    every = values[0],
+    expected = values.every(function (i) {
+    return i === every;
+}),
+    actual = undefined;
+aeroflow(values).every(every).run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.strictEqual(actual, expected));
+});
+```
+
+<a name="aeroflow-some"></a>
+## #some()
+is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.some);
+```
+
+returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow().some(), 'Aeroflow');
+```
+
+emitting true if no arguments passed.
+
+```js
+var actual = undefined;
+aeroflow(1, 2).some().run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.isTrue(actual));
+});
+```
+
+<a name="aeroflow-somefunction"></a>
+## #some(@Function)
+emitting result if at least one source matches to provided function.
+
+```js
+var sources = [3, 4, 5, 6],
+    isEven = function isEven(value) {
+    return value % 2 === 0;
+},
+    expected = sources.filter(isEven).length !== 0,
+    actual = undefined;
+aeroflow(sources).some(isEven).run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.strictEqual(actual, expected));
+});
+```
+
+<a name="aeroflow-someregexp"></a>
+## #some(@RegExp)
+emitting result if at least one source matches to provided ReqExp.
+
+```js
+var sources = ['*', 2, '6'],
+    reqexp = /^([a-z0-9])$/,
+    expected = sources.filter(function (item) {
+    return reqexp.test(item);
+}).length !== 0,
+    actual = undefined;
+aeroflow(sources).some(reqexp).run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.strictEqual(actual, expected));
+});
+```
+
+<a name="aeroflow-someprimitive"></a>
+## #some(@Primitive)
+emitting result whether at least one source equal to passed string.
+
+```js
+var values = ['a', 'b'],
+    some = values[0],
+    expected = values.indexOf(some) >= 0,
+    actual = undefined;
+aeroflow.apply(undefined, values).some(some).run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.strictEqual(actual, expected));
+});
+```
+
+emitting result whether at least one source equal to passed integer.
+
+```js
+var values = [0, 1, 2, 3],
+    some = values[0],
+    expected = values.indexOf(some) >= 0,
+    actual = undefined;
+aeroflow(values).some(some).run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.strictEqual(actual, expected));
+});
+```
+
+<a name="aeroflow-mean"></a>
+## #mean()
+is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.mean);
+```
+
+returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow().mean(), 'Aeroflow');
+```
+
+emitting mean value of flow with integers.
+
+```js
+var sources = [3, 4, 6, 7],
+    expected = 6,
+    actual = undefined;
+aeroflow.apply(undefined, sources).mean().run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.strictEqual(actual, expected));
+});
+```
+
+emitting mean value of flow with strings.
+
+```js
+var sources = ['a', 'b', 'c'],
+    expected = 'b',
+    actual = undefined;
+aeroflow.apply(undefined, sources).mean().run(function (value) {
     return actual = value;
 });
 setImmediate(function () {

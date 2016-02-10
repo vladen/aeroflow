@@ -421,7 +421,7 @@ var instanceTests = (aeroflow, assert) => describe('Aeroflow', () => {
         it('returns instance of Aeroflow', () =>
             assert.typeOf(aeroflow().max(), 'Aeroflow'));
 
-        it('emitting undefined if empty flow', (done) => {
+        it('emitting undefined if empty flow', done => {
             let invoked = false;
             aeroflow().max()
                     .run(value => invoked = true);
@@ -429,7 +429,7 @@ var instanceTests = (aeroflow, assert) => describe('Aeroflow', () => {
             setImmediate(() => done(assert.isFalse(invoked)));
         });
 
-        it('emitting valid result for non-empty flow', (done) => {
+        it('emitting valid result for non-empty flow', done => {
             let values = [1, 9, 2, 8, 3, 7, 4, 6, 5]
                 , expected = Math.max(...values)
                 , actual;
@@ -448,7 +448,7 @@ var instanceTests = (aeroflow, assert) => describe('Aeroflow', () => {
         it('returns instance of Aeroflow', () =>
             assert.typeOf(aeroflow().min(), 'Aeroflow'));
 
-        it('does not invoke if empty flow', (done) => {
+        it('does not invoke if empty flow', done => {
             let invoked = false;
             aeroflow.empty.min()
                     .run(value => invoked = true);
@@ -456,7 +456,7 @@ var instanceTests = (aeroflow, assert) => describe('Aeroflow', () => {
             setImmediate(() => done(assert.isFalse(invoked)));
         });
 
-        it('emitting valid result for non-empty flow', (done) => {
+        it('emitting valid result for non-empty flow', done => {
             let values = [1, 9, 2, 8, 3, 7, 4, 6, 5]
                 , expected = Math.min(...values)
                 , actual;
@@ -472,7 +472,7 @@ var instanceTests = (aeroflow, assert) => describe('Aeroflow', () => {
         it('is instance method', () =>
             assert.isFunction(aeroflow.empty.skip));
 
-        it('emitting undefined if called without param', (done) => {
+        it('emitting undefined if called without param', done => {
             let invoked = false;
             aeroflow([1, 2, 3, 4]).skip()
                     .run(value => invoked = true);
@@ -485,7 +485,7 @@ var instanceTests = (aeroflow, assert) => describe('Aeroflow', () => {
         it('returns instance of Aeroflow', () =>
             assert.typeOf(aeroflow().skip(1), 'Aeroflow'));
 
-        it('skips provided number of values from start', (done) => {
+        it('skips provided number of values from start', done => {
             let values = [1, 2, 3, 4],
                 skip = 2,
                 actual = [];
@@ -496,7 +496,7 @@ var instanceTests = (aeroflow, assert) => describe('Aeroflow', () => {
             setImmediate(() => done(assert.sameMembers(actual, values.slice(skip))));
         });
 
-        it('emitting values skipped provided number of values from end', (done) => {
+        it('emitting values skipped provided number of values from end', done => {
             let values = [1, 2, 3, 4]
                 , skip = 2
                 , actual = [];
@@ -509,7 +509,7 @@ var instanceTests = (aeroflow, assert) => describe('Aeroflow', () => {
     });
 
     describe('#skip(@Function)', () => {
-        it('emitting remained values when provided function returns false', (done) => {
+        it('emitting remained values when provided function returns false', done => {
             let values = [1, 2, 3, 4]
                 , skip = Math.floor(values.length / 2)
                 , limiter = (value, index) => index < skip
@@ -551,7 +551,7 @@ var instanceTests = (aeroflow, assert) => describe('Aeroflow', () => {
         it('returns instance of Aeroflow', () =>
             assert.typeOf(aeroflow().toArray(), 'Aeroflow'));
 
-        it('emitting empty Array if empty flow', (done) => {
+        it('emitting empty Array if empty flow', done => {
             let actual;
 
             aeroflow().toArray().run(value => actual = value);
@@ -584,7 +584,7 @@ var instanceTests = (aeroflow, assert) => describe('Aeroflow', () => {
         it('returns instance of Aeroflow', () =>
             assert.typeOf(aeroflow().toMap(), 'Aeroflow'));
 
-        it('emitting empty Map if empty flow', (done) => {
+        it('emitting empty Map if empty flow', done => {
             let actual;
 
             aeroflow().toMap().run(value => actual = value);
@@ -783,7 +783,7 @@ var instanceTests = (aeroflow, assert) => describe('Aeroflow', () => {
         it('returns instance of Aeroflow', () =>
             assert.typeOf(aeroflow().sum(), 'Aeroflow'));
 
-        it('does not invoke if empty flow', (done) => {
+        it('does not invoke if empty flow', done => {
             let invoked = false;
             aeroflow.empty.sum()
                     .run(value => invoked = true);
@@ -809,6 +809,224 @@ var instanceTests = (aeroflow, assert) => describe('Aeroflow', () => {
 
             setImmediate(() => done(assert.strictEqual(actual, expected)));
         });
+    });
+
+    describe('#bind()', () => {
+        it('is instance method', () =>
+            assert.isFunction(aeroflow.empty.bind));
+
+        it('returns instance of Aeroflow', () =>
+            assert.typeOf(aeroflow().bind(), 'Aeroflow'));
+
+        it('does not invoke if no arguments passed', done => {
+            let invoked = false;
+            aeroflow(1, 2).bind()
+                    .run(value => invoked = true);
+
+            setImmediate(() => done(assert.isFalse(invoked)));
+        });
+    });
+
+    describe('#bind(@sources)', () => {
+        it('emitting binded values', done => {
+            let initialSources = [1, 2, 3]
+                , bindedSources = [7, 8]
+                , actual = [];
+
+            aeroflow(...initialSources).bind(...bindedSources).run(value => actual.push(value));
+
+            setImmediate(() => done(assert.sameMembers(actual, bindedSources)));
+        });
+    });
+
+    describe('#concat()', () => {
+        it('is instance method', () =>
+            assert.isFunction(aeroflow.empty.concat));
+
+        it('returns instance of Aeroflow', () =>
+            assert.typeOf(aeroflow().concat(), 'Aeroflow'));
+
+        it('emitting same values if no arguments passed', done => {
+            let sources = [1, 2]
+                , actual = [];
+
+            aeroflow(sources).concat().run(value => actual.push(value));
+
+            setImmediate(() => done(assert.sameMembers(actual, sources)));
+        });
+    });
+
+    describe('#concat(@sources)', () => {
+        it('emitting initial values with concatenated as one flow', done => {
+            let sources = ['a', 1, new Date()]
+                , additional = [3, 4]
+                , actual = [];
+
+            aeroflow(...sources).concat(additional).run(value => actual.push(value));
+
+            setImmediate(() => done(assert.sameMembers(actual, sources.concat(additional))));
+        });
+    });
+
+    describe('#every()', () => {
+        it('is instance method', () =>
+            assert.isFunction(aeroflow.empty.every));
+
+        it('returns instance of Aeroflow', () =>
+            assert.typeOf(aeroflow().every(), 'Aeroflow'));
+
+        it('emitting true if no arguments passed', (done) => {
+            let actual;
+
+            aeroflow(1, 2).every().run(value => actual = value);
+
+            setImmediate(() => done(assert.isTrue(actual)));
+        });
+    });
+
+    describe('#every(@Function)', () => {
+        it('emitting a result of matching provided function to all sources', (done) => {
+            let sources = [2, 4, 6, 8, 12, 14]
+                , isEven = (value) => value % 2 === 0
+                , expected = sources.every(isEven)
+                , actual;
+
+            aeroflow(sources).every(isEven).run(value => actual = value);
+
+            setImmediate(() => done(assert.strictEqual(actual, expected)));
+        });
+    });
+
+    describe('#every(@RegExp)', () => {
+        it('emitting a result of matching provided RegExp to all sources', done => {
+            let sources = ['a', 'b', '6']
+                , reqexp = /^([a-z0-9])$/
+                , expected = sources.every(item => reqexp.test(item))
+                , actual;
+
+            aeroflow(sources).every(reqexp).run(value => actual = value);
+
+            setImmediate(() => done(assert.strictEqual(actual, expected)));
+        });
+    });
+
+    describe('#every(@Primitive)', () => {
+        it('emitting result whether all sources equal to passed string', done => {
+            let values = ['a', 'a']
+                , every = values[0]
+                , expected = values.every(i => i === every)
+                , actual;
+
+            aeroflow(values).every(every).run(value => actual = value);
+
+            setImmediate(() => done(assert.strictEqual(actual, expected)));
+        });
+
+        it('emitting result whether all sources equal to passed integer', done => {
+           let values = [0, 1, 2, 3]
+                , every = values[0]
+                , expected = values.every(i => i === every)
+                , actual;
+
+            aeroflow(values).every(every).run(value => actual = value);
+
+            setImmediate(() => done(assert.strictEqual(actual, expected)));
+        });
+    });
+
+    describe('#some()', () => {
+        it('is instance method', () =>
+            assert.isFunction(aeroflow.empty.some));
+
+        it('returns instance of Aeroflow', () =>
+            assert.typeOf(aeroflow().some(), 'Aeroflow'));
+
+        it('emitting true if no arguments passed', (done) => {
+            let actual;
+
+            aeroflow(1, 2).some().run(value => actual = value);
+
+            setImmediate(() => done(assert.isTrue(actual)));
+        });
+    });
+
+    describe('#some(@Function)', () => {
+        it('emitting result if at least one source matches to provided function', done => {
+            let sources = [3, 4, 5, 6]
+                , isEven = (value) => value % 2 === 0
+                , expected = sources.filter(isEven).length !== 0
+                , actual;
+
+            aeroflow(sources).some(isEven).run(value => actual = value);
+
+            setImmediate(() => done(assert.strictEqual(actual, expected)));
+        });
+    });
+
+    describe('#some(@RegExp)', () => {
+        it('emitting result if at least one source matches to provided ReqExp', done => {
+            let sources = ['*', 2, '6']
+                , reqexp = /^([a-z0-9])$/
+                , expected = sources.filter(item => reqexp.test(item)).length !== 0
+                , actual;
+
+            aeroflow(sources).some(reqexp).run(value => actual = value);
+
+            setImmediate(() => done(assert.strictEqual(actual, expected)));
+        });
+    });
+
+    describe('#some(@Primitive)', () => {
+        it('emitting result whether at least one source equal to passed string', done => {
+           let values = ['a', 'b']
+                , some = values[0]
+                , expected = values.indexOf(some) >= 0
+                , actual;
+
+            aeroflow(...values).some(some).run(value => actual = value);
+
+            setImmediate(() => done(assert.strictEqual(actual, expected)));
+        });
+
+        it('emitting result whether at least one source equal to passed integer', done => {
+            let values = [0, 1, 2, 3]
+                , some = values[0]
+                , expected = values.indexOf(some) >= 0
+                , actual;
+
+            aeroflow(values).some(some).run(value => actual = value);
+
+            setImmediate(() => done(assert.strictEqual(actual, expected)));
+        });
+    });
+
+    describe('#mean()', () => {
+        it('is instance method', () =>
+            assert.isFunction(aeroflow.empty.mean));
+
+        it('returns instance of Aeroflow', () =>
+            assert.typeOf(aeroflow().mean(), 'Aeroflow'));
+
+        it('emitting mean value of flow with integers', done => {
+            let sources = [3, 4, 6, 7]
+                , expected = 6
+                , actual;
+
+            aeroflow(...sources).mean().run(value => actual = value);
+
+            setImmediate(() => done(assert.strictEqual(actual, expected)));
+        });
+
+        it('emitting mean value of flow with strings', done => {
+            let sources = ['a', 'b', 'c']
+                , expected = 'b'
+                , actual;
+
+            aeroflow(...sources).mean().run(value => actual = value);
+
+            setImmediate(() => done(assert.strictEqual(actual, expected)));
+        });
+
     });
 });
 
