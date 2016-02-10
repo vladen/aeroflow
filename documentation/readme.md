@@ -265,7 +265,7 @@ aeroflow.repeat(index => index, index => 500 + 500 * index).take(3).dump().run()
     * [.toArray()](#Flow+toArray) ⇒ <code>[Flow](#Flow)</code>
     * [.toMap([keyTransformation], [valueTransformation])](#Flow+toMap) ⇒ <code>[Flow](#Flow)</code>
     * [.toSet()](#Flow+toSet) ⇒ <code>[Flow](#Flow)</code>
-    * [.toString([separator])](#Flow+toString) ⇒ <code>[Flow](#Flow)</code>
+    * [.toString([separator], [optional])](#Flow+toString) ⇒ <code>[Flow](#Flow)</code>
 
 <a name="Flow+average"></a>
 ### flow.average() ⇒ <code>[Flow](#Flow)</code>
@@ -683,7 +683,7 @@ returns new flow emitting reduced value.
   context.data.
   If is not a function, the returned flow will emit just reducer value.
 - seed <code>any</code> - Value to use as the first argument to the first call of the reducer.
-- optional <code>boolean</code>
+- optional <code>boolean</code> <code> = true</code>
 
 **Example**  
 ```js
@@ -1035,12 +1035,22 @@ aeroflow(1, 2, 3).toSet().dump().run();
 // done true
 ```
 <a name="Flow+toString"></a>
-### flow.toString([separator]) ⇒ <code>[Flow](#Flow)</code>
+### flow.toString([separator], [optional]) ⇒ <code>[Flow](#Flow)</code>
+Returns new flow joining all values emitted by this flow into a string
+and emitting this string.
+
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Returns**: <code>[Flow](#Flow)</code> - New flow emitting string representation of this flow.  
 **Params**
 
-- [separator] <code>string</code> | <code>function</code>
+- [separator] <code>string</code> | <code>function</code> | <code>boolean</code> - Optional. Specifies a string to separate each value emitted by this flow.
+The separator is converted to a string if necessary.
+If omitted, the array elements are separated with a comma.
+If separator is an empty string, all values are joined without any characters in between them.
+If separator is a boolean value, it is used instead a second parameter of this method.
+- [optional] <code>boolean</code> <code> = true</code> - Optional. Defines whether to emit an empty string value from empty flow or not.
+When true, an empty flow will emit 'done' event only.
+Otherwise an empty flow will emit 'next' event with an empty result and then 'done' event.
 
 **Example**  
 ```js

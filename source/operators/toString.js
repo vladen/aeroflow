@@ -1,12 +1,26 @@
 'use strict';
 
+import { BOOLEAN, FUNCTION, STRING } from '../symbols';
+import { classOf, constant, toFunction } from '../utilites';
 import { reduceOperator } from './reduce';
-import { constant, isUndefined, toFunction } from '../utilites';
 
-export function toStringOperator(separator) {
-  const joiner = isUndefined(separator)
-    ? constant(',')
-    : toFunction(separator, constant(separator));
+export function toStringOperator(separator, optional) {
+  let joiner;
+  switch (classOf(separator)) {
+    case BOOLEAN:
+      optional = separator;
+      break;
+    case FUNCTION:
+      joiner = separator;
+      break;
+    default:
+      joiner = constant(separator);
+      break;
+  }
+  if (!joiner) joiner = constant(',');
   return reduceOperator((string, result, index, data) =>
-    string + joiner(result, index, data) + result, undefined, false);
+    string.length
+      ? string + joiner(result, index, data) + result
+      : '' + result,
+    optional ? undefined : '');
 }

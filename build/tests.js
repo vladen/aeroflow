@@ -1,3 +1,5 @@
+'use strict';
+
 try {
   require('./modern/aeroflow.tests.js')(
     require('./modern')

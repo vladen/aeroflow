@@ -820,7 +820,7 @@ aeroflow(['a', 'b', 'c'])
 // next a0b1c2
 // done
 */
-function reduce(reducer, seed, optional) {
+function reduce(reducer, seed, optional = true) {
   return this.chain(reduceOperator(reducer, seed, optional));
 }
 
@@ -1243,9 +1243,21 @@ function toSet() {
 }
 
 /**
+Returns new flow joining all values emitted by this flow into a string
+and emitting this string.
+
 @alias Flow#toString
 
-@param {string|function} [separator]
+@param {string|function|boolean} [separator]
+Optional. Specifies a string to separate each value emitted by this flow.
+The separator is converted to a string if necessary.
+If omitted, the array elements are separated with a comma.
+If separator is an empty string, all values are joined without any characters in between them.
+If separator is a boolean value, it is used instead a second parameter of this method.
+@param {boolean} [optional=true]
+Optional. Defines whether to emit an empty string value from empty flow or not.
+When true, an empty flow will emit 'done' event only.
+Otherwise an empty flow will emit 'next' event with an empty result and then 'done' event.
 
 @return {Flow}
 New flow emitting string representation of this flow.
@@ -1267,8 +1279,8 @@ aeroflow(1, 2, 3).toString((value, index) => '-'.repeat(index + 1)).dump().run()
 // next 1--2---3
 // done true
 */
-function toString(separator) {
-  return this.chain(toStringOperator(separator)); 
+function toString(separator, optional) {
+  return this.chain(toStringOperator(separator, optional)); 
 }
 
 const operators = objectCreate(Object[PROTOTYPE], {

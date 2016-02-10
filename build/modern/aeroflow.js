@@ -340,32 +340,13 @@
     };
   }
 
-  function reduceOptionalOperator(reducer, seed) {
-    return emitter => (next, done, context) => {
-      let empty = true, index = 0, reduced = seed;
-      emitter(
-        result => {
-          empty = false;
-          reduced = reducer(reduced, result, index++, context.data);
-          return true;
-        },
-        result => {
-          if (isError(result) || empty || !unsync(next(reduced), tie(done, result), done))
-            done(result);
-        },
-        context);
-    };
-  }
-
-  function reduceOperator(reducer, seed, optional) {
+  function reduceOperator(reducer, seed) {
     return isUndefined(reducer)
       ? () => emptyEmitter(false)
       : isFunction(reducer)
         ? isUndefined(seed)
           ? reduceAlongOperator(reducer)
-          : optional
-            ? reduceOptionalOperator(reducer, seed)
-            : reduceGeneralOperator(reducer, seed)
+          : reduceGeneralOperator(reducer, seed)
         : () => scalarAdapter(reducer);
   }
 
@@ -1004,12 +985,25 @@
     };
   }
 
-  function toStringOperator(separator) {
-    const joiner = isUndefined(separator)
-      ? constant(',')
-      : toFunction(separator, constant(separator));
+  function toStringOperator(separator, optional) {
+    let joiner;
+    switch (classOf(separator)) {
+      case STRING:
+        joiner = constant(separator);
+        break;
+      case FUNCTION:
+        joiner = separator;
+        break;
+      case BOOLEAN:
+        optional = separator;
+        break;
+    }
+    if (!joiner) joiner = constant(',');
     return reduceOperator((string, result, index, data) =>
-      string + joiner(result, index, data) + result, undefined, false);
+      string.length
+        ? string + joiner(result, index, data) + result
+        : '' + result,
+      optional ? undefined : '');
   }
 
   function emit(next, done, context) {
@@ -1787,10 +1781,38 @@
   // next a0b1c2
   // done
   */
-  function reduce(reducer, seed, optional) {
+  function reduce(reducer, seed, optional = true) {
     return this.chain(reduceOperator(reducer, seed, optional));
   }
 
+  /**
+  @alias Flow#replay
+
+  @param {number|function} delay
+  @param {boolean} timing
+
+  @return {Flow}
+
+  @example
+  aeroflow(1, 2).replay(1000).take(4).dump().run();
+  // next 1
+  // next 2
+  // next 1 // after 1000ms
+  // next 2
+  // done false
+  aeroflow(1, 2).delay(500).replay(1000).take(4).dump().run();
+  // next 1
+  // next 2 // after 500ms
+  // next 1 // after 1000ms
+  // next 2
+  // done false
+  aeroflow(1, 2).delay(500).replay(1000, true).take(4).dump().run();
+  // next 1
+  // next 2 // after 500ms
+  // next 1 // after 1000ms
+  // next 2 // after 500ms
+  // done false
+  */
   function replay(delay, timing) {
     return this.chain(replayOperator(delay, timing));
   }
@@ -2185,6 +2207,7 @@
   @alias Flow#toString
 
   @param {string|function} [separator]
+  @param {boolean} [optional=true]
 
   @return {Flow}
   New flow emitting string representation of this flow.
@@ -2206,8 +2229,8 @@
   // next 1--2---3
   // done true
   */
-  function toString(separator) {
-    return this.chain(toStringOperator(separator)); 
+  function toString(separator, optional) {
+    return this.chain(toStringOperator(separator, optional)); 
   }
 
   const operators = objectCreate(Object[PROTOTYPE], {

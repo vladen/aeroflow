@@ -58,14 +58,12 @@ function reduceOptionalOperator(reducer, seed) {
   };
 }
 
-export function reduceOperator(reducer, seed, optional) {
+export function reduceOperator(reducer, seed) {
   return isUndefined(reducer)
     ? () => emptyEmitter(false)
     : isFunction(reducer)
       ? isUndefined(seed)
         ? reduceAlongOperator(reducer)
-        : optional
-          ? reduceOptionalOperator(reducer, seed)
-          : reduceGeneralOperator(reducer, seed)
+        : reduceGeneralOperator(reducer, seed)
       : () => scalarAdapter(reducer);
 }

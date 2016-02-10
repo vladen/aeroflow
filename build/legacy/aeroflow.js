@@ -446,27 +446,10 @@
     };
   }
 
-  function reduceOptionalOperator(reducer, seed) {
-    return function (emitter) {
-      return function (next, done, context) {
-        var empty = true,
-            index = 0,
-            reduced = seed;
-        emitter(function (result) {
-          empty = false;
-          reduced = reducer(reduced, result, index++, context.data);
-          return true;
-        }, function (result) {
-          if (isError(result) || empty || !unsync(next(reduced), tie(done, result), done)) done(result);
-        }, context);
-      };
-    };
-  }
-
-  function reduceOperator(reducer, seed, optional) {
+  function reduceOperator(reducer, seed) {
     return isUndefined(reducer) ? function () {
       return emptyEmitter(false);
-    } : isFunction(reducer) ? isUndefined(seed) ? reduceAlongOperator(reducer) : optional ? reduceOptionalOperator(reducer, seed) : reduceGeneralOperator(reducer, seed) : function () {
+    } : isFunction(reducer) ? isUndefined(seed) ? reduceAlongOperator(reducer) : reduceGeneralOperator(reducer, seed) : function () {
       return scalarAdapter(reducer);
     };
   }
@@ -1168,11 +1151,27 @@
     };
   }
 
-  function toStringOperator(separator) {
-    var joiner = isUndefined(separator) ? constant(',') : toFunction(separator, constant(separator));
+  function toStringOperator(separator, optional) {
+    var joiner = undefined;
+
+    switch (classOf(separator)) {
+      case STRING:
+        joiner = constant(separator);
+        break;
+
+      case FUNCTION:
+        joiner = separator;
+        break;
+
+      case BOOLEAN:
+        optional = separator;
+        break;
+    }
+
+    if (!joiner) joiner = constant(',');
     return reduceOperator(function (string, result, index, data) {
-      return string + joiner(result, index, data) + result;
-    }, undefined, false);
+      return string.length ? string + joiner(result, index, data) + result : '' + result;
+    }, optional ? undefined : '');
   }
 
   function emit(next, done, context) {
@@ -1315,7 +1314,8 @@
     return this.chain(minOperator());
   }
 
-  function reduce(reducer, seed, optional) {
+  function reduce(reducer, seed) {
+    var optional = arguments.length <= 2 || arguments[2] === undefined ? true : arguments[2];
     return this.chain(reduceOperator(reducer, seed, optional));
   }
 
@@ -1411,8 +1411,8 @@
     return this.chain(toSetOperator());
   }
 
-  function toString(separator) {
-    return this.chain(toStringOperator(separator));
+  function toString(separator, optional) {
+    return this.chain(toStringOperator(separator, optional));
   }
 
   var operators = objectCreate(Object[PROTOTYPE], {

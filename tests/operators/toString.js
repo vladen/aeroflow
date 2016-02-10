@@ -1,4 +1,4 @@
-var toStringOperatorTests = (aeroflow, assert) => describe('Aeroflow#toString', () => {
+export default (aeroflow, assert) => describe('Aeroflow#toString', () => {
   it('is instance method', () =>
     assert.isFunction(aeroflow.empty.toString));
 
@@ -60,14 +60,3 @@ var toStringOperatorTests = (aeroflow, assert) => describe('Aeroflow#toString', 
   });
 
 });
-
-const tests = [
-  // factoryTests,
-  // staticMethodsTests,
-  // instanceTests,
-  toStringOperatorTests
-];
-
-var aeroflow = (aeroflow, assert) => tests.forEach(test => test(aeroflow, assert));
-
-export default aeroflow;
