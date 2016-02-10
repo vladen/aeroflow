@@ -411,18 +411,31 @@
     return isDefined(interval) ? repeatDeferredEmitter(repeater, toFunction(interval, constant(interval))) : repeatImmediateEmitter(repeater);
   }
 
-  function reduceAlongOperator(reducer) {
+  function reduceOperator(reducer, seed, required) {
+    if (isUndefined(reducer)) return tie(emptyEmitter, false);
+    if (!isFunction(reducer)) return tie(scalarAdapter, reducer);
+
+    if (isUndefined(required) && isBoolean(seed)) {
+      required = seed;
+      seed = undefined;
+    }
+
     return function (emitter) {
       return function (next, done, context) {
-        var empty = true,
+        var empty = !required,
             index = 1,
-            reduced = undefined;
+            reduced = seed;
         emitter(function (result) {
           if (empty) {
             empty = false;
-            reduced = result;
-          } else reduced = reducer(reduced, result, index++, context.data);
 
+            if (isUndefined(reduced)) {
+              reduced = result;
+              return true;
+            }
+          }
+
+          reduced = reducer(reduced, result, index++, context.data);
           return true;
         }, function (result) {
           if (isError(result) || empty || !unsync(next(reduced), tie(done, result), done)) done(result);
@@ -431,30 +444,7 @@
     };
   }
 
-  function reduceGeneralOperator(reducer, seed) {
-    return function (emitter) {
-      return function (next, done, context) {
-        var index = 0,
-            reduced = seed;
-        emitter(function (result) {
-          reduced = reducer(reduced, result, index++, context.data);
-          return true;
-        }, function (result) {
-          if (isError(result) || !unsync(next(reduced), tie(done, result), done)) done(result);
-        }, context);
-      };
-    };
-  }
-
-  function reduceOperator(reducer, seed) {
-    return isUndefined(reducer) ? function () {
-      return emptyEmitter(false);
-    } : isFunction(reducer) ? isUndefined(seed) ? reduceAlongOperator(reducer) : reduceGeneralOperator(reducer, seed) : function () {
-      return scalarAdapter(reducer);
-    };
-  }
-
-  function averageOperator() {
+  function averageOperator(required) {
     return reduceOperator(function (average, result, index) {
       return (average * index + result) / (index + 1);
     });
@@ -474,7 +464,7 @@
   function countOperator() {
     return reduceOperator(function (count) {
       return count + 1;
-    }, 0);
+    }, 0, true);
   }
 
   function delayOperator(interval) {
@@ -750,7 +740,7 @@
     };
   }
 
-  function maxOperator(optional) {
+  function maxOperator(required) {
     return reduceOperator(function (maximum, result) {
       return maximum < result ? result : maximum;
     });
@@ -768,7 +758,7 @@
     };
   }
 
-  function minOperator(optional) {
+  function minOperator() {
     return reduceOperator(function (minimum, result) {
       return minimum > result ? result : minimum;
     });
@@ -1044,10 +1034,10 @@
     };
   }
 
-  function sumOperator() {
+  function sumOperator(required) {
     return reduceOperator(function (sum, result) {
       return +result + sum;
-    }, 0, true);
+    }, 0, required);
   }
 
   function takeFirstOperator(count) {
@@ -1151,7 +1141,7 @@
     };
   }
 
-  function toStringOperator(separator, optional) {
+  function toStringOperator(separator, required) {
     var joiner = undefined;
 
     switch (classOf(separator)) {
@@ -1160,7 +1150,7 @@
         break;
 
       case BOOLEAN:
-        optional = separator;
+        if (isUndefined(required)) required = separator;
 
       case UNDEFINED:
         separator = ',';
@@ -1172,7 +1162,7 @@
 
     return reduceOperator(function (string, result, index, data) {
       return string.length ? string + joiner(result, index, data) + result : '' + result;
-    }, optional ? undefined : '');
+    }, '', required);
   }
 
   function emit(next, done, context) {
@@ -1315,9 +1305,8 @@
     return this.chain(minOperator());
   }
 
-  function reduce(reducer, seed) {
-    var optional = arguments.length <= 2 || arguments[2] === undefined ? true : arguments[2];
-    return this.chain(reduceOperator(reducer, seed, optional));
+  function reduce(reducer, seed, required) {
+    return this.chain(reduceOperator(reducer, seed, required));
   }
 
   function replay(delay, timing) {
@@ -1388,8 +1377,8 @@
     return this.chain(sortOperator(parameters));
   }
 
-  function sum() {
-    return this.chain(sumOperator());
+  function sum(required) {
+    return this.chain(sumOperator(required));
   }
 
   function take(condition) {
@@ -1412,8 +1401,8 @@
     return this.chain(toSetOperator());
   }
 
-  function toString(separator, optional) {
-    return this.chain(toStringOperator(separator, optional));
+  function toString(separator, required) {
+    return this.chain(toStringOperator(separator, required));
   }
 
   var operators = objectCreate(Object[PROTOTYPE], {

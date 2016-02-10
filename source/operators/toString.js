@@ -1,10 +1,10 @@
 'use strict';
 
 import { BOOLEAN, FUNCTION, UNDEFINED } from '../symbols';
-import { classOf, constant, toFunction } from '../utilites';
+import { classOf, constant, isUndefined } from '../utilites';
 import { reduceOperator } from './reduce';
 
-export function toStringOperator(separator, optional) {
+export function toStringOperator(separator, required) {
   let joiner;
   /*eslint no-fallthrough: 0*/
   switch (classOf(separator)) {
@@ -12,7 +12,7 @@ export function toStringOperator(separator, optional) {
       joiner = separator;
       break;
     case BOOLEAN:
-      optional = separator;
+      if (isUndefined(required)) required = separator;
     case UNDEFINED:
       separator = ',';
     default:
@@ -23,5 +23,6 @@ export function toStringOperator(separator, optional) {
     string.length
       ? string + joiner(result, index, data) + result
       : '' + result,
-    optional ? undefined : '');
+    '',
+    required);
 }

@@ -250,7 +250,7 @@ aeroflow.repeat(index => index, index => 500 + 500 * index).take(3).dump().run()
     * [.max()](#Flow+max) ⇒ <code>[Flow](#Flow)</code>
     * [.mean()](#Flow+mean) ⇒ <code>[Flow](#Flow)</code>
     * [.min()](#Flow+min) ⇒ <code>[Flow](#Flow)</code>
-    * [.reduce(reducer, seed, optional)](#Flow+reduce) ⇒ <code>[Flow](#Flow)</code>
+    * [.reduce(reducer, [seed], [required])](#Flow+reduce) ⇒ <code>[Flow](#Flow)</code>
     * [.replay(delay, timing)](#Flow+replay) ⇒ <code>[Flow](#Flow)</code>
     * [.retry(attempts)](#Flow+retry) ⇒ <code>[Flow](#Flow)</code>
     * [.reverse()](#Flow+reverse) ⇒ <code>[Flow](#Flow)</code>
@@ -259,13 +259,13 @@ aeroflow.repeat(index => index, index => 500 + 500 * index).take(3).dump().run()
     * [.slice([begin], [end])](#Flow+slice) ⇒ <code>[Flow](#Flow)</code>
     * [.some([predicate])](#Flow+some) ⇒ <code>[Flow](#Flow)</code>
     * [.sort([...parameters])](#Flow+sort) ⇒ <code>[Flow](#Flow)</code> &#124; <code>[Flow](#Flow)</code>
-    * [.sum()](#Flow+sum) ⇒ <code>[Flow](#Flow)</code>
+    * [.sum([required])](#Flow+sum) ⇒ <code>[Flow](#Flow)</code>
     * [.take([condition])](#Flow+take) ⇒ <code>[Flow](#Flow)</code>
     * [.tap([callback])](#Flow+tap) ⇒ <code>[Flow](#Flow)</code>
     * [.toArray()](#Flow+toArray) ⇒ <code>[Flow](#Flow)</code>
     * [.toMap([keyTransformation], [valueTransformation])](#Flow+toMap) ⇒ <code>[Flow](#Flow)</code>
     * [.toSet()](#Flow+toSet) ⇒ <code>[Flow](#Flow)</code>
-    * [.toString([separator], [optional])](#Flow+toString) ⇒ <code>[Flow](#Flow)</code>
+    * [.toString([separator], [required])](#Flow+toString) ⇒ <code>[Flow](#Flow)</code>
 
 <a name="Flow+average"></a>
 ### flow.average() ⇒ <code>[Flow](#Flow)</code>
@@ -669,21 +669,26 @@ aeroflow('b', 'a', 'c').min().dump().run();
 // done true
 ```
 <a name="Flow+reduce"></a>
-### flow.reduce(reducer, seed, optional) ⇒ <code>[Flow](#Flow)</code>
-Applies a function against an accumulator and each value emitted by this flow to reduce it to a single value,
-returns new flow emitting reduced value.
+### flow.reduce(reducer, [seed], [required]) ⇒ <code>[Flow](#Flow)</code>
+Applies a function against an accumulator and each value emitted by this flow
+to reduce it to a single value, returns new flow emitting the reduced value.
 
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
+**Returns**: <code>[Flow](#Flow)</code> - New flow emitting reduced result only or no result at all if this flow is empty
+and the 'required' argument is false.  
 **Params**
 
 - reducer <code>function</code> | <code>any</code> - Function to execute on each emitted value, taking four arguments:
   result - the value previously returned in the last invocation of the reducer, or seed, if supplied;
   value - the current value emitted by this flow;
   index - the index of the current value emitted by the flow;
-  context.data.
-  If is not a function, the returned flow will emit just reducer value.
-- seed <code>any</code> - Value to use as the first argument to the first call of the reducer.
-- optional <code>boolean</code> <code> = true</code>
+  data - the data bound to current execution context.
+  If is not a function, the returned flow will emit just the reducer value.
+- [seed] <code>any</code> | <code>boolean</code> - Value to use as the first argument to the first call of the reducer.
+When boolean value is passed and no value defined for the 'required' argument,
+the 'seed' argument is considered to be omitted.
+- [required] <code>boolean</code> <code> = false</code> - True to emit reduced result always, even if this flow is empty.
+False to emit only 'done' event for empty flow.
 
 **Example**  
 ```js
@@ -692,8 +697,19 @@ aeroflow().reduce().dump().run();
 aeroflow().reduce('test').dump().run();
 // next test
 // done true
-aeroflow(2, 4, 8).reduce((product, value) => product * value, 1).dump().run();
+aeroflow().reduce((product, value) => product * value).dump().run();
+// done true
+aeroflow().reduce((product, value) => product * value, true).dump().run();
+// next undefined
+// done true
+aeroflow().reduce((product, value) => product * value, 1, true).dump().run();
+// next 1
+// done true
+aeroflow(2, 4, 8).reduce((product, value) => product * value).dump().run();
 // next 64
+// done
+aeroflow(2, 4, 8).reduce((product, value) => product * value, 2).dump().run();
+// next 128
 // done
 aeroflow(['a', 'b', 'c'])
   .reduce((product, value, index) => product + value + index, '')
@@ -922,8 +938,12 @@ aeroflow(
 // done true
 ```
 <a name="Flow+sum"></a>
-### flow.sum() ⇒ <code>[Flow](#Flow)</code>
+### flow.sum([required]) ⇒ <code>[Flow](#Flow)</code>
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
+**Params**
+
+- [required] <code>boolean</code> <code> = false</code>
+
 **Example**  
 ```js
 aeroflow().sum().dump().run();
@@ -1035,7 +1055,7 @@ aeroflow(1, 2, 3).toSet().dump().run();
 // done true
 ```
 <a name="Flow+toString"></a>
-### flow.toString([separator], [optional]) ⇒ <code>[Flow](#Flow)</code>
+### flow.toString([separator], [required]) ⇒ <code>[Flow](#Flow)</code>
 Returns new flow joining all values emitted by this flow into a string
 and emitting this string.
 
@@ -1048,13 +1068,15 @@ The separator is converted to a string if necessary.
 If omitted, the array elements are separated with a comma.
 If separator is an empty string, all values are joined without any characters in between them.
 If separator is a boolean value, it is used instead a second parameter of this method.
-- [optional] <code>boolean</code> <code> = true</code> - Optional. Defines whether to emit an empty string value from empty flow or not.
-When true, an empty flow will emit 'done' event only.
-Otherwise an empty flow will emit 'next' event with an empty result and then 'done' event.
+- [required] <code>boolean</code> <code> = false</code> - Optional. Defines whether to emit an empty string value from empty flow or not.
+When false (default), an empty flow will emit 'done' event only.
+When true, an empty flow will emit 'next' event with an empty result and then 'done' event.
 
 **Example**  
 ```js
 aeroflow().toString().dump().run();
+// done true
+aeroflow().toString(true).dump().run();
 // next
 // done true
 aeroflow('test').toString().dump().run();

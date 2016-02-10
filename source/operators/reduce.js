@@ -1,52 +1,28 @@
 'use strict';
 
-import { isError, isFunction, isUndefined, tie } from '../utilites';
+import { isError, isBoolean, isFunction, isUndefined, tie } from '../utilites';
 import { unsync } from '../unsync';
 import { scalarAdapter } from '../adapters/scalar';
 import { emptyEmitter } from '../emitters/empty';
 
-function reduceAlongOperator(reducer) {
+export function reduceOperator(reducer, seed, required) {
+  if (isUndefined(reducer)) return tie(emptyEmitter, false);
+  if (!isFunction(reducer)) return tie(scalarAdapter, reducer);
+  if (isUndefined(required) && isBoolean(seed)) {
+    required = seed;
+    seed = undefined;
+  }
   return emitter => (next, done, context) => {
-    let empty = true, index = 1, reduced;
+    let empty = !required, index = 1, reduced = seed;
     emitter(
       result => {
         if (empty) {
           empty = false;
-          reduced = result;
+          if (isUndefined(reduced)) {
+            reduced = result;
+            return true;
+          }
         }
-        else reduced = reducer(reduced, result, index++, context.data);
-        return true;
-      },
-      result => {
-        if (isError(result) || empty || !unsync(next(reduced), tie(done, result), done))
-          done(result);
-      },
-      context);
-  };
-}
-
-function reduceGeneralOperator(reducer, seed) {
-  return emitter => (next, done, context) => {
-    let index = 0, reduced = seed;
-    emitter(
-      result => {
-        reduced = reducer(reduced, result, index++, context.data)
-        return true;
-      },
-      result => {
-        if (isError(result) || !unsync(next(reduced), tie(done, result), done))
-          done(result);
-      },
-      context);
-  };
-}
-
-function reduceOptionalOperator(reducer, seed) {
-  return emitter => (next, done, context) => {
-    let empty = true, index = 0, reduced = seed;
-    emitter(
-      result => {
-        empty = false;
         reduced = reducer(reduced, result, index++, context.data);
         return true;
       },
@@ -56,14 +32,4 @@ function reduceOptionalOperator(reducer, seed) {
       },
       context);
   };
-}
-
-export function reduceOperator(reducer, seed) {
-  return isUndefined(reducer)
-    ? () => emptyEmitter(false)
-    : isFunction(reducer)
-      ? isUndefined(seed)
-        ? reduceAlongOperator(reducer)
-        : reduceGeneralOperator(reducer, seed)
-      : () => scalarAdapter(reducer);
 }

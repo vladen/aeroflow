@@ -787,8 +787,8 @@ function min() {
 }
 
 /**
-Applies a function against an accumulator and each value emitted by this flow to reduce it to a single value,
-returns new flow emitting reduced value.
+Applies a function against an accumulator and each value emitted by this flow
+to reduce it to a single value, returns new flow emitting the reduced value.
 
 @alias Flow#reduce
 
@@ -797,13 +797,19 @@ Function to execute on each emitted value, taking four arguments:
   result - the value previously returned in the last invocation of the reducer, or seed, if supplied;
   value - the current value emitted by this flow;
   index - the index of the current value emitted by the flow;
-  context.data.
-  If is not a function, the returned flow will emit just reducer value.
-@param {any} seed
+  data - the data bound to current execution context.
+  If is not a function, the returned flow will emit just the reducer value.
+@param {any|boolean} [seed]
 Value to use as the first argument to the first call of the reducer.
-@param {boolean} optional
+When boolean value is passed and no value defined for the 'required' argument,
+the 'seed' argument is considered to be omitted.
+@param {boolean} [required=false]
+True to emit reduced result always, even if this flow is empty.
+False to emit only 'done' event for empty flow.
 
 @return {Flow}
+New flow emitting reduced result only or no result at all if this flow is empty
+and the 'required' argument is false.
 
 @example
 aeroflow().reduce().dump().run();
@@ -811,8 +817,19 @@ aeroflow().reduce().dump().run();
 aeroflow().reduce('test').dump().run();
 // next test
 // done true
-aeroflow(2, 4, 8).reduce((product, value) => product * value, 1).dump().run();
+aeroflow().reduce((product, value) => product * value).dump().run();
+// done true
+aeroflow().reduce((product, value) => product * value, true).dump().run();
+// next undefined
+// done true
+aeroflow().reduce((product, value) => product * value, 1, true).dump().run();
+// next 1
+// done true
+aeroflow(2, 4, 8).reduce((product, value) => product * value).dump().run();
 // next 64
+// done
+aeroflow(2, 4, 8).reduce((product, value) => product * value, 2).dump().run();
+// next 128
 // done
 aeroflow(['a', 'b', 'c'])
   .reduce((product, value, index) => product + value + index, '')
@@ -820,8 +837,8 @@ aeroflow(['a', 'b', 'c'])
 // next a0b1c2
 // done
 */
-function reduce(reducer, seed, optional = true) {
-  return this.chain(reduceOperator(reducer, seed, optional));
+function reduce(reducer, seed, required) {
+  return this.chain(reduceOperator(reducer, seed, required));
 }
 
 /**
@@ -1105,6 +1122,8 @@ function sort(...parameters) {
 /**
 @alias Flow#sum
 
+@param {boolean} [required=false]
+
 @return {Flow}
 
 @example
@@ -1117,8 +1136,8 @@ aeroflow(1, 2, 3).sum().dump().run();
 // next 6
 // done true
 */
-function sum() {
-  return this.chain(sumOperator());
+function sum(required) {
+  return this.chain(sumOperator(required));
 }
 
 /**
@@ -1254,16 +1273,18 @@ The separator is converted to a string if necessary.
 If omitted, the array elements are separated with a comma.
 If separator is an empty string, all values are joined without any characters in between them.
 If separator is a boolean value, it is used instead a second parameter of this method.
-@param {boolean} [optional=true]
+@param {boolean} [required=false]
 Optional. Defines whether to emit an empty string value from empty flow or not.
-When true, an empty flow will emit 'done' event only.
-Otherwise an empty flow will emit 'next' event with an empty result and then 'done' event.
+When false (default), an empty flow will emit 'done' event only.
+When true, an empty flow will emit 'next' event with an empty result and then 'done' event.
 
 @return {Flow}
 New flow emitting string representation of this flow.
 
 @example
 aeroflow().toString().dump().run();
+// done true
+aeroflow().toString(true).dump().run();
 // next
 // done true
 aeroflow('test').toString().dump().run();
@@ -1279,8 +1300,8 @@ aeroflow(1, 2, 3).toString((value, index) => '-'.repeat(index + 1)).dump().run()
 // next 1--2---3
 // done true
 */
-function toString(separator, optional) {
-  return this.chain(toStringOperator(separator, optional)); 
+function toString(separator, required) {
+  return this.chain(toStringOperator(separator, required)); 
 }
 
 const operators = objectCreate(Object[PROTOTYPE], {

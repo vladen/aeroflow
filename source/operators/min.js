@@ -2,6 +2,6 @@
 
 import { reduceOperator } from './reduce';
 
-export function minOperator(optional) {
+export function minOperator() {
   return reduceOperator((minimum, result) => minimum > result ? result : minimum);
 }
