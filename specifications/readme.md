@@ -34,20 +34,33 @@
        - [@function](#aeroflow-repeatfunction-function)
    - [Aeroflow](#aeroflow)
      - [#max()](#aeroflow-max)
+     - [#min()](#aeroflow-min)
      - [#skip()](#aeroflow-skip)
      - [#skip(@Number)](#aeroflow-skipnumber)
-       - [@Number](#aeroflow-skipnumber-number)
-         - [skipps provided number of values from start](#aeroflow-skipnumber-number-skipps-provided-number-of-values-from-start)
      - [#skip(@Function)](#aeroflow-skipfunction)
-       - [@Function](#aeroflow-skipfunction-function)
      - [#tap()](#aeroflow-tap)
      - [#tap(@Function)](#aeroflow-tapfunction)
-       - [@Function](#aeroflow-tapfunction-function)
      - [#toArray()](#aeroflow-toarray)
      - [#toMap()](#aeroflow-tomap)
+     - [#toSet()](#aeroflow-toset)
      - [#distinct()](#aeroflow-distinct)
      - [#distinct(@Boolean)](#aeroflow-distinctboolean)
-       - [@Boolean](#aeroflow-distinctboolean-boolean)
+     - [#average()](#aeroflow-average)
+     - [#count()](#aeroflow-count)
+     - [#sum()](#aeroflow-sum)
+     - [#bind()](#aeroflow-bind)
+     - [#bind(@sources)](#aeroflow-bindsources)
+     - [#concat()](#aeroflow-concat)
+     - [#concat(@sources)](#aeroflow-concatsources)
+     - [#every()](#aeroflow-every)
+     - [#every(@Function)](#aeroflow-everyfunction)
+     - [#every(@RegExp)](#aeroflow-everyregexp)
+     - [#every(@Primitive)](#aeroflow-everyprimitive)
+     - [#some()](#aeroflow-some)
+     - [#some(@Function)](#aeroflow-somefunction)
+     - [#some(@RegExp)](#aeroflow-someregexp)
+     - [#some(@Primitive)](#aeroflow-someprimitive)
+     - [#mean()](#aeroflow-mean)
 <a name=""></a>
  
 <a name="aeroflow"></a>
@@ -216,12 +229,12 @@ return assert.typeOf(aeroflow.empty, 'Aeroflow');
 emitting empty flow.
 
 ```js
-var result = undefined;
+var invoked = false;
 aeroflow.empty.run(function (value) {
-    return result = value;
+    return invoked = true;
 });
 setImmediate(function () {
-    return done(assert.isUndefined(result));
+    return done(assert.isFalse(invoked));
 });
 ```
 
@@ -289,12 +302,12 @@ return assert.typeOf(aeroflow.just(), 'Aeroflow');
 emitting empty flow.
 
 ```js
-var actual = undefined;
+var invoked = false;
 aeroflow.just().run(function (value) {
-    return value = actual;
+    return invoked = true;
 });
 setImmediate(function () {
-    assert.isUndefined(actual);
+    assert.isTrue(invoked);
     done();
 });
 ```
@@ -600,12 +613,12 @@ return assert.typeOf(aeroflow().max(), 'Aeroflow');
 emitting undefined if empty flow.
 
 ```js
-var actual = undefined;
+var invoked = false;
 aeroflow().max().run(function (value) {
-    return actual = value;
+    return invoked = true;
 });
 setImmediate(function () {
-    return done(assert.isUndefined(actual));
+    return done(assert.isFalse(invoked));
 });
 ```
 
@@ -624,6 +637,47 @@ setImmediate(function () {
 });
 ```
 
+<a name="aeroflow-min"></a>
+## #min()
+is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.min);
+```
+
+returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow().min(), 'Aeroflow');
+```
+
+does not invoke if empty flow.
+
+```js
+var invoked = false;
+aeroflow.empty.min().run(function (value) {
+    return invoked = true;
+});
+setImmediate(function () {
+    return done(assert.isFalse(invoked));
+});
+```
+
+emitting valid result for non-empty flow.
+
+```js
+var _Math2;
+var values = [1, 9, 2, 8, 3, 7, 4, 6, 5],
+    expected = (_Math2 = Math).min.apply(_Math2, values),
+    actual = undefined;
+aeroflow(values).min().run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.strictEqual(actual, expected));
+});
+```
+
 <a name="aeroflow-skip"></a>
 ## #skip()
 is instance method.
@@ -635,12 +689,12 @@ return assert.isFunction(aeroflow.empty.skip);
 emitting undefined if called without param.
 
 ```js
-var actual = undefined;
+var invoked = false;
 aeroflow([1, 2, 3, 4]).skip().run(function (value) {
-    return actual = value;
+    return invoked = true;
 });
 setImmediate(function () {
-    return done(assert.isUndefined(actual));
+    return done(assert.isFalse(invoked));
 });
 ```
 
@@ -649,11 +703,23 @@ setImmediate(function () {
 returns instance of Aeroflow.
 
 ```js
-return assert.typeOf(aeroflow([1, 2, 3, 4]).skip(), 'Aeroflow');
+return assert.typeOf(aeroflow().skip(1), 'Aeroflow');
 ```
 
-<a name="aeroflow-skipnumber-number"></a>
-### @Number
+skips provided number of values from start.
+
+```js
+var values = [1, 2, 3, 4],
+    skip = 2,
+    actual = [];
+aeroflow(values).skip(skip).run(function (value) {
+    return actual.push(value);
+});
+setImmediate(function () {
+    return done(assert.sameMembers(actual, values.slice(skip)));
+});
+```
+
 emitting values skipped provided number of values from end.
 
 ```js
@@ -664,53 +730,12 @@ aeroflow(values).skip(-skip).run(function (value) {
     return actual.push(value);
 });
 setImmediate(function () {
-    actual.forEach(function (item, i) {
-        return assert.strictEqual(item, values[i]);
-    });
-    done();
-});
-```
-
-<a name="aeroflow-skipnumber-number-skipps-provided-number-of-values-from-start"></a>
-#### skipps provided number of values from start
-values passed as single source.
-
-```js
-var values = [1, 2, 3, 4],
-    skip = 2,
-    actual = [];
-aeroflow(values).skip(skip).run(function (value) {
-    return actual.push(value);
-});
-setImmediate(function () {
-    actual.forEach(function (item, i) {
-        return assert.strictEqual(item, values[skip + i]);
-    });
-    done();
-});
-```
-
-values passed as separate sources.
-
-```js
-var expected = [1, 2, 3, 4],
-    skip = 2,
-    actual = [];
-aeroflow(1, 2, 3, 4).skip(skip).run(function (value) {
-    return actual.push(value);
-});
-setImmediate(function () {
-    actual.forEach(function (item, i) {
-        return assert.strictEqual(item, expected[skip + i]);
-    });
-    done();
+    return done(assert.sameMembers(actual, values.slice(0, skip)));
 });
 ```
 
 <a name="aeroflow-skipfunction"></a>
 ## #skip(@Function)
-<a name="aeroflow-skipfunction-function"></a>
-### @Function
 emitting remained values when provided function returns false.
 
 ```js
@@ -720,14 +745,11 @@ var values = [1, 2, 3, 4],
     return index < skip;
 },
     actual = [];
-aeroflow(values).skip(skip).run(function (value) {
+aeroflow(values).skip(limiter).run(function (value) {
     return actual.push(value);
 });
 setImmediate(function () {
-    actual.forEach(function (item, i) {
-        return assert.strictEqual(item, values[skip + i]);
-    });
-    done();
+    return done(assert.sameMembers(actual, values.slice(skip)));
 });
 ```
 
@@ -742,13 +764,11 @@ return assert.isFunction(aeroflow.empty.tap);
 returns instance of Aeroflow.
 
 ```js
-return assert.typeOf(aeroflow([1, 2, 3, 4]).tap(), 'Aeroflow');
+return assert.typeOf(aeroflow().tap(), 'Aeroflow');
 ```
 
 <a name="aeroflow-tapfunction"></a>
 ## #tap(@Function)
-<a name="aeroflow-tapfunction-function"></a>
-### @Function
 intercepts each emitted value.
 
 ```js
@@ -776,7 +796,21 @@ return assert.isFunction(aeroflow.empty.toArray);
 returns instance of Aeroflow.
 
 ```js
-return assert.typeOf(aeroflow([1, 2, 3, 4]).toArray(), 'Aeroflow');
+return assert.typeOf(aeroflow().toArray(), 'Aeroflow');
+```
+
+emitting empty Array if empty flow.
+
+```js
+var actual = undefined;
+aeroflow().toArray().run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    assert.isArray(actual);
+    assert.strictEqual(actual.length, 0);
+    done();
+});
 ```
 
 emitting single array containing all values.
@@ -805,7 +839,21 @@ return assert.isFunction(aeroflow.empty.toMap);
 returns instance of Aeroflow.
 
 ```js
-return assert.typeOf(aeroflow([1, 2, 3, 4]).toMap(), 'Aeroflow');
+return assert.typeOf(aeroflow().toMap(), 'Aeroflow');
+```
+
+emitting empty Map if empty flow.
+
+```js
+var actual = undefined;
+aeroflow().toMap().run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    assert.typeOf(actual, 'Map');
+    assert.strictEqual(actual.size, 0);
+    done();
+});
 ```
 
 emitting single map containing all values.
@@ -824,6 +872,50 @@ setImmediate(function () {
 });
 ```
 
+<a name="aeroflow-toset"></a>
+## #toSet()
+is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.toSet);
+```
+
+returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow().toSet(), 'Aeroflow');
+```
+
+emitting empty Set if empty flow.
+
+```js
+var actual = undefined;
+aeroflow().toSet().run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    assert.typeOf(actual, 'Set');
+    assert.strictEqual(actual.size, 0);
+    done();
+});
+```
+
+emitting single set containing all values.
+
+```js
+var expected = [0, 1, 2, 3],
+    actual = undefined;
+aeroflow.apply(undefined, expected.concat(expected)).toSet().run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    assert.typeOf(actual, 'Set');
+    assert.sameMembers(Array.from(actual.keys()), expected);
+    assert.sameMembers(Array.from(actual.values()), expected);
+    done();
+});
+```
+
 <a name="aeroflow-distinct"></a>
 ## #distinct()
 is instance method.
@@ -835,7 +927,7 @@ return assert.isFunction(aeroflow.empty.distinct);
 returns instance of Aeroflow.
 
 ```js
-return assert.typeOf(aeroflow([1, 2, 3, 4]).distinct(), 'Aeroflow');
+return assert.typeOf(aeroflow().distinct(), 'Aeroflow');
 ```
 
 emitting only unique values in sources with a same type.
@@ -887,8 +979,6 @@ setImmediate(function () {
 
 <a name="aeroflow-distinctboolean"></a>
 ## #distinct(@Boolean)
-<a name="aeroflow-distinctboolean-boolean"></a>
-### @Boolean
 emitting unique values until it changed if true passed.
 
 ```js
@@ -918,6 +1008,467 @@ setImmediate(function () {
     assert.strictEqual(actual.length, expected.length);
     assert.sameMembers(actual, expected);
     done();
+});
+```
+
+<a name="aeroflow-average"></a>
+## #average()
+is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.average);
+```
+
+returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow().average(), 'Aeroflow');
+```
+
+does not invoke if empty flow.
+
+```js
+var invoked = false;
+aeroflow().average().run(function (value) {
+    return invoked = true;
+});
+setImmediate(function () {
+    return done(assert.isFalse(invoked));
+});
+```
+
+emitting average value of array.
+
+```js
+var values = [1, 4, 7, 8],
+    expected = values.reduce(function (sum, next) {
+    return sum + next;
+}, 0) / values.length,
+    actual = undefined;
+aeroflow(values).average().run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.strictEqual(actual, expected));
+});
+```
+
+<a name="aeroflow-count"></a>
+## #count()
+is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.count);
+```
+
+returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow().count(), 'Aeroflow');
+```
+
+emitting 0 if empty flow.
+
+```js
+var actual = undefined;
+aeroflow.empty.count().run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.strictEqual(actual, 0));
+});
+```
+
+emitting the number of values in flow.
+
+```js
+var values = [[1, 2], new Map(), function () {}, 'a'],
+    expected = values.length,
+    actual = undefined;
+aeroflow.apply(undefined, values).count().run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.strictEqual(actual, expected));
+});
+```
+
+<a name="aeroflow-sum"></a>
+## #sum()
+is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.sum);
+```
+
+returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow().sum(), 'Aeroflow');
+```
+
+does not invoke if empty flow.
+
+```js
+var invoked = false;
+aeroflow.empty.sum().run(function (value) {
+    return invoked = true;
+});
+setImmediate(function () {
+    return done(assert.isFalse(invoked));
+});
+```
+
+emitting NaN if not integer passed.
+
+```js
+var values = [],
+    actual = false;
+aeroflow('test').sum().run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.isNotNumber(true));
+});
+```
+
+emitting sum of integer values.
+
+```js
+var values = [1, 4, 7, 8],
+    expected = values.reduce(function (sum, next) {
+    return sum + next;
+}, 0),
+    actual = undefined;
+aeroflow.apply(undefined, values).sum().run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.strictEqual(actual, expected));
+});
+```
+
+<a name="aeroflow-bind"></a>
+## #bind()
+is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.bind);
+```
+
+returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow().bind(), 'Aeroflow');
+```
+
+does not invoke if no arguments passed.
+
+```js
+var invoked = false;
+aeroflow(1, 2).bind().run(function (value) {
+    return invoked = true;
+});
+setImmediate(function () {
+    return done(assert.isFalse(invoked));
+});
+```
+
+<a name="aeroflow-bindsources"></a>
+## #bind(@sources)
+emitting binded values.
+
+```js
+var _aeroflow;
+var initialSources = [1, 2, 3],
+    bindedSources = [7, 8],
+    actual = [];
+(_aeroflow = aeroflow.apply(undefined, initialSources)).bind.apply(_aeroflow, bindedSources).run(function (value) {
+    return actual.push(value);
+});
+setImmediate(function () {
+    return done(assert.sameMembers(actual, bindedSources));
+});
+```
+
+<a name="aeroflow-concat"></a>
+## #concat()
+is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.concat);
+```
+
+returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow().concat(), 'Aeroflow');
+```
+
+emitting same values if no arguments passed.
+
+```js
+var sources = [1, 2],
+    actual = [];
+aeroflow(sources).concat().run(function (value) {
+    return actual.push(value);
+});
+setImmediate(function () {
+    return done(assert.sameMembers(actual, sources));
+});
+```
+
+<a name="aeroflow-concatsources"></a>
+## #concat(@sources)
+emitting initial values with concatenated as one flow.
+
+```js
+var sources = ['a', 1, new Date()],
+    additional = [3, 4],
+    actual = [];
+aeroflow.apply(undefined, sources).concat(additional).run(function (value) {
+    return actual.push(value);
+});
+setImmediate(function () {
+    return done(assert.sameMembers(actual, sources.concat(additional)));
+});
+```
+
+<a name="aeroflow-every"></a>
+## #every()
+is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.every);
+```
+
+returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow().every(), 'Aeroflow');
+```
+
+emitting true if no arguments passed.
+
+```js
+var actual = undefined;
+aeroflow(1, 2).every().run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.isTrue(actual));
+});
+```
+
+<a name="aeroflow-everyfunction"></a>
+## #every(@Function)
+emitting a result of matching provided function to all sources.
+
+```js
+var sources = [2, 4, 6, 8, 12, 14],
+    isEven = function isEven(value) {
+    return value % 2 === 0;
+},
+    expected = sources.every(isEven),
+    actual = undefined;
+aeroflow(sources).every(isEven).run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.strictEqual(actual, expected));
+});
+```
+
+<a name="aeroflow-everyregexp"></a>
+## #every(@RegExp)
+emitting a result of matching provided RegExp to all sources.
+
+```js
+var sources = ['a', 'b', '6'],
+    reqexp = /^([a-z0-9])$/,
+    expected = sources.every(function (item) {
+    return reqexp.test(item);
+}),
+    actual = undefined;
+aeroflow(sources).every(reqexp).run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.strictEqual(actual, expected));
+});
+```
+
+<a name="aeroflow-everyprimitive"></a>
+## #every(@Primitive)
+emitting result whether all sources equal to passed string.
+
+```js
+var values = ['a', 'a'],
+    every = values[0],
+    expected = values.every(function (i) {
+    return i === every;
+}),
+    actual = undefined;
+aeroflow(values).every(every).run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.strictEqual(actual, expected));
+});
+```
+
+emitting result whether all sources equal to passed integer.
+
+```js
+var values = [0, 1, 2, 3],
+    every = values[0],
+    expected = values.every(function (i) {
+    return i === every;
+}),
+    actual = undefined;
+aeroflow(values).every(every).run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.strictEqual(actual, expected));
+});
+```
+
+<a name="aeroflow-some"></a>
+## #some()
+is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.some);
+```
+
+returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow().some(), 'Aeroflow');
+```
+
+emitting true if no arguments passed.
+
+```js
+var actual = undefined;
+aeroflow(1, 2).some().run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.isTrue(actual));
+});
+```
+
+<a name="aeroflow-somefunction"></a>
+## #some(@Function)
+emitting result if at least one source matches to provided function.
+
+```js
+var sources = [3, 4, 5, 6],
+    isEven = function isEven(value) {
+    return value % 2 === 0;
+},
+    expected = sources.filter(isEven).length !== 0,
+    actual = undefined;
+aeroflow(sources).some(isEven).run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.strictEqual(actual, expected));
+});
+```
+
+<a name="aeroflow-someregexp"></a>
+## #some(@RegExp)
+emitting result if at least one source matches to provided ReqExp.
+
+```js
+var sources = ['*', 2, '6'],
+    reqexp = /^([a-z0-9])$/,
+    expected = sources.filter(function (item) {
+    return reqexp.test(item);
+}).length !== 0,
+    actual = undefined;
+aeroflow(sources).some(reqexp).run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.strictEqual(actual, expected));
+});
+```
+
+<a name="aeroflow-someprimitive"></a>
+## #some(@Primitive)
+emitting result whether at least one source equal to passed string.
+
+```js
+var values = ['a', 'b'],
+    some = values[0],
+    expected = values.indexOf(some) >= 0,
+    actual = undefined;
+aeroflow.apply(undefined, values).some(some).run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.strictEqual(actual, expected));
+});
+```
+
+emitting result whether at least one source equal to passed integer.
+
+```js
+var values = [0, 1, 2, 3],
+    some = values[0],
+    expected = values.indexOf(some) >= 0,
+    actual = undefined;
+aeroflow(values).some(some).run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.strictEqual(actual, expected));
+});
+```
+
+<a name="aeroflow-mean"></a>
+## #mean()
+is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.mean);
+```
+
+returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow().mean(), 'Aeroflow');
+```
+
+emitting mean value of flow with integers.
+
+```js
+var sources = [3, 4, 6, 7],
+    expected = 6,
+    actual = undefined;
+aeroflow.apply(undefined, sources).mean().run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.strictEqual(actual, expected));
+});
+```
+
+emitting mean value of flow with strings.
+
+```js
+var sources = ['a', 'b', 'c'],
+    expected = 'b',
+    actual = undefined;
+aeroflow.apply(undefined, sources).mean().run(function (value) {
+    return actual = value;
+});
+setImmediate(function () {
+    return done(assert.strictEqual(actual, expected));
 });
 ```
 

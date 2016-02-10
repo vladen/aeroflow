@@ -10,10 +10,10 @@ export default (aeroflow, assert) => describe('aeroflow', () => {
             assert.typeOf(aeroflow.empty, 'Aeroflow'));
 
         it('emitting empty flow', (done) => {
-            let result;
+            let invoked = false;
             aeroflow.empty
-                    .run(value => result = value);
-            setImmediate(() => done(assert.isUndefined(result)));
+                    .run(value => invoked = true);
+            setImmediate(() => done(assert.isFalse(invoked)));
         });
     });
 
@@ -60,13 +60,13 @@ export default (aeroflow, assert) => describe('aeroflow', () => {
             assert.typeOf(aeroflow.just(), 'Aeroflow'));
 
         it('emitting empty flow', (done) => {
-            let actual;
+            let invoked = false;
 
             aeroflow.just()
-                    .run(value => value = actual );
+                    .run(value => invoked = true );
 
             setImmediate(() => {
-                assert.isUndefined(actual);
+                assert.isTrue(invoked);
                 done();
             });
         });
