@@ -1,6 +1,6 @@
 'use strict';
 
-import { isError, isBoolean, isFunction, isUndefined, tie } from '../utilites';
+import { isError, isFunction, isUndefined, tie } from '../utilites';
 import { unsync } from '../unsync';
 import { scalarAdapter } from '../adapters/scalar';
 import { emptyGenerator } from '../generators/empty';

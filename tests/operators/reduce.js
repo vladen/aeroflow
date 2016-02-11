@@ -57,13 +57,14 @@ export default (aeroflow, assert) => describe('Aeroflow#reduce', () => {
     });
 
     it('passes zero-based index of iteration to @reducer as third argument', () => {
-      const values = [1, 2, 3, 4];
-      return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow(values).reduce((_, __, index) => index).run(done, fail)),
-        values.length - 2);
+      const values = [1, 2, 3, 4], expectation = values.length - 2;
+      return assert.isFulfilled(new Promise((done, fail) =>
+        aeroflow(values).reduce((_, __, index) => {
+          if (index === expectation) done();
+        }).run(fail, fail)));
     });
 
-    it('passes context data to @function as forth argument', () => {
+    it('passes context data to @reducer as forth argument', () => {
       const data = {};
       return assert.eventually.strictEqual(new Promise((done, fail) =>
         aeroflow(1, 2).reduce((_, __, ___, data) => done(data)).run(fail, fail, data)),

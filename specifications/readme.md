@@ -1,8 +1,17 @@
 # TOC
    - [Aeroflow#average](#aeroflowaverage)
      - [()](#aeroflowaverage-)
+   - [Aeroflow#catch](#aeroflowcatch)
+     - [()](#aeroflowcatch-)
+     - [(@alternative:function)](#aeroflowcatch-alternativefunction)
+     - [(@alternative:!function)](#aeroflowcatch-alternativefunction)
    - [Aeroflow#count](#aeroflowcount)
      - [()](#aeroflowcount-)
+   - [Aeroflow#filter](#aeroflowfilter)
+     - [()](#aeroflowfilter-)
+     - [(@condition:function)](#aeroflowfilter-conditionfunction)
+     - [(@condition:regex)](#aeroflowfilter-conditionregex)
+     - [(@condition:!function!regex)](#aeroflowfilter-conditionfunctionregex)
    - [Aeroflow#max](#aeroflowmax)
      - [()](#aeroflowmax-)
    - [Aeroflow#min](#aeroflowmin)
@@ -90,6 +99,86 @@ return assert.eventually.isNaN(new Promise(function (done, fail) {
 }));
 ```
 
+<a name="aeroflowcatch"></a>
+# Aeroflow#catch
+is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.catch);
+```
+
+<a name="aeroflowcatch-"></a>
+## ()
+returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow.empty.catch(), 'Aeroflow');
+```
+
+emits nothing when flow is empty.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow.empty.catch().run(fail, done);
+}));
+```
+
+supresses error emitted by flow.
+
+```js
+return assert.eventually.isBoolean(new Promise(function (done, fail) {
+  return aeroflow(new Error('test')).catch().run(fail, done);
+}));
+```
+
+<a name="aeroflowcatch-alternativefunction"></a>
+## (@alternative:function)
+does not call @alternative when flow is empty.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow.empty.catch(fail).run(fail, done);
+}));
+```
+
+does not call @alternative when flow does not emit error.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow(1).catch(fail).run(done, fail);
+}));
+```
+
+calls @alternative when flow emits error.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow(new Error('tests')).catch(done).run(fail, fail);
+}));
+```
+
+emits value returned by @alternative when flow emits error.
+
+```js
+var alternative = 'caught';
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow(new Error('test')).catch(function () {
+    return alternative;
+  }).run(done, fail);
+}), alternative);
+```
+
+<a name="aeroflowcatch-alternativefunction"></a>
+## (@alternative:!function)
+emits @alternative value when flow emits error.
+
+```js
+var alternative = 'caught';
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow(new Error('test')).catch(alternative).run(done, fail);
+}), alternative);
+```
+
 <a name="aeroflowcount"></a>
 # Aeroflow#count
 is instance method.
@@ -131,6 +220,135 @@ var values = [1, 2, 3],
     expectation = values.length;
 return assert.eventually.strictEqual(new Promise(function (done, fail) {
   return aeroflow(values).count().run(done, fail);
+}), expectation);
+```
+
+<a name="aeroflowfilter"></a>
+# Aeroflow#filter
+is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.filter);
+```
+
+<a name="aeroflowfilter-"></a>
+## ()
+returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow.empty.filter(), 'Aeroflow');
+```
+
+emits nothing when flow is empty.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow.empty.filter().run(fail, done);
+}));
+```
+
+emits only truthy values.
+
+```js
+var values = [false, true, 0, 1, undefined, null, 'test'],
+    expectation = values.filter(function (value) {
+  return value;
+});
+assert.eventually.includeMembers(new Promise(function (done, fail) {
+  return aeroflow(values).filter().toArray().run(done, fail);
+}), expectation);
+```
+
+<a name="aeroflowfilter-conditionfunction"></a>
+## (@condition:function)
+does not call @condition when flow is empty.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow.empty.filter(fail).run(fail, done);
+}));
+```
+
+calls @condition when flow is not empty.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow('test').filter(done).run(fail, fail);
+}));
+```
+
+passes value emitted by flow to @condition as first argument.
+
+```js
+var value = 'test';
+assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow(value).filter(done).run(fail, fail);
+}), value);
+```
+
+passes zero-based index of iteration to @condition as second argument.
+
+```js
+var values = [1, 2, 3, 4],
+    expectation = values.length - 1;
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow(values).filter(function (_, index) {
+    if (index === expectation) done();
+  }).run(fail, fail);
+}));
+```
+
+passes context data to @condition as third argument.
+
+```js
+var data = {};
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow('test').filter(function (_, __, data) {
+    return done(data);
+  }).run(fail, fail, data);
+}), data);
+```
+
+emits only values passing @condition test.
+
+```js
+var values = [0, 1, 2, 3],
+    condition = function condition(value) {
+  return value > 1;
+},
+    expectation = values.filter(condition);
+assert.eventually.includeMembers(new Promise(function (done, fail) {
+  return aeroflow(values).filter(condition).toArray().run(done, fail);
+}), expectation);
+```
+
+<a name="aeroflowfilter-conditionregex"></a>
+## (@condition:regex)
+emits only values passing @condition test.
+
+```js
+var values = ['a', 'b', 'aa', 'bb'],
+    condition = /a/,
+    expectation = values.filter(function (value) {
+  return condition.test(value);
+});
+assert.eventually.includeMembers(new Promise(function (done, fail) {
+  return aeroflow(values).filter(condition).toArray().run(done, fail);
+}), expectation);
+```
+
+<a name="aeroflowfilter-conditionfunctionregex"></a>
+## (@condition:!function!regex)
+emits only values equal to @condition.
+
+```js
+var values = [1, 2, 3],
+    condition = 2,
+    expectation = values.filter(function (value) {
+  return value === condition;
+});
+assert.eventually.includeMembers(new Promise(function (done, fail) {
+  return aeroflow(values).filter(condition).toArray().run(done, fail);
 }), expectation);
 ```
 
@@ -326,6 +544,17 @@ return assert.isFulfilled(new Promise(function (done, fail) {
 }));
 ```
 
+emits error thrown by @reducer.
+
+```js
+var error = new Error('test');
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow(1, 2).reduce(function () {
+    throw error;
+  }).run(fail, done);
+}), error);
+```
+
 emits value emitted by flow when flow emits single value.
 
 ```js
@@ -365,15 +594,16 @@ return assert.eventually.includeMembers(new Promise(function (done, fail) {
 passes zero-based index of iteration to @reducer as third argument.
 
 ```js
-var values = [1, 2, 3, 4];
-return assert.eventually.strictEqual(new Promise(function (done, fail) {
+var values = [1, 2, 3, 4],
+    expectation = values.length - 2;
+return assert.isFulfilled(new Promise(function (done, fail) {
   return aeroflow(values).reduce(function (_, __, index) {
-    return index;
-  }).run(done, fail);
-}), values.length - 2);
+    if (index === expectation) done();
+  }).run(fail, fail);
+}));
 ```
 
-passes context data to @function as forth argument.
+passes context data to @reducer as forth argument.
 
 ```js
 var data = {};

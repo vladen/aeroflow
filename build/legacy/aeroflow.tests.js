@@ -63,6 +63,62 @@
     });
   };
 
+  var catchOperatorTests = function catchOperatorTests(aeroflow, assert) {
+    return describe('Aeroflow#catch', function () {
+      it('is instance method', function () {
+        return assert.isFunction(aeroflow.empty.catch);
+      });
+      describe('()', function () {
+        it('returns instance of Aeroflow', function () {
+          return assert.typeOf(aeroflow.empty.catch(), 'Aeroflow');
+        });
+        it('emits nothing when flow is empty', function () {
+          return assert.isFulfilled(new Promise(function (done, fail) {
+            return aeroflow.empty.catch().run(fail, done);
+          }));
+        });
+        it('supresses error emitted by flow', function () {
+          return assert.eventually.isBoolean(new Promise(function (done, fail) {
+            return aeroflow(new Error('test')).catch().run(fail, done);
+          }));
+        });
+      });
+      describe('(@alternative:function)', function () {
+        it('does not call @alternative when flow is empty', function () {
+          return assert.isFulfilled(new Promise(function (done, fail) {
+            return aeroflow.empty.catch(fail).run(fail, done);
+          }));
+        });
+        it('does not call @alternative when flow does not emit error', function () {
+          return assert.isFulfilled(new Promise(function (done, fail) {
+            return aeroflow(1).catch(fail).run(done, fail);
+          }));
+        });
+        it('calls @alternative when flow emits error', function () {
+          return assert.isFulfilled(new Promise(function (done, fail) {
+            return aeroflow(new Error('tests')).catch(done).run(fail, fail);
+          }));
+        });
+        it('emits value returned by @alternative when flow emits error', function () {
+          var alternative = 'caught';
+          return assert.eventually.strictEqual(new Promise(function (done, fail) {
+            return aeroflow(new Error('test')).catch(function () {
+              return alternative;
+            }).run(done, fail);
+          }), alternative);
+        });
+      });
+      describe('(@alternative:!function)', function () {
+        it('emits @alternative value when flow emits error', function () {
+          var alternative = 'caught';
+          return assert.eventually.strictEqual(new Promise(function (done, fail) {
+            return aeroflow(new Error('test')).catch(alternative).run(done, fail);
+          }), alternative);
+        });
+      });
+    });
+  };
+
   var countOperatorTests = function countOperatorTests(aeroflow, assert) {
     return describe('Aeroflow#count', function () {
       it('is instance method', function () {
@@ -89,6 +145,103 @@
               expectation = values.length;
           return assert.eventually.strictEqual(new Promise(function (done, fail) {
             return aeroflow(values).count().run(done, fail);
+          }), expectation);
+        });
+      });
+    });
+  };
+
+  var filterOperatorTests = function filterOperatorTests(aeroflow, assert) {
+    return describe('Aeroflow#filter', function () {
+      it('is instance method', function () {
+        return assert.isFunction(aeroflow.empty.filter);
+      });
+      describe('()', function () {
+        it('returns instance of Aeroflow', function () {
+          return assert.typeOf(aeroflow.empty.filter(), 'Aeroflow');
+        });
+        it('emits nothing when flow is empty', function () {
+          return assert.isFulfilled(new Promise(function (done, fail) {
+            return aeroflow.empty.filter().run(fail, done);
+          }));
+        });
+        it('emits only truthy values', function () {
+          var values = [false, true, 0, 1, undefined, null, 'test'],
+              expectation = values.filter(function (value) {
+            return value;
+          });
+          assert.eventually.includeMembers(new Promise(function (done, fail) {
+            return aeroflow(values).filter().toArray().run(done, fail);
+          }), expectation);
+        });
+      });
+      describe('(@condition:function)', function () {
+        it('does not call @condition when flow is empty', function () {
+          return assert.isFulfilled(new Promise(function (done, fail) {
+            return aeroflow.empty.filter(fail).run(fail, done);
+          }));
+        });
+        it('calls @condition when flow is not empty', function () {
+          return assert.isFulfilled(new Promise(function (done, fail) {
+            return aeroflow('test').filter(done).run(fail, fail);
+          }));
+        });
+        it('passes value emitted by flow to @condition as first argument', function () {
+          var value = 'test';
+          assert.eventually.strictEqual(new Promise(function (done, fail) {
+            return aeroflow(value).filter(done).run(fail, fail);
+          }), value);
+        });
+        it('passes zero-based index of iteration to @condition as second argument', function () {
+          var values = [1, 2, 3, 4],
+              expectation = values.length - 1;
+          return assert.isFulfilled(new Promise(function (done, fail) {
+            return aeroflow(values).filter(function (_, index) {
+              if (index === expectation) done();
+            }).run(fail, fail);
+          }));
+        });
+        it('passes context data to @condition as third argument', function () {
+          var data = {};
+          return assert.eventually.strictEqual(new Promise(function (done, fail) {
+            return aeroflow('test').filter(function (_, __, data) {
+              return done(data);
+            }).run(fail, fail, data);
+          }), data);
+        });
+        it('emits only values passing @condition test', function () {
+          var values = [0, 1, 2, 3],
+              condition = function condition(value) {
+            return value > 1;
+          },
+              expectation = values.filter(condition);
+
+          assert.eventually.includeMembers(new Promise(function (done, fail) {
+            return aeroflow(values).filter(condition).toArray().run(done, fail);
+          }), expectation);
+        });
+      });
+      describe('(@condition:regex)', function () {
+        it('emits only values passing @condition test', function () {
+          var values = ['a', 'b', 'aa', 'bb'],
+              condition = /a/,
+              expectation = values.filter(function (value) {
+            return condition.test(value);
+          });
+          assert.eventually.includeMembers(new Promise(function (done, fail) {
+            return aeroflow(values).filter(condition).toArray().run(done, fail);
+          }), expectation);
+        });
+      });
+      describe('(@condition:!function!regex)', function () {
+        it('emits only values equal to @condition', function () {
+          var values = [1, 2, 3],
+              condition = 2,
+              expectation = values.filter(function (value) {
+            return value === condition;
+          });
+          assert.eventually.includeMembers(new Promise(function (done, fail) {
+            return aeroflow(values).filter(condition).toArray().run(done, fail);
           }), expectation);
         });
       });
@@ -270,14 +423,15 @@
           }), values);
         });
         it('passes zero-based index of iteration to @reducer as third argument', function () {
-          var values = [1, 2, 3, 4];
-          return assert.eventually.strictEqual(new Promise(function (done, fail) {
+          var values = [1, 2, 3, 4],
+              expectation = values.length - 2;
+          return assert.isFulfilled(new Promise(function (done, fail) {
             return aeroflow(values).reduce(function (_, __, index) {
-              return index;
-            }).run(done, fail);
-          }), values.length - 2);
+              if (index === expectation) done();
+            }).run(fail, fail);
+          }));
         });
-        it('passes context data to @function as forth argument', function () {
+        it('passes context data to @reducer as forth argument', function () {
           var data = {};
           return assert.eventually.strictEqual(new Promise(function (done, fail) {
             return aeroflow(1, 2).reduce(function (_, __, ___, data) {
@@ -488,7 +642,7 @@
     });
   };
 
-  var tests = [averageOperatorTests, countOperatorTests, maxOperatorTests, minOperatorTests, reduceOperatorTests, toArrayOperatorTests, toSetOperatorTests, toStringOperatorTests];
+  var tests = [averageOperatorTests, catchOperatorTests, countOperatorTests, filterOperatorTests, maxOperatorTests, minOperatorTests, reduceOperatorTests, toArrayOperatorTests, toSetOperatorTests, toStringOperatorTests];
 
   var aeroflow = function aeroflow(_aeroflow, assert) {
     return tests.forEach(function (test) {
