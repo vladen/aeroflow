@@ -20,24 +20,24 @@
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">39.7% </span>
+        <span class="strong">40.07% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>322/811</span>
+        <span class='fraction'>325/811</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">19.02% </span>
+        <span class="strong">19.33% </span>
         <span class="quiet">Branches</span>
-        <span class='fraction'>62/326</span>
+        <span class='fraction'>63/326</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">28.81% </span>
+        <span class="strong">29.47% </span>
         <span class="quiet">Functions</span>
-        <span class='fraction'>87/302</span>
+        <span class='fraction'>89/302</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">41.8% </span>
+        <span class="strong">42.2% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>311/744</span>
+        <span class='fraction'>314/744</span>
       </div>
     </div>
   </div>
@@ -1679,7 +1679,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-yes">12×</span>
 <span class="cline-any cline-yes">3×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1711,7 +1711,7 @@
 <span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-yes">265×</span>
+<span class="cline-any cline-yes">266×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
@@ -1949,8 +1949,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -2799,7 +2799,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
@@ -2819,7 +2819,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-yes">130×</span>
+<span class="cline-any cline-yes">131×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -3516,9 +3516,9 @@
     };
   }
 &nbsp;
-<span class="fstat-no" title="function not covered" >  function expandGenerator(expanding, seed) {</span>
-<span class="cstat-no" title="statement not covered" >    var expander = isFunction(expanding) ? expanding : constant(expanding);</span>
-<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span></span>
+  function expandGenerator(expanding, seed) {
+    var expander = i</span>sFunction(expanding) ? <span class="branch-0 cbranch-no" title="branch not covered" >expanding : constant(expanding);
+    return <span class="fstat-no" title="function not covered" >function (next, done, context) {</span>
 <span class="cstat-no" title="statement not covered" >      var index = 0,</span>
           value = seed;
 <span class="cstat-no" title="statement not covered" >      !<span class="fstat-no" title="function not covered" >function proceed() {</span></span>
@@ -4366,8 +4366,8 @@
 <span class="cstat-no" title="statement not covered" >    return new Flow(customGenerator(emitter));</span>
   }
 &nbsp;
-<span class="fstat-no" title="function not covered" >  function expand(expander, seed) {</span>
-<span class="cstat-no" title="statement not covered" >    return new Flow(expandGenerator(expander, seed));</span>
+  function expand(expander, seed) {
+    return new Flow(expandGenerator(expander, seed));
   }
 &nbsp;
 <span class="fstat-no" title="function not covered" >  function just(value) {</span>
@@ -4753,7 +4753,7 @@
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Thu Feb 11 2016 21:40:45 GMT+0300 (Belarus Standard Time)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Thu Feb 11 2016 22:19:33 GMT+0300 (Belarus Standard Time)
 </div>
 </div>
 <script src="../../prettify.js"></script>

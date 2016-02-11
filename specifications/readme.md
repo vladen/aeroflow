@@ -33,6 +33,10 @@
      - [toString(true)](#tostring-tostringtrue)
      - [toString(@string)](#tostring-tostringstring)
      - [toString(@string, true)](#tostring-tostringstring-true)
+   - [Aeroflow#expand](#aeroflowexpand)
+     - [()](#aeroflowexpand-)
+     - [(@function)](#aeroflowexpand-function)
+     - [(@!function)](#aeroflowexpand-function)
 <a name=""></a>
  
 <a name="average"></a>
@@ -889,5 +893,21 @@ var delimiter = ';',
 return assert.eventually.lengthOf(new Promise(function (done, fail) {
   return aeroflow.empty.toString(delimiter, true).run(done, fail);
 }), expectation);
+```
+
+<a name="aeroflowexpand"></a>
+# Aeroflow#expand
+is static method.
+
+```js
+assert.isFunction(aeroflow.expand);
+```
+
+<a name="aeroflowexpand-"></a>
+## ()
+returns instance of Aeroflow.
+
+```js
+assert.typeOf(aeroflow.expand(), 'Aeroflow');
 ```
 

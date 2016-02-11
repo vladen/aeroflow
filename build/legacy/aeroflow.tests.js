@@ -17,7 +17,7 @@
     value: true
   });
 
-  var averageOperatorTests = function averageOperatorTests(aeroflow, assert) {
+  var averageTests = function averageTests(aeroflow, assert) {
     return describe('average', function () {
       it('Is instance method', function () {
         assert.isFunction(aeroflow.empty.average);
@@ -63,7 +63,7 @@
     });
   };
 
-  var catchOperatorTests = function catchOperatorTests(aeroflow, assert) {
+  var catchTests = function catchTests(aeroflow, assert) {
     return describe('catch', function () {
       it('Is instance method', function () {
         return assert.isFunction(aeroflow.empty.catch);
@@ -119,7 +119,7 @@
     });
   };
 
-  var countOperatorTests = function countOperatorTests(aeroflow, assert) {
+  var countTests = function countTests(aeroflow, assert) {
     return describe('count', function () {
       it('Is instance method', function () {
         assert.isFunction(aeroflow.empty.count);
@@ -151,7 +151,7 @@
     });
   };
 
-  var filterOperatorTests = function filterOperatorTests(aeroflow, assert) {
+  var filterTests = function filterTests(aeroflow, assert) {
     return describe('filter', function () {
       it('Is instance method', function () {
         return assert.isFunction(aeroflow.empty.filter);
@@ -248,7 +248,7 @@
     });
   };
 
-  var maxOperatorTests = function maxOperatorTests(aeroflow, assert) {
+  var maxTests = function maxTests(aeroflow, assert) {
     return describe('max', function () {
       it('Is instance method', function () {
         assert.isFunction(aeroflow.empty.max);
@@ -299,7 +299,7 @@
     });
   };
 
-  var minOperatorTests = function minOperatorTests(aeroflow, assert) {
+  var minTests = function minTests(aeroflow, assert) {
     return describe('min', function () {
       it('Is instance method', function () {
         assert.isFunction(aeroflow.empty.min);
@@ -350,7 +350,7 @@
     });
   };
 
-  var reduceOperatorTests = function reduceOperatorTests(aeroflow, assert) {
+  var reduceTests = function reduceTests(aeroflow, assert) {
     return describe('reduce', function () {
       it('Is instance method', function () {
         return assert.isFunction(aeroflow.empty.reduce);
@@ -478,7 +478,7 @@
     });
   };
 
-  var toArrayOperatorTests = function toArrayOperatorTests(aeroflow, assert) {
+  var toArrayTests = function toArrayTests(aeroflow, assert) {
     return describe('toArray', function () {
       it('Is instance method', function () {
         assert.isFunction(aeroflow.empty.toArray);
@@ -517,7 +517,7 @@
     });
   };
 
-  var toSetOperatorTests = function toSetOperatorTests(aeroflow, assert) {
+  var toSetTests = function toSetTests(aeroflow, assert) {
     return describe('toSet', function () {
       it('Is instance method', function () {
         assert.isFunction(aeroflow.empty.toSet);
@@ -558,7 +558,7 @@
     });
   };
 
-  var toStringOperatorTests = function toStringOperatorTests(aeroflow, assert) {
+  var toStringTests = function toStringTests(aeroflow, assert) {
     return describe('toString', function () {
       it('Is instance method', function () {
         assert.isFunction(aeroflow.empty.toString);
@@ -642,7 +642,25 @@
     });
   };
 
-  var tests = [averageOperatorTests, catchOperatorTests, countOperatorTests, filterOperatorTests, maxOperatorTests, minOperatorTests, reduceOperatorTests, toArrayOperatorTests, toSetOperatorTests, toStringOperatorTests];
+  var operatorsTests = [averageTests, catchTests, countTests, filterTests, maxTests, minTests, reduceTests, toArrayTests, toSetTests, toStringTests];
+
+  var expandTests = function expandTests(aeroflow, assert) {
+    return describe('Aeroflow#expand', function () {
+      it('is static method', function () {
+        assert.isFunction(aeroflow.expand);
+      });
+      describe('()', function () {
+        it('returns instance of Aeroflow', function () {
+          assert.typeOf(aeroflow.expand(), 'Aeroflow');
+        });
+      });
+      describe('(@function)', function () {});
+      describe('(@!function)', function () {});
+    });
+  };
+
+  var generatorsTests = [expandTests];
+  var tests = [].concat(operatorsTests, generatorsTests);
 
   var aeroflow = function aeroflow(_aeroflow, assert) {
     return tests.forEach(function (test) {

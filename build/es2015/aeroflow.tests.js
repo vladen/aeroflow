@@ -1,4 +1,4 @@
-var averageOperatorTests = (aeroflow, assert) => describe('average', () => {
+var averageTests = (aeroflow, assert) => describe('average', () => {
   it('Is instance method', () => {
     assert.isFunction(aeroflow.empty.average);
   });
@@ -42,7 +42,7 @@ var averageOperatorTests = (aeroflow, assert) => describe('average', () => {
 
 });
 
-var catchOperatorTests = (aeroflow, assert) => describe('catch', () => {
+var catchTests = (aeroflow, assert) => describe('catch', () => {
   it('Is instance method', () =>
     assert.isFunction(aeroflow.empty.catch));
 
@@ -90,7 +90,7 @@ var catchOperatorTests = (aeroflow, assert) => describe('catch', () => {
   });
 });
 
-var countOperatorTests = (aeroflow, assert) => describe('count', () => {
+var countTests = (aeroflow, assert) => describe('count', () => {
   it('Is instance method', () => {
     assert.isFunction(aeroflow.empty.count);
   });
@@ -123,7 +123,7 @@ var countOperatorTests = (aeroflow, assert) => describe('count', () => {
   });
 });
 
-var filterOperatorTests = (aeroflow, assert) => describe('filter', () => {
+var filterTests = (aeroflow, assert) => describe('filter', () => {
   it('Is instance method', () =>
     assert.isFunction(aeroflow.empty.filter));
 
@@ -205,7 +205,7 @@ var filterOperatorTests = (aeroflow, assert) => describe('filter', () => {
   });
 });
 
-var maxOperatorTests = (aeroflow, assert) => describe('max', () => {
+var maxTests = (aeroflow, assert) => describe('max', () => {
   it('Is instance method', () => {
     assert.isFunction(aeroflow.empty.max);
   });
@@ -250,7 +250,7 @@ var maxOperatorTests = (aeroflow, assert) => describe('max', () => {
   });
 });
 
-var minOperatorTests = (aeroflow, assert) => describe('min', () => {
+var minTests = (aeroflow, assert) => describe('min', () => {
   it('Is instance method', () => {
     assert.isFunction(aeroflow.empty.min);
   });
@@ -295,7 +295,7 @@ var minOperatorTests = (aeroflow, assert) => describe('min', () => {
   });
 });
 
-var reduceOperatorTests = (aeroflow, assert) => describe('reduce', () => {
+var reduceTests = (aeroflow, assert) => describe('reduce', () => {
   it('Is instance method', () =>
     assert.isFunction(aeroflow.empty.reduce));
 
@@ -408,7 +408,7 @@ var reduceOperatorTests = (aeroflow, assert) => describe('reduce', () => {
   });
 });
 
-var toArrayOperatorTests = (aeroflow, assert) => describe('toArray', () => {
+var toArrayTests = (aeroflow, assert) => describe('toArray', () => {
   it('Is instance method', () => {
     assert.isFunction(aeroflow.empty.toArray);
   });
@@ -447,7 +447,7 @@ var toArrayOperatorTests = (aeroflow, assert) => describe('toArray', () => {
   });
 });
 
-var toSetOperatorTests = (aeroflow, assert) => describe('toSet', () => {
+var toSetTests = (aeroflow, assert) => describe('toSet', () => {
   it('Is instance method', () => {
     assert.isFunction(aeroflow.empty.toSet);
   });
@@ -487,7 +487,7 @@ var toSetOperatorTests = (aeroflow, assert) => describe('toSet', () => {
   });
 });
 
-var toStringOperatorTests = (aeroflow, assert) => describe('toString', () => {
+var toStringTests = (aeroflow, assert) => describe('toString', () => {
   it('Is instance method', () => {
     assert.isFunction(aeroflow.empty.toString);
   });
@@ -570,20 +570,46 @@ var toStringOperatorTests = (aeroflow, assert) => describe('toString', () => {
   });
 });
 
+var operatorsTests = [
+  averageTests,
+  catchTests,
+  countTests,
+  filterTests,
+  maxTests,
+  minTests,
+  reduceTests,
+  toArrayTests,
+  toSetTests,
+  toStringTests
+];
+
+var expandTests = (aeroflow, assert) => describe('Aeroflow#expand', () => {
+  it('is static method', () => {
+    assert.isFunction(aeroflow.expand);
+  });
+
+  describe('()', () => {
+    it('returns instance of Aeroflow', () => {
+      assert.typeOf(aeroflow.expand(), 'Aeroflow');
+    });
+  });
+
+  describe('(@function)', () => {
+    
+  });
+
+  describe('(@!function)', () => {
+    
+  });
+});
+
+var generatorsTests = [
+  expandTests
+];
+
 const tests = [
-  // factoryTests,
-  // staticMethodsTests,
-  // instanceTests,
-  averageOperatorTests,
-  catchOperatorTests,
-  countOperatorTests,
-  filterOperatorTests,
-  maxOperatorTests,
-  minOperatorTests,
-  reduceOperatorTests,
-  toArrayOperatorTests,
-  toSetOperatorTests,
-  toStringOperatorTests
+  ...operatorsTests,
+  ...generatorsTests
 ];
 
 var aeroflow = (aeroflow, assert) => tests.forEach(test => test(aeroflow, assert));
