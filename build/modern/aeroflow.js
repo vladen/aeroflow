@@ -116,9 +116,9 @@
 
   function arrayAdapter(source) {
     return (next, done, context) => {
-      let index = -1, length = source.length;
+      let index = -1;
       !function proceed() {
-        while (++index < length) if (unsync(next(source[index]), proceed, done)) return;
+        while (++index < source.length) if (unsync(next(source[index]), proceed, done)) return;
         done(true);
       }();
     };
@@ -193,38 +193,47 @@
     };
   }
 
-  function emptyEmitter(result) {
+  function emptyGenerator(result) {
     return (next, done) => done(result);
   }
 
-  function customEmitter(emitter) {
-    if (isUndefined(emitter)) return emptyEmitter(true);
-    if (!isFunction(emitter)) return scalarAdapter(emitter);
+  function customGenerator(generator) {
+    if (isUndefined(generator)) return emptyGenerator(true);
+    if (!isFunction(generator)) return scalarAdapter(generator);
     return (next, done, context) => {
-      let buffer = [], completed = false, finalizer, waiting = false;
-      finalizer = emitter(accept, finish, context);
-      function accept(result) {
-        buffer.push(result);
-        proceed();
-      }
-      function finish(result) {
-        if (completed) return;
-        completed = true;
+      let buffer = [], busy = false, idle = false, finalizer;
+      finalizer = generator(
+        result => {
+          if (idle) return false;
+          buffer.push(result);
+          if (!busy) proceed(true);
+          return true;
+        },
+        result => {
+          if (idle) return false;
+          idle = true;
+          buffer.result = isUndefined(result) || result;
+          if (!busy) proceed(true);
+          return true;
+        },
+        context.data);
+      function complete(result) {
+        idle = true;
         if (isFunction(finalizer)) setTimeout(finalizer, 0);
-        if (isUndefined(result)) result = true;
-        done(result);
+        done(result && buffer.result);
       }
-      function proceed() {
-        waiting = false;
-        while (buffer.length) if (unsync(next(buffer.shift()), proceed, finish)) {
-          waiting = true;
+      function proceed(result) {
+        busy = false;
+        if (result) while (buffer.length) if (unsync(next(buffer.shift()), proceed, complete)) {
+          busy = true;
           return;
         }
+        complete(result);
       }
     };
   }
 
-  function expandEmitter(expanding, seed) {
+  function expandGenerator(expanding, seed) {
     const expander = isFunction(expanding)
       ? expanding
       : constant(expanding);
@@ -236,7 +245,7 @@
     };
   }
 
-  function randomEmitter(minimum, maximum) {
+  function randomGenerator(minimum, maximum) {
     maximum = toNumber(maximum, 1 - mathPow(10,-15));
     minimum = toNumber(minimum, 0);
     maximum -= minimum;
@@ -250,7 +259,7 @@
     };
   }
 
-  function rangeEmitter(start, end, step) {
+  function rangeGenerator(start, end, step) {
     end = toNumber(end, maxInteger);
     start = toNumber(start, 0);
     if (start === end) return scalarAdapter(start);
@@ -277,7 +286,7 @@
     };
   }
 
-  function repeatDeferredEmitter(repeater, delayer) {
+  function repeatDeferredGenerator(repeater, delayer) {
     return (next, done, context) => {
       let index = -1;
       !function proceed(result) {
@@ -288,7 +297,7 @@
     };
   }
 
-  function repeatImmediateEmitter(repeater) {
+  function repeatImmediateGenerator(repeater) {
     return (next, done, context) => {
       let index = 0;
       !function proceed() {
@@ -297,22 +306,18 @@
     };
   }
 
-  function repeatEmitter(value, interval) {
+  function repeatGenerator(value, interval) {
     const repeater = toFunction(value, constant(value));
     return isDefined(interval)
-      ? repeatDeferredEmitter(repeater, toFunction(interval, constant(interval)))
-      : repeatImmediateEmitter(repeater);
+      ? repeatDeferredGenerator(repeater, toFunction(interval, constant(interval)))
+      : repeatImmediateGenerator(repeater);
   }
 
   function reduceOperator(reducer, seed, required) {
-    if (isUndefined(reducer)) return tie(emptyEmitter, false);
+    if (isUndefined(reducer)) return tie(emptyGenerator, false);
     if (!isFunction(reducer)) return tie(scalarAdapter, reducer);
-    if (isUndefined(required) && isBoolean(seed)) {
-      required = seed;
-      seed = undefined;
-    }
     return emitter => (next, done, context) => {
-      let empty = !required, index = 1, reduced = seed;
+      let empty = !required, index = 0, reduced = seed;
       emitter(
         result => {
           if (empty) {
@@ -333,14 +338,16 @@
     };
   }
 
-  function averageOperator(required) {
-    return reduceOperator((average, result, index) => (average * index + result) / (index + 1));
+  function averageOperator() {
+    return reduceOperator(
+      (average, result, index) => (average * index + result) / (index + 1),
+      0);
   }
 
   function catchOperator(alternative) {
     const regressor = isDefined(alternative) 
       ? adapterSelector(alternative, scalarAdapter(alternative))
-      : emptyEmitter(false);
+      : emptyGenerator(false);
     return emitter => (next, done, context) => emitter(
       next,
       result => isError(result)
@@ -528,17 +535,17 @@
       let groups = new Map, index = 0;
       emitter(
         value => {
-          let current, parent = groups;
+          let ancestor = groups, descendant;
           for (let i = -1; ++i <= limit;) {
             let key = selectors[i](value, index++, context.data);
-            current = parent.get(key);
-            if (!current) {
-              current = i === limit ? [] : new Map;
-              parent.set(key, current);
+            descendant = ancestor.get(key);
+            if (!descendant) {
+              descendant = i === limit ? [] : new Map;
+              ancestor.set(key, descendant);
             }
-            parent = current;
+            ancestor = descendant;
           }
-          current.push(value);
+          descendant.push(value);
           return true;
         },
         result => {
@@ -549,16 +556,18 @@
     };
   }
 
-  function toArrayOperator() {
+  function toArrayOperator(required) {
     return emitter => (next, done, context) => {
-      let array = [];
+      let array = [], empty = !required;
       emitter(
         result => {
+          empty = false;
           array.push(result);
           return true;
         },
         result => {
-          if (isError(result) || !unsync(next(array), tie(done, result), done)) done(result);
+          if (isError(result) || empty || !unsync(next(array), tie(done, result), done))
+            done(result);
         },
         context);
     };
@@ -617,8 +626,8 @@
     return reduceOperator((minimum, result) => minimum > result ? result : minimum);
   }
 
-  function replayOperator(delay, timing) {
-    const delayer = toFunction(delay, constant(delay));
+  function replayOperator(interval, timing) {
+    const delayer = toFunction(interval, constant(interval));
     return emitter => (next, done, context) => {
       let past = dateNow();
       const chronicles = [], chronicler = timing
@@ -637,11 +646,11 @@
           if (isError(result)) done(result);
           else {
             let index = -1;
-            const length = chronicles.length;
             !function proceed(proceedResult) {
               if (unsync(proceedResult, proceed, tie(done, proceedResult))) return;
-              index = (index + 1) % length;
-              const chronicle = chronicles[index], interval = index
+              index = (index + 1) % chronicles.length;
+              const chronicle = chronicles[index];
+              interval = index
                 ? chronicle.delay
                 : chronicle.delay + toNumber(delayer(context.data), 0);
               (interval ? setTimeout : setImmediate)(() => {
@@ -752,9 +761,8 @@
     return begin < 0 || end < 0
       ? emitter => (next, done, context) =>
           toArrayOperator()(emitter)(result => {
-            let length = result.length,
-                index = begin < 0 ? length + begin : begin,
-                limit = end < 0 ? length + end : mathMin(length, end);
+            let index = begin < 0 ? result.length + begin : begin,
+              limit = end < 0 ? result.length + end : mathMin(result.length, end);
             if (index < 0) index = 0;
             if (limit < 0) limit = 0;
             return index >= limit || new Promise(resolve => {
@@ -904,13 +912,13 @@
           ? takeFirstOperator(condition)
           : condition < 0
             ? takeLastOperator(-condition)
-            : () => emptyEmitter(false)
+            : tie(emptyGenerator, false)
       case FUNCTION:
         return takeWhileOperator(condition);
       default:
         return condition
           ? identity
-          : () => emptyEmitter(false);
+          : tie(emptyGenerator, false);
     }
   }
 
@@ -956,16 +964,18 @@
     };
   }
 
-  function toSetOperator() {
+  function toSetOperator(required) {
     return emitter => (next, done, context) => {
-      let set = new Set;
+      let empty = !required, set = new Set;
       emitter(
         result => {
+          empty = false;
           set.add(result);
           return true;
         },
         result => {
-          if (isError(result) || !unsync(next(set), tie(done, result), done)) done(result);
+          if (isError(result) || empty || !unsync(next(set), tie(done, result), done))
+            done(result);
         },
         context);
     };
@@ -1093,7 +1103,7 @@
   // done false
   */
   function create(emitter) {
-    return new Flow(customEmitter(emitter));
+    return new Flow(customGenerator(emitter));
   }
 
   /**
@@ -1112,7 +1122,7 @@
   // done false
   */
   function expand(expander, seed) {
-    return new Flow(expandEmitter(expander, seed));
+    return new Flow(expandGenerator(expander, seed));
   }
 
   /**
@@ -1161,7 +1171,7 @@
   // done false
   */
   function random(minimum, maximum) {
-    return new Flow(randomEmitter(minimum, maximum));
+    return new Flow(randomGenerator(minimum, maximum));
   }
 
   /**
@@ -1199,7 +1209,7 @@
   // done true
   */
   function range(start, end, step) {
-    return new Flow(rangeEmitter(start, end, step));
+    return new Flow(rangeGenerator(start, end, step));
   }
 
   /**
@@ -1243,7 +1253,7 @@
   // done false
   */
   function repeat(value, interval) {
-    return new Flow(repeatEmitter(value, interval));
+    return new Flow(repeatGenerator(value, interval));
   }
 
   /**
@@ -1266,6 +1276,9 @@
 
   @example
   aeroflow().average().dump().run();
+  // done true
+  aeroflow('test').average().dump().run();
+  // next NaN
   // done true
   aeroflow(1, 2, 6).average().dump().run();
   // next 3
@@ -1763,6 +1776,8 @@
   @example
   aeroflow().reduce().dump().run();
   // done false
+  aeroflow(1, 2).reduce().dump().run();
+  // done false
   aeroflow().reduce('test').dump().run();
   // next test
   // done true
@@ -1818,8 +1833,8 @@
   // next 2 // after 500ms
   // done false
   */
-  function replay(delay, timing) {
-    return this.chain(replayOperator(delay, timing));
+  function replay(interval, timing) {
+    return this.chain(replayOperator(interval, timing));
   }
 
   /**
@@ -1870,14 +1885,11 @@
   @alias Flow#run
 
   @param {function} [next]
-  Callback to execute for each emitted value, taking two arguments: result, context.
-  Or EventEmitter object.
-  Or EventTarget object.
-  Or Observer object.
+  Callback to execute for each emitted value, taking two arguments: result, data.
   @param {function} [done]
   If next parameter is callback,
-  then callback to execute as emission is complete, taking two arguments: result, context.
-  Or data parameter.
+  then callback to execute as emission is complete, taking two arguments: result, data.
+  Or data argument.
   @param {function} [data]
   Arbitrary value passed to each callback invoked by this flow as the last argument.
 
@@ -2144,6 +2156,8 @@
 
   @example
   aeroflow().toArray().dump().run();
+  // done true
+  aeroflow().toArray(true).dump().run();
   // next []
   // done true
   aeroflow('test').toArray().dump().run();
@@ -2153,8 +2167,8 @@
   // next [1, 2, 3]
   // done true
   */
-  function toArray() {
-    return this.chain(toArrayOperator());
+  function toArray(required) {
+    return this.chain(toArrayOperator(required));
   }
 
   /**
@@ -2200,14 +2214,16 @@
 
   @example
   aeroflow().toSet().dump().run();
+  // done true
+  aeroflow().toSet(true).dump().run();
   // next Set {}
   // done true
   aeroflow(1, 2, 3).toSet().dump().run();
   // next Set {1, 2, 3}
   // done true
   */
-  function toSet() {
-    return this.chain(toSetOperator()); 
+  function toSet(required) {
+    return this.chain(toSetOperator(required)); 
   }
 
   /**
@@ -2249,6 +2265,7 @@
   // next 1--2---3
   // done true
   */
+  /*eslint no-shadow: 0*/
   function toString(separator, required) {
     return this.chain(toStringOperator(separator, required)); 
   }
@@ -2297,7 +2314,7 @@
   objectDefineProperties(aeroflow, {
     adapters: { value: adapters },
     create: { value: create },
-    empty: { enumerable: true, value: new Flow(emptyEmitter(true)) },
+    empty: { enumerable: true, value: new Flow(emptyGenerator(true)) },
     expand: { value: expand },
     just: { value: just },
     operators: { value: operators },

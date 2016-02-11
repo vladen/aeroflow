@@ -3,7 +3,7 @@
 import { constant, isDefined, toDelay, toFunction } from '../utilites';
 import { unsync } from '../unsync';
 
-export function repeatDeferredEmitter(repeater, delayer) {
+export function repeatDeferredGenerator(repeater, delayer) {
   return (next, done, context) => {
     let index = -1;
     !function proceed(result) {
@@ -14,7 +14,7 @@ export function repeatDeferredEmitter(repeater, delayer) {
   };
 }
 
-export function repeatImmediateEmitter(repeater) {
+export function repeatImmediateGenerator(repeater) {
   return (next, done, context) => {
     let index = 0;
     !function proceed() {
@@ -23,9 +23,9 @@ export function repeatImmediateEmitter(repeater) {
   };
 }
 
-export function repeatEmitter(value, interval) {
+export function repeatGenerator(value, interval) {
   const repeater = toFunction(value, constant(value));
   return isDefined(interval)
-    ? repeatDeferredEmitter(repeater, toFunction(interval, constant(interval)))
-    : repeatImmediateEmitter(repeater);
+    ? repeatDeferredGenerator(repeater, toFunction(interval, constant(interval)))
+    : repeatImmediateGenerator(repeater);
 }

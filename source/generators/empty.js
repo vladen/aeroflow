@@ -1,5 +1,5 @@
 'use strict';
 
-export function emptyEmitter(result) {
+export function emptyGenerator(result) {
   return (next, done) => done(result);
 }

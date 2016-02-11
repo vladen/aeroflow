@@ -1,60 +1,6 @@
 'use strict';
 
 export default (aeroflow, assert) => describe('Aeroflow', () => {
-    describe('#max()', ()=> {
-        it('is instance method', () =>
-            assert.isFunction(aeroflow.empty.max));
-
-        it('returns instance of Aeroflow', () =>
-            assert.typeOf(aeroflow().max(), 'Aeroflow'));
-
-        it('emitting undefined if empty flow', (done) => {
-            let invoked = false;
-            aeroflow().max()
-                    .run(value => invoked = true);
-
-            setImmediate(() => done(assert.isFalse(invoked)));
-        });
-
-        it('emitting valid result for non-empty flow', (done) => {
-            let values = [1, 9, 2, 8, 3, 7, 4, 6, 5]
-                , expected = Math.max(...values)
-                , actual;
-
-            aeroflow(values).max()
-                    .run(value => actual = value);
-
-            setImmediate(() => done(assert.strictEqual(actual, expected)));
-        });
-    });
-
-     describe('#min()', ()=> {
-        it('is instance method', () =>
-            assert.isFunction(aeroflow.empty.min));
-
-        it('returns instance of Aeroflow', () =>
-            assert.typeOf(aeroflow().min(), 'Aeroflow'));
-
-        it('does not invoke if empty flow', (done) => {
-            let invoked = false;
-            aeroflow.empty.min()
-                    .run(value => invoked = true);
-
-            setImmediate(() => done(assert.isFalse(invoked)));
-        });
-
-        it('emitting valid result for non-empty flow', (done) => {
-            let values = [1, 9, 2, 8, 3, 7, 4, 6, 5]
-                , expected = Math.min(...values)
-                , actual;
-
-            aeroflow(values).min()
-                    .run(value => actual = value);
-
-            setImmediate(() => done(assert.strictEqual(actual, expected)));
-        });
-    });
-
     describe('#skip()', () => {
         it('is instance method', () =>
             assert.isFunction(aeroflow.empty.skip));
@@ -131,39 +77,6 @@ export default (aeroflow, assert) => describe('Aeroflow', () => {
         });
     });
 
-    describe('#toArray()', () => {
-        it('is instance method', () =>
-            assert.isFunction(aeroflow.empty.toArray));
-
-        it('returns instance of Aeroflow', () =>
-            assert.typeOf(aeroflow().toArray(), 'Aeroflow'));
-
-        it('emitting empty Array if empty flow', (done) => {
-            let actual;
-
-            aeroflow().toArray().run(value => actual = value);
-
-            setImmediate(() => {
-                assert.isArray(actual);
-                assert.strictEqual(actual.length, 0);
-                done();
-            });
-        });
-
-        it('emitting single array containing all values', done => {
-            let expected = [1, 2, 3]
-                , actual;
-
-            aeroflow(...expected).toArray().run(value => actual = value);
-
-            setImmediate(() => {
-                assert.isArray(actual);
-                assert.sameMembers(actual, expected);
-                done();
-            });
-        });
-    });
-
     describe('#toMap()', () => {
         it('is instance method', () =>
             assert.isFunction(aeroflow.empty.toMap));
@@ -193,40 +106,6 @@ export default (aeroflow, assert) => describe('Aeroflow', () => {
                 assert.typeOf(actual, 'Map');
                 assert.includeMembers(Array.from(actual.keys()), expected);
                 assert.includeMembers(Array.from(actual.values()), expected);
-                done();
-            });
-        });
-    });
-
-    describe('#toSet()', ()=> {
-        it('is instance method', () =>
-            assert.isFunction(aeroflow.empty.toSet));
-
-        it('returns instance of Aeroflow', () =>
-            assert.typeOf(aeroflow().toSet(), 'Aeroflow'));
-
-        it('emitting empty Set if empty flow', (done) => {
-            let actual;
-
-            aeroflow().toSet().run(value => actual = value);
-
-            setImmediate(() => {
-                assert.typeOf(actual, 'Set');
-                assert.strictEqual(actual.size, 0);
-                done();
-            });
-        });
-
-        it('emitting single set containing all values', done => {
-            let expected = [0, 1, 2, 3]
-                , actual;
-
-            aeroflow(...expected, ...expected).toSet().run(value => actual = value);
-
-            setImmediate(() => {
-                assert.typeOf(actual, 'Set');
-                assert.sameMembers(Array.from(actual.keys()), expected);
-                assert.sameMembers(Array.from(actual.values()), expected);
                 done();
             });
         });
@@ -308,93 +187,6 @@ export default (aeroflow, assert) => describe('Aeroflow', () => {
                 assert.sameMembers(actual, expected);
                 done();
             });
-        });
-    });
-
-    describe('#average()', () => {
-        it('is instance method', () =>
-            assert.isFunction(aeroflow.empty.average));
-
-        it('returns instance of Aeroflow', () =>
-            assert.typeOf(aeroflow().average(), 'Aeroflow'));
-
-        it('does not invoke if empty flow', (done) => {
-            let invoked = false;
-            aeroflow().average()
-                    .run(value => invoked = true);
-
-            setImmediate(() => done(assert.isFalse(invoked)));
-        });
-
-        it('emitting average value of array', done => {
-            let values = [1, 4, 7, 8]
-                , expected = values.reduce((sum, next) => sum + next, 0)/values.length
-                , actual;
-
-            aeroflow(values).average().run(value => actual = value);
-
-            setImmediate(() => done(assert.strictEqual(actual, expected)));
-        });
-    });
-
-    describe('#count()', () => {
-        it('is instance method', () =>
-            assert.isFunction(aeroflow.empty.count));
-
-        it('returns instance of Aeroflow', () =>
-            assert.typeOf(aeroflow().count(), 'Aeroflow'));
-
-        it('emitting 0 if empty flow', done => {
-            let actual;
-
-            aeroflow.empty.count().run(value => actual = value);
-
-            setImmediate(() => done(assert.strictEqual(actual, 0)));
-        });
-
-        it('emitting the number of values in flow', done => {
-            let values = [[1, 2], new Map(), () => {}, 'a']
-                , expected = values.length
-                , actual;
-
-            aeroflow(...values).count().run(value => actual = value);
-
-            setImmediate(() => done(assert.strictEqual(actual, expected)));
-        });
-    });
-
-    describe('#sum()', () => {
-        it('is instance method', () =>
-            assert.isFunction(aeroflow.empty.sum));
-
-        it('returns instance of Aeroflow', () =>
-            assert.typeOf(aeroflow().sum(), 'Aeroflow'));
-
-        it('does not invoke if empty flow', (done) => {
-            let invoked = false;
-            aeroflow.empty.sum()
-                    .run(value => invoked = true);
-
-            setImmediate(() => done(assert.isFalse(invoked)));
-        });
-
-        it('emitting NaN if not integer passed', done => {
-            let values = []
-                , actual = false;
-
-            aeroflow('test').sum().run(value => actual = value);
-
-            setImmediate(() => done(assert.isNotNumber(true)));
-        });
-
-        it('emitting sum of integer values', done => {
-            let values = [1, 4, 7, 8]
-                , expected = values.reduce((sum, next) => sum + next, 0)
-                , actual;
-
-            aeroflow(...values).sum().run(value => actual = value);
-
-            setImmediate(() => done(assert.strictEqual(actual, expected)));
         });
     });
 });

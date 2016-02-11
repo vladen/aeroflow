@@ -4,7 +4,7 @@ import { maxInteger, toNumber } from '../utilites';
 import { unsync } from '../unsync';
 import { scalarAdapter } from '../adapters/scalar';
 
-export function rangeEmitter(start, end, step) {
+export function rangeGenerator(start, end, step) {
   end = toNumber(end, maxInteger);
   start = toNumber(start, 0);
   if (start === end) return scalarAdapter(start);

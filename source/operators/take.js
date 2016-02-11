@@ -1,9 +1,9 @@
 'use strict';
 
 import { FUNCTION, NUMBER } from '../symbols';
-import { classOf, falsey, identity, isBoolean, isError, isPromise } from '../utilites';
-import { emptyEmitter } from '../emitters/empty';
+import { classOf, falsey, identity, isBoolean, isError, isPromise, tie } from '../utilites';
 import { arrayAdapter } from '../adapters/array';
+import { emptyGenerator } from '../generators/empty';
 
 export function takeFirstOperator(count) {
   return emitter => (next, done, context) => {
@@ -55,12 +55,12 @@ export function takeOperator(condition) {
         ? takeFirstOperator(condition)
         : condition < 0
           ? takeLastOperator(-condition)
-          : () => emptyEmitter(false)
+          : tie(emptyGenerator, false)
     case FUNCTION:
       return takeWhileOperator(condition);
     default:
       return condition
         ? identity
-        : () => emptyEmitter(false);
+        : tie(emptyGenerator, false);
   }
 }

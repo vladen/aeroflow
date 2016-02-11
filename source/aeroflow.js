@@ -7,12 +7,12 @@ import { isError, isFunction, noop, objectDefineProperties, objectCreate } from 
 import { adapters, adapterSelector } from './adapters/index';
 import { scalarAdapter } from './adapters/scalar';
 
-import { customEmitter } from './emitters/custom';
-import { emptyEmitter } from './emitters/empty';
-import { expandEmitter } from './emitters/expand';
-import { randomEmitter } from './emitters/random';
-import { rangeEmitter } from './emitters/range';
-import { repeatEmitter } from './emitters/repeat';
+import { customGenerator } from './generators/custom';
+import { emptyGenerator } from './generators/empty';
+import { expandGenerator } from './generators/expand';
+import { randomGenerator } from './generators/random';
+import { rangeGenerator } from './generators/range';
+import { repeatGenerator } from './generators/repeat';
 
 import { averageOperator } from './operators/average';
 import { catchOperator } from './operators/catch';
@@ -144,7 +144,7 @@ aeroflow.create((next, done, context) => {
 // done false
 */
 function create(emitter) {
-  return new Flow(customEmitter(emitter));
+  return new Flow(customGenerator(emitter));
 }
 
 /**
@@ -163,7 +163,7 @@ aeroflow.expand(value => value * 2, 1).take(3).dump().run();
 // done false
 */
 function expand(expander, seed) {
-  return new Flow(expandEmitter(expander, seed));
+  return new Flow(expandGenerator(expander, seed));
 }
 
 /**
@@ -212,7 +212,7 @@ aeroflow.random(1.1, 8.9).take(2).dump().run();
 // done false
 */
 function random(minimum, maximum) {
-  return new Flow(randomEmitter(minimum, maximum));
+  return new Flow(randomGenerator(minimum, maximum));
 }
 
 /**
@@ -250,7 +250,7 @@ aeroflow.range(5, 0, -2).dump().run();
 // done true
 */
 function range(start, end, step) {
-  return new Flow(rangeEmitter(start, end, step));
+  return new Flow(rangeGenerator(start, end, step));
 }
 
 /**
@@ -294,7 +294,7 @@ aeroflow.repeat(index => index, index => 500 + 500 * index).take(3).dump().run()
 // done false
 */
 function repeat(value, interval) {
-  return new Flow(repeatEmitter(value, interval));
+  return new Flow(repeatGenerator(value, interval));
 }
 
 /**
@@ -317,6 +317,9 @@ function Flow(emitter, sources) {
 
 @example
 aeroflow().average().dump().run();
+// done true
+aeroflow('test').average().dump().run();
+// next NaN
 // done true
 aeroflow(1, 2, 6).average().dump().run();
 // next 3
@@ -814,6 +817,8 @@ and the 'required' argument is false.
 @example
 aeroflow().reduce().dump().run();
 // done false
+aeroflow(1, 2).reduce().dump().run();
+// done false
 aeroflow().reduce('test').dump().run();
 // next test
 // done true
@@ -869,8 +874,8 @@ aeroflow(1, 2).delay(500).replay(1000, true).take(4).dump().run();
 // next 2 // after 500ms
 // done false
 */
-function replay(delay, timing) {
-  return this.chain(replayOperator(delay, timing));
+function replay(interval, timing) {
+  return this.chain(replayOperator(interval, timing));
 }
 
 /**
@@ -921,14 +926,11 @@ If no callbacks provided, runs this flow for its side-effects only.
 @alias Flow#run
 
 @param {function} [next]
-Callback to execute for each emitted value, taking two arguments: result, context.
-Or EventEmitter object.
-Or EventTarget object.
-Or Observer object.
+Callback to execute for each emitted value, taking two arguments: result, data.
 @param {function} [done]
 If next parameter is callback,
-then callback to execute as emission is complete, taking two arguments: result, context.
-Or data parameter.
+then callback to execute as emission is complete, taking two arguments: result, data.
+Or data argument.
 @param {function} [data]
 Arbitrary value passed to each callback invoked by this flow as the last argument.
 
@@ -1195,6 +1197,8 @@ New flow emitting array containing all results emitted by this flow.
 
 @example
 aeroflow().toArray().dump().run();
+// done true
+aeroflow().toArray(true).dump().run();
 // next []
 // done true
 aeroflow('test').toArray().dump().run();
@@ -1204,8 +1208,8 @@ aeroflow(1, 2, 3).toArray().dump().run();
 // next [1, 2, 3]
 // done true
 */
-function toArray() {
-  return this.chain(toArrayOperator());
+function toArray(required) {
+  return this.chain(toArrayOperator(required));
 }
 
 /**
@@ -1251,14 +1255,16 @@ New flow emitting set containing all results emitted by this flow.
 
 @example
 aeroflow().toSet().dump().run();
+// done true
+aeroflow().toSet(true).dump().run();
 // next Set {}
 // done true
 aeroflow(1, 2, 3).toSet().dump().run();
 // next Set {1, 2, 3}
 // done true
 */
-function toSet() {
-  return this.chain(toSetOperator()); 
+function toSet(required) {
+  return this.chain(toSetOperator(required)); 
 }
 
 /**
@@ -1300,6 +1306,7 @@ aeroflow(1, 2, 3).toString((value, index) => '-'.repeat(index + 1)).dump().run()
 // next 1--2---3
 // done true
 */
+/*eslint no-shadow: 0*/
 function toString(separator, required) {
   return this.chain(toStringOperator(separator, required)); 
 }
@@ -1348,7 +1355,7 @@ Flow[PROTOTYPE] = objectCreate(operators, {
 objectDefineProperties(aeroflow, {
   adapters: { value: adapters },
   create: { value: create },
-  empty: { enumerable: true, value: new Flow(emptyEmitter(true)) },
+  empty: { enumerable: true, value: new Flow(emptyGenerator(true)) },
   expand: { value: expand },
   just: { value: just },
   operators: { value: operators },

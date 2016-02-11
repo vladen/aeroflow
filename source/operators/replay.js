@@ -3,8 +3,8 @@
 import { constant, dateNow, isError, toFunction, toNumber, tie } from '../utilites';
 import { unsync } from '../unsync';
 
-export function replayOperator(delay, timing) {
-  const delayer = toFunction(delay, constant(delay));
+export function replayOperator(interval, timing) {
+  const delayer = toFunction(interval, constant(interval));
   return emitter => (next, done, context) => {
     let past = dateNow();
     const chronicles = [], chronicler = timing
@@ -23,11 +23,11 @@ export function replayOperator(delay, timing) {
         if (isError(result)) done(result);
         else {
           let index = -1;
-          const length = chronicles.length;
           !function proceed(proceedResult) {
             if (unsync(proceedResult, proceed, tie(done, proceedResult))) return;
-            index = (index + 1) % length;
-            const chronicle = chronicles[index], interval = index
+            index = (index + 1) % chronicles.length;
+            const chronicle = chronicles[index];
+            interval = index
               ? chronicle.delay
               : chronicle.delay + toNumber(delayer(context.data), 0);
             (interval ? setTimeout : setImmediate)(() => {

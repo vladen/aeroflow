@@ -14,17 +14,17 @@ export function groupOperator(selectors) {
     let groups = new Map, index = 0;
     emitter(
       value => {
-        let current, parent = groups;
+        let ancestor = groups, descendant;
         for (let i = -1; ++i <= limit;) {
           let key = selectors[i](value, index++, context.data);
-          current = parent.get(key);
-          if (!current) {
-            current = i === limit ? [] : new Map;
-            parent.set(key, current);
+          descendant = ancestor.get(key);
+          if (!descendant) {
+            descendant = i === limit ? [] : new Map;
+            ancestor.set(key, descendant);
           }
-          parent = current;
+          ancestor = descendant;
         }
-        current.push(value);
+        descendant.push(value);
         return true;
       },
       result => {

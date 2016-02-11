@@ -10,9 +10,8 @@ export function sliceOperator(begin, end) {
   return begin < 0 || end < 0
     ? emitter => (next, done, context) =>
         toArrayOperator()(emitter)(result => {
-          let length = result.length,
-              index = begin < 0 ? length + begin : begin,
-              limit = end < 0 ? length + end : mathMin(length, end);
+          let index = begin < 0 ? result.length + begin : begin,
+            limit = end < 0 ? result.length + end : mathMin(result.length, end);
           if (index < 0) index = 0;
           if (limit < 0) limit = 0;
           return index >= limit || new Promise(resolve => {

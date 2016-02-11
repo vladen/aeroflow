@@ -7,6 +7,9 @@ import averageOperatorTests from './operators/average';
 import countOperatorTests from './operators/count';
 import maxOperatorTests from './operators/max';
 import minOperatorTests from './operators/min';
+import reduceOperatorTests from './operators/reduce';
+import toArrayOperatorTests from './operators/toArray';
+import toSetOperatorTests from './operators/toSet';
 import toStringOperatorTests from './operators/toString';
 
 const tests = [
@@ -17,6 +20,9 @@ const tests = [
   countOperatorTests,
   maxOperatorTests,
   minOperatorTests,
+  reduceOperatorTests,
+  toArrayOperatorTests,
+  toSetOperatorTests,
   toStringOperatorTests
 ];
 

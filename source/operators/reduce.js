@@ -3,17 +3,13 @@
 import { isError, isBoolean, isFunction, isUndefined, tie } from '../utilites';
 import { unsync } from '../unsync';
 import { scalarAdapter } from '../adapters/scalar';
-import { emptyEmitter } from '../emitters/empty';
+import { emptyGenerator } from '../generators/empty';
 
 export function reduceOperator(reducer, seed, required) {
-  if (isUndefined(reducer)) return tie(emptyEmitter, false);
+  if (isUndefined(reducer)) return tie(emptyGenerator, false);
   if (!isFunction(reducer)) return tie(scalarAdapter, reducer);
-  if (isUndefined(required) && isBoolean(seed)) {
-    required = seed;
-    seed = undefined;
-  }
   return emitter => (next, done, context) => {
-    let empty = !required, index = 1, reduced = seed;
+    let empty = !required, index = 0, reduced = seed;
     emitter(
       result => {
         if (empty) {

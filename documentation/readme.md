@@ -274,6 +274,9 @@ aeroflow.repeat(index => index, index => 500 + 500 * index).take(3).dump().run()
 ```js
 aeroflow().average().dump().run();
 // done true
+aeroflow('test').average().dump().run();
+// next NaN
+// done true
 aeroflow(1, 2, 6).average().dump().run();
 // next 3
 // done true
@@ -694,6 +697,8 @@ False to emit only 'done' event for empty flow.
 ```js
 aeroflow().reduce().dump().run();
 // done false
+aeroflow(1, 2).reduce().dump().run();
+// done false
 aeroflow().reduce('test').dump().run();
 // next test
 // done true
@@ -788,13 +793,10 @@ If no callbacks provided, runs this flow for its side-effects only.
 **Returns**: <code>Promise</code> - A promise resolving when this flow completes successfully or rejecting otherwise.  
 **Params**
 
-- [next] <code>function</code> - Callback to execute for each emitted value, taking two arguments: result, context.
-Or EventEmitter object.
-Or EventTarget object.
-Or Observer object.
+- [next] <code>function</code> - Callback to execute for each emitted value, taking two arguments: result, data.
 - [done] <code>function</code> - If next parameter is callback,
-then callback to execute as emission is complete, taking two arguments: result, context.
-Or data parameter.
+then callback to execute as emission is complete, taking two arguments: result, data.
+Or data argument.
 - [data] <code>function</code> - Arbitrary value passed to each callback invoked by this flow as the last argument.
 
 **Example**  
@@ -1002,6 +1004,8 @@ Collects all values emitted by this flow to array, returns flow emitting this ar
 **Example**  
 ```js
 aeroflow().toArray().dump().run();
+// done true
+aeroflow().toArray(true).dump().run();
 // next []
 // done true
 aeroflow('test').toArray().dump().run();
@@ -1048,6 +1052,8 @@ Collects all values emitted by this flow to ES6 set, returns flow emitting this 
 **Example**  
 ```js
 aeroflow().toSet().dump().run();
+// done true
+aeroflow().toSet(true).dump().run();
 // next Set {}
 // done true
 aeroflow(1, 2, 3).toSet().dump().run();

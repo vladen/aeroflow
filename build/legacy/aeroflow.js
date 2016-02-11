@@ -190,10 +190,9 @@
 
   function arrayAdapter(source) {
     return function (next, done, context) {
-      var index = -1,
-          length = source.length;
+      var index = -1;
       !function proceed() {
-        while (++index < length) {
+        while (++index < source.length) {
           if (unsync(next(source[index]), proceed, done)) return;
         }
 
@@ -290,49 +289,53 @@
     };
   }
 
-  function emptyEmitter(result) {
+  function emptyGenerator(result) {
     return function (next, done) {
       return done(result);
     };
   }
 
-  function customEmitter(emitter) {
-    if (isUndefined(emitter)) return emptyEmitter(true);
-    if (!isFunction(emitter)) return scalarAdapter(emitter);
+  function customGenerator(generator) {
+    if (isUndefined(generator)) return emptyGenerator(true);
+    if (!isFunction(generator)) return scalarAdapter(generator);
     return function (next, done, context) {
       var buffer = [],
-          completed = false,
-          finalizer = undefined,
-          waiting = false;
-      finalizer = emitter(accept, finish, context);
-
-      function accept(result) {
+          busy = false,
+          idle = false,
+          finalizer = undefined;
+      finalizer = generator(function (result) {
+        if (idle) return false;
         buffer.push(result);
-        proceed();
-      }
+        if (!busy) proceed(true);
+        return true;
+      }, function (result) {
+        if (idle) return false;
+        idle = true;
+        buffer.result = isUndefined(result) || result;
+        if (!busy) proceed(true);
+        return true;
+      }, context.data);
 
-      function finish(result) {
-        if (completed) return;
-        completed = true;
+      function complete(result) {
+        idle = true;
         if (isFunction(finalizer)) setTimeout(finalizer, 0);
-        if (isUndefined(result)) result = true;
-        done(result);
+        done(result && buffer.result);
       }
 
-      function proceed() {
-        waiting = false;
-
-        while (buffer.length) {
-          if (unsync(next(buffer.shift()), proceed, finish)) {
-            waiting = true;
+      function proceed(result) {
+        busy = false;
+        if (result) while (buffer.length) {
+          if (unsync(next(buffer.shift()), proceed, complete)) {
+            busy = true;
             return;
           }
         }
+        complete(result);
       }
     };
   }
 
-  function expandEmitter(expanding, seed) {
+  function expandGenerator(expanding, seed) {
     var expander = isFunction(expanding) ? expanding : constant(expanding);
     return function (next, done, context) {
       var index = 0,
@@ -343,7 +346,7 @@
     };
   }
 
-  function randomEmitter(minimum, maximum) {
+  function randomGenerator(minimum, maximum) {
     maximum = toNumber(maximum, 1 - mathPow(10, -15));
     minimum = toNumber(minimum, 0);
     maximum -= minimum;
@@ -355,7 +358,7 @@
     };
   }
 
-  function rangeEmitter(start, end, step) {
+  function rangeGenerator(start, end, step) {
     end = toNumber(end, maxInteger);
     start = toNumber(start, 0);
     if (start === end) return scalarAdapter(start);
@@ -386,7 +389,7 @@
     };
   }
 
-  function repeatDeferredEmitter(repeater, delayer) {
+  function repeatDeferredGenerator(repeater, delayer) {
     return function (next, done, context) {
       var index = -1;
       !function proceed(result) {
@@ -397,7 +400,7 @@
     };
   }
 
-  function repeatImmediateEmitter(repeater) {
+  function repeatImmediateGenerator(repeater) {
     return function (next, done, context) {
       var index = 0;
       !function proceed() {
@@ -406,24 +409,18 @@
     };
   }
 
-  function repeatEmitter(value, interval) {
+  function repeatGenerator(value, interval) {
     var repeater = toFunction(value, constant(value));
-    return isDefined(interval) ? repeatDeferredEmitter(repeater, toFunction(interval, constant(interval))) : repeatImmediateEmitter(repeater);
+    return isDefined(interval) ? repeatDeferredGenerator(repeater, toFunction(interval, constant(interval))) : repeatImmediateGenerator(repeater);
   }
 
   function reduceOperator(reducer, seed, required) {
-    if (isUndefined(reducer)) return tie(emptyEmitter, false);
+    if (isUndefined(reducer)) return tie(emptyGenerator, false);
     if (!isFunction(reducer)) return tie(scalarAdapter, reducer);
-
-    if (isUndefined(required) && isBoolean(seed)) {
-      required = seed;
-      seed = undefined;
-    }
-
     return function (emitter) {
       return function (next, done, context) {
         var empty = !required,
-            index = 1,
+            index = 0,
             reduced = seed;
         emitter(function (result) {
           if (empty) {
@@ -444,14 +441,14 @@
     };
   }
 
-  function averageOperator(required) {
+  function averageOperator() {
     return reduceOperator(function (average, result, index) {
       return (average * index + result) / (index + 1);
-    });
+    }, 0);
   }
 
   function catchOperator(alternative) {
-    var regressor = isDefined(alternative) ? adapterSelector(alternative, scalarAdapter(alternative)) : emptyEmitter(false);
+    var regressor = isDefined(alternative) ? adapterSelector(alternative, scalarAdapter(alternative)) : emptyGenerator(false);
     return function (emitter) {
       return function (next, done, context) {
         return emitter(next, function (result) {
@@ -664,22 +661,22 @@
         var groups = new Map(),
             index = 0;
         emitter(function (value) {
-          var current = undefined,
-              parent = groups;
+          var ancestor = groups,
+              descendant = undefined;
 
           for (var i = -1; ++i <= limit;) {
             var key = selectors[i](value, index++, context.data);
-            current = parent.get(key);
+            descendant = ancestor.get(key);
 
-            if (!current) {
-              current = i === limit ? [] : new Map();
-              parent.set(key, current);
+            if (!descendant) {
+              descendant = i === limit ? [] : new Map();
+              ancestor.set(key, descendant);
             }
 
-            parent = current;
+            ancestor = descendant;
           }
 
-          current.push(value);
+          descendant.push(value);
           return true;
         }, function (result) {
           if (isError(result)) done(result);else iterableAdapter(groups)(next, tie(done, result), context);
@@ -688,15 +685,17 @@
     };
   }
 
-  function toArrayOperator() {
+  function toArrayOperator(required) {
     return function (emitter) {
       return function (next, done, context) {
-        var array = [];
+        var array = [],
+            empty = !required;
         emitter(function (result) {
+          empty = false;
           array.push(result);
           return true;
         }, function (result) {
-          if (isError(result) || !unsync(next(array), tie(done, result), done)) done(result);
+          if (isError(result) || empty || !unsync(next(array), tie(done, result), done)) done(result);
         }, context);
       };
     };
@@ -764,8 +763,8 @@
     });
   }
 
-  function replayOperator(delay, timing) {
-    var delayer = toFunction(delay, constant(delay));
+  function replayOperator(interval, timing) {
+    var delayer = toFunction(interval, constant(interval));
     return function (emitter) {
       return function (next, done, context) {
         var past = dateNow();
@@ -791,12 +790,11 @@
           if (isError(result)) done(result);else {
             (function () {
               var index = -1;
-              var length = chronicles.length;
               !function proceed(proceedResult) {
                 if (unsync(proceedResult, proceed, tie(done, proceedResult))) return;
-                index = (index + 1) % length;
-                var chronicle = chronicles[index],
-                    interval = index ? chronicle.delay : chronicle.delay + toNumber(delayer(context.data), 0);
+                index = (index + 1) % chronicles.length;
+                var chronicle = chronicles[index];
+                interval = index ? chronicle.delay : chronicle.delay + toNumber(delayer(context.data), 0);
                 (interval ? setTimeout : setImmediate)(function () {
                   if (!unsync(next(chronicle.result), proceed, proceed)) proceed(true);
                 }, interval);
@@ -912,9 +910,8 @@
     return begin < 0 || end < 0 ? function (emitter) {
       return function (next, done, context) {
         return toArrayOperator()(emitter)(function (result) {
-          var length = result.length,
-              index = begin < 0 ? length + begin : begin,
-              limit = end < 0 ? length + end : mathMin(length, end);
+          var index = begin < 0 ? result.length + begin : begin,
+              limit = end < 0 ? result.length + end : mathMin(result.length, end);
           if (index < 0) index = 0;
           if (limit < 0) limit = 0;
           return index >= limit || new Promise(function (resolve) {
@@ -1084,17 +1081,13 @@
   function takeOperator(condition) {
     switch (classOf(condition)) {
       case NUMBER:
-        return condition > 0 ? takeFirstOperator(condition) : condition < 0 ? takeLastOperator(-condition) : function () {
-          return emptyEmitter(false);
-        };
+        return condition > 0 ? takeFirstOperator(condition) : condition < 0 ? takeLastOperator(-condition) : tie(emptyGenerator, false);
 
       case FUNCTION:
         return takeWhileOperator(condition);
 
       default:
-        return condition ? identity : function () {
-          return emptyEmitter(false);
-        };
+        return condition ? identity : tie(emptyGenerator, false);
     }
   }
 
@@ -1127,15 +1120,17 @@
     };
   }
 
-  function toSetOperator() {
+  function toSetOperator(required) {
     return function (emitter) {
       return function (next, done, context) {
-        var set = new Set();
+        var empty = !required,
+            set = new Set();
         emitter(function (result) {
+          empty = false;
           set.add(result);
           return true;
         }, function (result) {
-          if (isError(result) || !unsync(next(set), tie(done, result), done)) done(result);
+          if (isError(result) || empty || !unsync(next(set), tie(done, result), done)) done(result);
         }, context);
       };
     };
@@ -1187,11 +1182,11 @@
   }
 
   function create(emitter) {
-    return new Flow(customEmitter(emitter));
+    return new Flow(customGenerator(emitter));
   }
 
   function expand(expander, seed) {
-    return new Flow(expandEmitter(expander, seed));
+    return new Flow(expandGenerator(expander, seed));
   }
 
   function just(value) {
@@ -1199,15 +1194,15 @@
   }
 
   function random(minimum, maximum) {
-    return new Flow(randomEmitter(minimum, maximum));
+    return new Flow(randomGenerator(minimum, maximum));
   }
 
   function range(start, end, step) {
-    return new Flow(rangeEmitter(start, end, step));
+    return new Flow(rangeGenerator(start, end, step));
   }
 
   function repeat(value, interval) {
-    return new Flow(repeatEmitter(value, interval));
+    return new Flow(repeatGenerator(value, interval));
   }
 
   function Flow(emitter, sources) {
@@ -1309,8 +1304,8 @@
     return this.chain(reduceOperator(reducer, seed, required));
   }
 
-  function replay(delay, timing) {
-    return this.chain(replayOperator(delay, timing));
+  function replay(interval, timing) {
+    return this.chain(replayOperator(interval, timing));
   }
 
   function retry(attempts) {
@@ -1389,16 +1384,16 @@
     return this.chain(tapOperator(callback));
   }
 
-  function toArray() {
-    return this.chain(toArrayOperator());
+  function toArray(required) {
+    return this.chain(toArrayOperator(required));
   }
 
   function toMap(keyTransformation, valueTransformation) {
     return this.chain(toMapOperator(keyTransformation, valueTransformation));
   }
 
-  function toSet() {
-    return this.chain(toSetOperator());
+  function toSet(required) {
+    return this.chain(toSetOperator(required));
   }
 
   function toString(separator, required) {
@@ -1547,7 +1542,7 @@
     },
     empty: {
       enumerable: true,
-      value: new Flow(emptyEmitter(true))
+      value: new Flow(emptyGenerator(true))
     },
     expand: {
       value: expand
