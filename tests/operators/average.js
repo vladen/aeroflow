@@ -3,7 +3,7 @@ export default (aeroflow, assert) => describe('average', () => {
     assert.isFunction(aeroflow.empty.average);
   });
 
-  describe('aeroflow().average()', () => {
+  describe('average()', () => {
     it('Returns instance of Aeroflow', () => {
       assert.typeOf(aeroflow.empty.average(), 'Aeroflow');
     });

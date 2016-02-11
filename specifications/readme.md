@@ -1,38 +1,38 @@
 # TOC
    - [average](#average)
-     - [aeroflow().average()](#average-aeroflowaverage)
+     - [average()](#average-average)
    - [catch](#catch)
-     - [aeroflow().catch()](#catch-aeroflowcatch)
-     - [aeroflow().catch(@alternative:function)](#catch-aeroflowcatchalternativefunction)
-     - [aeroflow().catch(@alternative:!function)](#catch-aeroflowcatchalternativefunction)
+     - [catch()](#catch-catch)
+     - [catch(@alternative:function)](#catch-catchalternativefunction)
+     - [catch(@alternative:!function)](#catch-catchalternativefunction)
    - [count](#count)
-     - [aeroflow().count()](#count-aeroflowcount)
+     - [count()](#count-count)
    - [filter](#filter)
-     - [aeroflow().filter()](#filter-aeroflowfilter)
-     - [aeroflow().filter(@condition:function)](#filter-aeroflowfilterconditionfunction)
-     - [aeroflow().filter(@condition:regex)](#filter-aeroflowfilterconditionregex)
-     - [aeroflow().filter(@condition:!function!regex)](#filter-aeroflowfilterconditionfunctionregex)
+     - [filter()](#filter-filter)
+     - [filter(@condition:function)](#filter-filterconditionfunction)
+     - [filter(@condition:regex)](#filter-filterconditionregex)
+     - [filter(@condition:!function!regex)](#filter-filterconditionfunctionregex)
    - [max](#max)
-     - [aeroflow().max()](#max-aeroflowmax)
+     - [max()](#max-max)
    - [min](#min)
-     - [aeroflow().min()](#min-aeroflowmin)
+     - [min()](#min-min)
    - [reduce](#reduce)
-     - [aeroflow().reduce()](#reduce-aeroflowreduce)
-     - [aeroflow().reduce(@reducer:function)](#reduce-aeroflowreducereducerfunction)
-     - [aeroflow().reduce(@reducer:function, @seed:any)](#reduce-aeroflowreducereducerfunction-seedany)
-     - [aeroflow().reduce(@reducer:function, @seed:any, true)](#reduce-aeroflowreducereducerfunction-seedany-true)
-     - [aeroflow().reduce(@seed:!function)](#reduce-aeroflowreduceseedfunction)
+     - [reduce()](#reduce-reduce)
+     - [reduce(@reducer:function)](#reduce-reducereducerfunction)
+     - [reduce(@reducer:function, @seed:any)](#reduce-reducereducerfunction-seedany)
+     - [reduce(@reducer:function, @seed:any, true)](#reduce-reducereducerfunction-seedany-true)
+     - [reduce(@seed:!function)](#reduce-reduceseedfunction)
    - [toArray](#toarray)
-     - [aeroflow().toArray()](#toarray-aeroflowtoarray)
-     - [aeroflow().toArray(true)](#toarray-aeroflowtoarraytrue)
+     - [toArray()](#toarray-toarray)
+     - [toArray(true)](#toarray-toarraytrue)
    - [toSet](#toset)
-     - [aeroflow().toSet()](#toset-aeroflowtoset)
-     - [aeroflow().toSet(true)](#toset-aeroflowtosettrue)
+     - [toSet()](#toset-toset)
+     - [toSet(true)](#toset-tosettrue)
    - [toString](#tostring)
-     - [aeroflow().toString()](#tostring-aeroflowtostring)
-     - [aeroflow().toString(true)](#tostring-aeroflowtostringtrue)
-     - [aeroflow().toString(@string)](#tostring-aeroflowtostringstring)
-     - [aeroflow().toString(@string, true)](#tostring-aeroflowtostringstring-true)
+     - [toString()](#tostring-tostring)
+     - [toString(true)](#tostring-tostringtrue)
+     - [toString(@string)](#tostring-tostringstring)
+     - [toString(@string, true)](#tostring-tostringstring-true)
 <a name=""></a>
  
 <a name="average"></a>
@@ -43,8 +43,8 @@ Is instance method.
 assert.isFunction(aeroflow.empty.average);
 ```
 
-<a name="average-aeroflowaverage"></a>
-## aeroflow().average()
+<a name="average-average"></a>
+## average()
 Returns instance of Aeroflow.
 
 ```js
@@ -107,8 +107,8 @@ Is instance method.
 return assert.isFunction(aeroflow.empty.catch);
 ```
 
-<a name="catch-aeroflowcatch"></a>
-## aeroflow().catch()
+<a name="catch-catch"></a>
+## catch()
 Returns instance of Aeroflow.
 
 ```js
@@ -131,8 +131,8 @@ return assert.eventually.isBoolean(new Promise(function (done, fail) {
 }));
 ```
 
-<a name="catch-aeroflowcatchalternativefunction"></a>
-## aeroflow().catch(@alternative:function)
+<a name="catch-catchalternativefunction"></a>
+## catch(@alternative:function)
 Does not call @alternative when flow is empty.
 
 ```js
@@ -168,8 +168,8 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), alternative);
 ```
 
-<a name="catch-aeroflowcatchalternativefunction"></a>
-## aeroflow().catch(@alternative:!function)
+<a name="catch-catchalternativefunction"></a>
+## catch(@alternative:!function)
 Emits @alternative value when flow emits error.
 
 ```js
@@ -187,8 +187,8 @@ Is instance method.
 assert.isFunction(aeroflow.empty.count);
 ```
 
-<a name="count-aeroflowcount"></a>
-## aeroflow().count()
+<a name="count-count"></a>
+## count()
 Returns instance of Aeroflow.
 
 ```js
@@ -231,8 +231,8 @@ Is instance method.
 return assert.isFunction(aeroflow.empty.filter);
 ```
 
-<a name="filter-aeroflowfilter"></a>
-## aeroflow().filter()
+<a name="filter-filter"></a>
+## filter()
 Returns instance of Aeroflow.
 
 ```js
@@ -259,8 +259,8 @@ assert.eventually.includeMembers(new Promise(function (done, fail) {
 }), expectation);
 ```
 
-<a name="filter-aeroflowfilterconditionfunction"></a>
-## aeroflow().filter(@condition:function)
+<a name="filter-filterconditionfunction"></a>
+## filter(@condition:function)
 Does not call @condition when flow is empty.
 
 ```js
@@ -322,8 +322,8 @@ assert.eventually.includeMembers(new Promise(function (done, fail) {
 }), expectation);
 ```
 
-<a name="filter-aeroflowfilterconditionregex"></a>
-## aeroflow().filter(@condition:regex)
+<a name="filter-filterconditionregex"></a>
+## filter(@condition:regex)
 Emits only values passing @condition test.
 
 ```js
@@ -337,8 +337,8 @@ assert.eventually.includeMembers(new Promise(function (done, fail) {
 }), expectation);
 ```
 
-<a name="filter-aeroflowfilterconditionfunctionregex"></a>
-## aeroflow().filter(@condition:!function!regex)
+<a name="filter-filterconditionfunctionregex"></a>
+## filter(@condition:!function!regex)
 Emits only values equal to @condition.
 
 ```js
@@ -360,8 +360,8 @@ Is instance method.
 assert.isFunction(aeroflow.empty.max);
 ```
 
-<a name="max-aeroflowmax"></a>
-## aeroflow().max()
+<a name="max-max"></a>
+## max()
 Returns instance of Aeroflow.
 
 ```js
@@ -427,8 +427,8 @@ Is instance method.
 assert.isFunction(aeroflow.empty.min);
 ```
 
-<a name="min-aeroflowmin"></a>
-## aeroflow().min()
+<a name="min-min"></a>
+## min()
 Returns instance of Aeroflow.
 
 ```js
@@ -494,8 +494,8 @@ Is instance method.
 return assert.isFunction(aeroflow.empty.reduce);
 ```
 
-<a name="reduce-aeroflowreduce"></a>
-## aeroflow().reduce()
+<a name="reduce-reduce"></a>
+## reduce()
 Returns instance of Aeroflow.
 
 ```js
@@ -518,8 +518,8 @@ return assert.isFulfilled(new Promise(function (done, fail) {
 }));
 ```
 
-<a name="reduce-aeroflowreducereducerfunction"></a>
-## aeroflow().reduce(@reducer:function)
+<a name="reduce-reducereducerfunction"></a>
+## reduce(@reducer:function)
 Does not call @reducer when flow is empty.
 
 ```js
@@ -614,8 +614,8 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), data);
 ```
 
-<a name="reduce-aeroflowreducereducerfunction-seedany"></a>
-## aeroflow().reduce(@reducer:function, @seed:any)
+<a name="reduce-reducereducerfunction-seedany"></a>
+## reduce(@reducer:function, @seed:any)
 Emits nothing when flow is empty.
 
 ```js
@@ -633,8 +633,8 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), seed);
 ```
 
-<a name="reduce-aeroflowreducereducerfunction-seedany-true"></a>
-## aeroflow().reduce(@reducer:function, @seed:any, true)
+<a name="reduce-reducereducerfunction-seedany-true"></a>
+## reduce(@reducer:function, @seed:any, true)
 Emits @seed when flow is empty.
 
 ```js
@@ -644,8 +644,8 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), seed);
 ```
 
-<a name="reduce-aeroflowreduceseedfunction"></a>
-## aeroflow().reduce(@seed:!function)
+<a name="reduce-reduceseedfunction"></a>
+## reduce(@seed:!function)
 Emits @seed when flow is empty.
 
 ```js
@@ -672,8 +672,8 @@ Is instance method.
 assert.isFunction(aeroflow.empty.toArray);
 ```
 
-<a name="toarray-aeroflowtoarray"></a>
-## aeroflow().toArray()
+<a name="toarray-toarray"></a>
+## toArray()
 Returns instance of Aeroflow.
 
 ```js
@@ -698,8 +698,8 @@ return assert.eventually.includeMembers(new Promise(function (done, fail) {
 }), expectation);
 ```
 
-<a name="toarray-aeroflowtoarraytrue"></a>
-## aeroflow().toArray(true)
+<a name="toarray-toarraytrue"></a>
+## toArray(true)
 Emits an array when flow is empty.
 
 ```js
@@ -726,8 +726,8 @@ Is instance method.
 assert.isFunction(aeroflow.empty.toSet);
 ```
 
-<a name="toset-aeroflowtoset"></a>
-## aeroflow().toSet()
+<a name="toset-toset"></a>
+## toSet()
 Returns instance of Aeroflow.
 
 ```js
@@ -754,8 +754,8 @@ return assert.eventually.includeMembers(new Promise(function (done, fail) {
 }), expectation);
 ```
 
-<a name="toset-aeroflowtosettrue"></a>
-## aeroflow().toSet(true)
+<a name="toset-tosettrue"></a>
+## toSet(true)
 Emits a set when flow is empty.
 
 ```js
@@ -782,8 +782,8 @@ Is instance method.
 assert.isFunction(aeroflow.empty.toString);
 ```
 
-<a name="tostring-aeroflowtostring"></a>
-## aeroflow().toString()
+<a name="tostring-tostring"></a>
+## toString()
 Returns instance of Aeroflow.
 
 ```js
@@ -838,8 +838,8 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), expectation);
 ```
 
-<a name="tostring-aeroflowtostringtrue"></a>
-## aeroflow().toString(true)
+<a name="tostring-tostringtrue"></a>
+## toString(true)
 Emits string when flow empty.
 
 ```js
@@ -858,8 +858,8 @@ return assert.eventually.lengthOf(new Promise(function (done, fail) {
 }), expectation);
 ```
 
-<a name="tostring-aeroflowtostringstring"></a>
-## aeroflow().toString(@string)
+<a name="tostring-tostringstring"></a>
+## toString(@string)
 Emits nothing when flow is empty.
 
 ```js
@@ -879,8 +879,8 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), expectation);
 ```
 
-<a name="tostring-aeroflowtostringstring-true"></a>
-## aeroflow().toString(@string, true)
+<a name="tostring-tostringstring-true"></a>
+## toString(@string, true)
 Emits empty string when flow is empty.
 
 ```js

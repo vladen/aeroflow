@@ -3,7 +3,7 @@ export default (aeroflow, assert) => describe('toArray', () => {
     assert.isFunction(aeroflow.empty.toArray);
   });
 
-  describe('aeroflow().toArray()', () => {
+  describe('toArray()', () => {
     it('Returns instance of Aeroflow', () => {
       assert.typeOf(aeroflow.empty.toArray(), 'Aeroflow');
     });
@@ -21,7 +21,7 @@ export default (aeroflow, assert) => describe('toArray', () => {
     });
   });
 
-  describe('aeroflow().toArray(true)', () => {
+  describe('toArray(true)', () => {
     it('Emits an array when flow is empty', () => {
       const expectation = 'Array';
       return assert.eventually.typeOf(new Promise((done, fail) =>

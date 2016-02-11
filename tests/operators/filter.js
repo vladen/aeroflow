@@ -2,7 +2,7 @@ export default (aeroflow, assert) => describe('filter', () => {
   it('Is instance method', () =>
     assert.isFunction(aeroflow.empty.filter));
 
-  describe('aeroflow().filter()', () => {
+  describe('filter()', () => {
     it('Returns instance of Aeroflow', () =>
       assert.typeOf(aeroflow.empty.filter(), 'Aeroflow'));
 
@@ -19,7 +19,7 @@ export default (aeroflow, assert) => describe('filter', () => {
     });
   });
 
-  describe('aeroflow().filter(@condition:function)', () => {
+  describe('filter(@condition:function)', () => {
     it('Does not call @condition when flow is empty', () =>
       assert.isFulfilled(new Promise((done, fail) =>
         aeroflow.empty.filter(fail).run(fail, done))));
@@ -59,7 +59,7 @@ export default (aeroflow, assert) => describe('filter', () => {
     });
   });
 
-  describe('aeroflow().filter(@condition:regex)', () => {
+  describe('filter(@condition:regex)', () => {
     it('Emits only values passing @condition test', () => {
       const values = ['a', 'b', 'aa', 'bb'], condition = /a/,
         expectation = values.filter(value => condition.test(value));
@@ -69,7 +69,7 @@ export default (aeroflow, assert) => describe('filter', () => {
     });
   });
 
-  describe('aeroflow().filter(@condition:!function!regex)', () => {
+  describe('filter(@condition:!function!regex)', () => {
     it('Emits only values equal to @condition', () => {
       const values = [1, 2, 3], condition = 2,
         expectation = values.filter(value => value === condition);

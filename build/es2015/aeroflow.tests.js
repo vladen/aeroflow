@@ -3,7 +3,7 @@ var averageOperatorTests = (aeroflow, assert) => describe('average', () => {
     assert.isFunction(aeroflow.empty.average);
   });
 
-  describe('aeroflow().average()', () => {
+  describe('average()', () => {
     it('Returns instance of Aeroflow', () => {
       assert.typeOf(aeroflow.empty.average(), 'Aeroflow');
     });
@@ -46,7 +46,7 @@ var catchOperatorTests = (aeroflow, assert) => describe('catch', () => {
   it('Is instance method', () =>
     assert.isFunction(aeroflow.empty.catch));
 
-  describe('aeroflow().catch()', () => {
+  describe('catch()', () => {
     it('Returns instance of Aeroflow', () =>
       assert.typeOf(aeroflow.empty.catch(), 'Aeroflow'));
 
@@ -59,7 +59,7 @@ var catchOperatorTests = (aeroflow, assert) => describe('catch', () => {
         aeroflow(new Error('test')).catch().run(fail, done))));
   });
 
-  describe('aeroflow().catch(@alternative:function)', () => {
+  describe('catch(@alternative:function)', () => {
     it('Does not call @alternative when flow is empty', () =>
       assert.isFulfilled(new Promise((done, fail) =>
         aeroflow.empty.catch(fail).run(fail, done))));
@@ -80,7 +80,7 @@ var catchOperatorTests = (aeroflow, assert) => describe('catch', () => {
     });
   });
 
-  describe('aeroflow().catch(@alternative:!function)', () => {
+  describe('catch(@alternative:!function)', () => {
     it('Emits @alternative value when flow emits error', () => {
       const alternative = 'caught';
       return assert.eventually.strictEqual(new Promise((done, fail) =>
@@ -95,7 +95,7 @@ var countOperatorTests = (aeroflow, assert) => describe('count', () => {
     assert.isFunction(aeroflow.empty.count);
   });
 
-  describe('aeroflow().count()', () => {
+  describe('count()', () => {
     it('Returns instance of Aeroflow', () => {
       assert.typeOf(aeroflow.empty.count(), 'Aeroflow');
     });
@@ -127,7 +127,7 @@ var filterOperatorTests = (aeroflow, assert) => describe('filter', () => {
   it('Is instance method', () =>
     assert.isFunction(aeroflow.empty.filter));
 
-  describe('aeroflow().filter()', () => {
+  describe('filter()', () => {
     it('Returns instance of Aeroflow', () =>
       assert.typeOf(aeroflow.empty.filter(), 'Aeroflow'));
 
@@ -144,7 +144,7 @@ var filterOperatorTests = (aeroflow, assert) => describe('filter', () => {
     });
   });
 
-  describe('aeroflow().filter(@condition:function)', () => {
+  describe('filter(@condition:function)', () => {
     it('Does not call @condition when flow is empty', () =>
       assert.isFulfilled(new Promise((done, fail) =>
         aeroflow.empty.filter(fail).run(fail, done))));
@@ -184,7 +184,7 @@ var filterOperatorTests = (aeroflow, assert) => describe('filter', () => {
     });
   });
 
-  describe('aeroflow().filter(@condition:regex)', () => {
+  describe('filter(@condition:regex)', () => {
     it('Emits only values passing @condition test', () => {
       const values = ['a', 'b', 'aa', 'bb'], condition = /a/,
         expectation = values.filter(value => condition.test(value));
@@ -194,7 +194,7 @@ var filterOperatorTests = (aeroflow, assert) => describe('filter', () => {
     });
   });
 
-  describe('aeroflow().filter(@condition:!function!regex)', () => {
+  describe('filter(@condition:!function!regex)', () => {
     it('Emits only values equal to @condition', () => {
       const values = [1, 2, 3], condition = 2,
         expectation = values.filter(value => value === condition);
@@ -210,7 +210,7 @@ var maxOperatorTests = (aeroflow, assert) => describe('max', () => {
     assert.isFunction(aeroflow.empty.max);
   });
 
-  describe('aeroflow().max()', () => {
+  describe('max()', () => {
     it('Returns instance of Aeroflow', () => {
       assert.typeOf(aeroflow.empty.max(), 'Aeroflow');
     });
@@ -255,7 +255,7 @@ var minOperatorTests = (aeroflow, assert) => describe('min', () => {
     assert.isFunction(aeroflow.empty.min);
   });
 
-  describe('aeroflow().min()', () => {
+  describe('min()', () => {
     it('Returns instance of Aeroflow', () => {
       assert.typeOf(aeroflow.empty.min(), 'Aeroflow');
     });
@@ -299,7 +299,7 @@ var reduceOperatorTests = (aeroflow, assert) => describe('reduce', () => {
   it('Is instance method', () =>
     assert.isFunction(aeroflow.empty.reduce));
 
-  describe('aeroflow().reduce()', () => {
+  describe('reduce()', () => {
     it('Returns instance of Aeroflow', () =>
       assert.typeOf(aeroflow.empty.reduce(), 'Aeroflow'));
 
@@ -312,7 +312,7 @@ var reduceOperatorTests = (aeroflow, assert) => describe('reduce', () => {
         aeroflow('test').reduce().run(fail, done))));
   });
 
-  describe('aeroflow().reduce(@reducer:function)', () => {
+  describe('reduce(@reducer:function)', () => {
     it('Does not call @reducer when flow is empty', () =>
       assert.isFulfilled(new Promise((done, fail) =>
         aeroflow.empty.reduce(fail).run(fail, done))));
@@ -369,7 +369,7 @@ var reduceOperatorTests = (aeroflow, assert) => describe('reduce', () => {
     });
   });
 
-  describe('aeroflow().reduce(@reducer:function, @seed:any)', () => {
+  describe('reduce(@reducer:function, @seed:any)', () => {
     it('Emits nothing when flow is empty', () =>
       assert.isFulfilled(new Promise((done, fail) =>
         aeroflow.empty.reduce(() => {}, 42).run(fail, done))));
@@ -382,7 +382,7 @@ var reduceOperatorTests = (aeroflow, assert) => describe('reduce', () => {
     });
   });
 
-  describe('aeroflow().reduce(@reducer:function, @seed:any, true)', () => {
+  describe('reduce(@reducer:function, @seed:any, true)', () => {
     it('Emits @seed when flow is empty', () => {
       const seed = 'test';
       return assert.eventually.strictEqual(new Promise((done, fail) => 
@@ -391,7 +391,7 @@ var reduceOperatorTests = (aeroflow, assert) => describe('reduce', () => {
     });
   });
 
-  describe('aeroflow().reduce(@seed:!function)', () => {
+  describe('reduce(@seed:!function)', () => {
     it('Emits @seed when flow is empty', () => {
       const seed = 42;
       return assert.eventually.strictEqual(new Promise((done, fail) => 
@@ -413,7 +413,7 @@ var toArrayOperatorTests = (aeroflow, assert) => describe('toArray', () => {
     assert.isFunction(aeroflow.empty.toArray);
   });
 
-  describe('aeroflow().toArray()', () => {
+  describe('toArray()', () => {
     it('Returns instance of Aeroflow', () => {
       assert.typeOf(aeroflow.empty.toArray(), 'Aeroflow');
     });
@@ -431,7 +431,7 @@ var toArrayOperatorTests = (aeroflow, assert) => describe('toArray', () => {
     });
   });
 
-  describe('aeroflow().toArray(true)', () => {
+  describe('toArray(true)', () => {
     it('Emits an array when flow is empty', () => {
       const expectation = 'Array';
       return assert.eventually.typeOf(new Promise((done, fail) =>
@@ -452,7 +452,7 @@ var toSetOperatorTests = (aeroflow, assert) => describe('toSet', () => {
     assert.isFunction(aeroflow.empty.toSet);
   });
 
-  describe('aeroflow().toSet()', () => {
+  describe('toSet()', () => {
     it('Returns instance of Aeroflow', () => {
       assert.typeOf(aeroflow.empty.toSet(), 'Aeroflow');
     });
@@ -470,7 +470,7 @@ var toSetOperatorTests = (aeroflow, assert) => describe('toSet', () => {
     });
   });
 
-  describe('aeroflow().toSet(true)', () => {
+  describe('toSet(true)', () => {
     it('Emits a set when flow is empty', () => {
       const expectation = 'Set';
       return assert.eventually.typeOf(new Promise((done, fail) =>
@@ -492,7 +492,7 @@ var toStringOperatorTests = (aeroflow, assert) => describe('toString', () => {
     assert.isFunction(aeroflow.empty.toString);
   });
 
-  describe('aeroflow().toString()', () => {
+  describe('toString()', () => {
     it('Returns instance of Aeroflow', () => {
       assert.typeOf(aeroflow.empty.toString(), 'Aeroflow');
     });
@@ -531,7 +531,7 @@ var toStringOperatorTests = (aeroflow, assert) => describe('toString', () => {
     });
   });
 
-  describe('aeroflow().toString(true)', () => {
+  describe('toString(true)', () => {
     it('Emits string when flow empty', () => {
       const expectation = 'String';
       return assert.eventually.typeOf(new Promise((done, fail) =>
@@ -546,7 +546,7 @@ var toStringOperatorTests = (aeroflow, assert) => describe('toString', () => {
     });
   });
 
-  describe('aeroflow().toString(@string)', () => {
+  describe('toString(@string)', () => {
     it('Emits nothing when flow is empty', () => {
       return assert.isFulfilled(new Promise((done, fail) =>
         aeroflow.empty.toString(';').run(fail, done)));
@@ -560,7 +560,7 @@ var toStringOperatorTests = (aeroflow, assert) => describe('toString', () => {
     });
   });
 
-  describe('aeroflow().toString(@string, true)', () => {
+  describe('toString(@string, true)', () => {
     it('Emits empty string when flow is empty', () => {
       const delimiter = ';', expectation = 0;
       return assert.eventually.lengthOf(new Promise((done, fail) =>

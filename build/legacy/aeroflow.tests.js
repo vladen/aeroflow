@@ -22,7 +22,7 @@
       it('Is instance method', function () {
         assert.isFunction(aeroflow.empty.average);
       });
-      describe('aeroflow().average()', function () {
+      describe('average()', function () {
         it('Returns instance of Aeroflow', function () {
           assert.typeOf(aeroflow.empty.average(), 'Aeroflow');
         });
@@ -68,7 +68,7 @@
       it('Is instance method', function () {
         return assert.isFunction(aeroflow.empty.catch);
       });
-      describe('aeroflow().catch()', function () {
+      describe('catch()', function () {
         it('Returns instance of Aeroflow', function () {
           return assert.typeOf(aeroflow.empty.catch(), 'Aeroflow');
         });
@@ -83,7 +83,7 @@
           }));
         });
       });
-      describe('aeroflow().catch(@alternative:function)', function () {
+      describe('catch(@alternative:function)', function () {
         it('Does not call @alternative when flow is empty', function () {
           return assert.isFulfilled(new Promise(function (done, fail) {
             return aeroflow.empty.catch(fail).run(fail, done);
@@ -108,7 +108,7 @@
           }), alternative);
         });
       });
-      describe('aeroflow().catch(@alternative:!function)', function () {
+      describe('catch(@alternative:!function)', function () {
         it('Emits @alternative value when flow emits error', function () {
           var alternative = 'caught';
           return assert.eventually.strictEqual(new Promise(function (done, fail) {
@@ -124,7 +124,7 @@
       it('Is instance method', function () {
         assert.isFunction(aeroflow.empty.count);
       });
-      describe('aeroflow().count()', function () {
+      describe('count()', function () {
         it('Returns instance of Aeroflow', function () {
           assert.typeOf(aeroflow.empty.count(), 'Aeroflow');
         });
@@ -156,7 +156,7 @@
       it('Is instance method', function () {
         return assert.isFunction(aeroflow.empty.filter);
       });
-      describe('aeroflow().filter()', function () {
+      describe('filter()', function () {
         it('Returns instance of Aeroflow', function () {
           return assert.typeOf(aeroflow.empty.filter(), 'Aeroflow');
         });
@@ -175,7 +175,7 @@
           }), expectation);
         });
       });
-      describe('aeroflow().filter(@condition:function)', function () {
+      describe('filter(@condition:function)', function () {
         it('Does not call @condition when flow is empty', function () {
           return assert.isFulfilled(new Promise(function (done, fail) {
             return aeroflow.empty.filter(fail).run(fail, done);
@@ -221,7 +221,7 @@
           }), expectation);
         });
       });
-      describe('aeroflow().filter(@condition:regex)', function () {
+      describe('filter(@condition:regex)', function () {
         it('Emits only values passing @condition test', function () {
           var values = ['a', 'b', 'aa', 'bb'],
               condition = /a/,
@@ -233,7 +233,7 @@
           }), expectation);
         });
       });
-      describe('aeroflow().filter(@condition:!function!regex)', function () {
+      describe('filter(@condition:!function!regex)', function () {
         it('Emits only values equal to @condition', function () {
           var values = [1, 2, 3],
               condition = 2,
@@ -253,7 +253,7 @@
       it('Is instance method', function () {
         assert.isFunction(aeroflow.empty.max);
       });
-      describe('aeroflow().max()', function () {
+      describe('max()', function () {
         it('Returns instance of Aeroflow', function () {
           assert.typeOf(aeroflow.empty.max(), 'Aeroflow');
         });
@@ -304,7 +304,7 @@
       it('Is instance method', function () {
         assert.isFunction(aeroflow.empty.min);
       });
-      describe('aeroflow().min()', function () {
+      describe('min()', function () {
         it('Returns instance of Aeroflow', function () {
           assert.typeOf(aeroflow.empty.min(), 'Aeroflow');
         });
@@ -355,7 +355,7 @@
       it('Is instance method', function () {
         return assert.isFunction(aeroflow.empty.reduce);
       });
-      describe('aeroflow().reduce()', function () {
+      describe('reduce()', function () {
         it('Returns instance of Aeroflow', function () {
           return assert.typeOf(aeroflow.empty.reduce(), 'Aeroflow');
         });
@@ -370,7 +370,7 @@
           }));
         });
       });
-      describe('aeroflow().reduce(@reducer:function)', function () {
+      describe('reduce(@reducer:function)', function () {
         it('Does not call @reducer when flow is empty', function () {
           return assert.isFulfilled(new Promise(function (done, fail) {
             return aeroflow.empty.reduce(fail).run(fail, done);
@@ -440,7 +440,7 @@
           }), data);
         });
       });
-      describe('aeroflow().reduce(@reducer:function, @seed:any)', function () {
+      describe('reduce(@reducer:function, @seed:any)', function () {
         it('Emits nothing when flow is empty', function () {
           return assert.isFulfilled(new Promise(function (done, fail) {
             return aeroflow.empty.reduce(function () {}, 42).run(fail, done);
@@ -453,7 +453,7 @@
           }), seed);
         });
       });
-      describe('aeroflow().reduce(@reducer:function, @seed:any, true)', function () {
+      describe('reduce(@reducer:function, @seed:any, true)', function () {
         it('Emits @seed when flow is empty', function () {
           var seed = 'test';
           return assert.eventually.strictEqual(new Promise(function (done, fail) {
@@ -461,7 +461,7 @@
           }), seed);
         });
       });
-      describe('aeroflow().reduce(@seed:!function)', function () {
+      describe('reduce(@seed:!function)', function () {
         it('Emits @seed when flow is empty', function () {
           var seed = 42;
           return assert.eventually.strictEqual(new Promise(function (done, fail) {
@@ -483,7 +483,7 @@
       it('Is instance method', function () {
         assert.isFunction(aeroflow.empty.toArray);
       });
-      describe('aeroflow().toArray()', function () {
+      describe('toArray()', function () {
         it('Returns instance of Aeroflow', function () {
           assert.typeOf(aeroflow.empty.toArray(), 'Aeroflow');
         });
@@ -500,7 +500,7 @@
           }), expectation);
         });
       });
-      describe('aeroflow().toArray(true)', function () {
+      describe('toArray(true)', function () {
         it('Emits an array when flow is empty', function () {
           var expectation = 'Array';
           return assert.eventually.typeOf(new Promise(function (done, fail) {
@@ -522,7 +522,7 @@
       it('Is instance method', function () {
         assert.isFunction(aeroflow.empty.toSet);
       });
-      describe('aeroflow().toSet()', function () {
+      describe('toSet()', function () {
         it('Returns instance of Aeroflow', function () {
           assert.typeOf(aeroflow.empty.toSet(), 'Aeroflow');
         });
@@ -541,7 +541,7 @@
           }), expectation);
         });
       });
-      describe('aeroflow().toSet(true)', function () {
+      describe('toSet(true)', function () {
         it('Emits a set when flow is empty', function () {
           var expectation = 'Set';
           return assert.eventually.typeOf(new Promise(function (done, fail) {
@@ -563,7 +563,7 @@
       it('Is instance method', function () {
         assert.isFunction(aeroflow.empty.toString);
       });
-      describe('aeroflow().toString()', function () {
+      describe('toString()', function () {
         it('Returns instance of Aeroflow', function () {
           assert.typeOf(aeroflow.empty.toString(), 'Aeroflow');
         });
@@ -601,7 +601,7 @@
           }), expectation);
         });
       });
-      describe('aeroflow().toString(true)', function () {
+      describe('toString(true)', function () {
         it('Emits string when flow empty', function () {
           var expectation = 'String';
           return assert.eventually.typeOf(new Promise(function (done, fail) {
@@ -615,7 +615,7 @@
           }), expectation);
         });
       });
-      describe('aeroflow().toString(@string)', function () {
+      describe('toString(@string)', function () {
         it('Emits nothing when flow is empty', function () {
           return assert.isFulfilled(new Promise(function (done, fail) {
             return aeroflow.empty.toString(';').run(fail, done);
@@ -630,7 +630,7 @@
           }), expectation);
         });
       });
-      describe('aeroflow().toString(@string, true)', function () {
+      describe('toString(@string, true)', function () {
         it('Emits empty string when flow is empty', function () {
           var delimiter = ';',
               expectation = 0;

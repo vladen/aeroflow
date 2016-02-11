@@ -3,7 +3,7 @@ export default (aeroflow, assert) => describe('max', () => {
     assert.isFunction(aeroflow.empty.max);
   });
 
-  describe('aeroflow().max()', () => {
+  describe('max()', () => {
     it('Returns instance of Aeroflow', () => {
       assert.typeOf(aeroflow.empty.max(), 'Aeroflow');
     });

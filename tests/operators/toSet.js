@@ -3,7 +3,7 @@ export default (aeroflow, assert) => describe('toSet', () => {
     assert.isFunction(aeroflow.empty.toSet);
   });
 
-  describe('aeroflow().toSet()', () => {
+  describe('toSet()', () => {
     it('Returns instance of Aeroflow', () => {
       assert.typeOf(aeroflow.empty.toSet(), 'Aeroflow');
     });
@@ -21,7 +21,7 @@ export default (aeroflow, assert) => describe('toSet', () => {
     });
   });
 
-  describe('aeroflow().toSet(true)', () => {
+  describe('toSet(true)', () => {
     it('Emits a set when flow is empty', () => {
       const expectation = 'Set';
       return assert.eventually.typeOf(new Promise((done, fail) =>

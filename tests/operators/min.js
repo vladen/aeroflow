@@ -3,7 +3,7 @@ export default (aeroflow, assert) => describe('min', () => {
     assert.isFunction(aeroflow.empty.min);
   });
 
-  describe('aeroflow().min()', () => {
+  describe('min()', () => {
     it('Returns instance of Aeroflow', () => {
       assert.typeOf(aeroflow.empty.min(), 'Aeroflow');
     });

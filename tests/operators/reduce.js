@@ -2,7 +2,7 @@ export default (aeroflow, assert) => describe('reduce', () => {
   it('Is instance method', () =>
     assert.isFunction(aeroflow.empty.reduce));
 
-  describe('aeroflow().reduce()', () => {
+  describe('reduce()', () => {
     it('Returns instance of Aeroflow', () =>
       assert.typeOf(aeroflow.empty.reduce(), 'Aeroflow'));
 
@@ -15,7 +15,7 @@ export default (aeroflow, assert) => describe('reduce', () => {
         aeroflow('test').reduce().run(fail, done))));
   });
 
-  describe('aeroflow().reduce(@reducer:function)', () => {
+  describe('reduce(@reducer:function)', () => {
     it('Does not call @reducer when flow is empty', () =>
       assert.isFulfilled(new Promise((done, fail) =>
         aeroflow.empty.reduce(fail).run(fail, done))));
@@ -72,7 +72,7 @@ export default (aeroflow, assert) => describe('reduce', () => {
     });
   });
 
-  describe('aeroflow().reduce(@reducer:function, @seed:any)', () => {
+  describe('reduce(@reducer:function, @seed:any)', () => {
     it('Emits nothing when flow is empty', () =>
       assert.isFulfilled(new Promise((done, fail) =>
         aeroflow.empty.reduce(() => {}, 42).run(fail, done))));
@@ -85,7 +85,7 @@ export default (aeroflow, assert) => describe('reduce', () => {
     });
   });
 
-  describe('aeroflow().reduce(@reducer:function, @seed:any, true)', () => {
+  describe('reduce(@reducer:function, @seed:any, true)', () => {
     it('Emits @seed when flow is empty', () => {
       const seed = 'test';
       return assert.eventually.strictEqual(new Promise((done, fail) => 
@@ -94,7 +94,7 @@ export default (aeroflow, assert) => describe('reduce', () => {
     });
   });
 
-  describe('aeroflow().reduce(@seed:!function)', () => {
+  describe('reduce(@seed:!function)', () => {
     it('Emits @seed when flow is empty', () => {
       const seed = 42;
       return assert.eventually.strictEqual(new Promise((done, fail) => 

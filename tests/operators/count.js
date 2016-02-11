@@ -3,7 +3,7 @@ export default (aeroflow, assert) => describe('count', () => {
     assert.isFunction(aeroflow.empty.count);
   });
 
-  describe('aeroflow().count()', () => {
+  describe('count()', () => {
     it('Returns instance of Aeroflow', () => {
       assert.typeOf(aeroflow.empty.count(), 'Aeroflow');
     });

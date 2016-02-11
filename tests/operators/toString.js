@@ -3,7 +3,7 @@ export default (aeroflow, assert) => describe('toString', () => {
     assert.isFunction(aeroflow.empty.toString);
   });
 
-  describe('aeroflow().toString()', () => {
+  describe('toString()', () => {
     it('Returns instance of Aeroflow', () => {
       assert.typeOf(aeroflow.empty.toString(), 'Aeroflow');
     });
@@ -42,7 +42,7 @@ export default (aeroflow, assert) => describe('toString', () => {
     });
   });
 
-  describe('aeroflow().toString(true)', () => {
+  describe('toString(true)', () => {
     it('Emits string when flow empty', () => {
       const expectation = 'String';
       return assert.eventually.typeOf(new Promise((done, fail) =>
@@ -57,7 +57,7 @@ export default (aeroflow, assert) => describe('toString', () => {
     });
   });
 
-  describe('aeroflow().toString(@string)', () => {
+  describe('toString(@string)', () => {
     it('Emits nothing when flow is empty', () => {
       return assert.isFulfilled(new Promise((done, fail) =>
         aeroflow.empty.toString(';').run(fail, done)));
@@ -71,7 +71,7 @@ export default (aeroflow, assert) => describe('toString', () => {
     });
   });
 
-  describe('aeroflow().toString(@string, true)', () => {
+  describe('toString(@string, true)', () => {
     it('Emits empty string when flow is empty', () => {
       const delimiter = ';', expectation = 0;
       return assert.eventually.lengthOf(new Promise((done, fail) =>
