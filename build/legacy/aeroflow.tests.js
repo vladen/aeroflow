@@ -229,10 +229,38 @@
 
   var tests = [averageOperatorTests, countOperatorTests, maxOperatorTests, minOperatorTests, toStringOperatorTests];
 
-  var aeroflow = function aeroflow(_aeroflow, assert) {
+  var operatorsTest = function operatorsTest(aeroflow, assert) {
     return tests.forEach(function (test) {
-      return test(_aeroflow, assert);
+      return test(aeroflow, assert);
     });
+  };
+
+  var expandEmittersTests = function expandEmittersTests(aeroflow, assert) {
+    return describe('Aeroflow#expand', function () {
+      it('is instance method', function () {
+        assert.isFunction(aeroflow.expand);
+      });
+      describe('()', function () {
+        it('returns instance of Aeroflow', function () {
+          assert.typeOf(aeroflow.expand(), 'Aeroflow');
+        });
+      });
+      describe('(@function)', function () {});
+      describe('(@!function)', function () {});
+    });
+  };
+
+  var tests$1 = [expandEmittersTests];
+
+  var emittersTest = function emittersTest(aeroflow, assert) {
+    return tests$1.forEach(function (test) {
+      return test(aeroflow, assert);
+    });
+  };
+
+  var aeroflow = function aeroflow(_aeroflow, assert) {
+    operatorsTest(_aeroflow, assert);
+    emittersTest(_aeroflow, assert);
   };
 
   exports.default = aeroflow;

@@ -213,9 +213,6 @@
   });
 
   const tests = [
-    // factoryTests,
-    // staticMethodsTests,
-    // instanceTests,
     averageOperatorTests,
     countOperatorTests,
     maxOperatorTests,
@@ -223,7 +220,38 @@
     toStringOperatorTests
   ];
 
-  var aeroflow = (aeroflow, assert) => tests.forEach(test => test(aeroflow, assert));
+  var operatorsTest = (aeroflow, assert) => tests.forEach(test => test(aeroflow, assert));
+
+  var expandEmittersTests = (aeroflow, assert) => describe('Aeroflow#expand', () => {
+    it('is instance method', () => {
+      assert.isFunction(aeroflow.expand);
+    });
+
+    describe('()', () => {
+      it('returns instance of Aeroflow', () => {
+        assert.typeOf(aeroflow.expand(), 'Aeroflow');
+      });
+    });
+
+    describe('(@function)', () => {
+      
+    });
+
+    describe('(@!function)', () => {
+      
+    });
+  });
+
+  const tests$1 = [
+    expandEmittersTests
+  ];
+
+  var emittersTest = (aeroflow, assert) => tests$1.forEach(test => test(aeroflow, assert));
+
+  var aeroflow = (aeroflow, assert) => {
+    operatorsTest(aeroflow, assert);
+    emittersTest(aeroflow, assert);
+  };
 
   return aeroflow;
 
