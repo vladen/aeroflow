@@ -4,7 +4,7 @@
   (global.aeroflowTests = factory());
 }(this, function () { 'use strict';
 
-  var averageOperatorTests = (aeroflow, assert) => describe('Aeroflow#average', () => {
+  var averageTests = (aeroflow, assert) => describe('Aeroflow#average', () => {
     it('is instance method', () => {
       assert.isFunction(aeroflow.empty.average);
     });
@@ -36,7 +36,7 @@
 
   });
 
-  var countOperatorTests = (aeroflow, assert) => describe('Aeroflow#count', () => {
+  var countTests = (aeroflow, assert) => describe('Aeroflow#count', () => {
     it('is instance method', () => {
       assert.isFunction(aeroflow.empty.count);
     });
@@ -70,7 +70,7 @@
 
   });
 
-  var maxOperatorTests = (aeroflow, assert) => describe('Aeroflow#max', () => {
+  var maxTests = (aeroflow, assert) => describe('Aeroflow#max', () => {
     it('is instance method', () => {
       assert.isFunction(aeroflow.empty.max);
     });
@@ -102,7 +102,7 @@
 
   });
 
-  var minOperatorTests = (aeroflow, assert) => describe('Aeroflow#min', () => {
+  var minTests = (aeroflow, assert) => describe('Aeroflow#min', () => {
     it('is instance method', () => {
       assert.isFunction(aeroflow.empty.min);
     });
@@ -134,7 +134,7 @@
 
   });
 
-  var toStringOperatorTests = (aeroflow, assert) => describe('Aeroflow#toString', () => {
+  var toStringTests = (aeroflow, assert) => describe('Aeroflow#toString', () => {
     it('is instance method', () => {
       assert.isFunction(aeroflow.empty.toString);
     });
@@ -212,18 +212,16 @@
 
   });
 
-  const tests = [
-    averageOperatorTests,
-    countOperatorTests,
-    maxOperatorTests,
-    minOperatorTests,
-    toStringOperatorTests
+  const tests$1 = [
+    averageTests,
+    countTests,
+    maxTests,
+    minTests,
+    toStringTests
   ];
 
-  var operatorsTest = (aeroflow, assert) => tests.forEach(test => test(aeroflow, assert));
-
-  var expandEmittersTests = (aeroflow, assert) => describe('Aeroflow#expand', () => {
-    it('is instance method', () => {
+  var expandTests = (aeroflow, assert) => describe('Aeroflow#expand', () => {
+    it('is static method', () => {
       assert.isFunction(aeroflow.expand);
     });
 
@@ -242,16 +240,16 @@
     });
   });
 
-  const tests$1 = [
-    expandEmittersTests
+  const tests$2 = [
+    expandTests
   ];
 
-  var emittersTest = (aeroflow, assert) => tests$1.forEach(test => test(aeroflow, assert));
+  const tests = [
+    ...tests$1,
+    ...tests$2
+  ];
 
-  var aeroflow = (aeroflow, assert) => {
-    operatorsTest(aeroflow, assert);
-    emittersTest(aeroflow, assert);
-  };
+  var aeroflow = (aeroflow, assert) => tests.forEach(test => test(aeroflow, assert));
 
   return aeroflow;
 
