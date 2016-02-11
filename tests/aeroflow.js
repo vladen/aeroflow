@@ -1,11 +1,11 @@
 'use strict';
 
-import operatorsTest from './operators/index';
-import generatorsTest from './generators/index';
+import operatorsTests from './operators/index';
+import generatorsTests from './generators/index';
 
 const tests = [
-  ...operatorsTest,
-  ...generatorsTest
+  ...operatorsTests,
+  ...generatorsTests
 ];
 
 export default (aeroflow, assert) => tests.forEach(test => test(aeroflow, assert));
