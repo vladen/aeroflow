@@ -10,11 +10,13 @@ import reduceTests from './reduce';
 import toArrayTests from './toArray';
 import toSetTests from './toSet';
 import toStringTests from './toString';
+import everyTests from './every';
 
 export default [
   averageTests,
   catchTests,
   countTests,
+  everyTests,
   filterTests,
   maxTests,
   minTests,
