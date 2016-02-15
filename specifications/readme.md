@@ -7,6 +7,11 @@
      - [catch(@alternative:!function)](#catch-catchalternativefunction)
    - [count](#count)
      - [count()](#count-count)
+   - [every](#every)
+     - [every()](#every-every)
+     - [every(@condition:function)](#every-everyconditionfunction)
+     - [every(@condition:regex)](#every-everyconditionregex)
+     - [every(@condition:!function!regex)](#every-everyconditionfunctionregex)
    - [filter](#filter)
      - [filter()](#filter-filter)
      - [filter(@condition:function)](#filter-filterconditionfunction)
@@ -224,6 +229,83 @@ var values = [1, 2, 3],
     expectation = values.length;
 return assert.eventually.strictEqual(new Promise(function (done, fail) {
   return aeroflow(values).count().run(done, fail);
+}), expectation);
+```
+
+<a name="every"></a>
+# every
+Is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.every);
+```
+
+<a name="every-every"></a>
+## every()
+Returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow.empty.every(), 'Aeroflow');
+```
+
+Emits true when flow is empty.
+
+```js
+return assert.eventually.isTrue(new Promise(function (done, fail) {
+  return aeroflow.empty.every().run(done, fail);
+}));
+```
+
+Emits true when flow is not empty.
+
+```js
+return assert.eventually.isTrue(new Promise(function (done, fail) {
+  return aeroflow(1).every().run(done, fail);
+}));
+```
+
+<a name="every-everyconditionfunction"></a>
+## every(@condition:function)
+Emits result of passing @condition test by each item in flow.
+
+```js
+var values = [2, 4, 3],
+    condition = function condition(item) {
+  return item % 2 === 0;
+},
+    expectation = values.every(condition);
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow(values).every(condition).run(done, fail);
+}), expectation);
+```
+
+<a name="every-everyconditionregex"></a>
+## every(@condition:regex)
+Emits result of passing @condition test by each item in flow.
+
+```js
+var values = ['a', 'b', 'aa', 'bb'],
+    condition = /a/,
+    expectation = values.every(function (value) {
+  return condition.test(value);
+});
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow(values).every(condition).run(done, fail);
+}), expectation);
+```
+
+<a name="every-everyconditionfunctionregex"></a>
+## every(@condition:!function!regex)
+Emits result of passing @condition test by each item in flow.
+
+```js
+var values = [1, 1, 1, 1],
+    condition = 1,
+    expectation = values.every(function (value) {
+  return value === condition;
+});
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow(values).every(condition).run(done, fail);
 }), expectation);
 ```
 
