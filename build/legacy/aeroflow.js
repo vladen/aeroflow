@@ -134,7 +134,7 @@
   };
 
   var toFunction = function toFunction(value, def) {
-    return isFunction(value) ? value : def;
+    return isFunction(value) ? value : isDefined(def) ? def : constant(value);
   };
 
   var toNumber = function toNumber(value, def) {
@@ -239,7 +239,7 @@
     return def;
   }
 
-  function scalarAdapter(value) {
+  function valueAdapter(value) {
     return function (next, done) {
       if (!unsync(next(value), done, done)) done(true);
     };
@@ -253,7 +253,7 @@
 
   function customGenerator(generator) {
     if (isUndefined(generator)) return emptyGenerator(true);
-    if (!isFunction(generator)) return scalarAdapter(generator);
+    if (!isFunction(generator)) return valueAdapter(generator);
     return function (next, done, context) {
       var buffer = [],
           busy = false,
@@ -288,8 +288,8 @@
     };
   }
 
-  function expandGenerator(expanding, seed) {
-    var expander = isFunction(expanding) ? expanding : constant(expanding);
+  function expandGenerator(expander, seed) {
+    expander = toFunction(expander);
     return function (next, done, context) {
       var index = 0,
           value = seed;
@@ -314,14 +314,14 @@
   function rangeGenerator(start, end, step) {
     end = toNumber(end, maxInteger);
     start = toNumber(start, 0);
-    if (start === end) return scalarAdapter(start);
+    if (start === end) return valueAdapter(start);
     var down = start < end;
     if (down) {
       step = toNumber(step, 1);
-      if (step < 1) return scalarAdapter(start);
+      if (step < 1) return valueAdapter(start);
     } else {
       step = toNumber(step, -1);
-      if (step > -1) return scalarAdapter(start);
+      if (step > -1) return valueAdapter(start);
     }
     var limiter = down ? function (value) {
       return value <= end;
@@ -359,13 +359,13 @@
   }
 
   function repeatGenerator(value, interval) {
-    var repeater = toFunction(value, constant(value));
-    return isDefined(interval) ? repeatDeferredGenerator(repeater, toFunction(interval, constant(interval))) : repeatImmediateGenerator(repeater);
+    var repeater = toFunction(value);
+    return isDefined(interval) ? repeatDeferredGenerator(repeater, toFunction(interval)) : repeatImmediateGenerator(repeater);
   }
 
   function reduceOperator(reducer, seed, required) {
     if (isUndefined(reducer)) return tie(emptyGenerator, false);
-    if (!isFunction(reducer)) return tie(scalarAdapter, reducer);
+    if (!isFunction(reducer)) return tie(valueAdapter, reducer);
     return function (emitter) {
       return function (next, done, context) {
         var empty = !required,
@@ -395,7 +395,7 @@
   }
 
   function catchOperator(alternative) {
-    var regressor = isDefined(alternative) ? adapterSelector(alternative, scalarAdapter(alternative)) : emptyGenerator(false);
+    var regressor = isDefined(alternative) ? adapterSelector(alternative, valueAdapter(alternative)) : emptyGenerator(false);
     return function (emitter) {
       return function (next, done, context) {
         return emitter(next, function (result) {
@@ -412,7 +412,7 @@
   }
 
   function delayOperator(interval) {
-    var delayer = toFunction(interval, constant(interval));
+    var delayer = toFunction(interval);
     return function (emitter) {
       return function (next, done, context) {
         var index = 0;
@@ -640,7 +640,7 @@
 
   function joinOperator(right, condition) {
     var comparer = toFunction(condition, truthy),
-        toArray = toArrayOperator()(adapterSelector(right, scalarAdapter(right)));
+        toArray = toArrayOperator()(adapterSelector(right, valueAdapter(right)));
     return function (emitter) {
       return function (next, done, context) {
         return toArray(function (rightArray) {
@@ -688,7 +688,7 @@
   }
 
   function replayOperator(interval, timing) {
-    var delayer = toFunction(interval, constant(interval));
+    var delayer = toFunction(interval);
     return function (emitter) {
       return function (next, done, context) {
         var past = dateNow();
@@ -1053,7 +1053,7 @@
     !function proceed(result) {
       if (result !== true || ++index >= context.sources.length) done(result);else try {
         var source = context.sources[index];
-        var adapter = adapterSelector(source, scalarAdapter(source));
+        var adapter = adapterSelector(source, valueAdapter(source));
         adapter(next, proceed, context);
       } catch (err) {
         done(err);
@@ -1175,6 +1175,7 @@
   Creates new flow emitting the provided value only.
   
   @alias aeroflow.just
+  @alias aeroflow.return
   
   @param {any} value
   The value to emit.
@@ -1188,7 +1189,7 @@
   // done
   */
   function just(value) {
-    return new Flow(scalarAdapter(value));
+    return new Flow(valueAdapter(value));
   }
 
   /**
@@ -2377,7 +2378,8 @@
     operators: { value: operators },
     random: { value: random },
     range: { value: range },
-    repeat: { value: repeat }
+    repeat: { value: repeat },
+    return: { value: just }
   });
 
   exports.default = aeroflow;

@@ -2,12 +2,12 @@
 
 import { isFunction, isUndefined } from '../utilites';
 import { unsync } from '../unsync';
-import { scalarAdapter } from '../adapters/scalar';
+import { valueAdapter } from '../adapters/value';
 import { emptyGenerator } from './empty';
 
 export function customGenerator(generator) {
   if (isUndefined(generator)) return emptyGenerator(true);
-  if (!isFunction(generator)) return scalarAdapter(generator);
+  if (!isFunction(generator)) return valueAdapter(generator);
   return (next, done, context) => {
     let buffer = [], busy = false, idle = false, finalizer;
     finalizer = generator(

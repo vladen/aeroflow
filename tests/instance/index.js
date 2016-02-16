@@ -20,24 +20,24 @@ import toMapTests from './toMap';
 import sliceTests from './slice';
 import sumTests from './sum';
 
-export default [
+const tests = [
   averageTests,
   catchTests,
   countTests,
+  distinctTests,
   everyTests,
   filterTests,
   maxTests,
   minTests,
   reduceTests,
-  toArrayTests,
-  toSetTests,
-  toStringTests,
-  toMapTests,
   someTests,
-  distinctTests,
   takeTests,
   skipTests,
   sortTests,
   sliceTests,
-  sumTests
+  sumTests,
+  toStringTests
 ];
+
+export default (aeroflow, assert) => describe('instance members', () =>
+  tests.forEach(test => test(aeroflow, assert)));

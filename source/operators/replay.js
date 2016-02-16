@@ -1,10 +1,10 @@
 'use strict';
 
-import { constant, dateNow, isError, toFunction, toNumber, tie } from '../utilites';
+import { dateNow, isError, toFunction, toNumber, tie } from '../utilites';
 import { unsync } from '../unsync';
 
 export function replayOperator(interval, timing) {
-  const delayer = toFunction(interval, constant(interval));
+  const delayer = toFunction(interval);
   return emitter => (next, done, context) => {
     let past = dateNow();
     const chronicles = [], chronicler = timing

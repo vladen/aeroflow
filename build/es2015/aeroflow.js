@@ -71,7 +71,9 @@ const toDelay = (value, def) => {
 
 const toFunction = (value, def) => isFunction(value)
   ? value
-  : def;
+  : isDefined(def)
+    ? def
+    : constant(value);
 
 const toNumber = (value, def) => {
   if (!isNumber(value)) {
@@ -181,7 +183,7 @@ function adapterSelector(source, def) {
   return def;
 }
 
-function scalarAdapter(value) {
+function valueAdapter(value) {
   return (next, done) => {
     if (!unsync(next(value), done, done)) done(true);
   };
@@ -193,7 +195,7 @@ function emptyGenerator(result) {
 
 function customGenerator(generator) {
   if (isUndefined(generator)) return emptyGenerator(true);
-  if (!isFunction(generator)) return scalarAdapter(generator);
+  if (!isFunction(generator)) return valueAdapter(generator);
   return (next, done, context) => {
     let buffer = [], busy = false, idle = false, finalizer;
     finalizer = generator(
@@ -227,10 +229,8 @@ function customGenerator(generator) {
   };
 }
 
-function expandGenerator(expanding, seed) {
-  const expander = isFunction(expanding)
-    ? expanding
-    : constant(expanding);
+function expandGenerator(expander, seed) {
+  expander = toFunction(expander);
   return (next, done, context) => {
     let index = 0, value = seed;
     !function proceed() {
@@ -256,15 +256,15 @@ function randomGenerator(minimum, maximum) {
 function rangeGenerator(start, end, step) {
   end = toNumber(end, maxInteger);
   start = toNumber(start, 0);
-  if (start === end) return scalarAdapter(start);
+  if (start === end) return valueAdapter(start);
   const down = start < end;
   if (down) {
     step = toNumber(step, 1);
-    if (step < 1) return scalarAdapter(start);
+    if (step < 1) return valueAdapter(start);
   }
   else {
     step = toNumber(step, -1);
-    if (step > -1) return scalarAdapter(start);
+    if (step > -1) return valueAdapter(start);
   }
   const limiter = down
     ? value => value <= end
@@ -301,15 +301,15 @@ function repeatImmediateGenerator(repeater) {
 }
 
 function repeatGenerator(value, interval) {
-  const repeater = toFunction(value, constant(value));
+  const repeater = toFunction(value);
   return isDefined(interval)
-    ? repeatDeferredGenerator(repeater, toFunction(interval, constant(interval)))
+    ? repeatDeferredGenerator(repeater, toFunction(interval))
     : repeatImmediateGenerator(repeater);
 }
 
 function reduceOperator(reducer, seed, required) {
   if (isUndefined(reducer)) return tie(emptyGenerator, false);
-  if (!isFunction(reducer)) return tie(scalarAdapter, reducer);
+  if (!isFunction(reducer)) return tie(valueAdapter, reducer);
   return emitter => (next, done, context) => {
     let empty = !required, index = 0, reduced = seed;
     emitter(
@@ -340,7 +340,7 @@ function averageOperator() {
 
 function catchOperator(alternative) {
   const regressor = isDefined(alternative) 
-    ? adapterSelector(alternative, scalarAdapter(alternative))
+    ? adapterSelector(alternative, valueAdapter(alternative))
     : emptyGenerator(false);
   return emitter => (next, done, context) => emitter(
     next,
@@ -355,7 +355,7 @@ function countOperator() {
 }
 
 function delayOperator(interval) {
-  const delayer = toFunction(interval, constant(interval));
+  const delayer = toFunction(interval);
   return emitter => (next, done, context) => {
     let index = 0;
     return emitter(
@@ -584,7 +584,7 @@ function mapOperator(mapping) {
 function joinOperator(right, condition) {
   const
     comparer = toFunction(condition, truthy),
-    toArray = toArrayOperator()(adapterSelector(right, scalarAdapter(right)));
+    toArray = toArrayOperator()(adapterSelector(right, valueAdapter(right)));
   return emitter => (next, done, context) => toArray(
     rightArray => new Promise(rightResolve => emitter(
       leftResult => new Promise(leftResolve => {
@@ -621,7 +621,7 @@ function minOperator() {
 }
 
 function replayOperator(interval, timing) {
-  const delayer = toFunction(interval, constant(interval));
+  const delayer = toFunction(interval);
   return emitter => (next, done, context) => {
     let past = dateNow();
     const chronicles = [], chronicler = timing
@@ -1004,7 +1004,7 @@ function emit(next, done, context) {
     if (result !== true || ++index >= context.sources.length) done(result);
     else try {
       const source = context.sources[index];
-      let adapter = adapterSelector(source, scalarAdapter(source));
+      let adapter = adapterSelector(source, valueAdapter(source));
       adapter(next, proceed, context);
     }
     catch (err) {
@@ -1123,6 +1123,7 @@ function expand(expander, seed) {
 Creates new flow emitting the provided value only.
 
 @alias aeroflow.just
+@alias aeroflow.return
 
 @param {any} value
 The value to emit.
@@ -1136,7 +1137,7 @@ aeroflow.just([1, 2, 3]).dump().run();
 // done
 */
 function just(value) {
-  return new Flow(scalarAdapter(value));
+  return new Flow(valueAdapter(value));
 }
 
 /**
@@ -2314,7 +2315,8 @@ objectDefineProperties(aeroflow, {
   operators: { value: operators },
   random: { value: random },
   range: { value: range },
-  repeat: { value: repeat }
+  repeat: { value: repeat },
+  return: { value: just }
 });
 
 export default aeroflow;

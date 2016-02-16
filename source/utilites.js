@@ -65,7 +65,9 @@ export const toDelay = (value, def) => {
 
 export const toFunction = (value, def) => isFunction(value)
   ? value
-  : def;
+  : isDefined(def)
+    ? def
+    : constant(value);
 
 export const toNumber = (value, def) => {
   if (!isNumber(value)) {
