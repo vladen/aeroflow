@@ -11,6 +11,9 @@ import toArrayTests from './toArray';
 import toSetTests from './toSet';
 import toStringTests from './toString';
 import everyTests from './every';
+import someTests from './some';
+import distinctTests from './distinct';
+import takeTests from './take';
 
 export default [
   averageTests,
@@ -23,5 +26,8 @@ export default [
   reduceTests,
   toArrayTests,
   toSetTests,
-  toStringTests
+  toStringTests,
+  someTests,
+  distinctTests,
+  takeTests
 ];

@@ -38,6 +38,19 @@
      - [toString(true)](#tostring-tostringtrue)
      - [toString(@string)](#tostring-tostringstring)
      - [toString(@string, true)](#tostring-tostringstring-true)
+   - [some](#some)
+     - [some()](#some-some)
+     - [every(@condition:function)](#some-everyconditionfunction)
+     - [some(@condition:regex)](#some-someconditionregex)
+     - [some(@condition:!function!regex)](#some-someconditionfunctionregex)
+   - [distinct](#distinct)
+     - [distinct()](#distinct-distinct)
+     - [distinct(true)](#distinct-distincttrue)
+   - [take](#take)
+     - [take()](#take-take)
+     - [take(@condition:function)](#take-takeconditionfunction)
+     - [take(@condition:number)](#take-takeconditionnumber)
+     - [take(@condition:!function!number)](#take-takeconditionfunctionnumber)
    - [Aeroflow#expand](#aeroflowexpand)
      - [()](#aeroflowexpand-)
      - [(@function)](#aeroflowexpand-function)
@@ -975,6 +988,214 @@ var delimiter = ';',
 return assert.eventually.lengthOf(new Promise(function (done, fail) {
   return aeroflow.empty.toString(delimiter, true).run(done, fail);
 }), expectation);
+```
+
+<a name="some"></a>
+# some
+Is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.some);
+```
+
+<a name="some-some"></a>
+## some()
+Returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow.empty.some(), 'Aeroflow');
+```
+
+Emits false when flow is empty.
+
+```js
+return assert.eventually.isFalse(new Promise(function (done, fail) {
+  return aeroflow.empty.some().run(done, fail);
+}));
+```
+
+Emits true when flow is not empty.
+
+```js
+return assert.eventually.isTrue(new Promise(function (done, fail) {
+  return aeroflow(1).some().run(done, fail);
+}));
+```
+
+<a name="some-everyconditionfunction"></a>
+## every(@condition:function)
+Emits result of passing @condition test at least one item in flow.
+
+```js
+var values = [2, 1, 3],
+    condition = function condition(item) {
+  return item % 2 === 0;
+},
+    expectation = values.some(condition);
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow(values).some(condition).run(done, fail);
+}), expectation);
+```
+
+<a name="some-someconditionregex"></a>
+## some(@condition:regex)
+Emits result of passing @condition test at least one item in flow.
+
+```js
+var values = ['a', 'b', 'aa', 'bb'],
+    condition = /^a$/,
+    expectation = values.some(function (value) {
+  return condition.test(value);
+});
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow(values).some(condition).run(done, fail);
+}), expectation);
+```
+
+<a name="some-someconditionfunctionregex"></a>
+## some(@condition:!function!regex)
+Emits result of passing @condition test at least one item in flow.
+
+```js
+var values = [1, 2],
+    condition = 1,
+    expectation = values.some(function (value) {
+  return value === condition;
+});
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow(values).some(condition).run(done, fail);
+}), expectation);
+```
+
+<a name="distinct"></a>
+# distinct
+Is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.distinct);
+```
+
+<a name="distinct-distinct"></a>
+## distinct()
+Returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow.empty.distinct(), 'Aeroflow');
+```
+
+Emits unique @values from flow emitting several numeric @values.
+
+```js
+var values = [1, 1, 2, 2, 3],
+    expectation = Array.from(new Set(values));
+return assert.eventually.includeMembers(new Promise(function (done, fail) {
+  return aeroflow(values).distinct().toArray().run(done, fail);
+}), expectation);
+```
+
+Emits unique @values from flow emitting several non-numeric @values.
+
+```js
+var values = ['a', 'b', 1, 'c', 'c'],
+    expectation = Array.from(new Set(values));
+return assert.eventually.includeMembers(new Promise(function (done, fail) {
+  return aeroflow(values).distinct().toArray().run(done, fail);
+}), expectation);
+```
+
+<a name="distinct-distincttrue"></a>
+## distinct(true)
+Emits unique @values from each identical sequence of @values.
+
+```js
+var values = [1, 1, 2, 2, 1, 1],
+    expectation = [1, 2, 1];
+return assert.eventually.includeMembers(new Promise(function (done, fail) {
+  return aeroflow(values).distinct(true).toArray().run(done, fail);
+}), expectation);
+```
+
+<a name="take"></a>
+# take
+Is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.take);
+```
+
+<a name="take-take"></a>
+## take()
+Returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow.empty.take(), 'Aeroflow');
+```
+
+Emits nothing when flow is empty.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow.empty.take().run(fail, done);
+}));
+```
+
+Emits nothing when flow is not empty.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow('test').take().run(fail, done);
+}));
+```
+
+<a name="take-takeconditionfunction"></a>
+## take(@condition:function)
+Emits @values while they satisfies @condition .
+
+```js
+var values = [2, 4, 6, 3, 4],
+    condition = function condition(value) {
+  return value % 2 === 0;
+},
+    expectation = [2, 4, 6];
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow(values).take(condition).toArray().run(done, fail);
+}), expectation);
+```
+
+<a name="take-takeconditionnumber"></a>
+## take(@condition:number)
+Emits @condition number of @values from the start.
+
+```js
+var values = [1, 2, 3],
+    take = 2,
+    expectation = values.slice(0, take);
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow(values).take(take).toArray().run(done, fail);
+}), expectation);
+```
+
+Emits @condition number of @values from the end.
+
+```js
+var values = [1, 2, 3],
+    take = -2,
+    expectation = values.slice(take);
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow(values).take(take).toArray().run(done, fail);
+}), expectation);
+```
+
+<a name="take-takeconditionfunctionnumber"></a>
+## take(@condition:!function!number)
+Emits all @values when @condition is non-numeric.
+
+```js
+var values = ['a', 'b', 'c'],
+    take = 'a';
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow(values).take(take).toArray().run(done, fail);
+}), values);
 ```
 
 <a name="aeroflowexpand"></a>
