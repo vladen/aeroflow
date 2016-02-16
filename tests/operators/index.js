@@ -14,6 +14,11 @@ import everyTests from './every';
 import someTests from './some';
 import distinctTests from './distinct';
 import takeTests from './take';
+import skipTests from './skip';
+import sortTests from './sort';
+import toMapTests from './toMap';
+import sliceTests from './slice';
+import sumTests from './sum';
 
 export default [
   averageTests,
@@ -27,7 +32,12 @@ export default [
   toArrayTests,
   toSetTests,
   toStringTests,
+  toMapTests,
   someTests,
   distinctTests,
-  takeTests
+  takeTests,
+  skipTests,
+  sortTests,
+  sliceTests,
+  sumTests
 ];

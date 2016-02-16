@@ -211,14 +211,12 @@ var maxTests = (aeroflow, assert) => describe('max', () => {
   });
 
   describe('max()', () => {
-    it('Returns instance of Aeroflow', () => {
-      assert.typeOf(aeroflow.empty.max(), 'Aeroflow');
-    });
+    it('Returns instance of Aeroflow', () =>
+      assert.typeOf(aeroflow.empty.max(), 'Aeroflow'));
 
-    it('Emits nothing from empty flow', () => {
-      return assert.isFulfilled(new Promise((done, fail) => 
-        aeroflow.empty.max().run(fail, done)));
-    });
+    it('Emits nothing from empty flow', () => 
+       assert.isFulfilled(new Promise((done, fail) => 
+        aeroflow.empty.max().run(fail, done))));
 
     it('Emits @value from flow emitting single numeric @value', () => {
       const value = 42, expectation = value;
@@ -321,7 +319,7 @@ var reduceTests = (aeroflow, assert) => describe('reduce', () => {
       assert.isFulfilled(new Promise((done, fail) =>
         aeroflow(1).reduce(fail).run(done, fail))));
 
-    it('calls @reducer when flow emits serveral values', () =>
+    it('calls @reducer when flow emits several values', () =>
       assert.isFulfilled(new Promise((done, fail) =>
         aeroflow(1, 2).reduce(done).run(fail, fail))));
 
@@ -672,6 +670,10 @@ var distinctTests = (aeroflow, assert) => describe('distinct', () => {
     it('Returns instance of Aeroflow', () =>
       assert.typeOf(aeroflow.empty.distinct(), 'Aeroflow'));
 
+    it('Emits nothing when flow is empty', () =>
+      assert.isFulfilled(new Promise((done, fail) =>
+        aeroflow.empty.distinct().run(fail, done))));
+
     it('Emits unique @values from flow emitting several numeric @values', () => {
       const values = [1, 1, 2, 2, 3], expectation = Array.from(new Set(values));
       return assert.eventually.includeMembers(new Promise((done, fail) => 
@@ -749,6 +751,342 @@ var takeTests = (aeroflow, assert) => describe('take', () => {
   });
 });
 
+var skipTests = (aeroflow, assert) => describe('skip', () => {
+  it('Is instance method', () =>
+    assert.isFunction(aeroflow.empty.skip));
+
+  describe('skip()', () => {
+    it('Returns instance of Aeroflow', () => 
+      assert.typeOf(aeroflow.empty.skip(), 'Aeroflow'));
+
+    it('Emits nothing when flow is empty', () =>
+      assert.isFulfilled(new Promise((done, fail) =>
+        aeroflow.empty.skip().run(fail, done))));
+
+    it('Emits nothing when flow is not empty', () =>
+      assert.isFulfilled(new Promise((done, fail) => 
+        aeroflow('test').skip().run(fail, done))));
+  });
+
+  describe('skip(@condition:function)', () => {
+    it('Emits @values until they not satisfies @condition ', () => {
+      const values = [2, 4, 6, 3, 7], condition = (value) => value %2 === 0, expectation = [3, 7];
+      return assert.eventually.sameMembers(new Promise((done, fail) =>
+        aeroflow(values).skip(condition).toArray().run(done, fail)),
+        expectation);
+    });
+  });
+
+  describe('skip(@condition:number)', () => {
+    it('Emits @values beginning with @condition position from the start', () => {
+      const values = [1, 2, 3], skip = 2, expectation = values.slice(skip);
+      return assert.eventually.sameMembers(new Promise((done, fail) =>
+        aeroflow(values).skip(skip).toArray().run(done, fail)),
+        expectation);
+    });
+
+    it('Emits @values without @condition number of @values from the end', () => {
+      const values = [1, 2, 3], skip = 2, expectation = values.slice(0, values.length - skip);
+      return assert.eventually.sameMembers(new Promise((done, fail) =>
+        aeroflow(values).skip(-skip).toArray().run(done, fail)),
+        expectation);
+    });
+  });
+
+  describe('skip(@condition:!function!number)', () => {
+    it('Emits nothing when @condition is non-numeric', () => 
+      assert.isFulfilled(new Promise((done, fail) =>
+        aeroflow('test').skip('test').run(fail, done))));
+  });
+});
+
+var sortTests = (aeroflow, assert) => describe('sort', () => {
+  it('Is instance method', () =>
+    assert.isFunction(aeroflow.empty.sort));
+
+  describe('sort()', () => {
+    it('Returns instance of Aeroflow', () =>
+      assert.typeOf(aeroflow.empty.sort(), 'Aeroflow'));
+
+    it('Emits nothing when flow is empty', () =>
+      assert.isFulfilled(new Promise((done, fail) =>
+        aeroflow.empty.sort().run(fail, done))));
+
+    it('Emits @values in ascending order when flow is not empty', () => {
+      const values = [6, 5, 3, 8], expectation = values.sort();
+      return assert.eventually.sameMembers(new Promise((done, fail) => 
+        aeroflow(values).sort().toArray().run(done, fail)),
+        expectation);
+    });
+  });
+
+  describe('sort(@comparer:string)', () => {
+    it('Emits @values in descending order when @comparer equal to desc', () => {
+      const values = ['a', 'c', 'f'], sort = 'desc', expectation = values.sort().reverse();
+      return assert.eventually.sameMembers(new Promise((done, fail) => 
+        aeroflow(values).sort(sort).toArray().run(done, fail)),
+        expectation);
+    });
+
+    it('Emits @values in descending order when @comparer not equal to desc', () => {
+      const values = ['a', 'c', 'f'], sort = 'asc', expectation = values.sort();
+      return assert.eventually.sameMembers(new Promise((done, fail) => 
+        aeroflow(values).sort(sort).toArray().run(done, fail)),
+        expectation);
+    });
+  });
+
+  describe('sort(@comparer:boolean)', () => {
+    it('Emits @values in descending order when false passed', () => {
+      const values = [2, 7, 4], sort = false, expectation = values.sort().reverse();
+      return assert.eventually.sameMembers(new Promise((done, fail) => 
+        aeroflow(values).sort(sort).toArray().run(done, fail)),
+        expectation);
+    });
+
+    it('Emits @values in descending order when true passed', () => {
+      const values = [4, 8, 1], sort = true, expectation = values.sort();
+      return assert.eventually.sameMembers(new Promise((done, fail) => 
+        aeroflow(values).sort(sort).toArray().run(done, fail)),
+        expectation);
+    });
+  });
+
+  describe('sort(@comparer:number)', () => {
+    it('Emits @values in descending order when @comparer less than 0', () => {
+      const values = [2, 7, 4], sort = -1, expectation = values.sort().reverse();
+      return assert.eventually.sameMembers(new Promise((done, fail) => 
+        aeroflow(values).sort(sort).toArray().run(done, fail)),
+        expectation);
+    });
+
+    it('Emits @values in descending order when @comparer greatest or equal to 0', () => {
+      const values = [4, 8, 1], sort = 1, expectation = values.sort();
+      return assert.eventually.sameMembers(new Promise((done, fail) => 
+        aeroflow(values).sort(sort).toArray().run(done, fail)),
+        expectation);
+    });
+  });
+
+  describe('sort(@comparer:function)', () => {
+    it('Emits @values sorted according by result of @comparer', () => {
+      const values = [4, 8, 1], comparer = (a, b) => a - b, expectation = values.sort();
+      return assert.eventually.sameMembers(new Promise((done, fail) => 
+        aeroflow(values).sort(comparer).toArray().run(done, fail)),
+        expectation);
+    });
+  });
+
+  describe('sort(@comparers:array)', () => {
+    it('Emits @values sorted by applying @comparers in order', () => {
+      const values = [{ prop: 'test1'}, { prop: 'test2'}], comparers = [(value) => value.prop, 'desc'],
+        expectation = values.sort((value) => value.prop).reverse();
+      return assert.eventually.sameDeepMembers(new Promise((done, fail) => 
+        aeroflow(values).sort(comparers).toArray().run(done, fail)),
+        expectation);
+    });
+  });
+});
+
+var toMapTests = (aeroflow, assert) => describe('toMap', () => {
+  it('Is instance method', () => {
+    assert.isFunction(aeroflow.empty.toMap);
+  });
+
+  describe('toMap()', () => {
+    it('Returns instance of Aeroflow', () => {
+      assert.typeOf(aeroflow.empty.toMap(), 'Aeroflow');
+    });
+
+    it('Emits a map when flow is empty', () => {
+      const expectation = 'Map';
+      return assert.eventually.typeOf(new Promise((done, fail) =>
+        aeroflow.empty.toMap().run(done, fail)),
+        expectation);
+    });
+
+    it('Emits empty Map when flow is empty', () => {
+      const expectation = 0;
+      return assert.eventually.propertyVal(new Promise((done, fail) =>
+        aeroflow.empty.toMap().run(done, fail)),
+        'size',
+        expectation);
+    });
+
+    it('Emits the @values as keys of Map', () => {
+      const values = [1, 2, 3];
+      return assert.eventually.sameMembers(new Promise((done, fail) =>
+        aeroflow(values).toMap().map(map => Array.from(map.keys())).run(done, fail)),
+        values);
+    });
+
+    it('Emits the @values as values of Map', () => {
+      const values = [1, 2, 3];
+      return assert.eventually.sameMembers(new Promise((done, fail) =>
+        aeroflow(values).toMap().map(map => Array.from(map.values())).run(done, fail)),
+        values);
+    });
+  });
+
+  describe('toMap(@keys:function)', () => {
+    it('Emits Map with keys provided by @keys', () => {
+      const values = [0, 1, 2, 3]
+            , keyTransform = (key) => key++
+            , expectation = values.map(keyTransform);
+      return assert.eventually.sameMembers(new Promise((done, fail) =>
+        aeroflow(values).toMap(keyTransform).map(map => Array.from(map.keys())).run(done, fail)),
+        expectation);
+    });
+
+    it('Emits Map with keys provided by @keys and values from flow', () => {
+      const values = [0, 1, 2, 3], keyTransform = (key) => key++;
+      return assert.eventually.sameMembers(new Promise((done, fail) =>
+        aeroflow(values).toMap(keyTransform).map(map => Array.from(map.values())).run(done, fail)),
+        values);
+    });
+  });
+
+  describe('toMap(@keys:!function)', () => {
+    it('Emits Map with only one element', () => {
+      const values = [0, 1, 2, 3], key = 'a', expectation = 1;
+      return assert.eventually.propertyVal(new Promise((done, fail) =>
+        aeroflow(values).toMap(key).run(done, fail)),
+        'size',
+        expectation);
+    });
+
+    it('Emits Map with only one key equal to @keys', () => {
+      const values = [0, 1, 2, 3], keys = 'a';
+      return assert.eventually.strictEqual(new Promise((done, fail) =>
+        aeroflow(...values).toMap(keys).map(map => Array.from(map.keys())[0]).run(done, fail)),
+        keys);
+    });
+
+    it('Emits Map with only one key equal to @keys and value last from @values', () => {
+      const values = [0, 1, 2, 3], keys = 'a', expectation = values[values.length - 1];
+      return assert.eventually.strictEqual(new Promise((done, fail) =>
+        aeroflow(...values).toMap(keys).map(map => Array.from(map.values())[0]).run(done, fail)),
+        expectation);
+    });
+  });
+
+  describe('toMap(@keys, @values:function)', () => {
+
+  });
+
+  describe('toMap(@keys, @values:!function)', () => {
+    
+  });
+});
+
+var sliceTests = (aeroflow, assert) => describe('slice', () => {
+  it('Is instance method', () => {
+    assert.isFunction(aeroflow.empty.slice);
+  });
+
+  describe('slice()', () => {
+    it('Returns instance of Aeroflow', () => {
+      assert.typeOf(aeroflow.empty.slice(), 'Aeroflow');
+    });
+
+    it('Emits nothing when flow is empty', () =>
+      assert.isFulfilled(new Promise((done, fail) =>
+        aeroflow.empty.slice().run(fail, done))));
+
+    it('Emits @values when any param not passed', () => {
+      const values = [1, 2];
+      assert.eventually.sameMembers(new Promise((done, fail) =>
+        aeroflow(values).slice().toArray().run(done, fail)),
+        values);
+    });
+  });
+
+  describe('slice(@start:number)', () => {
+    it('Emits @start number of @values from the start', () => {
+      const values = [1, 2, 3], slice = 2, expectation = values.slice(slice);
+      return assert.eventually.sameMembers(new Promise((done, fail) =>
+        aeroflow(values).slice(slice).toArray().run(done, fail)),
+        expectation);
+    });
+
+    it('Emits @start number of @values from the end', () => {
+      const values = [1, 2, 3], slice = -2, expectation = values.slice(slice);
+      return assert.eventually.sameMembers(new Promise((done, fail) =>
+        aeroflow(values).slice(slice).toArray().run(done, fail)),
+        expectation);
+    });
+  });
+
+  describe('slice(@start:!number)', () => {
+    it('Emits @values when passed non-numerical @start', () => {
+      const values = [1, 2];
+      return assert.eventually.sameMembers(new Promise((done, fail) =>
+        aeroflow(values).slice('test').toArray().run(done, fail)),
+        values);
+    });
+  });
+
+  describe('slice(@start:number, @end:number)', () => {
+    it('Emits @values within @start and @end indexes from the start', () => {
+      const values = [1, 2, 3], slice = [1, 2], expectation = values.slice(...slice);
+      return assert.eventually.sameMembers(new Promise((done, fail) =>
+        aeroflow(values).slice(...slice).toArray().run(done, fail)),
+        expectation);
+    });
+
+    it('Emits @values within @start and @end indexes from the end', () => {
+      const values = [1, 2, 3], slice = [-2, -1], expectation = values.slice(...slice);
+      return assert.eventually.sameMembers(new Promise((done, fail) =>
+        aeroflow(values).slice(...slice).toArray().run(done, fail)),
+        expectation);
+    });
+  });
+
+  describe('slice(@start:number, @end:!number)', () => {
+    it('Emits @values from @start index till the end', () => {
+      const values = [1, 2], start = 1, expectation = values.slice(start);
+      return assert.eventually.sameMembers(new Promise((done, fail) =>
+        aeroflow(values).slice(start, 'test').toArray().run(done, fail)),
+        expectation);
+    });
+  });
+});
+
+var sumTests = (aeroflow, assert) => describe('sum', () => {
+  it('Is instance method', () => {
+    assert.isFunction(aeroflow.empty.sum);
+  });
+
+  describe('sum()', () => {
+    it('Returns instance of Aeroflow', () =>
+      assert.typeOf(aeroflow.empty.sum(), 'Aeroflow'));
+
+    it('Emits nothing from empty flow', () => 
+      assert.isFulfilled(new Promise((done, fail) => 
+        aeroflow.empty.sum().run(fail, done))));
+
+    it('Emits sum of @values from flow emitting several numeric @values', () => {
+      const values = [1, 3, 2], expectation = values.reduce((prev, curr) => prev + curr, 0);
+      return assert.eventually.strictEqual(new Promise((done, fail) => 
+        aeroflow(values).sum().run(done, fail)),
+        expectation);
+    });
+
+    it('Emits NaN from flow emitting several non-numeric @values', () =>
+      assert.eventually.isNaN(new Promise((done, fail) => 
+        aeroflow('q', 'b').sum().run(done, fail))));
+  });
+
+  describe('sum(true)', () => {
+    it('Emits sum when flow is empty', () => {
+      const expectation = 0;
+      return assert.eventually.strictEqual(new Promise((done, fail) => 
+        aeroflow.empty.sum(true).run(done, fail)),
+        expectation);
+    });
+  });
+});
+
 var operatorsTests = [
   averageTests,
   catchTests,
@@ -761,9 +1099,14 @@ var operatorsTests = [
   toArrayTests,
   toSetTests,
   toStringTests,
+  toMapTests,
   someTests,
   distinctTests,
-  takeTests
+  takeTests,
+  skipTests,
+  sortTests,
+  sliceTests,
+  sumTests
 ];
 
 var expandTests = (aeroflow, assert) => describe('Aeroflow#expand', () => {
