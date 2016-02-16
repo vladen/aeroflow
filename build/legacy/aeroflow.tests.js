@@ -16,23 +16,21 @@
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
+
   var averageTests = function averageTests(aeroflow, assert) {
     return describe('average', function () {
       it('Is instance method', function () {
         assert.isFunction(aeroflow.empty.average);
       });
-
       describe('average()', function () {
         it('Returns instance of Aeroflow', function () {
           assert.typeOf(aeroflow.empty.average(), 'Aeroflow');
         });
-
         it('Emits nothing from empty flow', function () {
           return assert.isFulfilled(new Promise(function (done, fail) {
             return aeroflow.empty.average().run(fail, done);
           }));
         });
-
         it('Emits @value from flow emitting single numeric @value', function () {
           var value = 42,
               expectation = value;
@@ -40,14 +38,12 @@
             return aeroflow(expectation).average().run(done, fail);
           }), expectation);
         });
-
         it('Emits NaN from flow emitting single non-numeric @value', function () {
           var value = 'test';
           return assert.eventually.isNaN(new Promise(function (done, fail) {
             return aeroflow(value).average().run(done, fail);
           }));
         });
-
         it('Emits average from @values from flow emitting several numeric @values', function () {
           var values = [1, 3, 2],
               expectation = values.reduce(function (sum, value) {
@@ -57,7 +53,6 @@
             return aeroflow(values).average().run(done, fail);
           }), expectation);
         });
-
         it('Emits NaN from @values from flow emitting several non-numeric @values', function () {
           var values = ['a', 'b'];
           return assert.eventually.isNaN(new Promise(function (done, fail) {
@@ -73,44 +68,37 @@
       it('Is instance method', function () {
         return assert.isFunction(aeroflow.empty.catch);
       });
-
       describe('catch()', function () {
         it('Returns instance of Aeroflow', function () {
           return assert.typeOf(aeroflow.empty.catch(), 'Aeroflow');
         });
-
         it('Emits nothing when flow is empty', function () {
           return assert.isFulfilled(new Promise(function (done, fail) {
             return aeroflow.empty.catch().run(fail, done);
           }));
         });
-
         it('Supresses error emitted by flow', function () {
           return assert.eventually.isBoolean(new Promise(function (done, fail) {
             return aeroflow(new Error('test')).catch().run(fail, done);
           }));
         });
       });
-
       describe('catch(@alternative:function)', function () {
         it('Does not call @alternative when flow is empty', function () {
           return assert.isFulfilled(new Promise(function (done, fail) {
             return aeroflow.empty.catch(fail).run(fail, done);
           }));
         });
-
         it('Does not call @alternative when flow does not emit error', function () {
           return assert.isFulfilled(new Promise(function (done, fail) {
             return aeroflow(1).catch(fail).run(done, fail);
           }));
         });
-
         it('Calls @alternative when flow emits error', function () {
           return assert.isFulfilled(new Promise(function (done, fail) {
             return aeroflow(new Error('tests')).catch(done).run(fail, fail);
           }));
         });
-
         it('Emits value returned by @alternative when flow emits error', function () {
           var alternative = 'caught';
           return assert.eventually.strictEqual(new Promise(function (done, fail) {
@@ -120,7 +108,6 @@
           }), alternative);
         });
       });
-
       describe('catch(@alternative:!function)', function () {
         it('Emits @alternative value when flow emits error', function () {
           var alternative = 'caught';
@@ -137,26 +124,22 @@
       it('Is instance method', function () {
         assert.isFunction(aeroflow.empty.count);
       });
-
       describe('count()', function () {
         it('Returns instance of Aeroflow', function () {
           assert.typeOf(aeroflow.empty.count(), 'Aeroflow');
         });
-
         it('Emits 0 from empty flow', function () {
           var expectation = 0;
           return assert.eventually.strictEqual(new Promise(function (done, fail) {
             return aeroflow.empty.count().run(done, fail);
           }), expectation);
         });
-
         it('Emits 1 from flow emitting single value', function () {
           var expectation = 1;
           return assert.eventually.strictEqual(new Promise(function (done, fail) {
             return aeroflow(expectation).count().run(done, fail);
           }), expectation);
         });
-
         it('Emits number of @values from flow emitting several @values', function () {
           var values = [1, 2, 3],
               expectation = values.length;
@@ -173,18 +156,15 @@
       it('Is instance method', function () {
         return assert.isFunction(aeroflow.empty.filter);
       });
-
       describe('filter()', function () {
         it('Returns instance of Aeroflow', function () {
           return assert.typeOf(aeroflow.empty.filter(), 'Aeroflow');
         });
-
         it('Emits nothing when flow is empty', function () {
           return assert.isFulfilled(new Promise(function (done, fail) {
             return aeroflow.empty.filter().run(fail, done);
           }));
         });
-
         it('Emits only truthy values', function () {
           var values = [false, true, 0, 1, undefined, null, 'test'],
               expectation = values.filter(function (value) {
@@ -195,27 +175,23 @@
           }), expectation);
         });
       });
-
       describe('filter(@condition:function)', function () {
         it('Does not call @condition when flow is empty', function () {
           return assert.isFulfilled(new Promise(function (done, fail) {
             return aeroflow.empty.filter(fail).run(fail, done);
           }));
         });
-
         it('Calls @condition when flow is not empty', function () {
           return assert.isFulfilled(new Promise(function (done, fail) {
             return aeroflow('test').filter(done).run(fail, fail);
           }));
         });
-
         it('Passes value emitted by flow to @condition as first argument', function () {
           var value = 'test';
           assert.eventually.strictEqual(new Promise(function (done, fail) {
             return aeroflow(value).filter(done).run(fail, fail);
           }), value);
         });
-
         it('Passes zero-based index of iteration to @condition as second argument', function () {
           var values = [1, 2, 3, 4],
               expectation = values.length - 1;
@@ -225,7 +201,6 @@
             }).run(fail, fail);
           }));
         });
-
         it('Passes context data to @condition as third argument', function () {
           var data = {};
           return assert.eventually.strictEqual(new Promise(function (done, fail) {
@@ -234,19 +209,18 @@
             }).run(fail, fail, data);
           }), data);
         });
-
         it('Emits only values passing @condition test', function () {
           var values = [0, 1, 2, 3],
               condition = function condition(value) {
             return value > 1;
           },
               expectation = values.filter(condition);
+
           assert.eventually.includeMembers(new Promise(function (done, fail) {
             return aeroflow(values).filter(condition).toArray().run(done, fail);
           }), expectation);
         });
       });
-
       describe('filter(@condition:regex)', function () {
         it('Emits only values passing @condition test', function () {
           var values = ['a', 'b', 'aa', 'bb'],
@@ -259,7 +233,6 @@
           }), expectation);
         });
       });
-
       describe('filter(@condition:!function!regex)', function () {
         it('Emits only values equal to @condition', function () {
           var values = [1, 2, 3],
@@ -280,18 +253,15 @@
       it('Is instance method', function () {
         assert.isFunction(aeroflow.empty.max);
       });
-
       describe('max()', function () {
         it('Returns instance of Aeroflow', function () {
           assert.typeOf(aeroflow.empty.max(), 'Aeroflow');
         });
-
         it('Emits nothing from empty flow', function () {
           return assert.isFulfilled(new Promise(function (done, fail) {
             return aeroflow.empty.max().run(fail, done);
           }));
         });
-
         it('Emits @value from flow emitting single numeric @value', function () {
           var value = 42,
               expectation = value;
@@ -299,7 +269,6 @@
             return aeroflow(value).max().run(done, fail);
           }), expectation);
         });
-
         it('Emits @value from flow emitting single non-numeric @value', function () {
           var value = 'test',
               expectation = value;
@@ -307,17 +276,16 @@
             return aeroflow(value).max().run(done, fail);
           }), expectation);
         });
-
         it('Emits maximum of @values from flow emitting several numeric @values', function () {
           var _Math;
 
           var values = [1, 3, 2],
               expectation = (_Math = Math).max.apply(_Math, values);
+
           return assert.eventually.strictEqual(new Promise(function (done, fail) {
             return aeroflow(values).max().run(done, fail);
           }), expectation);
         });
-
         it('Emits maximum of @values from flow emitting several non-numeric @values', function () {
           var values = ['a', 'c', 'b'],
               expectation = values.reduce(function (max, value) {
@@ -336,18 +304,15 @@
       it('Is instance method', function () {
         assert.isFunction(aeroflow.empty.min);
       });
-
       describe('min()', function () {
         it('Returns instance of Aeroflow', function () {
           assert.typeOf(aeroflow.empty.min(), 'Aeroflow');
         });
-
         it('Emits nothing from empty flow', function () {
           return assert.isFulfilled(new Promise(function (done, fail) {
             return aeroflow.empty.min().run(fail, done);
           }));
         });
-
         it('Emits @value from flow emitting single @value', function () {
           var value = 42,
               expectation = value;
@@ -355,7 +320,6 @@
             return aeroflow(value).min().run(done, fail);
           }), expectation);
         });
-
         it('Emits @value from flow emitting single non-numeric @value', function () {
           var value = 'test',
               expectation = value;
@@ -363,17 +327,16 @@
             return aeroflow(value).min().run(done, fail);
           }), expectation);
         });
-
         it('Emits minimum of @values from flow emitting several numeric @values', function () {
           var _Math2;
 
           var values = [1, 3, 2],
               expectation = (_Math2 = Math).min.apply(_Math2, values);
+
           return assert.eventually.strictEqual(new Promise(function (done, fail) {
             return aeroflow(values).min().run(done, fail);
           }), expectation);
         });
-
         it('Emits minimum of @values from flow emitting several non-numeric @values', function () {
           var values = ['a', 'c', 'b'],
               expectation = values.reduce(function (min, value) {
@@ -392,44 +355,37 @@
       it('Is instance method', function () {
         return assert.isFunction(aeroflow.empty.reduce);
       });
-
       describe('reduce()', function () {
         it('Returns instance of Aeroflow', function () {
           return assert.typeOf(aeroflow.empty.reduce(), 'Aeroflow');
         });
-
         it('Emits nothing when flow is empty', function () {
           return assert.isFulfilled(new Promise(function (done, fail) {
             return aeroflow.empty.reduce().run(fail, done);
           }));
         });
-
         it('Emits nothing when flow is not empty', function () {
           return assert.isFulfilled(new Promise(function (done, fail) {
             return aeroflow('test').reduce().run(fail, done);
           }));
         });
       });
-
       describe('reduce(@reducer:function)', function () {
         it('Does not call @reducer when flow is empty', function () {
           return assert.isFulfilled(new Promise(function (done, fail) {
             return aeroflow.empty.reduce(fail).run(fail, done);
           }));
         });
-
         it('Does not call @reducer when flow emits single value', function () {
           return assert.isFulfilled(new Promise(function (done, fail) {
             return aeroflow(1).reduce(fail).run(done, fail);
           }));
         });
-
         it('calls @reducer when flow emits serveral values', function () {
           return assert.isFulfilled(new Promise(function (done, fail) {
             return aeroflow(1, 2).reduce(done).run(fail, fail);
           }));
         });
-
         it('Emits error thrown by @reducer', function () {
           var error = new Error('test');
           return assert.eventually.strictEqual(new Promise(function (done, fail) {
@@ -438,7 +394,6 @@
             }).run(fail, done);
           }), error);
         });
-
         it('Emits value emitted by flow when flow emits single value', function () {
           var value = 42;
           return assert.eventually.strictEqual(new Promise(function (done, fail) {
@@ -447,7 +402,6 @@
             }).run(done, fail);
           }), value);
         });
-
         it('Emits value returned by @reducer when flow emits several values', function () {
           var value = 42;
           return assert.eventually.strictEqual(new Promise(function (done, fail) {
@@ -456,7 +410,6 @@
             }).run(done, fail);
           }), value);
         });
-
         it('Passes first and second values emitted by flow to @reducer as first and second arguments on first iteration', function () {
           var values = [1, 2];
           return assert.eventually.includeMembers(new Promise(function (done, fail) {
@@ -469,7 +422,6 @@
             }).run(fail, fail);
           }), values);
         });
-
         it('Passes zero-based index of iteration to @reducer as third argument', function () {
           var values = [1, 2, 3, 4],
               expectation = values.length - 2;
@@ -479,7 +431,6 @@
             }).run(fail, fail);
           }));
         });
-
         it('Passes context data to @reducer as forth argument', function () {
           var data = {};
           return assert.eventually.strictEqual(new Promise(function (done, fail) {
@@ -489,14 +440,12 @@
           }), data);
         });
       });
-
       describe('reduce(@reducer:function, @seed:any)', function () {
         it('Emits nothing when flow is empty', function () {
           return assert.isFulfilled(new Promise(function (done, fail) {
             return aeroflow.empty.reduce(function () {}, 42).run(fail, done);
           }));
         });
-
         it('Passes @seed to @reducer as first argument on first iteration', function () {
           var seed = 42;
           return assert.eventually.strictEqual(new Promise(function (done, fail) {
@@ -504,7 +453,6 @@
           }), seed);
         });
       });
-
       describe('reduce(@reducer:function, @seed:any, true)', function () {
         it('Emits @seed when flow is empty', function () {
           var seed = 'test';
@@ -513,7 +461,6 @@
           }), seed);
         });
       });
-
       describe('reduce(@seed:!function)', function () {
         it('Emits @seed when flow is empty', function () {
           var seed = 42;
@@ -521,7 +468,6 @@
             return aeroflow.empty.reduce(seed).run(done, fail);
           }), seed);
         });
-
         it('Emits @seed when flow is not empty', function () {
           var seed = 42;
           return assert.eventually.strictEqual(new Promise(function (done, fail) {
@@ -537,18 +483,15 @@
       it('Is instance method', function () {
         assert.isFunction(aeroflow.empty.toArray);
       });
-
       describe('toArray()', function () {
         it('Returns instance of Aeroflow', function () {
           assert.typeOf(aeroflow.empty.toArray(), 'Aeroflow');
         });
-
         it('Emits nothing when flow is empty', function () {
           return assert.isFulfilled(new Promise(function (done, fail) {
             return aeroflow.empty.toArray().run(fail, done);
           }));
         });
-
         it('Emits array of @values when flow emits several @values', function () {
           var values = [1, 2, 1, 3, 2, 3],
               expectation = values;
@@ -557,7 +500,6 @@
           }), expectation);
         });
       });
-
       describe('toArray(true)', function () {
         it('Emits an array when flow is empty', function () {
           var expectation = 'Array';
@@ -580,18 +522,15 @@
       it('Is instance method', function () {
         assert.isFunction(aeroflow.empty.toSet);
       });
-
       describe('toSet()', function () {
         it('Returns instance of Aeroflow', function () {
           assert.typeOf(aeroflow.empty.toSet(), 'Aeroflow');
         });
-
         it('Emits nothing when flow is empty', function () {
           return assert.isFulfilled(new Promise(function (done, fail) {
             return aeroflow.empty.toSet().run(fail, done);
           }));
         });
-
         it('Emits set of unique @values when flow emits several @values', function () {
           var values = [1, 2, 1, 3, 2, 3],
               expectation = Array.from(new Set(values));
@@ -602,7 +541,6 @@
           }), expectation);
         });
       });
-
       describe('toSet(true)', function () {
         it('Emits a set when flow is empty', function () {
           var expectation = 'Set';
@@ -625,18 +563,15 @@
       it('Is instance method', function () {
         assert.isFunction(aeroflow.empty.toString);
       });
-
       describe('toString()', function () {
         it('Returns instance of Aeroflow', function () {
           assert.typeOf(aeroflow.empty.toString(), 'Aeroflow');
         });
-
         it('Emits nothing when flow is empty', function () {
           return assert.isFulfilled(new Promise(function (done, fail) {
             return aeroflow.empty.toString().run(fail, done);
           }));
         });
-
         it('Emits @string when flow emits single @string', function () {
           var string = 'test',
               expectation = string;
@@ -644,7 +579,6 @@
             return aeroflow(string).toString().run(done, fail);
           }), expectation);
         });
-
         it('Emits @number converted to string when flow emits single @number', function () {
           var number = 42,
               expectation = '' + number;
@@ -652,7 +586,6 @@
             return aeroflow(number).toString().run(done, fail);
           }), expectation);
         });
-
         it('Emits @strings concatenated via "," separator when flow emits several @strings', function () {
           var strings = ['a', 'b'],
               expectation = strings.join(',');
@@ -660,7 +593,6 @@
             return aeroflow(strings).toString().run(done, fail);
           }), expectation);
         });
-
         it('Emits @numbers converted to strings and concatenated via "," separator when flow emits several @numbers', function () {
           var numbers = [100, 500],
               expectation = numbers.join(',');
@@ -669,7 +601,6 @@
           }), expectation);
         });
       });
-
       describe('toString(true)', function () {
         it('Emits string when flow empty', function () {
           var expectation = 'String';
@@ -684,14 +615,12 @@
           }), expectation);
         });
       });
-
       describe('toString(@string)', function () {
         it('Emits nothing when flow is empty', function () {
           return assert.isFulfilled(new Promise(function (done, fail) {
             return aeroflow.empty.toString(';').run(fail, done);
           }));
         });
-
         it('Emits @strings concatenated via @string separator when flow emits several @strings', function () {
           var separator = ';',
               strings = ['a', 'b'],
@@ -701,7 +630,6 @@
           }), expectation);
         });
       });
-
       describe('toString(@string, true)', function () {
         it('Emits empty string when flow is empty', function () {
           var delimiter = ';',
@@ -719,25 +647,21 @@
       it('Is instance method', function () {
         return assert.isFunction(aeroflow.empty.every);
       });
-
       describe('every()', function () {
         it('Returns instance of Aeroflow', function () {
           return assert.typeOf(aeroflow.empty.every(), 'Aeroflow');
         });
-
         it('Emits true when flow is empty', function () {
           return assert.eventually.isTrue(new Promise(function (done, fail) {
             return aeroflow.empty.every().run(done, fail);
           }));
         });
-
         it('Emits true when flow is not empty', function () {
           return assert.eventually.isTrue(new Promise(function (done, fail) {
             return aeroflow(1).every().run(done, fail);
           }));
         });
       });
-
       describe('every(@condition:function)', function () {
         it('Emits result of passing @condition test by each item in flow', function () {
           var values = [2, 4, 3],
@@ -745,12 +669,12 @@
             return item % 2 === 0;
           },
               expectation = values.every(condition);
+
           return assert.eventually.strictEqual(new Promise(function (done, fail) {
             return aeroflow(values).every(condition).run(done, fail);
           }), expectation);
         });
       });
-
       describe('every(@condition:regex)', function () {
         it('Emits result of passing @condition test by each item in flow', function () {
           var values = ['a', 'b', 'aa', 'bb'],
@@ -763,7 +687,6 @@
           }), expectation);
         });
       });
-
       describe('every(@condition:!function!regex)', function () {
         it('Emits result of passing @condition test by each item in flow', function () {
           var values = [1, 1, 1, 1],
@@ -784,25 +707,21 @@
       it('Is instance method', function () {
         return assert.isFunction(aeroflow.empty.some);
       });
-
       describe('some()', function () {
         it('Returns instance of Aeroflow', function () {
           return assert.typeOf(aeroflow.empty.some(), 'Aeroflow');
         });
-
         it('Emits false when flow is empty', function () {
           return assert.eventually.isFalse(new Promise(function (done, fail) {
             return aeroflow.empty.some().run(done, fail);
           }));
         });
-
         it('Emits true when flow is not empty', function () {
           return assert.eventually.isTrue(new Promise(function (done, fail) {
             return aeroflow(1).some().run(done, fail);
           }));
         });
       });
-
       describe('every(@condition:function)', function () {
         it('Emits result of passing @condition test at least one item in flow', function () {
           var values = [2, 1, 3],
@@ -810,12 +729,12 @@
             return item % 2 === 0;
           },
               expectation = values.some(condition);
+
           return assert.eventually.strictEqual(new Promise(function (done, fail) {
             return aeroflow(values).some(condition).run(done, fail);
           }), expectation);
         });
       });
-
       describe('some(@condition:regex)', function () {
         it('Emits result of passing @condition test at least one item in flow', function () {
           var values = ['a', 'b', 'aa', 'bb'],
@@ -828,7 +747,6 @@
           }), expectation);
         });
       });
-
       describe('some(@condition:!function!regex)', function () {
         it('Emits result of passing @condition test at least one item in flow', function () {
           var values = [1, 2],
@@ -849,12 +767,10 @@
       it('Is instance method', function () {
         return assert.isFunction(aeroflow.empty.distinct);
       });
-
       describe('distinct()', function () {
         it('Returns instance of Aeroflow', function () {
           return assert.typeOf(aeroflow.empty.distinct(), 'Aeroflow');
         });
-
         it('Emits unique @values from flow emitting several numeric @values', function () {
           var values = [1, 1, 2, 2, 3],
               expectation = Array.from(new Set(values));
@@ -862,7 +778,6 @@
             return aeroflow(values).distinct().toArray().run(done, fail);
           }), expectation);
         });
-
         it('Emits unique @values from flow emitting several non-numeric @values', function () {
           var values = ['a', 'b', 1, 'c', 'c'],
               expectation = Array.from(new Set(values));
@@ -871,7 +786,6 @@
           }), expectation);
         });
       });
-
       describe('distinct(true)', function () {
         it('Emits unique @values from each identical sequence of @values', function () {
           var values = [1, 1, 2, 2, 1, 1],
@@ -889,25 +803,21 @@
       it('Is instance method', function () {
         return assert.isFunction(aeroflow.empty.take);
       });
-
       describe('take()', function () {
         it('Returns instance of Aeroflow', function () {
           return assert.typeOf(aeroflow.empty.take(), 'Aeroflow');
         });
-
         it('Emits nothing when flow is empty', function () {
           return assert.isFulfilled(new Promise(function (done, fail) {
             return aeroflow.empty.take().run(fail, done);
           }));
         });
-
         it('Emits nothing when flow is not empty', function () {
           return assert.isFulfilled(new Promise(function (done, fail) {
             return aeroflow('test').take().run(fail, done);
           }));
         });
       });
-
       describe('take(@condition:function)', function () {
         it('Emits @values while they satisfies @condition ', function () {
           var values = [2, 4, 6, 3, 4],
@@ -915,12 +825,12 @@
             return value % 2 === 0;
           },
               expectation = [2, 4, 6];
+
           return assert.eventually.sameMembers(new Promise(function (done, fail) {
             return aeroflow(values).take(condition).toArray().run(done, fail);
           }), expectation);
         });
       });
-
       describe('take(@condition:number)', function () {
         it('Emits @condition number of @values from the start', function () {
           var values = [1, 2, 3],
@@ -930,7 +840,6 @@
             return aeroflow(values).take(take).toArray().run(done, fail);
           }), expectation);
         });
-
         it('Emits @condition number of @values from the end', function () {
           var values = [1, 2, 3],
               take = -2,
@@ -940,7 +849,6 @@
           }), expectation);
         });
       });
-
       describe('take(@condition:!function!number)', function () {
         it('Emits all @values when @condition is non-numeric', function () {
           var values = ['a', 'b', 'c'],
@@ -960,21 +868,17 @@
       it('is static method', function () {
         assert.isFunction(aeroflow.expand);
       });
-
       describe('()', function () {
         it('returns instance of Aeroflow', function () {
           assert.typeOf(aeroflow.expand(), 'Aeroflow');
         });
       });
-
       describe('(@function)', function () {});
-
       describe('(@!function)', function () {});
     });
   };
 
   var generatorsTests = [expandTests];
-
   var tests = [].concat(operatorsTests, generatorsTests);
 
   var aeroflow = function aeroflow(_aeroflow, assert) {
