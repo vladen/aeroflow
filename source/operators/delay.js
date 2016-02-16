@@ -1,10 +1,10 @@
 'use strict';
 
-import { constant, toDelay, toFunction } from '../utilites';
+import { toDelay, toFunction } from '../utilites';
 import { unsync } from '../unsync';
 
 export function delayOperator(interval) {
-  const delayer = toFunction(interval, constant(interval));
+  const delayer = toFunction(interval);
   return emitter => (next, done, context) => {
     let index = 0;
     return emitter(

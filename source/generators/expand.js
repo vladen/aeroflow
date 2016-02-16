@@ -1,12 +1,10 @@
 'use strict';
 
-import { constant, isFunction } from '../utilites';
+import { toFunction } from '../utilites';
 import { unsync } from '../unsync';
 
-export function expandGenerator(expanding, seed) {
-  const expander = isFunction(expanding)
-    ? expanding
-    : constant(expanding);
+export function expandGenerator(expander, seed) {
+  expander = toFunction(expander);
   return (next, done, context) => {
     let index = 0, value = seed;
     !function proceed() {

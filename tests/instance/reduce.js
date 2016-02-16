@@ -24,7 +24,7 @@ export default (aeroflow, assert) => describe('reduce', () => {
       assert.isFulfilled(new Promise((done, fail) =>
         aeroflow(1).reduce(fail).run(done, fail))));
 
-    it('calls @reducer when flow emits serveral values', () =>
+    it('Calls @reducer when flow emits serveral values', () =>
       assert.isFulfilled(new Promise((done, fail) =>
         aeroflow(1, 2).reduce(done).run(fail, fail))));
 
@@ -57,18 +57,17 @@ export default (aeroflow, assert) => describe('reduce', () => {
     });
 
     it('Passes zero-based index of iteration to @reducer as third argument', () => {
-      const values = [1, 2, 3, 4], expectation = values.length - 2;
-      return assert.isFulfilled(new Promise((done, fail) =>
-        aeroflow(values).reduce((_, __, index) => {
-          if (index === expectation) done();
-        }).run(fail, fail)));
+      const expectation = 0;
+      return assert.eventually.strictEqual(new Promise((done, fail) =>
+        aeroflow(1, 2).reduce((_, __, index) => done(index)).run(fail, fail)),
+        expectation);
     });
 
     it('Passes context data to @reducer as forth argument', () => {
-      const data = {};
+      const expectation = {};
       return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow(1, 2).reduce((_, __, ___, data) => done(data)).run(fail, fail, data)),
-        data);
+        aeroflow(1, 2).reduce((_, __, ___, data) => done(data)).run(fail, fail, expectation)),
+        expectation);
     });
   });
 

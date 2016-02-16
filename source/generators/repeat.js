@@ -1,6 +1,6 @@
 'use strict';
 
-import { constant, isDefined, toDelay, toFunction } from '../utilites';
+import { isDefined, toDelay, toFunction } from '../utilites';
 import { unsync } from '../unsync';
 
 export function repeatDeferredGenerator(repeater, delayer) {
@@ -24,8 +24,8 @@ export function repeatImmediateGenerator(repeater) {
 }
 
 export function repeatGenerator(value, interval) {
-  const repeater = toFunction(value, constant(value));
+  const repeater = toFunction(value);
   return isDefined(interval)
-    ? repeatDeferredGenerator(repeater, toFunction(interval, constant(interval)))
+    ? repeatDeferredGenerator(repeater, toFunction(interval))
     : repeatImmediateGenerator(repeater);
 }

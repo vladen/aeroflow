@@ -55,7 +55,7 @@ aeroflow("test").dump().run();
 * [aeroflow(...sources)](#aeroflow) ⇒ <code>[Flow](#Flow)</code>
     * [.create(emitter)](#aeroflow.create) ⇒ <code>[Flow](#Flow)</code>
     * [.expand(expander, [seed])](#aeroflow.expand) ⇒ <code>[Flow](#Flow)</code>
-    * [.just(value)](#aeroflow.just) ⇒ <code>[Flow](#Flow)</code>
+    * [.return(value)](#aeroflow.return) ⇒ <code>[Flow](#Flow)</code>
     * [.random([minimum], [maximum])](#aeroflow.random) ⇒ <code>[Flow](#Flow)</code>
     * [.range([start], [end], [step])](#aeroflow.range) ⇒ <code>[Flow](#Flow)</code>
     * [.repeat([value], [interval])](#aeroflow.repeat) ⇒ <code>[Flow](#Flow)</code>
@@ -105,8 +105,8 @@ aeroflow.expand(value => value * 2, 1).take(3).dump().run();
 // next 8
 // done false
 ```
-<a name="aeroflow.just"></a>
-### aeroflow.just(value) ⇒ <code>[Flow](#Flow)</code>
+<a name="aeroflow.return"></a>
+### aeroflow.return(value) ⇒ <code>[Flow](#Flow)</code>
 Creates new flow emitting the provided value only.
 
 **Kind**: static method of <code>[aeroflow](#aeroflow)</code>  

@@ -1,11 +1,12 @@
 'use strict';
 
-import operatorsTests from './operators/index';
-import generatorsTests from './generators/index';
+import staticMethodsTests from './static/index';
+import instanceMethodsTests from './instance/index';
 
 const tests = [
-  ...operatorsTests,
-  ...generatorsTests
+  staticMethodsTests,
+  instanceMethodsTests
 ];
 
-export default (aeroflow, assert) => tests.forEach(test => test(aeroflow, assert));
+export default (aeroflow, assert) =>
+  tests.forEach(test => test(aeroflow, assert));

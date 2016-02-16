@@ -2,12 +2,12 @@
 
 import { isDefined, isError } from '../utilites';
 import { adapterSelector } from '../adapters/index';
-import { scalarAdapter } from '../adapters/scalar';
+import { valueAdapter } from '../adapters/value';
 import { emptyGenerator } from '../generators/empty';
 
 export function catchOperator(alternative) {
   const regressor = isDefined(alternative) 
-    ? adapterSelector(alternative, scalarAdapter(alternative))
+    ? adapterSelector(alternative, valueAdapter(alternative))
     : emptyGenerator(false);
   return emitter => (next, done, context) => emitter(
     next,

@@ -15,19 +15,22 @@ import someTests from './some';
 import distinctTests from './distinct';
 import takeTests from './take';
 
-export default [
+const tests = [
   averageTests,
   catchTests,
   countTests,
+  distinctTests,
   everyTests,
   filterTests,
   maxTests,
   minTests,
   reduceTests,
+  someTests,
+  takeTests,
   toArrayTests,
   toSetTests,
-  toStringTests,
-  someTests,
-  distinctTests,
-  takeTests
+  toStringTests
 ];
+
+export default (aeroflow, assert) => describe('instance members', () =>
+  tests.forEach(test => test(aeroflow, assert)));

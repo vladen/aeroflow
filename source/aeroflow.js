@@ -5,7 +5,7 @@ import { AEROFLOW, CLASS, PROTOTYPE } from './symbols';
 import { isError, isFunction, noop, objectDefineProperties, objectCreate } from './utilites';
 
 import { adapters, adapterSelector } from './adapters/index';
-import { scalarAdapter } from './adapters/scalar';
+import { valueAdapter } from './adapters/value';
 
 import { customGenerator } from './generators/custom';
 import { emptyGenerator } from './generators/empty';
@@ -51,7 +51,7 @@ function emit(next, done, context) {
     if (result !== true || ++index >= context.sources.length) done(result);
     else try {
       const source = context.sources[index];
-      let adapter = adapterSelector(source, scalarAdapter(source));
+      let adapter = adapterSelector(source, valueAdapter(source));
       adapter(next, proceed, context);
     }
     catch (err) {
@@ -170,6 +170,7 @@ function expand(expander, seed) {
 Creates new flow emitting the provided value only.
 
 @alias aeroflow.just
+@alias aeroflow.return
 
 @param {any} value
 The value to emit.
@@ -183,7 +184,7 @@ aeroflow.just([1, 2, 3]).dump().run();
 // done
 */
 function just(value) {
-  return new Flow(scalarAdapter(value));
+  return new Flow(valueAdapter(value));
 }
 
 /**
@@ -1361,7 +1362,8 @@ objectDefineProperties(aeroflow, {
   operators: { value: operators },
   random: { value: random },
   range: { value: range },
-  repeat: { value: repeat }
+  repeat: { value: repeat },
+  return: { value: just }
 });
 
 export default aeroflow;

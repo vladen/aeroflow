@@ -4,6 +4,135 @@
   (global.aeroflowTests = factory());
 }(this, function () { 'use strict';
 
+  var emptyTests = (aeroflow, assert) => describe('empty', () => {
+    it('is static property', () => {
+      assert.isDefined(aeroflow.empty);
+    });
+
+    describe('empty', () => {
+      it('returns instance of Aeroflow', () => {
+        assert.typeOf(aeroflow.empty, 'Aeroflow');
+      });
+
+      it('returns instance of Aeroflow emitting "done" event only', () => {
+        return assert.isFulfilled(new Promise((done, fail) =>
+          aeroflow.empty.run(fail, done)));
+      });
+    });
+  });
+
+  const noop = () => {};
+
+  var expandTests = (aeroflow, assert) => describe('expand', () => {
+    it('Is static method', () =>
+      assert.isFunction(aeroflow.expand));
+
+    describe('expand()', () => {
+      it('Returns instance of Aeroflow', () =>
+        assert.typeOf(aeroflow.expand(), 'Aeroflow'));
+    });
+
+    describe('expand(@expander:function)', () => {
+      it('Calls @expander', () =>
+        assert.isFulfilled(new Promise((done, fail) =>
+          aeroflow.expand(done).take(1).run(fail, fail))));
+
+      it('Passes undefined to @expander as first argument because no seed is specified', () =>
+        assert.eventually.isUndefined(new Promise((done, fail) =>
+          aeroflow.expand(done).take(1).run(fail, fail))));
+
+      it('Passes value returned by @expander to @expander again as first argument on next iteration', () => {
+        const expectation = {};
+        let iteration = 0;
+        return assert.eventually.strictEqual(new Promise((done, fail) =>
+          aeroflow
+            .expand(value => iteration++
+                ? done(value)
+                : expectation)
+            .take(2)
+            .run(noop, fail)),
+          expectation);
+      });
+
+      it('Passes zero-based index of iteration to @expander as second argument', () => {
+        const indices = [], expectation = [0, 1, 2, 3];
+        return assert.eventually.includeMembers(new Promise((done, fail) =>
+          aeroflow
+            .expand((_, index) => indices.push(index))
+            .take(expectation.length)
+            .run(noop, () => done(indices))),
+          expectation);
+      });
+
+      it('Passes context data to @expander as third argument', () => {
+        const expectation = {};
+        return assert.eventually.strictEqual(new Promise((done, fail) =>
+          aeroflow.expand((_, __, data) => done(data)).take(1).run(fail, fail, expectation)),
+          expectation);
+      });
+
+      it('Emits value returned by @expander', () => {
+        const expectation = {};
+        return assert.eventually.strictEqual(new Promise((done, fail) =>
+          aeroflow.expand(() => expectation).take(1).run(done, fail)),
+          expectation);
+      });
+    });
+
+    describe('expand(@expander:function, @seed:any)', () => {
+      it('Passes @seed to @expander as first argument', () => {
+        const seed = 42, expectation = seed;
+        assert.eventually.strictEqual(new Promise((done, fail) =>
+          aeroflow.expand(done, seed).take(1).run(fail, fail)),
+          expectation);
+      });
+    });
+  });
+
+  var justTests = (aeroflow, assert) => describe('just', () => {
+    it('is static method', () =>
+      assert.isFunction(aeroflow.just));
+
+    describe('just()', () => {
+      it('returns instance of Aeroflow', () =>
+        assert.typeOf(aeroflow.just(), 'Aeroflow'));
+
+      it('returns instance of Aeroflow emitting single undefined value', () => {
+        const expectation = undefined;
+        return assert.eventually.strictEqual(new Promise((done, fail) =>
+          aeroflow.just().run(done, fail)),
+          expectation);
+      });
+    });
+
+    describe('just(@array)', () => {
+      it('returns instance of Aeroflow emitting @array as is', () => {
+        const array = [1, 2, 3], expectation = array;
+        return assert.eventually.strictEqual(new Promise((done, fail) =>
+          aeroflow.just(array).run(done, fail)),
+          expectation);
+      });
+    });
+
+    describe('just(@iterable)', () => {
+      it('returns instance of Aeroflow emitting @iterable as is', () => {
+        const iterable = new Set([1, 2, 3]), expectation = iterable;
+        return assert.eventually.strictEqual(new Promise((done, fail) =>
+          aeroflow.just(iterable).run(done, fail)),
+          expectation);
+      });
+    });
+  });
+
+  const tests$1 = [
+    emptyTests,
+    expandTests,
+    justTests
+  ];
+
+  var staticMethodsTests = (aeroflow, assert) => describe('static members', () =>
+    tests$1.forEach(test => test(aeroflow, assert)));
+
   var averageTests = (aeroflow, assert) => describe('average', () => {
     it('Is instance method', () => {
       assert.isFunction(aeroflow.empty.average);
@@ -327,7 +456,7 @@
         assert.isFulfilled(new Promise((done, fail) =>
           aeroflow(1).reduce(fail).run(done, fail))));
 
-      it('calls @reducer when flow emits serveral values', () =>
+      it('Calls @reducer when flow emits serveral values', () =>
         assert.isFulfilled(new Promise((done, fail) =>
           aeroflow(1, 2).reduce(done).run(fail, fail))));
 
@@ -360,18 +489,17 @@
       });
 
       it('Passes zero-based index of iteration to @reducer as third argument', () => {
-        const values = [1, 2, 3, 4], expectation = values.length - 2;
-        return assert.isFulfilled(new Promise((done, fail) =>
-          aeroflow(values).reduce((_, __, index) => {
-            if (index === expectation) done();
-          }).run(fail, fail)));
+        const expectation = 0;
+        return assert.eventually.strictEqual(new Promise((done, fail) =>
+          aeroflow(1, 2).reduce((_, __, index) => done(index)).run(fail, fail)),
+          expectation);
       });
 
       it('Passes context data to @reducer as forth argument', () => {
-        const data = {};
+        const expectation = {};
         return assert.eventually.strictEqual(new Promise((done, fail) =>
-          aeroflow(1, 2).reduce((_, __, ___, data) => done(data)).run(fail, fail, data)),
-          data);
+          aeroflow(1, 2).reduce((_, __, ___, data) => done(data)).run(fail, fail, expectation)),
+          expectation);
       });
     });
 
@@ -755,53 +883,33 @@
     });
   });
 
-  var operatorsTests = [
+  const tests$2 = [
     averageTests,
     catchTests,
     countTests,
+    distinctTests,
     everyTests,
     filterTests,
     maxTests,
     minTests,
     reduceTests,
+    someTests,
+    takeTests,
     toArrayTests,
     toSetTests,
-    toStringTests,
-    someTests,
-    distinctTests,
-    takeTests
+    toStringTests
   ];
 
-  var expandTests = (aeroflow, assert) => describe('Aeroflow#expand', () => {
-    it('is static method', () => {
-      assert.isFunction(aeroflow.expand);
-    });
-
-    describe('()', () => {
-      it('returns instance of Aeroflow', () => {
-        assert.typeOf(aeroflow.expand(), 'Aeroflow');
-      });
-    });
-
-    describe('(@function)', () => {
-      
-    });
-
-    describe('(@!function)', () => {
-      
-    });
-  });
-
-  var generatorsTests = [
-    expandTests
-  ];
+  var instanceMethodsTests = (aeroflow, assert) => describe('instance members', () =>
+    tests$2.forEach(test => test(aeroflow, assert)));
 
   const tests = [
-    ...operatorsTests,
-    ...generatorsTests
+    staticMethodsTests,
+    instanceMethodsTests
   ];
 
-  var aeroflow = (aeroflow, assert) => tests.forEach(test => test(aeroflow, assert));
+  var aeroflow = (aeroflow, assert) =>
+    tests.forEach(test => test(aeroflow, assert));
 
   return aeroflow;
 

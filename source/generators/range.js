@@ -2,20 +2,20 @@
 
 import { maxInteger, toNumber } from '../utilites';
 import { unsync } from '../unsync';
-import { scalarAdapter } from '../adapters/scalar';
+import { valueAdapter } from '../adapters/value';
 
 export function rangeGenerator(start, end, step) {
   end = toNumber(end, maxInteger);
   start = toNumber(start, 0);
-  if (start === end) return scalarAdapter(start);
+  if (start === end) return valueAdapter(start);
   const down = start < end;
   if (down) {
     step = toNumber(step, 1);
-    if (step < 1) return scalarAdapter(start);
+    if (step < 1) return valueAdapter(start);
   }
   else {
     step = toNumber(step, -1);
-    if (step > -1) return scalarAdapter(start);
+    if (step > -1) return valueAdapter(start);
   }
   const limiter = down
     ? value => value <= end

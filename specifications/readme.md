@@ -1,72 +1,251 @@
 # TOC
-   - [average](#average)
-     - [average()](#average-average)
-   - [catch](#catch)
-     - [catch()](#catch-catch)
-     - [catch(@alternative:function)](#catch-catchalternativefunction)
-     - [catch(@alternative:!function)](#catch-catchalternativefunction)
-   - [count](#count)
-     - [count()](#count-count)
-   - [every](#every)
-     - [every()](#every-every)
-     - [every(@condition:function)](#every-everyconditionfunction)
-     - [every(@condition:regex)](#every-everyconditionregex)
-     - [every(@condition:!function!regex)](#every-everyconditionfunctionregex)
-   - [filter](#filter)
-     - [filter()](#filter-filter)
-     - [filter(@condition:function)](#filter-filterconditionfunction)
-     - [filter(@condition:regex)](#filter-filterconditionregex)
-     - [filter(@condition:!function!regex)](#filter-filterconditionfunctionregex)
-   - [max](#max)
-     - [max()](#max-max)
-   - [min](#min)
-     - [min()](#min-min)
-   - [reduce](#reduce)
-     - [reduce()](#reduce-reduce)
-     - [reduce(@reducer:function)](#reduce-reducereducerfunction)
-     - [reduce(@reducer:function, @seed:any)](#reduce-reducereducerfunction-seedany)
-     - [reduce(@reducer:function, @seed:any, true)](#reduce-reducereducerfunction-seedany-true)
-     - [reduce(@seed:!function)](#reduce-reduceseedfunction)
-   - [toArray](#toarray)
-     - [toArray()](#toarray-toarray)
-     - [toArray(true)](#toarray-toarraytrue)
-   - [toSet](#toset)
-     - [toSet()](#toset-toset)
-     - [toSet(true)](#toset-tosettrue)
-   - [toString](#tostring)
-     - [toString()](#tostring-tostring)
-     - [toString(true)](#tostring-tostringtrue)
-     - [toString(@string)](#tostring-tostringstring)
-     - [toString(@string, true)](#tostring-tostringstring-true)
-   - [some](#some)
-     - [some()](#some-some)
-     - [every(@condition:function)](#some-everyconditionfunction)
-     - [some(@condition:regex)](#some-someconditionregex)
-     - [some(@condition:!function!regex)](#some-someconditionfunctionregex)
-   - [distinct](#distinct)
-     - [distinct()](#distinct-distinct)
-     - [distinct(true)](#distinct-distincttrue)
-   - [take](#take)
-     - [take()](#take-take)
-     - [take(@condition:function)](#take-takeconditionfunction)
-     - [take(@condition:number)](#take-takeconditionnumber)
-     - [take(@condition:!function!number)](#take-takeconditionfunctionnumber)
-   - [Aeroflow#expand](#aeroflowexpand)
-     - [()](#aeroflowexpand-)
-     - [(@function)](#aeroflowexpand-function)
-     - [(@!function)](#aeroflowexpand-function)
+   - [static members](#static-members)
+     - [empty](#static-members-empty)
+       - [empty](#static-members-empty-empty)
+     - [expand](#static-members-expand)
+       - [expand()](#static-members-expand-expand)
+       - [expand(@expander:function)](#static-members-expand-expandexpanderfunction)
+       - [expand(@expander:function, @seed:any)](#static-members-expand-expandexpanderfunction-seedany)
+     - [just](#static-members-just)
+       - [just()](#static-members-just-just)
+       - [just(@array)](#static-members-just-justarray)
+       - [just(@iterable)](#static-members-just-justiterable)
+   - [instance members](#instance-members)
+     - [average](#instance-members-average)
+       - [average()](#instance-members-average-average)
+     - [catch](#instance-members-catch)
+       - [catch()](#instance-members-catch-catch)
+       - [catch(@alternative:function)](#instance-members-catch-catchalternativefunction)
+       - [catch(@alternative:!function)](#instance-members-catch-catchalternativefunction)
+     - [count](#instance-members-count)
+       - [count()](#instance-members-count-count)
+     - [distinct](#instance-members-distinct)
+       - [distinct()](#instance-members-distinct-distinct)
+       - [distinct(true)](#instance-members-distinct-distincttrue)
+     - [every](#instance-members-every)
+       - [every()](#instance-members-every-every)
+       - [every(@condition:function)](#instance-members-every-everyconditionfunction)
+       - [every(@condition:regex)](#instance-members-every-everyconditionregex)
+       - [every(@condition:!function!regex)](#instance-members-every-everyconditionfunctionregex)
+     - [filter](#instance-members-filter)
+       - [filter()](#instance-members-filter-filter)
+       - [filter(@condition:function)](#instance-members-filter-filterconditionfunction)
+       - [filter(@condition:regex)](#instance-members-filter-filterconditionregex)
+       - [filter(@condition:!function!regex)](#instance-members-filter-filterconditionfunctionregex)
+     - [max](#instance-members-max)
+       - [max()](#instance-members-max-max)
+     - [min](#instance-members-min)
+       - [min()](#instance-members-min-min)
+     - [reduce](#instance-members-reduce)
+       - [reduce()](#instance-members-reduce-reduce)
+       - [reduce(@reducer:function)](#instance-members-reduce-reducereducerfunction)
+       - [reduce(@reducer:function, @seed:any)](#instance-members-reduce-reducereducerfunction-seedany)
+       - [reduce(@reducer:function, @seed:any, true)](#instance-members-reduce-reducereducerfunction-seedany-true)
+       - [reduce(@seed:!function)](#instance-members-reduce-reduceseedfunction)
+     - [some](#instance-members-some)
+       - [some()](#instance-members-some-some)
+       - [every(@condition:function)](#instance-members-some-everyconditionfunction)
+       - [some(@condition:regex)](#instance-members-some-someconditionregex)
+       - [some(@condition:!function!regex)](#instance-members-some-someconditionfunctionregex)
+     - [take](#instance-members-take)
+       - [take()](#instance-members-take-take)
+       - [take(@condition:function)](#instance-members-take-takeconditionfunction)
+       - [take(@condition:number)](#instance-members-take-takeconditionnumber)
+       - [take(@condition:!function!number)](#instance-members-take-takeconditionfunctionnumber)
+     - [toArray](#instance-members-toarray)
+       - [toArray()](#instance-members-toarray-toarray)
+       - [toArray(true)](#instance-members-toarray-toarraytrue)
+     - [toSet](#instance-members-toset)
+       - [toSet()](#instance-members-toset-toset)
+       - [toSet(true)](#instance-members-toset-tosettrue)
+     - [toString](#instance-members-tostring)
+       - [toString()](#instance-members-tostring-tostring)
+       - [toString(true)](#instance-members-tostring-tostringtrue)
+       - [toString(@string)](#instance-members-tostring-tostringstring)
+       - [toString(@string, true)](#instance-members-tostring-tostringstring-true)
 <a name=""></a>
  
-<a name="average"></a>
-# average
+<a name="static-members"></a>
+# static members
+<a name="static-members-empty"></a>
+## empty
+is static property.
+
+```js
+assert.isDefined(aeroflow.empty);
+```
+
+<a name="static-members-empty-empty"></a>
+### empty
+returns instance of Aeroflow.
+
+```js
+assert.typeOf(aeroflow.empty, 'Aeroflow');
+```
+
+returns instance of Aeroflow emitting "done" event only.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow.empty.run(fail, done);
+}));
+```
+
+<a name="static-members-expand"></a>
+## expand
+Is static method.
+
+```js
+return assert.isFunction(aeroflow.expand);
+```
+
+<a name="static-members-expand-expand"></a>
+### expand()
+Returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow.expand(), 'Aeroflow');
+```
+
+<a name="static-members-expand-expandexpanderfunction"></a>
+### expand(@expander:function)
+Calls @expander.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow.expand(done).take(1).run(fail, fail);
+}));
+```
+
+Passes undefined to @expander as first argument because no seed is specified.
+
+```js
+return assert.eventually.isUndefined(new Promise(function (done, fail) {
+  return aeroflow.expand(done).take(1).run(fail, fail);
+}));
+```
+
+Passes value returned by @expander to @expander again as first argument on next iteration.
+
+```js
+var expectation = {};
+var iteration = 0;
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow.expand(function (value) {
+    return iteration++ ? done(value) : expectation;
+  }).take(2).run(noop, fail);
+}), expectation);
+```
+
+Passes zero-based index of iteration to @expander as second argument.
+
+```js
+var indices = [],
+    expectation = [0, 1, 2, 3];
+return assert.eventually.includeMembers(new Promise(function (done, fail) {
+  return aeroflow.expand(function (_, index) {
+    return indices.push(index);
+  }).take(expectation.length).run(noop, function () {
+    return done(indices);
+  });
+}), expectation);
+```
+
+Passes context data to @expander as third argument.
+
+```js
+var expectation = {};
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow.expand(function (_, __, data) {
+    return done(data);
+  }).take(1).run(fail, fail, expectation);
+}), expectation);
+```
+
+Emits value returned by @expander.
+
+```js
+var expectation = {};
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow.expand(function () {
+    return expectation;
+  }).take(1).run(done, fail);
+}), expectation);
+```
+
+<a name="static-members-expand-expandexpanderfunction-seedany"></a>
+### expand(@expander:function, @seed:any)
+Passes @seed to @expander as first argument.
+
+```js
+var seed = 42,
+    expectation = seed;
+assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow.expand(done, seed).take(1).run(fail, fail);
+}), expectation);
+```
+
+<a name="static-members-just"></a>
+## just
+is static method.
+
+```js
+return assert.isFunction(aeroflow.just);
+```
+
+<a name="static-members-just-just"></a>
+### just()
+returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow.just(), 'Aeroflow');
+```
+
+returns instance of Aeroflow emitting single undefined value.
+
+```js
+var expectation = undefined;
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow.just().run(done, fail);
+}), expectation);
+```
+
+<a name="static-members-just-justarray"></a>
+### just(@array)
+returns instance of Aeroflow emitting @array as is.
+
+```js
+var array = [1, 2, 3],
+    expectation = array;
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow.just(array).run(done, fail);
+}), expectation);
+```
+
+<a name="static-members-just-justiterable"></a>
+### just(@iterable)
+returns instance of Aeroflow emitting @iterable as is.
+
+```js
+var iterable = new Set([1, 2, 3]),
+    expectation = iterable;
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow.just(iterable).run(done, fail);
+}), expectation);
+```
+
+<a name="instance-members"></a>
+# instance members
+<a name="instance-members-average"></a>
+## average
 Is instance method.
 
 ```js
 assert.isFunction(aeroflow.empty.average);
 ```
 
-<a name="average-average"></a>
-## average()
+<a name="instance-members-average-average"></a>
+### average()
 Returns instance of Aeroflow.
 
 ```js
@@ -121,16 +300,16 @@ return assert.eventually.isNaN(new Promise(function (done, fail) {
 }));
 ```
 
-<a name="catch"></a>
-# catch
+<a name="instance-members-catch"></a>
+## catch
 Is instance method.
 
 ```js
 return assert.isFunction(aeroflow.empty.catch);
 ```
 
-<a name="catch-catch"></a>
-## catch()
+<a name="instance-members-catch-catch"></a>
+### catch()
 Returns instance of Aeroflow.
 
 ```js
@@ -153,8 +332,8 @@ return assert.eventually.isBoolean(new Promise(function (done, fail) {
 }));
 ```
 
-<a name="catch-catchalternativefunction"></a>
-## catch(@alternative:function)
+<a name="instance-members-catch-catchalternativefunction"></a>
+### catch(@alternative:function)
 Does not call @alternative when flow is empty.
 
 ```js
@@ -190,8 +369,8 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), alternative);
 ```
 
-<a name="catch-catchalternativefunction"></a>
-## catch(@alternative:!function)
+<a name="instance-members-catch-catchalternativefunction"></a>
+### catch(@alternative:!function)
 Emits @alternative value when flow emits error.
 
 ```js
@@ -201,16 +380,16 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), alternative);
 ```
 
-<a name="count"></a>
-# count
+<a name="instance-members-count"></a>
+## count
 Is instance method.
 
 ```js
 assert.isFunction(aeroflow.empty.count);
 ```
 
-<a name="count-count"></a>
-## count()
+<a name="instance-members-count-count"></a>
+### count()
 Returns instance of Aeroflow.
 
 ```js
@@ -245,16 +424,64 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), expectation);
 ```
 
-<a name="every"></a>
-# every
+<a name="instance-members-distinct"></a>
+## distinct
+Is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.distinct);
+```
+
+<a name="instance-members-distinct-distinct"></a>
+### distinct()
+Returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow.empty.distinct(), 'Aeroflow');
+```
+
+Emits unique @values from flow emitting several numeric @values.
+
+```js
+var values = [1, 1, 2, 2, 3],
+    expectation = Array.from(new Set(values));
+return assert.eventually.includeMembers(new Promise(function (done, fail) {
+  return aeroflow(values).distinct().toArray().run(done, fail);
+}), expectation);
+```
+
+Emits unique @values from flow emitting several non-numeric @values.
+
+```js
+var values = ['a', 'b', 1, 'c', 'c'],
+    expectation = Array.from(new Set(values));
+return assert.eventually.includeMembers(new Promise(function (done, fail) {
+  return aeroflow(values).distinct().toArray().run(done, fail);
+}), expectation);
+```
+
+<a name="instance-members-distinct-distincttrue"></a>
+### distinct(true)
+Emits unique @values from each identical sequence of @values.
+
+```js
+var values = [1, 1, 2, 2, 1, 1],
+    expectation = [1, 2, 1];
+return assert.eventually.includeMembers(new Promise(function (done, fail) {
+  return aeroflow(values).distinct(true).toArray().run(done, fail);
+}), expectation);
+```
+
+<a name="instance-members-every"></a>
+## every
 Is instance method.
 
 ```js
 return assert.isFunction(aeroflow.empty.every);
 ```
 
-<a name="every-every"></a>
-## every()
+<a name="instance-members-every-every"></a>
+### every()
 Returns instance of Aeroflow.
 
 ```js
@@ -277,8 +504,8 @@ return assert.eventually.isTrue(new Promise(function (done, fail) {
 }));
 ```
 
-<a name="every-everyconditionfunction"></a>
-## every(@condition:function)
+<a name="instance-members-every-everyconditionfunction"></a>
+### every(@condition:function)
 Emits result of passing @condition test by each item in flow.
 
 ```js
@@ -292,8 +519,8 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), expectation);
 ```
 
-<a name="every-everyconditionregex"></a>
-## every(@condition:regex)
+<a name="instance-members-every-everyconditionregex"></a>
+### every(@condition:regex)
 Emits result of passing @condition test by each item in flow.
 
 ```js
@@ -307,8 +534,8 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), expectation);
 ```
 
-<a name="every-everyconditionfunctionregex"></a>
-## every(@condition:!function!regex)
+<a name="instance-members-every-everyconditionfunctionregex"></a>
+### every(@condition:!function!regex)
 Emits result of passing @condition test by each item in flow.
 
 ```js
@@ -322,16 +549,16 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), expectation);
 ```
 
-<a name="filter"></a>
-# filter
+<a name="instance-members-filter"></a>
+## filter
 Is instance method.
 
 ```js
 return assert.isFunction(aeroflow.empty.filter);
 ```
 
-<a name="filter-filter"></a>
-## filter()
+<a name="instance-members-filter-filter"></a>
+### filter()
 Returns instance of Aeroflow.
 
 ```js
@@ -358,8 +585,8 @@ assert.eventually.includeMembers(new Promise(function (done, fail) {
 }), expectation);
 ```
 
-<a name="filter-filterconditionfunction"></a>
-## filter(@condition:function)
+<a name="instance-members-filter-filterconditionfunction"></a>
+### filter(@condition:function)
 Does not call @condition when flow is empty.
 
 ```js
@@ -421,8 +648,8 @@ assert.eventually.includeMembers(new Promise(function (done, fail) {
 }), expectation);
 ```
 
-<a name="filter-filterconditionregex"></a>
-## filter(@condition:regex)
+<a name="instance-members-filter-filterconditionregex"></a>
+### filter(@condition:regex)
 Emits only values passing @condition test.
 
 ```js
@@ -436,8 +663,8 @@ assert.eventually.includeMembers(new Promise(function (done, fail) {
 }), expectation);
 ```
 
-<a name="filter-filterconditionfunctionregex"></a>
-## filter(@condition:!function!regex)
+<a name="instance-members-filter-filterconditionfunctionregex"></a>
+### filter(@condition:!function!regex)
 Emits only values equal to @condition.
 
 ```js
@@ -451,16 +678,16 @@ assert.eventually.includeMembers(new Promise(function (done, fail) {
 }), expectation);
 ```
 
-<a name="max"></a>
-# max
+<a name="instance-members-max"></a>
+## max
 Is instance method.
 
 ```js
 assert.isFunction(aeroflow.empty.max);
 ```
 
-<a name="max-max"></a>
-## max()
+<a name="instance-members-max-max"></a>
+### max()
 Returns instance of Aeroflow.
 
 ```js
@@ -518,16 +745,16 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), expectation);
 ```
 
-<a name="min"></a>
-# min
+<a name="instance-members-min"></a>
+## min
 Is instance method.
 
 ```js
 assert.isFunction(aeroflow.empty.min);
 ```
 
-<a name="min-min"></a>
-## min()
+<a name="instance-members-min-min"></a>
+### min()
 Returns instance of Aeroflow.
 
 ```js
@@ -585,16 +812,16 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), expectation);
 ```
 
-<a name="reduce"></a>
-# reduce
+<a name="instance-members-reduce"></a>
+## reduce
 Is instance method.
 
 ```js
 return assert.isFunction(aeroflow.empty.reduce);
 ```
 
-<a name="reduce-reduce"></a>
-## reduce()
+<a name="instance-members-reduce-reduce"></a>
+### reduce()
 Returns instance of Aeroflow.
 
 ```js
@@ -617,8 +844,8 @@ return assert.isFulfilled(new Promise(function (done, fail) {
 }));
 ```
 
-<a name="reduce-reducereducerfunction"></a>
-## reduce(@reducer:function)
+<a name="instance-members-reduce-reducereducerfunction"></a>
+### reduce(@reducer:function)
 Does not call @reducer when flow is empty.
 
 ```js
@@ -635,7 +862,7 @@ return assert.isFulfilled(new Promise(function (done, fail) {
 }));
 ```
 
-calls @reducer when flow emits serveral values.
+Calls @reducer when flow emits serveral values.
 
 ```js
 return assert.isFulfilled(new Promise(function (done, fail) {
@@ -693,28 +920,27 @@ return assert.eventually.includeMembers(new Promise(function (done, fail) {
 Passes zero-based index of iteration to @reducer as third argument.
 
 ```js
-var values = [1, 2, 3, 4],
-    expectation = values.length - 2;
-return assert.isFulfilled(new Promise(function (done, fail) {
-  return aeroflow(values).reduce(function (_, __, index) {
-    if (index === expectation) done();
+var expectation = 0;
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow(1, 2).reduce(function (_, __, index) {
+    return done(index);
   }).run(fail, fail);
-}));
+}), expectation);
 ```
 
 Passes context data to @reducer as forth argument.
 
 ```js
-var data = {};
+var expectation = {};
 return assert.eventually.strictEqual(new Promise(function (done, fail) {
   return aeroflow(1, 2).reduce(function (_, __, ___, data) {
     return done(data);
-  }).run(fail, fail, data);
-}), data);
+  }).run(fail, fail, expectation);
+}), expectation);
 ```
 
-<a name="reduce-reducereducerfunction-seedany"></a>
-## reduce(@reducer:function, @seed:any)
+<a name="instance-members-reduce-reducereducerfunction-seedany"></a>
+### reduce(@reducer:function, @seed:any)
 Emits nothing when flow is empty.
 
 ```js
@@ -732,8 +958,8 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), seed);
 ```
 
-<a name="reduce-reducereducerfunction-seedany-true"></a>
-## reduce(@reducer:function, @seed:any, true)
+<a name="instance-members-reduce-reducereducerfunction-seedany-true"></a>
+### reduce(@reducer:function, @seed:any, true)
 Emits @seed when flow is empty.
 
 ```js
@@ -743,8 +969,8 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), seed);
 ```
 
-<a name="reduce-reduceseedfunction"></a>
-## reduce(@seed:!function)
+<a name="instance-members-reduce-reduceseedfunction"></a>
+### reduce(@seed:!function)
 Emits @seed when flow is empty.
 
 ```js
@@ -763,16 +989,176 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), seed);
 ```
 
-<a name="toarray"></a>
-# toArray
+<a name="instance-members-some"></a>
+## some
+Is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.some);
+```
+
+<a name="instance-members-some-some"></a>
+### some()
+Returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow.empty.some(), 'Aeroflow');
+```
+
+Emits false when flow is empty.
+
+```js
+return assert.eventually.isFalse(new Promise(function (done, fail) {
+  return aeroflow.empty.some().run(done, fail);
+}));
+```
+
+Emits true when flow is not empty.
+
+```js
+return assert.eventually.isTrue(new Promise(function (done, fail) {
+  return aeroflow(1).some().run(done, fail);
+}));
+```
+
+<a name="instance-members-some-everyconditionfunction"></a>
+### every(@condition:function)
+Emits result of passing @condition test at least one item in flow.
+
+```js
+var values = [2, 1, 3],
+    condition = function condition(item) {
+  return item % 2 === 0;
+},
+    expectation = values.some(condition);
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow(values).some(condition).run(done, fail);
+}), expectation);
+```
+
+<a name="instance-members-some-someconditionregex"></a>
+### some(@condition:regex)
+Emits result of passing @condition test at least one item in flow.
+
+```js
+var values = ['a', 'b', 'aa', 'bb'],
+    condition = /^a$/,
+    expectation = values.some(function (value) {
+  return condition.test(value);
+});
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow(values).some(condition).run(done, fail);
+}), expectation);
+```
+
+<a name="instance-members-some-someconditionfunctionregex"></a>
+### some(@condition:!function!regex)
+Emits result of passing @condition test at least one item in flow.
+
+```js
+var values = [1, 2],
+    condition = 1,
+    expectation = values.some(function (value) {
+  return value === condition;
+});
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow(values).some(condition).run(done, fail);
+}), expectation);
+```
+
+<a name="instance-members-take"></a>
+## take
+Is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.take);
+```
+
+<a name="instance-members-take-take"></a>
+### take()
+Returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow.empty.take(), 'Aeroflow');
+```
+
+Emits nothing when flow is empty.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow.empty.take().run(fail, done);
+}));
+```
+
+Emits nothing when flow is not empty.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow('test').take().run(fail, done);
+}));
+```
+
+<a name="instance-members-take-takeconditionfunction"></a>
+### take(@condition:function)
+Emits @values while they satisfies @condition .
+
+```js
+var values = [2, 4, 6, 3, 4],
+    condition = function condition(value) {
+  return value % 2 === 0;
+},
+    expectation = [2, 4, 6];
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow(values).take(condition).toArray().run(done, fail);
+}), expectation);
+```
+
+<a name="instance-members-take-takeconditionnumber"></a>
+### take(@condition:number)
+Emits @condition number of @values from the start.
+
+```js
+var values = [1, 2, 3],
+    take = 2,
+    expectation = values.slice(0, take);
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow(values).take(take).toArray().run(done, fail);
+}), expectation);
+```
+
+Emits @condition number of @values from the end.
+
+```js
+var values = [1, 2, 3],
+    take = -2,
+    expectation = values.slice(take);
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow(values).take(take).toArray().run(done, fail);
+}), expectation);
+```
+
+<a name="instance-members-take-takeconditionfunctionnumber"></a>
+### take(@condition:!function!number)
+Emits all @values when @condition is non-numeric.
+
+```js
+var values = ['a', 'b', 'c'],
+    take = 'a';
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow(values).take(take).toArray().run(done, fail);
+}), values);
+```
+
+<a name="instance-members-toarray"></a>
+## toArray
 Is instance method.
 
 ```js
 assert.isFunction(aeroflow.empty.toArray);
 ```
 
-<a name="toarray-toarray"></a>
-## toArray()
+<a name="instance-members-toarray-toarray"></a>
+### toArray()
 Returns instance of Aeroflow.
 
 ```js
@@ -797,8 +1183,8 @@ return assert.eventually.includeMembers(new Promise(function (done, fail) {
 }), expectation);
 ```
 
-<a name="toarray-toarraytrue"></a>
-## toArray(true)
+<a name="instance-members-toarray-toarraytrue"></a>
+### toArray(true)
 Emits an array when flow is empty.
 
 ```js
@@ -817,16 +1203,16 @@ return assert.eventually.lengthOf(new Promise(function (done, fail) {
 }), expectation);
 ```
 
-<a name="toset"></a>
-# toSet
+<a name="instance-members-toset"></a>
+## toSet
 Is instance method.
 
 ```js
 assert.isFunction(aeroflow.empty.toSet);
 ```
 
-<a name="toset-toset"></a>
-## toSet()
+<a name="instance-members-toset-toset"></a>
+### toSet()
 Returns instance of Aeroflow.
 
 ```js
@@ -853,8 +1239,8 @@ return assert.eventually.includeMembers(new Promise(function (done, fail) {
 }), expectation);
 ```
 
-<a name="toset-tosettrue"></a>
-## toSet(true)
+<a name="instance-members-toset-tosettrue"></a>
+### toSet(true)
 Emits a set when flow is empty.
 
 ```js
@@ -873,16 +1259,16 @@ return assert.eventually.propertyVal(new Promise(function (done, fail) {
 }), 'size', expectation);
 ```
 
-<a name="tostring"></a>
-# toString
+<a name="instance-members-tostring"></a>
+## toString
 Is instance method.
 
 ```js
 assert.isFunction(aeroflow.empty.toString);
 ```
 
-<a name="tostring-tostring"></a>
-## toString()
+<a name="instance-members-tostring-tostring"></a>
+### toString()
 Returns instance of Aeroflow.
 
 ```js
@@ -937,8 +1323,8 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), expectation);
 ```
 
-<a name="tostring-tostringtrue"></a>
-## toString(true)
+<a name="instance-members-tostring-tostringtrue"></a>
+### toString(true)
 Emits string when flow empty.
 
 ```js
@@ -957,8 +1343,8 @@ return assert.eventually.lengthOf(new Promise(function (done, fail) {
 }), expectation);
 ```
 
-<a name="tostring-tostringstring"></a>
-## toString(@string)
+<a name="instance-members-tostring-tostringstring"></a>
+### toString(@string)
 Emits nothing when flow is empty.
 
 ```js
@@ -978,8 +1364,8 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), expectation);
 ```
 
-<a name="tostring-tostringstring-true"></a>
-## toString(@string, true)
+<a name="instance-members-tostring-tostringstring-true"></a>
+### toString(@string, true)
 Emits empty string when flow is empty.
 
 ```js
@@ -988,229 +1374,5 @@ var delimiter = ';',
 return assert.eventually.lengthOf(new Promise(function (done, fail) {
   return aeroflow.empty.toString(delimiter, true).run(done, fail);
 }), expectation);
-```
-
-<a name="some"></a>
-# some
-Is instance method.
-
-```js
-return assert.isFunction(aeroflow.empty.some);
-```
-
-<a name="some-some"></a>
-## some()
-Returns instance of Aeroflow.
-
-```js
-return assert.typeOf(aeroflow.empty.some(), 'Aeroflow');
-```
-
-Emits false when flow is empty.
-
-```js
-return assert.eventually.isFalse(new Promise(function (done, fail) {
-  return aeroflow.empty.some().run(done, fail);
-}));
-```
-
-Emits true when flow is not empty.
-
-```js
-return assert.eventually.isTrue(new Promise(function (done, fail) {
-  return aeroflow(1).some().run(done, fail);
-}));
-```
-
-<a name="some-everyconditionfunction"></a>
-## every(@condition:function)
-Emits result of passing @condition test at least one item in flow.
-
-```js
-var values = [2, 1, 3],
-    condition = function condition(item) {
-  return item % 2 === 0;
-},
-    expectation = values.some(condition);
-return assert.eventually.strictEqual(new Promise(function (done, fail) {
-  return aeroflow(values).some(condition).run(done, fail);
-}), expectation);
-```
-
-<a name="some-someconditionregex"></a>
-## some(@condition:regex)
-Emits result of passing @condition test at least one item in flow.
-
-```js
-var values = ['a', 'b', 'aa', 'bb'],
-    condition = /^a$/,
-    expectation = values.some(function (value) {
-  return condition.test(value);
-});
-return assert.eventually.strictEqual(new Promise(function (done, fail) {
-  return aeroflow(values).some(condition).run(done, fail);
-}), expectation);
-```
-
-<a name="some-someconditionfunctionregex"></a>
-## some(@condition:!function!regex)
-Emits result of passing @condition test at least one item in flow.
-
-```js
-var values = [1, 2],
-    condition = 1,
-    expectation = values.some(function (value) {
-  return value === condition;
-});
-return assert.eventually.strictEqual(new Promise(function (done, fail) {
-  return aeroflow(values).some(condition).run(done, fail);
-}), expectation);
-```
-
-<a name="distinct"></a>
-# distinct
-Is instance method.
-
-```js
-return assert.isFunction(aeroflow.empty.distinct);
-```
-
-<a name="distinct-distinct"></a>
-## distinct()
-Returns instance of Aeroflow.
-
-```js
-return assert.typeOf(aeroflow.empty.distinct(), 'Aeroflow');
-```
-
-Emits unique @values from flow emitting several numeric @values.
-
-```js
-var values = [1, 1, 2, 2, 3],
-    expectation = Array.from(new Set(values));
-return assert.eventually.includeMembers(new Promise(function (done, fail) {
-  return aeroflow(values).distinct().toArray().run(done, fail);
-}), expectation);
-```
-
-Emits unique @values from flow emitting several non-numeric @values.
-
-```js
-var values = ['a', 'b', 1, 'c', 'c'],
-    expectation = Array.from(new Set(values));
-return assert.eventually.includeMembers(new Promise(function (done, fail) {
-  return aeroflow(values).distinct().toArray().run(done, fail);
-}), expectation);
-```
-
-<a name="distinct-distincttrue"></a>
-## distinct(true)
-Emits unique @values from each identical sequence of @values.
-
-```js
-var values = [1, 1, 2, 2, 1, 1],
-    expectation = [1, 2, 1];
-return assert.eventually.includeMembers(new Promise(function (done, fail) {
-  return aeroflow(values).distinct(true).toArray().run(done, fail);
-}), expectation);
-```
-
-<a name="take"></a>
-# take
-Is instance method.
-
-```js
-return assert.isFunction(aeroflow.empty.take);
-```
-
-<a name="take-take"></a>
-## take()
-Returns instance of Aeroflow.
-
-```js
-return assert.typeOf(aeroflow.empty.take(), 'Aeroflow');
-```
-
-Emits nothing when flow is empty.
-
-```js
-return assert.isFulfilled(new Promise(function (done, fail) {
-  return aeroflow.empty.take().run(fail, done);
-}));
-```
-
-Emits nothing when flow is not empty.
-
-```js
-return assert.isFulfilled(new Promise(function (done, fail) {
-  return aeroflow('test').take().run(fail, done);
-}));
-```
-
-<a name="take-takeconditionfunction"></a>
-## take(@condition:function)
-Emits @values while they satisfies @condition .
-
-```js
-var values = [2, 4, 6, 3, 4],
-    condition = function condition(value) {
-  return value % 2 === 0;
-},
-    expectation = [2, 4, 6];
-return assert.eventually.sameMembers(new Promise(function (done, fail) {
-  return aeroflow(values).take(condition).toArray().run(done, fail);
-}), expectation);
-```
-
-<a name="take-takeconditionnumber"></a>
-## take(@condition:number)
-Emits @condition number of @values from the start.
-
-```js
-var values = [1, 2, 3],
-    take = 2,
-    expectation = values.slice(0, take);
-return assert.eventually.sameMembers(new Promise(function (done, fail) {
-  return aeroflow(values).take(take).toArray().run(done, fail);
-}), expectation);
-```
-
-Emits @condition number of @values from the end.
-
-```js
-var values = [1, 2, 3],
-    take = -2,
-    expectation = values.slice(take);
-return assert.eventually.sameMembers(new Promise(function (done, fail) {
-  return aeroflow(values).take(take).toArray().run(done, fail);
-}), expectation);
-```
-
-<a name="take-takeconditionfunctionnumber"></a>
-## take(@condition:!function!number)
-Emits all @values when @condition is non-numeric.
-
-```js
-var values = ['a', 'b', 'c'],
-    take = 'a';
-return assert.eventually.sameMembers(new Promise(function (done, fail) {
-  return aeroflow(values).take(take).toArray().run(done, fail);
-}), values);
-```
-
-<a name="aeroflowexpand"></a>
-# Aeroflow#expand
-is static method.
-
-```js
-assert.isFunction(aeroflow.expand);
-```
-
-<a name="aeroflowexpand-"></a>
-## ()
-returns instance of Aeroflow.
-
-```js
-assert.typeOf(aeroflow.expand(), 'Aeroflow');
 ```
 
