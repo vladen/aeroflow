@@ -8,11 +8,11 @@ export default (aeroflow, assert) => describe('slice', () => {
       assert.typeOf(aeroflow.empty.slice(), 'Aeroflow');
     });
 
-    it('Emits nothing when flow is empty', () =>
+    it('Emits nothing ("done" event only) when flow is empty', () =>
       assert.isFulfilled(new Promise((done, fail) =>
         aeroflow.empty.slice().run(fail, done))));
 
-    it('Emits @values when any param not passed', () => {
+    it('Emits @values when flow emits several @values', () => {
       const values = [1, 2];
       assert.eventually.sameMembers(new Promise((done, fail) =>
         aeroflow(values).slice().toArray().run(done, fail)),

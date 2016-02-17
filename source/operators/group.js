@@ -1,14 +1,12 @@
 'use strict';
 
-import { constant, isError, isFunction, tie } from '../utilites';
+import { constant, isError, tie, toFunction } from '../utilites';
 import { iterableAdapter } from '../adapters/iterable';
 
 export function groupOperator(selectors) {
   selectors = selectors.length
-    ? selectors.map(selector => isFunction(selector)
-      ? selector
-      : constant(selector))
-    : [constant()];
+    ? selectors.map(toFunction)
+    : [constant];
   const limit = selectors.length - 1;
   return emitter => (next, done, context) => {
     let groups = new Map, index = 0;

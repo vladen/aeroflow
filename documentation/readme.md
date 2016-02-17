@@ -250,7 +250,7 @@ aeroflow.repeat(index => index, index => 500 + 500 * index).take(3).dump().run()
     * [.max()](#Flow+max) ⇒ <code>[Flow](#Flow)</code>
     * [.mean()](#Flow+mean) ⇒ <code>[Flow](#Flow)</code>
     * [.min()](#Flow+min) ⇒ <code>[Flow](#Flow)</code>
-    * [.reduce(reducer, [seed], [required])](#Flow+reduce) ⇒ <code>[Flow](#Flow)</code>
+    * [.reduce(iteratee, [accumulator], [required])](#Flow+reduce) ⇒ <code>[Flow](#Flow)</code>
     * [.replay(delay, timing)](#Flow+replay) ⇒ <code>[Flow](#Flow)</code>
     * [.retry(attempts)](#Flow+retry) ⇒ <code>[Flow](#Flow)</code>
     * [.reverse()](#Flow+reverse) ⇒ <code>[Flow](#Flow)</code>
@@ -263,7 +263,7 @@ aeroflow.repeat(index => index, index => 500 + 500 * index).take(3).dump().run()
     * [.take([condition])](#Flow+take) ⇒ <code>[Flow](#Flow)</code>
     * [.tap([callback])](#Flow+tap) ⇒ <code>[Flow](#Flow)</code>
     * [.toArray()](#Flow+toArray) ⇒ <code>[Flow](#Flow)</code>
-    * [.toMap([keyTransformation], [valueTransformation])](#Flow+toMap) ⇒ <code>[Flow](#Flow)</code>
+    * [.toMap([keySelector], [valueSelector])](#Flow+toMap) ⇒ <code>[Flow](#Flow)</code>
     * [.toSet()](#Flow+toSet) ⇒ <code>[Flow](#Flow)</code>
     * [.toString([separator], [required])](#Flow+toString) ⇒ <code>[Flow](#Flow)</code>
 
@@ -672,7 +672,7 @@ aeroflow('b', 'a', 'c').min().dump().run();
 // done true
 ```
 <a name="Flow+reduce"></a>
-### flow.reduce(reducer, [seed], [required]) ⇒ <code>[Flow](#Flow)</code>
+### flow.reduce(iteratee, [accumulator], [required]) ⇒ <code>[Flow](#Flow)</code>
 Applies a function against an accumulator and each value emitted by this flow
 to reduce it to a single value, returns new flow emitting the reduced value.
 
@@ -681,13 +681,13 @@ to reduce it to a single value, returns new flow emitting the reduced value.
 and the 'required' argument is false.  
 **Params**
 
-- reducer <code>function</code> | <code>any</code> - Function to execute on each emitted value, taking four arguments:
+- iteratee <code>function</code> | <code>any</code> - Function to execute on each emitted value, taking four arguments:
   result - the value previously returned in the last invocation of the reducer, or seed, if supplied;
   value - the current value emitted by this flow;
   index - the index of the current value emitted by the flow;
   data - the data bound to current execution context.
   If is not a function, the returned flow will emit just the reducer value.
-- [seed] <code>any</code> | <code>boolean</code> - Value to use as the first argument to the first call of the reducer.
+- [accumulator] <code>any</code> | <code>boolean</code> - Value to use as the first argument to the first call of the reducer.
 When boolean value is passed and no value defined for the 'required' argument,
 the 'seed' argument is considered to be omitted.
 - [required] <code>boolean</code> <code> = false</code> - True to emit reduced result always, even if this flow is empty.
@@ -1016,16 +1016,16 @@ aeroflow(1, 2, 3).toArray().dump().run();
 // done true
 ```
 <a name="Flow+toMap"></a>
-### flow.toMap([keyTransformation], [valueTransformation]) ⇒ <code>[Flow](#Flow)</code>
+### flow.toMap([keySelector], [valueSelector]) ⇒ <code>[Flow](#Flow)</code>
 Collects all values emitted by this flow to ES6 map, returns flow emitting this map.
 
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Returns**: <code>[Flow](#Flow)</code> - New flow emitting map containing all results emitted by this flow.  
 **Params**
 
-- [keyTransformation] <code>function</code> | <code>any</code> - The mapping function used to transform each emitted value to map key.
+- [keySelector] <code>function</code> | <code>any</code> - The mapping function used to transform each emitted value to map key.
 Or scalar value to use as map key.
-- [valueTransformation] <code>function</code> | <code>any</code> - The mapping function used to transform each emitted value to map value,
+- [valueSelector] <code>function</code> | <code>any</code> - The mapping function used to transform each emitted value to map value,
 Or scalar value to use as map value.
 
 **Example**  

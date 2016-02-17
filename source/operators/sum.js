@@ -2,9 +2,6 @@
 
 import { reduceOperator } from './reduce';
 
-export function sumOperator(required) {
-  return reduceOperator(
-    (sum, result) => +result + sum, 
-    0,
-    required);
+export function sumOperator() {
+  return reduceOperator((sum, result) => +result + sum, 0);
 }

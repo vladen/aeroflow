@@ -1,30 +1,27 @@
 'use strict';
 
-import { constant, identity, isError, isFunction, isUndefined, tie } from '../utilites';
+import { identity, isError, isUndefined, tie, toFunction } from '../utilites';
 import { unsync } from '../unsync';
 
-export function toMapOperator(keyTransformation, valueTransformation) {
-  const keyTransformer = isUndefined(keyTransformation)
+export function toMapOperator(keySelector, valueSelector, required) {
+  keySelector = isUndefined(keySelector)
     ? identity
-    : isFunction(keyTransformation)
-      ? keyTransformation
-      : constant(keyTransformation);
-  const valueTransformer = isUndefined(valueTransformation)
+    : toFunction(keySelector);
+  valueSelector = isUndefined(valueSelector)
     ? identity
-    : isFunction(valueTransformation)
-      ? valueTransformation
-      : constant(valueTransformation);
-  return emitter=> (next, done, context) => {
-    let index = 0, map = new Map;
+    : toFunction(valueSelector);
+  return emitter => (next, done, context) => {
+    let empty = !required, index = 0, map = new Map;
     emitter(
       result => {
+        empty = false;
         map.set(
-          keyTransformer(result, index++, context.data),
-          valueTransformer(result, index++, context.data));
+          keySelector(result, index++, context.data),
+          valueSelector(result, index++, context.data));
         return true;
       },
       result => {
-        if (isError(result) || !unsync(next(map), tie(done, result), done)) done(result);
+        if (isError(result) || empty || !unsync(next(map), tie(done, result), done)) done(result);
       },
       context);
   };

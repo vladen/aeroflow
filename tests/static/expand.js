@@ -33,7 +33,7 @@ export default (aeroflow, assert) => describe('expand', () => {
 
     it('Passes zero-based index of iteration to @expander as second argument', () => {
       const indices = [], expectation = [0, 1, 2, 3];
-      return assert.eventually.includeMembers(new Promise((done, fail) =>
+      return assert.eventually.sameMembers(new Promise((done, fail) =>
         aeroflow
           .expand((_, index) => indices.push(index))
           .take(expectation.length)
