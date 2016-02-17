@@ -60,15 +60,6 @@ export default (aeroflow, assert) => describe('group', () => {
     });
   });
 
-  describe('group(@selector:!function)', () => {
-    it('Emits group with @selector name contains @values', () => {
-      const values = [1, 2], name = 'integers', expectation = [name, values];
-      return assert.eventually.sameDeepMembers(new Promise((done, fail) =>
-        aeroflow(values).group(name).run(done, fail)),
-        expectation);
-    });
-  });
-
   describe('group(@selectors:array)', () => {
     it('Emits nested named groups divided @values by @selectors', () => {
       const values  = [{name: 'test1', sex: 'female'}, {name: 'test2', sex: 'male'}],

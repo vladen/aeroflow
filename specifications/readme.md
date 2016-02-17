@@ -77,6 +77,22 @@
        - [toString(true)](#instance-members-tostring-tostringtrue)
        - [toString(@string)](#instance-members-tostring-tostringstring)
        - [toString(@string, true)](#instance-members-tostring-tostringstring-true)
+     - [map](#instance-members-map)
+       - [map()](#instance-members-map-map)
+       - [map(@mapping:function)](#instance-members-map-mapmappingfunction)
+       - [map(@mapping:!function)](#instance-members-map-mapmappingfunction)
+     - [mean](#instance-members-mean)
+       - [mean()](#instance-members-mean-mean)
+     - [reverse](#instance-members-reverse)
+       - [reverse()](#instance-members-reverse-reverse)
+     - [tap](#instance-members-tap)
+       - [tap()](#instance-members-tap-tap)
+       - [tap(@callback:function)](#instance-members-tap-tapcallbackfunction)
+       - [tap(@callback:!function)](#instance-members-tap-tapcallbackfunction)
+     - [group](#instance-members-group)
+       - [group()](#instance-members-group-group)
+       - [group(@selector:function)](#instance-members-group-groupselectorfunction)
+       - [group(@selectors:array)](#instance-members-group-groupselectorsarray)
 <a name=""></a>
  
 <a name="static-members"></a>
@@ -1764,5 +1780,458 @@ Emits empty string when flow is empty.
 return assert.eventually.lengthOf(new Promise(function (done, fail) {
   return aeroflow.empty.toString(';', true).run(done, fail);
 }), 0);
+```
+
+<a name="instance-members-map"></a>
+## map
+Is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.map);
+```
+
+<a name="instance-members-map-map"></a>
+### map()
+Returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow.empty.map(), 'Aeroflow');
+```
+
+Emits nothing when flow is empty.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow.empty.map().run(fail, done);
+}));
+```
+
+Emits same @values when no arguments passed.
+
+```js
+var values = [1, 2];
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow(values).map().toArray().run(done, fail);
+}), values);
+```
+
+<a name="instance-members-map-mapmappingfunction"></a>
+### map(@mapping:function)
+Does not call @mapping when flow is empty.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow.empty.map(fail).run(fail, done);
+}));
+```
+
+Calls @mapping when flow emits several values.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow(1, 2).map(done).run(fail, fail);
+}));
+```
+
+Emits error thrown by @mapping.
+
+```js
+var error = new Error('test');
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow(1, 2).map(function () {
+    throw error;
+  }).run(fail, done);
+}), error);
+```
+
+Emits @values processed through @mapping.
+
+```js
+var values = [1, 2, 3],
+    mapping = function mapping(item) {
+  return item * 2;
+},
+    expectation = values.map(mapping);
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow(values).map(mapping).toArray().run(done, fail);
+}), expectation);
+```
+
+Passes context data to @mapping as third argument.
+
+```js
+var data = {};
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow('test').map(function (_, __, data) {
+    return done(data);
+  }).run(fail, fail, data);
+}), data);
+```
+
+<a name="instance-members-map-mapmappingfunction"></a>
+### map(@mapping:!function)
+Emits @mapping value instead of every value in @values.
+
+```js
+var values = [1, 2],
+    mapping = 'a',
+    expectation = [mapping, mapping];
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow(values).map(mapping).toArray().run(done, fail);
+}), expectation);
+```
+
+<a name="instance-members-mean"></a>
+## mean
+Is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.mean);
+```
+
+<a name="instance-members-mean-mean"></a>
+### mean()
+Returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow.empty.mean(), 'Aeroflow');
+```
+
+Emits nothing when flow is empty.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow.empty.mean().run(fail, done);
+}));
+```
+
+Emits @value from flow emitting single numeric @value.
+
+```js
+var value = 42,
+    expectation = value;
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow(value).mean().run(done, fail);
+}), expectation);
+```
+
+Emits mean value of @values from flow emitting several numeric @values.
+
+```js
+var values = [1, 3, 4, 5],
+    expectation = 4;
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow(values).mean().run(done, fail);
+}), expectation);
+```
+
+Emits @value from flow emitting single non-numeric @value.
+
+```js
+var value = 'a',
+    expectation = value;
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow(value).mean().run(done, fail);
+}), expectation);
+```
+
+Emits mean value of @values from flow emitting several numeric @values.
+
+```js
+var values = ['a', 'd', 'f', 'm'],
+    expectation = 'f';
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow(values).mean().run(done, fail);
+}), expectation);
+```
+
+<a name="instance-members-reverse"></a>
+## reverse
+Is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.reverse);
+```
+
+<a name="instance-members-reverse-reverse"></a>
+### reverse()
+Returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow.empty.reverse(), 'Aeroflow');
+```
+
+Emits nothing when flow is empty.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow.empty.reverse().run(fail, done);
+}));
+```
+
+Emits @value from flow emitting single numeric @value.
+
+```js
+var value = 42,
+    expectation = value;
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow(value).reverse().run(done, fail);
+}), expectation);
+```
+
+Emits reversed @values from flow emitting @values.
+
+```js
+var values = [1, 3],
+    expectation = values.reverse();
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow(values).reverse().toArray().run(done, fail);
+}), expectation);
+```
+
+<a name="instance-members-tap"></a>
+## tap
+Is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.tap);
+```
+
+<a name="instance-members-tap-tap"></a>
+### tap()
+Returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow.empty.tap(), 'Aeroflow');
+```
+
+Emits nothing when flow is empty.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow.empty.tap().run(fail, done);
+}));
+```
+
+<a name="instance-members-tap-tapcallbackfunction"></a>
+### tap(@callback:function)
+Does not call @callback when flow is empty.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow.empty.tap(fail).run(fail, done);
+}));
+```
+
+Calls @callback when flow emits several values.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow(1, 2).tap(done).run(fail, fail);
+}));
+```
+
+Emits error thrown by @callback.
+
+```js
+var error = new Error('test');
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow(1, 2).tap(function () {
+    throw error;
+  }).run(fail, done);
+}), error);
+```
+
+Passes context data to @callback as third argument.
+
+```js
+var data = {};
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow('test').tap(function (_, __, data) {
+    return done(data);
+  }).run(fail, fail, data);
+}), data);
+```
+
+Emits immutable @values after tap @callback was applied.
+
+```js
+var values = [1, 2, 3];
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow(values).tap(function (item) {
+    return item * 2;
+  }).toArray().run(done, fail);
+}), values);
+```
+
+<a name="instance-members-tap-tapcallbackfunction"></a>
+### tap(@callback:!function)
+Emits immutable @values after tap @callback was applied.
+
+```js
+var values = [1, 2, 3];
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow(values).tap(1).toArray().run(done, fail);
+}), values);
+```
+
+<a name="instance-members-group"></a>
+## group
+Is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.group);
+```
+
+<a name="instance-members-group-group"></a>
+### group()
+Returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow.empty.group(), 'Aeroflow');
+```
+
+Emits nothing when flow is empty.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow.empty.group().run(fail, done);
+}));
+```
+
+<a name="instance-members-group-groupselectorfunction"></a>
+### group(@selector:function)
+Does not call @selector when flow is empty.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow.empty.group(fail).run(fail, done);
+}));
+```
+
+Calls @selector when flow emits several values.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow(1, 2).group(done).run(fail, fail);
+}));
+```
+
+Emits error thrown by @selector.
+
+```js
+var error = new Error('test');
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow(1, 2).group(function () {
+    throw error;
+  }).run(fail, done);
+}), error);
+```
+
+Passes context data to @selector as third argument.
+
+```js
+var data = {};
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow('test').group(function (_, __, data) {
+    return done(data);
+  }).run(fail, fail, data);
+}), data);
+```
+
+Passes zero-based @index of iteration to @condition as second argument.
+
+```js
+var values = [1, 2, 3, 4],
+    expectation = values.length - 1;
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow(values).group(function (_, index) {
+    if (index === expectation) done();
+  }).run(fail, fail);
+}));
+```
+
+Emits @values divided into groups by result of @selector.
+
+```js
+var values = [-1, 6, -3, 4],
+    expectation = [[-1, -3], [6, 4]];
+return assert.eventually.sameDeepMembers(new Promise(function (done, fail) {
+  return aeroflow(values).group(function (value) {
+    return value >= 0;
+  }).map(function (group) {
+    return group[1];
+  }).toArray().run(done, fail);
+}), expectation);
+```
+
+Emits @values divided into named groups by result of @selector.
+
+```js
+var values = [-1, 6, -3, 4],
+    positive = 'positive',
+    negative = 'positive';
+return assert.eventually.sameDeepMembers(new Promise(function (done, fail) {
+  return aeroflow(values).group(function (value) {
+    return value >= 0 ? positive : negative;
+  }).map(function (group) {
+    return group[0];
+  }).toArray().run(done, fail);
+}), [positive, negative]);
+```
+
+<a name="instance-members-group-groupselectorsarray"></a>
+### group(@selectors:array)
+Emits nested named groups divided @values by @selectors.
+
+```js
+var values = [{
+  name: 'test1',
+  sex: 'female'
+}, {
+  name: 'test2',
+  sex: 'male'
+}],
+    expectation = [values[0].name, values[1].name],
+    selectors = [function (value) {
+  return value.name;
+}, function (value) {
+  return value.sex;
+}];
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  var _aeroflow3;
+  return (_aeroflow3 = aeroflow(values)).group.apply(_aeroflow3, selectors).map(function (group) {
+    return group[0];
+  }).toArray().run(done, fail);
+}), expectation);
+```
+
+Use maps to contain nested groups which divided @values by @selectors.
+
+```js
+var values = [{
+  name: 'test1',
+  sex: 'female'
+}, {
+  name: 'test2',
+  sex: 'male'
+}],
+    selectors = [function (value) {
+  return value.name;
+}, function (value) {
+  return value.sex;
+}];
+return assert.eventually.typeOf(new Promise(function (done, fail) {
+  var _aeroflow4;
+  return (_aeroflow4 = aeroflow(values)).group.apply(_aeroflow4, selectors).toArray().map(function (group) {
+    return group[0][1];
+  }).run(done, fail);
+}), 'Map');
+```
+
+Emits nested named groups divided @values by @selectors 1.
+
+```js
+}
 ```
 
