@@ -39,8 +39,8 @@
      - [reduce](#instance-members-reduce)
        - [reduce()](#instance-members-reduce-reduce)
        - [reduce(@reducer:function)](#instance-members-reduce-reducereducerfunction)
-       - [reduce(@reducer:function, @seed:any)](#instance-members-reduce-reducereducerfunction-seedany)
-       - [reduce(@reducer:function, @seed:any, true)](#instance-members-reduce-reducereducerfunction-seedany-true)
+       - [reduce(@reducer:function, @seed)](#instance-members-reduce-reducereducerfunction-seed)
+       - [reduce(@reducer:function, @seed, true)](#instance-members-reduce-reducereducerfunction-seed-true)
        - [reduce(@seed:!function)](#instance-members-reduce-reduceseedfunction)
      - [some](#instance-members-some)
        - [some()](#instance-members-some-some)
@@ -72,7 +72,6 @@
        - [slice(@start:number, @end:!number)](#instance-members-slice-slicestartnumber-endnumber)
      - [sum](#instance-members-sum)
        - [sum()](#instance-members-sum-sum)
-       - [sum(true)](#instance-members-sum-sumtrue)
      - [toString](#instance-members-tostring)
        - [toString()](#instance-members-tostring-tostring)
        - [toString(true)](#instance-members-tostring-tostringtrue)
@@ -84,21 +83,21 @@
 # static members
 <a name="static-members-empty"></a>
 ## empty
-is static property.
+Is static property.
 
 ```js
-assert.isDefined(aeroflow.empty);
+return assert.isDefined(aeroflow.empty);
 ```
 
 <a name="static-members-empty-empty"></a>
 ### empty
-returns instance of Aeroflow.
+Returns instance of Aeroflow.
 
 ```js
-assert.typeOf(aeroflow.empty, 'Aeroflow');
+return assert.typeOf(aeroflow.empty, 'Aeroflow');
 ```
 
-returns instance of Aeroflow emitting "done" event only.
+Returns instance of Aeroflow emitting nothing ("done" event only).
 
 ```js
 return assert.isFulfilled(new Promise(function (done, fail) {
@@ -157,7 +156,7 @@ Passes zero-based index of iteration to @expander as second argument.
 ```js
 var indices = [],
     expectation = [0, 1, 2, 3];
-return assert.eventually.includeMembers(new Promise(function (done, fail) {
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
   return aeroflow.expand(function (_, index) {
     return indices.push(index);
   }).take(expectation.length).run(noop, function () {
@@ -202,7 +201,7 @@ assert.eventually.strictEqual(new Promise(function (done, fail) {
 
 <a name="static-members-just"></a>
 ## just
-is static method.
+Is static method.
 
 ```js
 return assert.isFunction(aeroflow.just);
@@ -210,13 +209,13 @@ return assert.isFunction(aeroflow.just);
 
 <a name="static-members-just-just"></a>
 ### just()
-returns instance of Aeroflow.
+Returns instance of Aeroflow.
 
 ```js
 return assert.typeOf(aeroflow.just(), 'Aeroflow');
 ```
 
-returns instance of Aeroflow emitting single undefined value.
+Returns instance of Aeroflow emitting single undefined value.
 
 ```js
 var expectation = undefined;
@@ -227,7 +226,7 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 
 <a name="static-members-just-justarray"></a>
 ### just(@array)
-returns instance of Aeroflow emitting @array as is.
+Returns instance of Aeroflow emitting @array as is.
 
 ```js
 var array = [1, 2, 3],
@@ -239,7 +238,7 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 
 <a name="static-members-just-justiterable"></a>
 ### just(@iterable)
-returns instance of Aeroflow emitting @iterable as is.
+Returns instance of Aeroflow emitting @iterable as is.
 
 ```js
 var iterable = new Set([1, 2, 3]),
@@ -256,7 +255,7 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 Is instance method.
 
 ```js
-assert.isFunction(aeroflow.empty.average);
+return assert.isFunction(aeroflow.empty.average);
 ```
 
 <a name="instance-members-average-average"></a>
@@ -264,10 +263,10 @@ assert.isFunction(aeroflow.empty.average);
 Returns instance of Aeroflow.
 
 ```js
-assert.typeOf(aeroflow.empty.average(), 'Aeroflow');
+return assert.typeOf(aeroflow.empty.average(), 'Aeroflow');
 ```
 
-Emits nothing from empty flow.
+Emits nothing ("done" event only) when flow is empty.
 
 ```js
 return assert.isFulfilled(new Promise(function (done, fail) {
@@ -275,26 +274,24 @@ return assert.isFulfilled(new Promise(function (done, fail) {
 }));
 ```
 
-Emits @value from flow emitting single numeric @value.
+Emits @value when flow emits single numeric @value.
 
 ```js
-var value = 42,
-    expectation = value;
+var value = 42;
 return assert.eventually.strictEqual(new Promise(function (done, fail) {
-  return aeroflow(expectation).average().run(done, fail);
-}), expectation);
+  return aeroflow(value).average().run(done, fail);
+}), value);
 ```
 
-Emits NaN from flow emitting single non-numeric @value.
+Emits NaN when flow emits single not numeric @value.
 
 ```js
-var value = 'test';
 return assert.eventually.isNaN(new Promise(function (done, fail) {
-  return aeroflow(value).average().run(done, fail);
+  return aeroflow('test').average().run(done, fail);
 }));
 ```
 
-Emits average from @values from flow emitting several numeric @values.
+Emits average of @values when flow emits several numeric @values.
 
 ```js
 var values = [1, 3, 2],
@@ -306,12 +303,11 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), expectation);
 ```
 
-Emits NaN from @values from flow emitting several non-numeric @values.
+Emits NaN when flow emits several not numeric @values.
 
 ```js
-var values = ['a', 'b'];
 return assert.eventually.isNaN(new Promise(function (done, fail) {
-  return aeroflow(values).average().run(done, fail);
+  return aeroflow('a', 'b').average().run(done, fail);
 }));
 ```
 
@@ -331,7 +327,7 @@ Returns instance of Aeroflow.
 return assert.typeOf(aeroflow.empty.catch(), 'Aeroflow');
 ```
 
-Emits nothing when flow is empty.
+Emits nothing ("done" event only) when flow is empty.
 
 ```js
 return assert.isFulfilled(new Promise(function (done, fail) {
@@ -386,7 +382,7 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 
 <a name="instance-members-catch-catchalternativefunction"></a>
 ### catch(@alternative:!function)
-Emits @alternative value when flow emits error.
+Emits @alternative value instead of error emitted by flow.
 
 ```js
 var alternative = 'caught';
@@ -400,7 +396,7 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 Is instance method.
 
 ```js
-assert.isFunction(aeroflow.empty.count);
+return assert.isFunction(aeroflow.empty.count);
 ```
 
 <a name="instance-members-count-count"></a>
@@ -408,19 +404,18 @@ assert.isFunction(aeroflow.empty.count);
 Returns instance of Aeroflow.
 
 ```js
-assert.typeOf(aeroflow.empty.count(), 'Aeroflow');
+return assert.typeOf(aeroflow.empty.count(), 'Aeroflow');
 ```
 
-Emits 0 from empty flow.
+Emits 0 when flow is empty.
 
 ```js
-var expectation = 0;
 return assert.eventually.strictEqual(new Promise(function (done, fail) {
   return aeroflow.empty.count().run(done, fail);
-}), expectation);
+}), 0);
 ```
 
-Emits 1 from flow emitting single value.
+Emits 1 when flow emits single @value.
 
 ```js
 var expectation = 1;
@@ -429,7 +424,7 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), expectation);
 ```
 
-Emits number of @values from flow emitting several @values.
+Emits number of @values emitted by flow when flow emits several @values.
 
 ```js
 var values = [1, 2, 3],
@@ -455,7 +450,7 @@ Returns instance of Aeroflow.
 return assert.typeOf(aeroflow.empty.distinct(), 'Aeroflow');
 ```
 
-Emits nothing when flow is empty.
+Emits nothing ("done" event only) when flow is empty.
 
 ```js
 return assert.isFulfilled(new Promise(function (done, fail) {
@@ -463,34 +458,34 @@ return assert.isFulfilled(new Promise(function (done, fail) {
 }));
 ```
 
-Emits unique @values from flow emitting several numeric @values.
+Emits unique of @values when flow emits several numeric @values.
 
 ```js
 var values = [1, 1, 2, 2, 3],
     expectation = Array.from(new Set(values));
-return assert.eventually.includeMembers(new Promise(function (done, fail) {
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
   return aeroflow(values).distinct().toArray().run(done, fail);
 }), expectation);
 ```
 
-Emits unique @values from flow emitting several non-numeric @values.
+Emits unique of @values when flow emits several string @values.
 
 ```js
-var values = ['a', 'b', 1, 'c', 'c'],
+var values = ['a', 'a', 'b', 'b', 'c'],
     expectation = Array.from(new Set(values));
-return assert.eventually.includeMembers(new Promise(function (done, fail) {
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
   return aeroflow(values).distinct().toArray().run(done, fail);
 }), expectation);
 ```
 
 <a name="instance-members-distinct-distincttrue"></a>
 ### distinct(true)
-Emits unique @values from each identical sequence of @values.
+Emits first @value of each sub-sequence of identical @values (distinct until changed).
 
 ```js
 var values = [1, 1, 2, 2, 1, 1],
     expectation = [1, 2, 1];
-return assert.eventually.includeMembers(new Promise(function (done, fail) {
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
   return aeroflow(values).distinct(true).toArray().run(done, fail);
 }), expectation);
 ```
@@ -511,7 +506,7 @@ Returns instance of Aeroflow.
 return assert.typeOf(aeroflow.empty.every(), 'Aeroflow');
 ```
 
-Emits true when flow is empty.
+Emits "true" when flow is empty.
 
 ```js
 return assert.eventually.isTrue(new Promise(function (done, fail) {
@@ -519,20 +514,50 @@ return assert.eventually.isTrue(new Promise(function (done, fail) {
 }));
 ```
 
-Emits true when flow is not empty.
+Emits "true" when all @values emitted by flow are truthy.
 
 ```js
 return assert.eventually.isTrue(new Promise(function (done, fail) {
-  return aeroflow(1).every().run(done, fail);
+  return aeroflow(true, 1).every().run(done, fail);
 }));
+```
+
+Emits "false" when at least one @value emitted by flow is falsey.
+
+```js
+return assert.eventually.isFalse(new Promise(function (done, fail) {
+  return aeroflow(true, 0).every().run(done, fail);
+}));
+```
+
+Emits single result when flow emits several @values.
+
+```js
+var expectation = 1;
+assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow(1, 2, 3).every().count().run(done, fail);
+}), expectation);
 ```
 
 <a name="instance-members-every-everyconditionfunction"></a>
 ### every(@condition:function)
-Emits result of passing @condition test by each item in flow.
+Emits "true" when all @values emitted by flow pass @condition test.
 
 ```js
-var values = [2, 4, 3],
+var values = [2, 4],
+    condition = function condition(item) {
+  return item % 2 === 0;
+},
+    expectation = values.every(condition);
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow(values).every(condition).run(done, fail);
+}), expectation);
+```
+
+Emits "false" when at least one @value emitted by flow does not pass @condition test.
+
+```js
+var values = [1, 4],
     condition = function condition(item) {
   return item % 2 === 0;
 },
@@ -544,10 +569,23 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 
 <a name="instance-members-every-everyconditionregex"></a>
 ### every(@condition:regex)
-Emits result of passing @condition test by each item in flow.
+Emits "true" when all @values emitted by flow pass @condition test.
 
 ```js
-var values = ['a', 'b', 'aa', 'bb'],
+var values = ['a', 'aa'],
+    condition = /a/,
+    expectation = values.every(function (value) {
+  return condition.test(value);
+});
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow(values).every(condition).run(done, fail);
+}), expectation);
+```
+
+Emits "false" when at least one @value emitted by flow does not pass @condition test.
+
+```js
+var values = ['a', 'bb'],
     condition = /a/,
     expectation = values.every(function (value) {
   return condition.test(value);
@@ -559,11 +597,24 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 
 <a name="instance-members-every-everyconditionfunctionregex"></a>
 ### every(@condition:!function!regex)
-Emits result of passing @condition test by each item in flow.
+Emits "true" when all @values emitted by flow equal @condition.
 
 ```js
-var values = [1, 1, 1, 1],
+var values = [1, 1],
     condition = 1,
+    expectation = values.every(function (value) {
+  return value === condition;
+});
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow(values).every(condition).run(done, fail);
+}), expectation);
+```
+
+Emits "false" when at least one @value emitted by flow does not equal @condition.
+
+```js
+var values = [1, 2],
+    condition = 2,
     expectation = values.every(function (value) {
   return value === condition;
 });
@@ -588,7 +639,7 @@ Returns instance of Aeroflow.
 return assert.typeOf(aeroflow.empty.filter(), 'Aeroflow');
 ```
 
-Emits nothing when flow is empty.
+Emits nothing ("done" event only) when flow is empty.
 
 ```js
 return assert.isFulfilled(new Promise(function (done, fail) {
@@ -596,14 +647,14 @@ return assert.isFulfilled(new Promise(function (done, fail) {
 }));
 ```
 
-Emits only truthy values.
+Emits only truthy of @values emitted by flow.
 
 ```js
 var values = [false, true, 0, 1, undefined, null, 'test'],
     expectation = values.filter(function (value) {
   return value;
 });
-assert.eventually.includeMembers(new Promise(function (done, fail) {
+assert.eventually.sameMembers(new Promise(function (done, fail) {
   return aeroflow(values).filter().toArray().run(done, fail);
 }), expectation);
 ```
@@ -626,7 +677,7 @@ return assert.isFulfilled(new Promise(function (done, fail) {
 }));
 ```
 
-Passes value emitted by flow to @condition as first argument.
+Passes @value emitted by flow to @condition as first argument.
 
 ```js
 var value = 'test';
@@ -635,7 +686,7 @@ assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), value);
 ```
 
-Passes zero-based index of iteration to @condition as second argument.
+Passes zero-based @index of iteration to @condition as second argument.
 
 ```js
 var values = [1, 2, 3, 4],
@@ -647,7 +698,7 @@ return assert.isFulfilled(new Promise(function (done, fail) {
 }));
 ```
 
-Passes context data to @condition as third argument.
+Passes context @data to @condition as third argument.
 
 ```js
 var data = {};
@@ -658,7 +709,7 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), data);
 ```
 
-Emits only values passing @condition test.
+Emits only @values emitted by flow and passing @condition test.
 
 ```js
 var values = [0, 1, 2, 3],
@@ -666,14 +717,14 @@ var values = [0, 1, 2, 3],
   return value > 1;
 },
     expectation = values.filter(condition);
-assert.eventually.includeMembers(new Promise(function (done, fail) {
+assert.eventually.sameMembers(new Promise(function (done, fail) {
   return aeroflow(values).filter(condition).toArray().run(done, fail);
 }), expectation);
 ```
 
 <a name="instance-members-filter-filterconditionregex"></a>
 ### filter(@condition:regex)
-Emits only values passing @condition test.
+Emits only @values emitted by flow and passing @condition test.
 
 ```js
 var values = ['a', 'b', 'aa', 'bb'],
@@ -681,14 +732,14 @@ var values = ['a', 'b', 'aa', 'bb'],
     expectation = values.filter(function (value) {
   return condition.test(value);
 });
-assert.eventually.includeMembers(new Promise(function (done, fail) {
+assert.eventually.sameMembers(new Promise(function (done, fail) {
   return aeroflow(values).filter(condition).toArray().run(done, fail);
 }), expectation);
 ```
 
 <a name="instance-members-filter-filterconditionfunctionregex"></a>
 ### filter(@condition:!function!regex)
-Emits only values equal to @condition.
+Emits only @values emitted by flow and equal to @condition.
 
 ```js
 var values = [1, 2, 3],
@@ -696,7 +747,7 @@ var values = [1, 2, 3],
     expectation = values.filter(function (value) {
   return value === condition;
 });
-assert.eventually.includeMembers(new Promise(function (done, fail) {
+assert.eventually.sameMembers(new Promise(function (done, fail) {
   return aeroflow(values).filter(condition).toArray().run(done, fail);
 }), expectation);
 ```
@@ -717,7 +768,7 @@ Returns instance of Aeroflow.
 return assert.typeOf(aeroflow.empty.max(), 'Aeroflow');
 ```
 
-Emits nothing from empty flow.
+Emits nothing ("done" event only) when flow is empty.
 
 ```js
 return assert.isFulfilled(new Promise(function (done, fail) {
@@ -725,27 +776,25 @@ return assert.isFulfilled(new Promise(function (done, fail) {
 }));
 ```
 
-Emits @value from flow emitting single numeric @value.
+Emits @value when flow emits single numeric @value.
 
 ```js
-var value = 42,
-    expectation = value;
+var value = 42;
 return assert.eventually.strictEqual(new Promise(function (done, fail) {
   return aeroflow(value).max().run(done, fail);
-}), expectation);
+}), value);
 ```
 
-Emits @value from flow emitting single non-numeric @value.
+Emits @value when flow emits single string @value.
 
 ```js
-var value = 'test',
-    expectation = value;
+var value = 'test';
 return assert.eventually.strictEqual(new Promise(function (done, fail) {
   return aeroflow(value).max().run(done, fail);
-}), expectation);
+}), value);
 ```
 
-Emits maximum of @values from flow emitting several numeric @values.
+Emits maximum of @values when flow emits several numeric @values.
 
 ```js
 var _Math;
@@ -756,7 +805,7 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), expectation);
 ```
 
-Emits maximum of @values from flow emitting several non-numeric @values.
+Emits maximum of @values when flow emits several string @values.
 
 ```js
 var values = ['a', 'c', 'b'],
@@ -773,7 +822,7 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 Is instance method.
 
 ```js
-assert.isFunction(aeroflow.empty.min);
+return assert.isFunction(aeroflow.empty.min);
 ```
 
 <a name="instance-members-min-min"></a>
@@ -781,10 +830,10 @@ assert.isFunction(aeroflow.empty.min);
 Returns instance of Aeroflow.
 
 ```js
-assert.typeOf(aeroflow.empty.min(), 'Aeroflow');
+return assert.typeOf(aeroflow.empty.min(), 'Aeroflow');
 ```
 
-Emits nothing from empty flow.
+Emits nothing ("done" event only) when flow is empty.
 
 ```js
 return assert.isFulfilled(new Promise(function (done, fail) {
@@ -792,27 +841,25 @@ return assert.isFulfilled(new Promise(function (done, fail) {
 }));
 ```
 
-Emits @value from flow emitting single @value.
+Emits @value when flow emits single numeric @value.
 
 ```js
-var value = 42,
-    expectation = value;
+var value = 42;
 return assert.eventually.strictEqual(new Promise(function (done, fail) {
   return aeroflow(value).min().run(done, fail);
-}), expectation);
+}), value);
 ```
 
-Emits @value from flow emitting single non-numeric @value.
+Emits @value when flow emits single string @value.
 
 ```js
-var value = 'test',
-    expectation = value;
+var value = 'test';
 return assert.eventually.strictEqual(new Promise(function (done, fail) {
   return aeroflow(value).min().run(done, fail);
-}), expectation);
+}), value);
 ```
 
-Emits minimum of @values from flow emitting several numeric @values.
+Emits minimum of @values when flow emits several numeric @values.
 
 ```js
 var _Math2;
@@ -823,7 +870,7 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), expectation);
 ```
 
-Emits minimum of @values from flow emitting several non-numeric @values.
+Emits minimum of @values when flow emits several string @values.
 
 ```js
 var values = ['a', 'c', 'b'],
@@ -851,7 +898,7 @@ Returns instance of Aeroflow.
 return assert.typeOf(aeroflow.empty.reduce(), 'Aeroflow');
 ```
 
-Emits nothing when flow is empty.
+Emits nothing ("done" event only) when flow is empty.
 
 ```js
 return assert.isFulfilled(new Promise(function (done, fail) {
@@ -859,7 +906,7 @@ return assert.isFulfilled(new Promise(function (done, fail) {
 }));
 ```
 
-Emits nothing when flow is not empty.
+Emits nothing ("done" event only) when flow is not empty.
 
 ```js
 return assert.isFulfilled(new Promise(function (done, fail) {
@@ -877,7 +924,7 @@ return assert.isFulfilled(new Promise(function (done, fail) {
 }));
 ```
 
-Does not call @reducer when flow emits single value.
+Does not call @reducer when flow emits single @value.
 
 ```js
 return assert.isFulfilled(new Promise(function (done, fail) {
@@ -885,7 +932,7 @@ return assert.isFulfilled(new Promise(function (done, fail) {
 }));
 ```
 
-Calls @reducer when flow emits several values.
+Calls @reducer when flow emits several v@alues.
 
 ```js
 return assert.isFulfilled(new Promise(function (done, fail) {
@@ -904,7 +951,7 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), error);
 ```
 
-Emits value emitted by flow when flow emits single value.
+Emits @value emitted by flow when flow emits single @value.
 
 ```js
 var value = 42;
@@ -915,7 +962,7 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), value);
 ```
 
-Emits value returned by @reducer when flow emits several values.
+Emits @value returned by @reducer when flow emits several @values.
 
 ```js
 var value = 42;
@@ -926,21 +973,18 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), value);
 ```
 
-Passes first and second values emitted by flow to @reducer as first and second arguments on first iteration.
+Passes first and second @values emitted by flow to @reducer as first and second arguments on first iteration.
 
 ```js
 var values = [1, 2];
-return assert.eventually.includeMembers(new Promise(function (done, fail) {
-  return aeroflow(values).reduce(function () {
-    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-    return done(args);
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow(values).reduce(function (first, second) {
+    return done([first, second]);
   }).run(fail, fail);
 }), values);
 ```
 
-Passes zero-based index of iteration to @reducer as third argument.
+Passes zero-based @index of iteration to @reducer as third argument.
 
 ```js
 var expectation = 0;
@@ -951,7 +995,7 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), expectation);
 ```
 
-Passes context data to @reducer as forth argument.
+Passes context @data to @reducer as forth argument.
 
 ```js
 var expectation = {};
@@ -962,9 +1006,9 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), expectation);
 ```
 
-<a name="instance-members-reduce-reducereducerfunction-seedany"></a>
-### reduce(@reducer:function, @seed:any)
-Emits nothing when flow is empty.
+<a name="instance-members-reduce-reducereducerfunction-seed"></a>
+### reduce(@reducer:function, @seed)
+Emits nothing ("done" event only) when flow is empty.
 
 ```js
 return assert.isFulfilled(new Promise(function (done, fail) {
@@ -981,9 +1025,9 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), seed);
 ```
 
-<a name="instance-members-reduce-reducereducerfunction-seedany-true"></a>
-### reduce(@reducer:function, @seed:any, true)
-Emits @seed when flow is empty.
+<a name="instance-members-reduce-reducereducerfunction-seed-true"></a>
+### reduce(@reducer:function, @seed, true)
+Emits @seed value when flow is empty.
 
 ```js
 var seed = 'test';
@@ -994,7 +1038,7 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 
 <a name="instance-members-reduce-reduceseedfunction"></a>
 ### reduce(@seed:!function)
-Emits @seed when flow is empty.
+Emits @seed value when flow is empty.
 
 ```js
 var seed = 42;
@@ -1003,7 +1047,7 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), seed);
 ```
 
-Emits @seed when flow is not empty.
+Emits @seed value when flow is not empty.
 
 ```js
 var seed = 42;
@@ -1028,7 +1072,7 @@ Returns instance of Aeroflow.
 return assert.typeOf(aeroflow.empty.some(), 'Aeroflow');
 ```
 
-Emits false when flow is empty.
+Emits "false" when flow is empty.
 
 ```js
 return assert.eventually.isFalse(new Promise(function (done, fail) {
@@ -1036,20 +1080,50 @@ return assert.eventually.isFalse(new Promise(function (done, fail) {
 }));
 ```
 
-Emits true when flow is not empty.
+Emits "true" when at least one @value emitted by flow is truthy.
 
 ```js
 return assert.eventually.isTrue(new Promise(function (done, fail) {
-  return aeroflow(1).some().run(done, fail);
+  return aeroflow(true, 0).some().run(done, fail);
 }));
+```
+
+Emits "false" when all @value emitted by flow are falsey.
+
+```js
+return assert.eventually.isFalse(new Promise(function (done, fail) {
+  return aeroflow(false, 0).some().run(done, fail);
+}));
+```
+
+Emits single result when flow emits several values.
+
+```js
+var expectation = 1;
+assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow(1, 2, 3).some().count().run(done, fail);
+}), expectation);
 ```
 
 <a name="instance-members-some-everyconditionfunction"></a>
 ### every(@condition:function)
-Emits result of passing @condition test at least one item in flow.
+Emits "true" when at least one @value emitted by flow passes @condition test.
 
 ```js
-var values = [2, 1, 3],
+var values = [2, 1],
+    condition = function condition(item) {
+  return item % 2 === 0;
+},
+    expectation = values.some(condition);
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow(values).some(condition).run(done, fail);
+}), expectation);
+```
+
+Emits "false" when no @values emitted by flow pass @condition test.
+
+```js
+var values = [3, 1],
     condition = function condition(item) {
   return item % 2 === 0;
 },
@@ -1061,11 +1135,24 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 
 <a name="instance-members-some-someconditionregex"></a>
 ### some(@condition:regex)
-Emits result of passing @condition test at least one item in flow.
+Emits "true" when at least one @value emitted by flow passes @condition test.
 
 ```js
-var values = ['a', 'b', 'aa', 'bb'],
-    condition = /^a$/,
+var values = ['a', 'b'],
+    condition = /a/,
+    expectation = values.some(function (value) {
+  return condition.test(value);
+});
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow(values).some(condition).run(done, fail);
+}), expectation);
+```
+
+Emits "false" when no @values emitted by flow pass @condition test.
+
+```js
+var values = ['a', 'b'],
+    condition = /c/,
     expectation = values.some(function (value) {
   return condition.test(value);
 });
@@ -1076,11 +1163,24 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 
 <a name="instance-members-some-someconditionfunctionregex"></a>
 ### some(@condition:!function!regex)
-Emits result of passing @condition test at least one item in flow.
+Emits "true" when at least one @value emitted by flow equals @condition.
 
 ```js
 var values = [1, 2],
     condition = 1,
+    expectation = values.some(function (value) {
+  return value === condition;
+});
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow(values).some(condition).run(done, fail);
+}), expectation);
+```
+
+Emits "false" when no @values emitted by flow equal @condition.
+
+```js
+var values = [1, 2],
+    condition = 3,
     expectation = values.some(function (value) {
   return value === condition;
 });
@@ -1379,7 +1479,11 @@ return assert.eventually.sameMembers(new Promise(function (done, fail) {
 Emits @values sorted by applying @comparers in order.
 
 ```js
-var values = [{ prop: 'test1' }, { prop: 'test2' }],
+var values = [{
+  prop: 'test1'
+}, {
+  prop: 'test2'
+}],
     comparers = [function (value) {
   return value.prop;
 }, 'desc'],
@@ -1407,7 +1511,7 @@ Returns instance of Aeroflow.
 assert.typeOf(aeroflow.empty.slice(), 'Aeroflow');
 ```
 
-Emits nothing when flow is empty.
+Emits nothing ("done" event only) when flow is empty.
 
 ```js
 return assert.isFulfilled(new Promise(function (done, fail) {
@@ -1415,7 +1519,7 @@ return assert.isFulfilled(new Promise(function (done, fail) {
 }));
 ```
 
-Emits @values when any param not passed.
+Emits @values when flow emits several @values.
 
 ```js
 var values = [1, 2];
@@ -1503,7 +1607,7 @@ return assert.eventually.sameMembers(new Promise(function (done, fail) {
 Is instance method.
 
 ```js
-assert.isFunction(aeroflow.empty.sum);
+return assert.isFunction(aeroflow.empty.sum);
 ```
 
 <a name="instance-members-sum-sum"></a>
@@ -1514,7 +1618,7 @@ Returns instance of Aeroflow.
 return assert.typeOf(aeroflow.empty.sum(), 'Aeroflow');
 ```
 
-Emits nothing from empty flow.
+Emits nothing ("done" event only) when flow is empty.
 
 ```js
 return assert.isFulfilled(new Promise(function (done, fail) {
@@ -1522,7 +1626,7 @@ return assert.isFulfilled(new Promise(function (done, fail) {
 }));
 ```
 
-Emits sum of @values from flow emitting several numeric @values.
+Emits total sum of values when flow emits several numeric values.
 
 ```js
 var values = [1, 3, 2],
@@ -1534,7 +1638,15 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), expectation);
 ```
 
-Emits NaN from flow emitting several non-numeric @values.
+Emits NaN when flow emits single not numeric value.
+
+```js
+return assert.eventually.isNaN(new Promise(function (done, fail) {
+  return aeroflow('q').sum().run(done, fail);
+}));
+```
+
+Emits NaN when flow emits several not numeric values.
 
 ```js
 return assert.eventually.isNaN(new Promise(function (done, fail) {
@@ -1542,23 +1654,12 @@ return assert.eventually.isNaN(new Promise(function (done, fail) {
 }));
 ```
 
-<a name="instance-members-sum-sumtrue"></a>
-### sum(true)
-Emits sum when flow is empty.
-
-```js
-var expectation = 0;
-return assert.eventually.strictEqual(new Promise(function (done, fail) {
-  return aeroflow.empty.sum(true).run(done, fail);
-}), expectation);
-```
-
 <a name="instance-members-tostring"></a>
 ## toString
 Is instance method.
 
 ```js
-assert.isFunction(aeroflow.empty.toString);
+return assert.isFunction(aeroflow.empty.toString);
 ```
 
 <a name="instance-members-tostring-tostring"></a>
@@ -1566,7 +1667,7 @@ assert.isFunction(aeroflow.empty.toString);
 Returns instance of Aeroflow.
 
 ```js
-assert.typeOf(aeroflow.empty.toString(), 'Aeroflow');
+return assert.typeOf(aeroflow.empty.toString(), 'Aeroflow');
 ```
 
 Emits nothing when flow is empty.
@@ -1580,11 +1681,10 @@ return assert.isFulfilled(new Promise(function (done, fail) {
 Emits @string when flow emits single @string.
 
 ```js
-var string = 'test',
-    expectation = string;
+var string = 'test';
 return assert.eventually.strictEqual(new Promise(function (done, fail) {
   return aeroflow(string).toString().run(done, fail);
-}), expectation);
+}), string);
 ```
 
 Emits @number converted to string when flow emits single @number.
@@ -1622,24 +1722,22 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 Emits string when flow empty.
 
 ```js
-var expectation = 'String';
 return assert.eventually.typeOf(new Promise(function (done, fail) {
   return aeroflow.empty.toString(true).run(done, fail);
-}), expectation);
+}), 'String');
 ```
 
 Emits empty string when flow is empty.
 
 ```js
-var expectation = 0;
 return assert.eventually.lengthOf(new Promise(function (done, fail) {
   return aeroflow.empty.toString(true).run(done, fail);
-}), expectation);
+}), 0);
 ```
 
 <a name="instance-members-tostring-tostringstring"></a>
 ### toString(@string)
-Emits nothing when flow is empty.
+Emits nothing ("done" event only) when flow is empty.
 
 ```js
 return assert.isFulfilled(new Promise(function (done, fail) {
@@ -1663,10 +1761,8 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 Emits empty string when flow is empty.
 
 ```js
-var delimiter = ';',
-    expectation = 0;
 return assert.eventually.lengthOf(new Promise(function (done, fail) {
-  return aeroflow.empty.toString(delimiter, true).run(done, fail);
-}), expectation);
+  return aeroflow.empty.toString(';', true).run(done, fail);
+}), 0);
 ```
 

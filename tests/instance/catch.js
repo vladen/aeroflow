@@ -6,7 +6,7 @@ export default (aeroflow, assert) => describe('catch', () => {
     it('Returns instance of Aeroflow', () =>
       assert.typeOf(aeroflow.empty.catch(), 'Aeroflow'));
 
-    it('Emits nothing when flow is empty', () =>
+    it('Emits nothing ("done" event only) when flow is empty', () =>
       assert.isFulfilled(new Promise((done, fail) =>
         aeroflow.empty.catch().run(fail, done))));
 
@@ -37,7 +37,7 @@ export default (aeroflow, assert) => describe('catch', () => {
   });
 
   describe('catch(@alternative:!function)', () => {
-    it('Emits @alternative value when flow emits error', () => {
+    it('Emits @alternative value instead of error emitted by flow', () => {
       const alternative = 'caught';
       return assert.eventually.strictEqual(new Promise((done, fail) =>
         aeroflow(new Error('test')).catch(alternative).run(done, fail)),

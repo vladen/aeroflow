@@ -332,10 +332,9 @@ function reduceOperator(reducer, seed, required) {
   };
 }
 
-function averageOperator() {
+function averageOperator(required) {
   return reduceOperator(
-    (average, result, index) => (average * index + result) / (index + 1),
-    0);
+    (average, result, index) => (average * index + result) / (index + 1), 0);
 }
 
 function catchOperator(alternative) {
@@ -520,10 +519,8 @@ function flattenOperator(depth) {
 
 function groupOperator(selectors) {
   selectors = selectors.length
-    ? selectors.map(selector => isFunction(selector)
-      ? selector
-      : constant(selector))
-    : [constant()];
+    ? selectors.map(toFunction)
+    : [constant];
   const limit = selectors.length - 1;
   return emitter => (next, done, context) => {
     let groups = new Map, index = 0;
@@ -849,11 +846,8 @@ function sortOperator(parameters) {
     context);
 }
 
-function sumOperator(required) {
-  return reduceOperator(
-    (sum, result) => +result + sum, 
-    0,
-    required);
+function sumOperator() {
+  return reduceOperator((sum, result) => +result + sum, 0);
 }
 
 function takeFirstOperator(count) {
@@ -931,28 +925,25 @@ function tapOperator(callback) {
     : emitter;
 }
 
-function toMapOperator(keyTransformation, valueTransformation) {
-  const keyTransformer = isUndefined(keyTransformation)
+function toMapOperator(keySelector, valueSelector, required) {
+  keySelector = isUndefined(keySelector)
     ? identity
-    : isFunction(keyTransformation)
-      ? keyTransformation
-      : constant(keyTransformation);
-  const valueTransformer = isUndefined(valueTransformation)
+    : toFunction(keySelector);
+  valueSelector = isUndefined(valueSelector)
     ? identity
-    : isFunction(valueTransformation)
-      ? valueTransformation
-      : constant(valueTransformation);
-  return emitter=> (next, done, context) => {
-    let index = 0, map = new Map;
+    : toFunction(valueSelector);
+  return emitter => (next, done, context) => {
+    let empty = !required, index = 0, map = new Map;
     emitter(
       result => {
+        empty = false;
         map.set(
-          keyTransformer(result, index++, context.data),
-          valueTransformer(result, index++, context.data));
+          keySelector(result, index++, context.data),
+          valueSelector(result, index++, context.data));
         return true;
       },
       result => {
-        if (isError(result) || !unsync(next(map), tie(done, result), done)) done(result);
+        if (isError(result) || empty || !unsync(next(map), tie(done, result), done)) done(result);
       },
       context);
   };
@@ -1749,14 +1740,14 @@ to reduce it to a single value, returns new flow emitting the reduced value.
 
 @alias Flow#reduce
 
-@param {function|any} reducer
+@param {function|any} iteratee
 Function to execute on each emitted value, taking four arguments:
   result - the value previously returned in the last invocation of the reducer, or seed, if supplied;
   value - the current value emitted by this flow;
   index - the index of the current value emitted by the flow;
   data - the data bound to current execution context.
   If is not a function, the returned flow will emit just the reducer value.
-@param {any|boolean} [seed]
+@param {any|boolean} [accumulator]
 Value to use as the first argument to the first call of the reducer.
 When boolean value is passed and no value defined for the 'required' argument,
 the 'seed' argument is considered to be omitted.
@@ -1796,8 +1787,8 @@ aeroflow(['a', 'b', 'c'])
 // next a0b1c2
 // done
 */
-function reduce(reducer, seed, required) {
-  return this.chain(reduceOperator(reducer, seed, required));
+function reduce(iteratee, accumulator, required) {
+  return this.chain(reduceOperator(iteratee, accumulator, required));
 }
 
 /**
@@ -2092,8 +2083,8 @@ aeroflow(1, 2, 3).sum().dump().run();
 // next 6
 // done true
 */
-function sum(required) {
-  return this.chain(sumOperator(required));
+function sum() {
+  return this.chain(sumOperator());
 }
 
 /**
@@ -2171,10 +2162,10 @@ Collects all values emitted by this flow to ES6 map, returns flow emitting this 
 
 @alias Flow#toMap
 
-@param {function|any} [keyTransformation]
+@param {function|any} [keySelector]
 The mapping function used to transform each emitted value to map key.
 Or scalar value to use as map key.
-@param {function|any} [valueTransformation]
+@param {function|any} [valueSelector]
 The mapping function used to transform each emitted value to map value,
 Or scalar value to use as map value.
 
@@ -2195,8 +2186,8 @@ aeroflow(1, 2, 3).toMap(v => 'key' + v, v => 10 * v).dump().run();
 // next Map {"key1" => 10, "key2" => 20, "key3" => 30}
 // done true
 */
-function toMap(keyTransformation, valueTransformation) {
-   return this.chain(toMapOperator(keyTransformation, valueTransformation));
+function toMap(keySelector, valueSelector, required) {
+   return this.chain(toMapOperator(keySelector, valueSelector));
 }
 
 /**
