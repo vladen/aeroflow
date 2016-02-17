@@ -4,14 +4,12 @@ export default (aeroflow, assert) => describe('max', () => {
   });
 
   describe('max()', () => {
-    it('Returns instance of Aeroflow', () => {
-      assert.typeOf(aeroflow.empty.max(), 'Aeroflow');
-    });
+    it('Returns instance of Aeroflow', () =>
+      assert.typeOf(aeroflow.empty.max(), 'Aeroflow'));
 
-    it('Emits nothing from empty flow', () => {
-      return assert.isFulfilled(new Promise((done, fail) => 
-        aeroflow.empty.max().run(fail, done)));
-    });
+    it('Emits nothing from empty flow', () => 
+       assert.isFulfilled(new Promise((done, fail) => 
+        aeroflow.empty.max().run(fail, done))));
 
     it('Emits @value from flow emitting single numeric @value', () => {
       const value = 42, expectation = value;
