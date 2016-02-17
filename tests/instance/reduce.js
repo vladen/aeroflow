@@ -24,7 +24,7 @@ export default (aeroflow, assert) => describe('reduce', () => {
       assert.isFulfilled(new Promise((done, fail) =>
         aeroflow(1).reduce(fail).run(done, fail))));
 
-    it('Calls @reducer when flow emits serveral values', () =>
+    it('Calls @reducer when flow emits several values', () =>
       assert.isFulfilled(new Promise((done, fail) =>
         aeroflow(1, 2).reduce(done).run(fail, fail))));
 

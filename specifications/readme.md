@@ -52,12 +52,27 @@
        - [take(@condition:function)](#instance-members-take-takeconditionfunction)
        - [take(@condition:number)](#instance-members-take-takeconditionnumber)
        - [take(@condition:!function!number)](#instance-members-take-takeconditionfunctionnumber)
-     - [toArray](#instance-members-toarray)
-       - [toArray()](#instance-members-toarray-toarray)
-       - [toArray(true)](#instance-members-toarray-toarraytrue)
-     - [toSet](#instance-members-toset)
-       - [toSet()](#instance-members-toset-toset)
-       - [toSet(true)](#instance-members-toset-tosettrue)
+     - [skip](#instance-members-skip)
+       - [skip()](#instance-members-skip-skip)
+       - [skip(@condition:function)](#instance-members-skip-skipconditionfunction)
+       - [skip(@condition:number)](#instance-members-skip-skipconditionnumber)
+       - [skip(@condition:!function!number)](#instance-members-skip-skipconditionfunctionnumber)
+     - [sort](#instance-members-sort)
+       - [sort()](#instance-members-sort-sort)
+       - [sort(@comparer:string)](#instance-members-sort-sortcomparerstring)
+       - [sort(@comparer:boolean)](#instance-members-sort-sortcomparerboolean)
+       - [sort(@comparer:number)](#instance-members-sort-sortcomparernumber)
+       - [sort(@comparer:function)](#instance-members-sort-sortcomparerfunction)
+       - [sort(@comparers:array)](#instance-members-sort-sortcomparersarray)
+     - [slice](#instance-members-slice)
+       - [slice()](#instance-members-slice-slice)
+       - [slice(@start:number)](#instance-members-slice-slicestartnumber)
+       - [slice(@start:!number)](#instance-members-slice-slicestartnumber)
+       - [slice(@start:number, @end:number)](#instance-members-slice-slicestartnumber-endnumber)
+       - [slice(@start:number, @end:!number)](#instance-members-slice-slicestartnumber-endnumber)
+     - [sum](#instance-members-sum)
+       - [sum()](#instance-members-sum-sum)
+       - [sum(true)](#instance-members-sum-sumtrue)
      - [toString](#instance-members-tostring)
        - [toString()](#instance-members-tostring-tostring)
        - [toString(true)](#instance-members-tostring-tostringtrue)
@@ -440,6 +455,14 @@ Returns instance of Aeroflow.
 return assert.typeOf(aeroflow.empty.distinct(), 'Aeroflow');
 ```
 
+Emits nothing when flow is empty.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow.empty.distinct().run(fail, done);
+}));
+```
+
 Emits unique @values from flow emitting several numeric @values.
 
 ```js
@@ -691,7 +714,7 @@ assert.isFunction(aeroflow.empty.max);
 Returns instance of Aeroflow.
 
 ```js
-assert.typeOf(aeroflow.empty.max(), 'Aeroflow');
+return assert.typeOf(aeroflow.empty.max(), 'Aeroflow');
 ```
 
 Emits nothing from empty flow.
@@ -862,7 +885,7 @@ return assert.isFulfilled(new Promise(function (done, fail) {
 }));
 ```
 
-Calls @reducer when flow emits serveral values.
+Calls @reducer when flow emits several values.
 
 ```js
 return assert.isFulfilled(new Promise(function (done, fail) {
@@ -1149,114 +1172,385 @@ return assert.eventually.sameMembers(new Promise(function (done, fail) {
 }), values);
 ```
 
-<a name="instance-members-toarray"></a>
-## toArray
+<a name="instance-members-skip"></a>
+## skip
 Is instance method.
 
 ```js
-assert.isFunction(aeroflow.empty.toArray);
+return assert.isFunction(aeroflow.empty.skip);
 ```
 
-<a name="instance-members-toarray-toarray"></a>
-### toArray()
+<a name="instance-members-skip-skip"></a>
+### skip()
 Returns instance of Aeroflow.
 
 ```js
-assert.typeOf(aeroflow.empty.toArray(), 'Aeroflow');
+return assert.typeOf(aeroflow.empty.skip(), 'Aeroflow');
 ```
 
 Emits nothing when flow is empty.
 
 ```js
 return assert.isFulfilled(new Promise(function (done, fail) {
-  return aeroflow.empty.toArray().run(fail, done);
+  return aeroflow.empty.skip().run(fail, done);
 }));
 ```
 
-Emits array of @values when flow emits several @values.
+Emits nothing when flow is not empty.
 
 ```js
-var values = [1, 2, 1, 3, 2, 3],
-    expectation = values;
-return assert.eventually.includeMembers(new Promise(function (done, fail) {
-  return aeroflow(values).toArray().run(done, fail);
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow('test').skip().run(fail, done);
+}));
+```
+
+<a name="instance-members-skip-skipconditionfunction"></a>
+### skip(@condition:function)
+Emits @values until they not satisfies @condition .
+
+```js
+var values = [2, 4, 6, 3, 7],
+    condition = function condition(value) {
+  return value % 2 === 0;
+},
+    expectation = [3, 7];
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow(values).skip(condition).toArray().run(done, fail);
 }), expectation);
 ```
 
-<a name="instance-members-toarray-toarraytrue"></a>
-### toArray(true)
-Emits an array when flow is empty.
+<a name="instance-members-skip-skipconditionnumber"></a>
+### skip(@condition:number)
+Emits @values beginning with @condition position from the start.
 
 ```js
-var expectation = 'Array';
-return assert.eventually.typeOf(new Promise(function (done, fail) {
-  return aeroflow.empty.toArray(true).run(done, fail);
+var values = [1, 2, 3],
+    skip = 2,
+    expectation = values.slice(skip);
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow(values).skip(skip).toArray().run(done, fail);
 }), expectation);
 ```
 
-Emits empty array from flow is empty.
+Emits @values without @condition number of @values from the end.
 
 ```js
-var expectation = 0;
-return assert.eventually.lengthOf(new Promise(function (done, fail) {
-  return aeroflow.empty.toArray(true).run(done, fail);
+var values = [1, 2, 3],
+    skip = 2,
+    expectation = values.slice(0, values.length - skip);
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow(values).skip(-skip).toArray().run(done, fail);
 }), expectation);
 ```
 
-<a name="instance-members-toset"></a>
-## toSet
+<a name="instance-members-skip-skipconditionfunctionnumber"></a>
+### skip(@condition:!function!number)
+Emits nothing when @condition is non-numeric.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow('test').skip('test').run(fail, done);
+}));
+```
+
+<a name="instance-members-sort"></a>
+## sort
 Is instance method.
 
 ```js
-assert.isFunction(aeroflow.empty.toSet);
+return assert.isFunction(aeroflow.empty.sort);
 ```
 
-<a name="instance-members-toset-toset"></a>
-### toSet()
+<a name="instance-members-sort-sort"></a>
+### sort()
 Returns instance of Aeroflow.
 
 ```js
-assert.typeOf(aeroflow.empty.toSet(), 'Aeroflow');
+return assert.typeOf(aeroflow.empty.sort(), 'Aeroflow');
 ```
 
 Emits nothing when flow is empty.
 
 ```js
 return assert.isFulfilled(new Promise(function (done, fail) {
-  return aeroflow.empty.toSet().run(fail, done);
+  return aeroflow.empty.sort().run(fail, done);
 }));
 ```
 
-Emits set of unique @values when flow emits several @values.
+Emits @values in ascending order when flow is not empty.
 
 ```js
-var values = [1, 2, 1, 3, 2, 3],
-    expectation = Array.from(new Set(values));
-return assert.eventually.includeMembers(new Promise(function (done, fail) {
-  return aeroflow(values).toSet().map(function (set) {
-    return Array.from(set);
-  }).run(done, fail);
+var values = [6, 5, 3, 8],
+    expectation = values.sort();
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow(values).sort().toArray().run(done, fail);
 }), expectation);
 ```
 
-<a name="instance-members-toset-tosettrue"></a>
-### toSet(true)
-Emits a set when flow is empty.
+<a name="instance-members-sort-sortcomparerstring"></a>
+### sort(@comparer:string)
+Emits @values in descending order when @comparer equal to desc.
 
 ```js
-var expectation = 'Set';
-return assert.eventually.typeOf(new Promise(function (done, fail) {
-  return aeroflow.empty.toSet(true).run(done, fail);
+var values = ['a', 'c', 'f'],
+    sort = 'desc',
+    expectation = values.sort().reverse();
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow(values).sort(sort).toArray().run(done, fail);
 }), expectation);
 ```
 
-Emits empty set when flow is empty.
+Emits @values in descending order when @comparer not equal to desc.
+
+```js
+var values = ['a', 'c', 'f'],
+    sort = 'asc',
+    expectation = values.sort();
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow(values).sort(sort).toArray().run(done, fail);
+}), expectation);
+```
+
+<a name="instance-members-sort-sortcomparerboolean"></a>
+### sort(@comparer:boolean)
+Emits @values in descending order when false passed.
+
+```js
+var values = [2, 7, 4],
+    sort = false,
+    expectation = values.sort().reverse();
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow(values).sort(sort).toArray().run(done, fail);
+}), expectation);
+```
+
+Emits @values in descending order when true passed.
+
+```js
+var values = [4, 8, 1],
+    sort = true,
+    expectation = values.sort();
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow(values).sort(sort).toArray().run(done, fail);
+}), expectation);
+```
+
+<a name="instance-members-sort-sortcomparernumber"></a>
+### sort(@comparer:number)
+Emits @values in descending order when @comparer less than 0.
+
+```js
+var values = [2, 7, 4],
+    sort = -1,
+    expectation = values.sort().reverse();
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow(values).sort(sort).toArray().run(done, fail);
+}), expectation);
+```
+
+Emits @values in descending order when @comparer greatest or equal to 0.
+
+```js
+var values = [4, 8, 1],
+    sort = 1,
+    expectation = values.sort();
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow(values).sort(sort).toArray().run(done, fail);
+}), expectation);
+```
+
+<a name="instance-members-sort-sortcomparerfunction"></a>
+### sort(@comparer:function)
+Emits @values sorted according by result of @comparer.
+
+```js
+var values = [4, 8, 1],
+    comparer = function comparer(a, b) {
+  return a - b;
+},
+    expectation = values.sort();
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow(values).sort(comparer).toArray().run(done, fail);
+}), expectation);
+```
+
+<a name="instance-members-sort-sortcomparersarray"></a>
+### sort(@comparers:array)
+Emits @values sorted by applying @comparers in order.
+
+```js
+var values = [{ prop: 'test1' }, { prop: 'test2' }],
+    comparers = [function (value) {
+  return value.prop;
+}, 'desc'],
+    expectation = values.sort(function (value) {
+  return value.prop;
+}).reverse();
+return assert.eventually.sameDeepMembers(new Promise(function (done, fail) {
+  return aeroflow(values).sort(comparers).toArray().run(done, fail);
+}), expectation);
+```
+
+<a name="instance-members-slice"></a>
+## slice
+Is instance method.
+
+```js
+assert.isFunction(aeroflow.empty.slice);
+```
+
+<a name="instance-members-slice-slice"></a>
+### slice()
+Returns instance of Aeroflow.
+
+```js
+assert.typeOf(aeroflow.empty.slice(), 'Aeroflow');
+```
+
+Emits nothing when flow is empty.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow.empty.slice().run(fail, done);
+}));
+```
+
+Emits @values when any param not passed.
+
+```js
+var values = [1, 2];
+assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow(values).slice().toArray().run(done, fail);
+}), values);
+```
+
+<a name="instance-members-slice-slicestartnumber"></a>
+### slice(@start:number)
+Emits @start number of @values from the start.
+
+```js
+var values = [1, 2, 3],
+    slice = 2,
+    expectation = values.slice(slice);
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow(values).slice(slice).toArray().run(done, fail);
+}), expectation);
+```
+
+Emits @start number of @values from the end.
+
+```js
+var values = [1, 2, 3],
+    slice = -2,
+    expectation = values.slice(slice);
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow(values).slice(slice).toArray().run(done, fail);
+}), expectation);
+```
+
+<a name="instance-members-slice-slicestartnumber"></a>
+### slice(@start:!number)
+Emits @values when passed non-numerical @start.
+
+```js
+var values = [1, 2];
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow(values).slice('test').toArray().run(done, fail);
+}), values);
+```
+
+<a name="instance-members-slice-slicestartnumber-endnumber"></a>
+### slice(@start:number, @end:number)
+Emits @values within @start and @end indexes from the start.
+
+```js
+var values = [1, 2, 3],
+    slice = [1, 2],
+    expectation = values.slice.apply(values, slice);
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  var _aeroflow;
+  return (_aeroflow = aeroflow(values)).slice.apply(_aeroflow, slice).toArray().run(done, fail);
+}), expectation);
+```
+
+Emits @values within @start and @end indexes from the end.
+
+```js
+var values = [1, 2, 3],
+    slice = [-2, -1],
+    expectation = values.slice.apply(values, slice);
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  var _aeroflow2;
+  return (_aeroflow2 = aeroflow(values)).slice.apply(_aeroflow2, slice).toArray().run(done, fail);
+}), expectation);
+```
+
+<a name="instance-members-slice-slicestartnumber-endnumber"></a>
+### slice(@start:number, @end:!number)
+Emits @values from @start index till the end.
+
+```js
+var values = [1, 2],
+    start = 1,
+    expectation = values.slice(start);
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow(values).slice(start, 'test').toArray().run(done, fail);
+}), expectation);
+```
+
+<a name="instance-members-sum"></a>
+## sum
+Is instance method.
+
+```js
+assert.isFunction(aeroflow.empty.sum);
+```
+
+<a name="instance-members-sum-sum"></a>
+### sum()
+Returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow.empty.sum(), 'Aeroflow');
+```
+
+Emits nothing from empty flow.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow.empty.sum().run(fail, done);
+}));
+```
+
+Emits sum of @values from flow emitting several numeric @values.
+
+```js
+var values = [1, 3, 2],
+    expectation = values.reduce(function (prev, curr) {
+  return prev + curr;
+}, 0);
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow(values).sum().run(done, fail);
+}), expectation);
+```
+
+Emits NaN from flow emitting several non-numeric @values.
+
+```js
+return assert.eventually.isNaN(new Promise(function (done, fail) {
+  return aeroflow('q', 'b').sum().run(done, fail);
+}));
+```
+
+<a name="instance-members-sum-sumtrue"></a>
+### sum(true)
+Emits sum when flow is empty.
 
 ```js
 var expectation = 0;
-return assert.eventually.propertyVal(new Promise(function (done, fail) {
-  return aeroflow.empty.toSet(true).run(done, fail);
-}), 'size', expectation);
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow.empty.sum(true).run(done, fail);
+}), expectation);
 ```
 
 <a name="instance-members-tostring"></a>

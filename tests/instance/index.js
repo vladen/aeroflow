@@ -14,6 +14,11 @@ import everyTests from './every';
 import someTests from './some';
 import distinctTests from './distinct';
 import takeTests from './take';
+import skipTests from './skip';
+import sortTests from './sort';
+import toMapTests from './toMap';
+import sliceTests from './slice';
+import sumTests from './sum';
 
 const tests = [
   averageTests,
@@ -27,8 +32,10 @@ const tests = [
   reduceTests,
   someTests,
   takeTests,
-  toArrayTests,
-  toSetTests,
+  skipTests,
+  sortTests,
+  sliceTests,
+  sumTests,
   toStringTests
 ];
 
