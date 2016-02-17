@@ -19,6 +19,11 @@ import sortTests from './sort';
 import toMapTests from './toMap';
 import sliceTests from './slice';
 import sumTests from './sum';
+import mapTests from './map';
+import meanTests from './mean';
+import tapTests from './tap';
+import reverseTests from './reverse';
+import groupTests from './group';
 
 const tests = [
   averageTests,
@@ -36,7 +41,12 @@ const tests = [
   sortTests,
   sliceTests,
   sumTests,
-  toStringTests
+  toStringTests,
+  mapTests,
+  meanTests,
+  reverseTests,
+  tapTests,
+  groupTests
 ];
 
 export default (aeroflow, assert) => describe('instance members', () =>
