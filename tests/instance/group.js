@@ -61,7 +61,7 @@ export default (aeroflow, assert) => describe('group', () => {
   });
 
   describe('group(@selectors:array)', () => {
-    it('Emits nested named groups divided @values by @selectors', () => {
+    it('Emits nested named groups which divide @values by first predicate from @selectors', () => {
       const values  = [{name: 'test1', sex: 'female'}, {name: 'test2', sex: 'male'}],
         expectation = [values[0].name, values[1].name],
         selectors = [(value) => value.name, (value) => value.sex];
@@ -80,15 +80,23 @@ export default (aeroflow, assert) => describe('group', () => {
         'Map');
     });
 
-    it('Emits nested named groups divided @values by @selectors 1', () => {
-      // const values  = [{name: 'test1', sex: 'female'}, {name: 'test2', sex: 'male'}],
-      //   expectation = [values[0].name, values[1].name],
-      //   selectors = [(value) => value.name, (value) => value.sex];
+    it('Emits nested named groups which divide @values by second predicate from @selectors', () => {
+       const values  = [{name: 'test1', sex: 'female'}, {name: 'test2', sex: 'male'}],
+         expectation = [[values[0].sex], [values[1].sex]],
+       selectors = [(value) => value.name, (value) => value.sex];
 
-      // return assert.eventually.sameMembers(new Promise((done, fail) =>
-      //   aeroflow(values).group(...selectors).map(group => group[1].keys()).toArray().run(done, fail)),
-      //   expectation);
+      return assert.eventually.sameDeepMembers(new Promise((done, fail) =>
+        aeroflow(values).group(...selectors).map(group => Array.from(group[1].keys())).toArray().run(done, fail)),
+        expectation);
     });
 
+    it('Emits @values on the root of nested groups', () => {
+      const values  = [{name: 'test1', sex: 'female'}, {name: 'test2', sex: 'male'}],
+         selectors = [(value) => value.name, (value) => value.sex];
+
+      return assert.eventually.sameDeepMembers(new Promise((done, fail) =>
+        aeroflow(values).group(...selectors).map(group => Array.from(group[1].values())[0][0]).toArray().run(done, fail)),
+        values);
+    });
   });
 });
