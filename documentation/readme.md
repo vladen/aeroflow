@@ -1,17 +1,26 @@
 <a name="aeroflow"></a>
-## aeroflow(...sources) ⇒ <code>[Flow](#Flow)</code>
-Creates new flow emitting values extracted from all provided data sources in series.
+## aeroflow([...sources]) ⇒ <code>[Flow](#Flow)</code>
+Creates new flow emitting values extracted from every provided data source in series.
+If no data sources provided, creates empty flow emitting "done" event only.
 
 **Kind**: global function  
 **Params**
 
-- ...sources <code>any</code> - Data sources.
+- [...sources] <code>any</code> - Data sources to extract values from.
 
 **Properties**
 
-- adapters <code>object</code>  
-- consumers <code>array</code>  
-- operators <code>object</code>  
+- adapters <code>array</code> &#124; <code>object</code> - Hybrid map/list of adapters to various types of data sources.
+As associative array maps type of data source to adapter function (Promise -> promiseAdapter).
+As indexed list contains functions performing complex testing of data source
+not mapped by their type via associative array
+and returning adpters for special types of data sources (Iterable -> iterableAdapter).
+When aeroflow adapts particular data source, first direct type based mapping is attempted.
+Then if source type matches no adapter, indexed adapters are tried until one of them returns a function.
+If no indexed adapter succeeds, this data source is treated as scalar value and emitted as is.
+See examples to find out how to create and register custom adapters.  
+- operators <code>object</code> - Map of operators available for use with every flow.
+See examples to find out how to create and register custom operators.  
 
 **Example**  
 ```js
@@ -50,9 +59,18 @@ aeroflow("test").dump().run();
 // next s
 // next t
 // done true
+aeroflow.operators.test = function() {
+  return this.chain(emitter => (next, done, context) => emitter(
+    value => next('test:' + value),
+    done,
+    context));
+}
+aeroflow(42).test().dump().run();
+// next test:42
+// done true
 ```
 
-* [aeroflow(...sources)](#aeroflow) ⇒ <code>[Flow](#Flow)</code>
+* [aeroflow([...sources])](#aeroflow) ⇒ <code>[Flow](#Flow)</code>
     * [.create(emitter)](#aeroflow.create) ⇒ <code>[Flow](#Flow)</code>
     * [.expand(expander, [seed])](#aeroflow.expand) ⇒ <code>[Flow](#Flow)</code>
     * [.return(value)](#aeroflow.return) ⇒ <code>[Flow](#Flow)</code>

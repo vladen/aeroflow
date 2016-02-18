@@ -1028,16 +1028,28 @@
   }
 
   /**
-  Creates new flow emitting values extracted from all provided data sources in series.
+  Creates new flow emitting values extracted from every provided data source in series.
+  If no data sources provided, creates empty flow emitting "done" event only.
 
-  @param {any} sources
-  Data sources.
+  @param {any} [sources]
+  Data sources to extract values from.
 
   @return {Flow}
 
-  @property {object} adapters
-  @property {array} consumers
+  @property {array|object} adapters
+  Hybrid map/list of adapters to various types of data sources.
+  As associative array maps type of data source to adapter function (Promise -> promiseAdapter).
+  As indexed list contains functions performing complex testing of data source
+  not mapped by their type via associative array
+  and returning adpters for special types of data sources (Iterable -> iterableAdapter).
+  When aeroflow adapts particular data source, first direct type based mapping is attempted.
+  Then if source type matches no adapter, indexed adapters are tried until one of them returns a function.
+  If no indexed adapter succeeds, this data source is treated as scalar value and emitted as is.
+  See examples to find out how to create and register custom adapters.
+
   @property {object} operators
+  Map of operators available for use with every flow.
+  See examples to find out how to create and register custom operators.
 
   @example
   aeroflow().dump().run();
@@ -1074,6 +1086,15 @@
   // next e
   // next s
   // next t
+  // done true
+  aeroflow.operators.test = function() {
+    return this.chain(emitter => (next, done, context) => emitter(
+      value => next('test:' + value),
+      done,
+      context));
+  }
+  aeroflow(42).test().dump().run();
+  // next test:42
   // done true
   */
   function aeroflow(...sources) {
