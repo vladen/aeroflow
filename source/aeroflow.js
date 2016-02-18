@@ -4,8 +4,9 @@ import { AEROFLOW, CLASS, PROTOTYPE } from './symbols';
 
 import { isDefined, isError, isFunction, noop, objectDefineProperties, objectCreate } from './utilites';
 
-import { adapters, adapterSelector } from './adapters/index';
+import { adapters } from './adapters/index';
 import { valueAdapter } from './adapters/value';
+import { adapt } from './adapt';
 
 import { customGenerator } from './generators/custom';
 import { emptyGenerator } from './generators/empty';
@@ -16,6 +17,7 @@ import { repeatGenerator } from './generators/repeat';
 
 import { averageOperator } from './operators/average';
 import { catchOperator } from './operators/catch';
+import { coalesceOperator } from './operators/coalesce';
 import { countOperator } from './operators/count';
 import { delayOperator } from './operators/delay';
 import { distinctOperator } from './operators/distinct';
@@ -51,11 +53,10 @@ function emit(next, done, context) {
     if (result !== true || ++index >= context.sources.length) done(result);
     else try {
       const source = context.sources[index];
-      let adapter = adapterSelector(source, valueAdapter(source));
-      adapter(next, proceed, context);
+      adapt(source)(next, proceed, context);
     }
-    catch (err) {
-      done(err);
+    catch (error) {
+      done(error);
     }
   }(true);
 }
@@ -384,6 +385,33 @@ function chain(operator) {
 }
 
 /**
+Returns new flow emitting values from alternate data sources
+when this flow is empty (emits only "done" event).
+
+@alias Flow#coalesce
+
+@param {any[]} [alternates]
+Data sources to emit values from in case this flow is empty.
+
+@return {Flow}
+New flow emitting all values emitted by this flow first
+and then all provided values.
+
+@example
+aeroflow().coalesce().dump().run();
+// done true
+aeroflow().coalesce('alternate').dump().run();
+// next alternate
+// done true
+aeroflow().coalesce([], 'alternate').dump().run();
+// next alternate
+// done true
+*/
+function coalesce(...alternates) {
+  return this.chain(coalesceOperator(alternates));
+}
+
+/**
 Returns new flow emitting values from this flow first 
 and then from all provided sources in series.
 
@@ -700,7 +728,7 @@ function join(right, comparer) {
 /**
 @alias Flow#map
 
-@param {function|any} [mapping]
+@param {function|any} [mapper]
 
 @return {Flow}
 
@@ -720,8 +748,8 @@ aeroflow(1, 2).map(value => value * 10).dump().run();
 // next 20
 // done true
 */
-function map(mapping) {
-  return this.chain(mapOperator(mapping));
+function map(mapper) {
+  return this.chain(mapOperator(mapper));
 }
 
 /**
@@ -796,7 +824,7 @@ to reduce it to a single value, returns new flow emitting the reduced value.
 
 @alias Flow#reduce
 
-@param {function|any} iteratee
+@param {function|any} [reducer]
 Function to execute on each emitted value, taking four arguments:
   result - the value previously returned in the last invocation of the reducer, or seed, if supplied;
   value - the current value emitted by this flow;
@@ -841,8 +869,8 @@ aeroflow(['a', 'b', 'c'])
 // next a0b1c2
 // done
 */
-function reduce(iteratee, accumulator) {
-  return this.chain(reduceOperator(iteratee, accumulator, isDefined(accumulator)));
+function reduce(reducer, accumulator) {
+  return this.chain(reduceOperator(reducer, accumulator, isDefined(accumulator)));
 }
 
 /**
@@ -972,8 +1000,8 @@ function run(next, done, data) {
       try {
         done(result, data);
       }
-      catch (err) {
-        result = err;
+      catch (error) {
+        result = error;
       }
       (isError(result) ? reject : resolve)(result);
     },
@@ -1313,6 +1341,7 @@ function toString(separator, required) {
 const operators = objectCreate(Object[PROTOTYPE], {
   average: { value: average, writable: true },
   catch: { value: catch_, writable: true },
+  coalesce: { value: coalesce, writable: true },
   count: { value: count, writable: true },
   delay: { value: delay, writable: true },
   distinct: { value: distinct, writable: true },

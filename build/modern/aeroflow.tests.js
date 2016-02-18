@@ -184,33 +184,73 @@
           aeroflow(new Error('test')).catch().run(fail, done))));
     });
 
-    describe('catch(@alternative:function)', () => {
+    describe('catch(@alternate:function)', () => {
       it('Does not call @alternative when flow is empty', () =>
         assert.isFulfilled(new Promise((done, fail) =>
           aeroflow.empty.catch(fail).run(fail, done))));
 
-      it('Does not call @alternative when flow does not emit error', () =>
+      it('Does not call @alternate when flow does not emit error', () =>
         assert.isFulfilled(new Promise((done, fail) =>
-          aeroflow(1).catch(fail).run(done, fail))));
+          aeroflow('test').catch(fail).run(done, fail))));
 
-      it('Calls @alternative when flow emits error', () =>
+      it('Calls @alternate when flow emits error', () =>
         assert.isFulfilled(new Promise((done, fail) =>
-          aeroflow(new Error('tests')).catch(done).run(fail, fail))));
+          aeroflow(new Error('test')).catch(done).run(fail, fail))));
 
-      it('Emits value returned by @alternative when flow emits error', () => {
-        const alternative = 'caught';
+      it('Emits value returned by @alternate when flow emits error', () => {
+        const alternate = 'alternate';
         return assert.eventually.strictEqual(new Promise((done, fail) =>
-          aeroflow(new Error('test')).catch(() => alternative).run(done, fail)),
-          alternative);
+          aeroflow(new Error('test')).catch(() => alternate).run(done, fail)),
+          alternate);
       });
     });
 
-    describe('catch(@alternative:!function)', () => {
-      it('Emits @alternative value instead of error emitted by flow', () => {
-        const alternative = 'caught';
+    describe('catch(@alternate:!function)', () => {
+      it('Emits @alternate value instead of error emitted by flow', () => {
+        const alternate = 'alternate';
         return assert.eventually.strictEqual(new Promise((done, fail) =>
-          aeroflow(new Error('test')).catch(alternative).run(done, fail)),
-          alternative);
+          aeroflow(new Error('test')).catch(alternate).run(done, fail)),
+          alternate);
+      });
+    });
+  });
+
+  var coalesceTests = (aeroflow, assert) => describe('coalesce', () => {
+    it('Is instance method', () =>
+      assert.isFunction(aeroflow.empty.coalesce));
+
+    describe('coalesce()', () => {
+      it('Returns instance of Aeroflow', () =>
+        assert.typeOf(aeroflow.empty.coalesce(), 'Aeroflow'));
+
+      it('Emits nothing ("done" event only) when flow is empty', () =>
+        assert.isFulfilled(new Promise((done, fail) =>
+          aeroflow.empty.coalesce().run(fail, done))));
+    });
+
+    describe('coalesce(@alternate:function)', () => {
+      it('Does not call @alternate when flow is not empty', () =>
+        assert.isFulfilled(new Promise((done, fail) =>
+          aeroflow('test').coalesce(fail).run(done, fail))));
+
+      it('Does not call @alternate when flow emits error', () =>
+        assert.isFulfilled(new Promise((done, fail) =>
+          aeroflow(new Error('test')).coalesce(fail).run(fail, done))));
+
+      it('Emits value returned by @alternate when flow is empty', () => {
+        const alternate = 'alternate';
+        return assert.eventually.strictEqual(new Promise((done, fail) =>
+          aeroflow.empty.coalesce(() => alternate).run(done, fail)),
+          alternate);
+      });
+    });
+
+    describe('catch(@alternate:!function)', () => {
+      it('Emits @alternate value when flow is empty', () => {
+        const alternate = 'alternate';
+        return assert.eventually.strictEqual(new Promise((done, fail) =>
+          aeroflow.empty.coalesce(alternate).run(done, fail)),
+          alternate);
       });
     });
   });
@@ -1378,6 +1418,7 @@
   const tests$2 = [
     averageTests,
     catchTests,
+    coalesceTests,
     countTests,
     distinctTests,
     everyTests,

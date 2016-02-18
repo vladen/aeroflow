@@ -1,18 +1,17 @@
 'use strict';
 
 import { isDefined, isError } from '../utilites';
-import { adapterSelector } from '../adapters/index';
-import { valueAdapter } from '../adapters/value';
+import { adapt } from '../adapt';
 import { emptyGenerator } from '../generators/empty';
 
-export function catchOperator(alternative) {
-  const regressor = isDefined(alternative) 
-    ? adapterSelector(alternative, valueAdapter(alternative))
+export function catchOperator(alternate) {
+  alternate = isDefined(alternate) 
+    ? adapt(alternate)
     : emptyGenerator(false);
   return emitter => (next, done, context) => emitter(
     next,
     result => isError(result)
-      ? regressor(next, done, context)
+      ? alternate(next, done, context)
       : done(result),
     context);
 } 

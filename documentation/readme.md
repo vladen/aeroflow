@@ -236,6 +236,7 @@ aeroflow.repeat(index => index, index => 500 + 500 * index).take(3).dump().run()
     * [.bind([...sources])](#Flow+bind) ⇒ <code>[Flow](#Flow)</code>
     * [.catch([alternative])](#Flow+catch) ⇒ <code>[Flow](#Flow)</code>
     * [.chain([operator])](#Flow+chain) ⇒ <code>[Flow](#Flow)</code>
+    * [.coalesce([...alternates])](#Flow+coalesce) ⇒ <code>[Flow](#Flow)</code>
     * [.concat([...sources])](#Flow+concat) ⇒ <code>[Flow](#Flow)</code>
     * [.count()](#Flow+count) ⇒ <code>[Flow](#Flow)</code>
     * [.delay([interval])](#Flow+delay) ⇒ <code>[Flow](#Flow)</code>
@@ -246,11 +247,11 @@ aeroflow.repeat(index => index, index => 500 + 500 * index).take(3).dump().run()
     * [.flatten([depth])](#Flow+flatten) ⇒ <code>[Flow](#Flow)</code>
     * [.group([...selectors])](#Flow+group) ⇒ <code>[Flow](#Flow)</code>
     * [.join(right, comparer)](#Flow+join) ⇒ <code>[Flow](#Flow)</code>
-    * [.map([mapping])](#Flow+map) ⇒ <code>[Flow](#Flow)</code>
+    * [.map([mapper])](#Flow+map) ⇒ <code>[Flow](#Flow)</code>
     * [.max()](#Flow+max) ⇒ <code>[Flow](#Flow)</code>
     * [.mean()](#Flow+mean) ⇒ <code>[Flow](#Flow)</code>
     * [.min()](#Flow+min) ⇒ <code>[Flow](#Flow)</code>
-    * [.reduce(iteratee, [accumulator], [required])](#Flow+reduce) ⇒ <code>[Flow](#Flow)</code>
+    * [.reduce([reducer], [accumulator], [required])](#Flow+reduce) ⇒ <code>[Flow](#Flow)</code>
     * [.replay(delay, timing)](#Flow+replay) ⇒ <code>[Flow](#Flow)</code>
     * [.retry(attempts)](#Flow+retry) ⇒ <code>[Flow](#Flow)</code>
     * [.reverse()](#Flow+reverse) ⇒ <code>[Flow](#Flow)</code>
@@ -324,6 +325,29 @@ aeroflow(new Error('test')).dump('before ').catch('success').dump('after ').run(
 
 - [operator] <code>function</code>
 
+<a name="Flow+coalesce"></a>
+### flow.coalesce([...alternates]) ⇒ <code>[Flow](#Flow)</code>
+Returns new flow emitting values from alternate data sources
+when this flow is empty (emits only "done" event).
+
+**Kind**: instance method of <code>[Flow](#Flow)</code>  
+**Returns**: <code>[Flow](#Flow)</code> - New flow emitting all values emitted by this flow first
+and then all provided values.  
+**Params**
+
+- [...alternates] <code>Array.&lt;any&gt;</code> - Data sources to emit values from in case this flow is empty.
+
+**Example**  
+```js
+aeroflow().coalesce().dump().run();
+// done true
+aeroflow().coalesce('alternate').dump().run();
+// next alternate
+// done true
+aeroflow().coalesce([], 'alternate').dump().run();
+// next alternate
+// done true
+```
 <a name="Flow+concat"></a>
 ### flow.concat([...sources]) ⇒ <code>[Flow](#Flow)</code>
 Returns new flow emitting values from this flow first 
@@ -597,11 +621,11 @@ aeroflow([
 // done true
 ```
 <a name="Flow+map"></a>
-### flow.map([mapping]) ⇒ <code>[Flow](#Flow)</code>
+### flow.map([mapper]) ⇒ <code>[Flow](#Flow)</code>
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Params**
 
-- [mapping] <code>function</code> | <code>any</code>
+- [mapper] <code>function</code> | <code>any</code>
 
 **Example**  
 ```js
@@ -672,7 +696,7 @@ aeroflow('b', 'a', 'c').min().dump().run();
 // done true
 ```
 <a name="Flow+reduce"></a>
-### flow.reduce(iteratee, [accumulator], [required]) ⇒ <code>[Flow](#Flow)</code>
+### flow.reduce([reducer], [accumulator], [required]) ⇒ <code>[Flow](#Flow)</code>
 Applies a function against an accumulator and each value emitted by this flow
 to reduce it to a single value, returns new flow emitting the reduced value.
 
@@ -681,7 +705,7 @@ to reduce it to a single value, returns new flow emitting the reduced value.
 and the 'required' argument is false.  
 **Params**
 
-- iteratee <code>function</code> | <code>any</code> - Function to execute on each emitted value, taking four arguments:
+- [reducer] <code>function</code> | <code>any</code> - Function to execute on each emitted value, taking four arguments:
   result - the value previously returned in the last invocation of the reducer, or seed, if supplied;
   value - the current value emitted by this flow;
   index - the index of the current value emitted by the flow;

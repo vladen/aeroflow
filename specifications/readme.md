@@ -15,8 +15,12 @@
        - [average()](#instance-members-average-average)
      - [catch](#instance-members-catch)
        - [catch()](#instance-members-catch-catch)
-       - [catch(@alternative:function)](#instance-members-catch-catchalternativefunction)
-       - [catch(@alternative:!function)](#instance-members-catch-catchalternativefunction)
+       - [catch(@alternate:function)](#instance-members-catch-catchalternatefunction)
+       - [catch(@alternate:!function)](#instance-members-catch-catchalternatefunction)
+     - [coalesce](#instance-members-coalesce)
+       - [coalesce()](#instance-members-coalesce-coalesce)
+       - [coalesce(@alternate:function)](#instance-members-coalesce-coalescealternatefunction)
+       - [catch(@alternate:!function)](#instance-members-coalesce-catchalternatefunction)
      - [count](#instance-members-count)
        - [count()](#instance-members-count-count)
      - [distinct](#instance-members-distinct)
@@ -358,8 +362,8 @@ return assert.eventually.isBoolean(new Promise(function (done, fail) {
 }));
 ```
 
-<a name="instance-members-catch-catchalternativefunction"></a>
-### catch(@alternative:function)
+<a name="instance-members-catch-catchalternatefunction"></a>
+### catch(@alternate:function)
 Does not call @alternative when flow is empty.
 
 ```js
@@ -368,42 +372,106 @@ return assert.isFulfilled(new Promise(function (done, fail) {
 }));
 ```
 
-Does not call @alternative when flow does not emit error.
+Does not call @alternate when flow does not emit error.
 
 ```js
 return assert.isFulfilled(new Promise(function (done, fail) {
-  return aeroflow(1).catch(fail).run(done, fail);
+  return aeroflow('test').catch(fail).run(done, fail);
 }));
 ```
 
-Calls @alternative when flow emits error.
+Calls @alternate when flow emits error.
 
 ```js
 return assert.isFulfilled(new Promise(function (done, fail) {
-  return aeroflow(new Error('tests')).catch(done).run(fail, fail);
+  return aeroflow(new Error('test')).catch(done).run(fail, fail);
 }));
 ```
 
-Emits value returned by @alternative when flow emits error.
+Emits value returned by @alternate when flow emits error.
 
 ```js
-var alternative = 'caught';
+var alternate = 'alternate';
 return assert.eventually.strictEqual(new Promise(function (done, fail) {
   return aeroflow(new Error('test')).catch(function () {
-    return alternative;
+    return alternate;
   }).run(done, fail);
-}), alternative);
+}), alternate);
 ```
 
-<a name="instance-members-catch-catchalternativefunction"></a>
-### catch(@alternative:!function)
-Emits @alternative value instead of error emitted by flow.
+<a name="instance-members-catch-catchalternatefunction"></a>
+### catch(@alternate:!function)
+Emits @alternate value instead of error emitted by flow.
 
 ```js
-var alternative = 'caught';
+var alternate = 'alternate';
 return assert.eventually.strictEqual(new Promise(function (done, fail) {
-  return aeroflow(new Error('test')).catch(alternative).run(done, fail);
-}), alternative);
+  return aeroflow(new Error('test')).catch(alternate).run(done, fail);
+}), alternate);
+```
+
+<a name="instance-members-coalesce"></a>
+## coalesce
+Is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.coalesce);
+```
+
+<a name="instance-members-coalesce-coalesce"></a>
+### coalesce()
+Returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow.empty.coalesce(), 'Aeroflow');
+```
+
+Emits nothing ("done" event only) when flow is empty.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow.empty.coalesce().run(fail, done);
+}));
+```
+
+<a name="instance-members-coalesce-coalescealternatefunction"></a>
+### coalesce(@alternate:function)
+Does not call @alternate when flow is not empty.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow('test').coalesce(fail).run(done, fail);
+}));
+```
+
+Does not call @alternate when flow emits error.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow(new Error('test')).coalesce(fail).run(fail, done);
+}));
+```
+
+Emits value returned by @alternate when flow is empty.
+
+```js
+var alternate = 'alternate';
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow.empty.coalesce(function () {
+    return alternate;
+  }).run(done, fail);
+}), alternate);
+```
+
+<a name="instance-members-coalesce-catchalternatefunction"></a>
+### catch(@alternate:!function)
+Emits @alternate value when flow is empty.
+
+```js
+var alternate = 'alternate';
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow.empty.coalesce(alternate).run(done, fail);
+}), alternate);
 ```
 
 <a name="instance-members-count"></a>

@@ -2,6 +2,7 @@
 
 import averageTests from './average';
 import catchTests from './catch';
+import coalesceTests from './coalesce';
 import countTests from './count';
 import filterTests from './filter';
 import maxTests from './max';
@@ -28,6 +29,7 @@ import groupTests from './group';
 const tests = [
   averageTests,
   catchTests,
+  coalesceTests,
   countTests,
   distinctTests,
   everyTests,

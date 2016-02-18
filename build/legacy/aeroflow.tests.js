@@ -217,37 +217,83 @@
           }));
         });
       });
-      describe('catch(@alternative:function)', function () {
+      describe('catch(@alternate:function)', function () {
         it('Does not call @alternative when flow is empty', function () {
           return assert.isFulfilled(new Promise(function (done, fail) {
             return aeroflow.empty.catch(fail).run(fail, done);
           }));
         });
-        it('Does not call @alternative when flow does not emit error', function () {
+        it('Does not call @alternate when flow does not emit error', function () {
           return assert.isFulfilled(new Promise(function (done, fail) {
-            return aeroflow(1).catch(fail).run(done, fail);
+            return aeroflow('test').catch(fail).run(done, fail);
           }));
         });
-        it('Calls @alternative when flow emits error', function () {
+        it('Calls @alternate when flow emits error', function () {
           return assert.isFulfilled(new Promise(function (done, fail) {
-            return aeroflow(new Error('tests')).catch(done).run(fail, fail);
+            return aeroflow(new Error('test')).catch(done).run(fail, fail);
           }));
         });
-        it('Emits value returned by @alternative when flow emits error', function () {
-          var alternative = 'caught';
+        it('Emits value returned by @alternate when flow emits error', function () {
+          var alternate = 'alternate';
           return assert.eventually.strictEqual(new Promise(function (done, fail) {
             return aeroflow(new Error('test')).catch(function () {
-              return alternative;
+              return alternate;
             }).run(done, fail);
-          }), alternative);
+          }), alternate);
         });
       });
-      describe('catch(@alternative:!function)', function () {
-        it('Emits @alternative value instead of error emitted by flow', function () {
-          var alternative = 'caught';
+      describe('catch(@alternate:!function)', function () {
+        it('Emits @alternate value instead of error emitted by flow', function () {
+          var alternate = 'alternate';
           return assert.eventually.strictEqual(new Promise(function (done, fail) {
-            return aeroflow(new Error('test')).catch(alternative).run(done, fail);
-          }), alternative);
+            return aeroflow(new Error('test')).catch(alternate).run(done, fail);
+          }), alternate);
+        });
+      });
+    });
+  };
+
+  var coalesceTests = function coalesceTests(aeroflow, assert) {
+    return describe('coalesce', function () {
+      it('Is instance method', function () {
+        return assert.isFunction(aeroflow.empty.coalesce);
+      });
+      describe('coalesce()', function () {
+        it('Returns instance of Aeroflow', function () {
+          return assert.typeOf(aeroflow.empty.coalesce(), 'Aeroflow');
+        });
+        it('Emits nothing ("done" event only) when flow is empty', function () {
+          return assert.isFulfilled(new Promise(function (done, fail) {
+            return aeroflow.empty.coalesce().run(fail, done);
+          }));
+        });
+      });
+      describe('coalesce(@alternate:function)', function () {
+        it('Does not call @alternate when flow is not empty', function () {
+          return assert.isFulfilled(new Promise(function (done, fail) {
+            return aeroflow('test').coalesce(fail).run(done, fail);
+          }));
+        });
+        it('Does not call @alternate when flow emits error', function () {
+          return assert.isFulfilled(new Promise(function (done, fail) {
+            return aeroflow(new Error('test')).coalesce(fail).run(fail, done);
+          }));
+        });
+        it('Emits value returned by @alternate when flow is empty', function () {
+          var alternate = 'alternate';
+          return assert.eventually.strictEqual(new Promise(function (done, fail) {
+            return aeroflow.empty.coalesce(function () {
+              return alternate;
+            }).run(done, fail);
+          }), alternate);
+        });
+      });
+      describe('catch(@alternate:!function)', function () {
+        it('Emits @alternate value when flow is empty', function () {
+          var alternate = 'alternate';
+          return assert.eventually.strictEqual(new Promise(function (done, fail) {
+            return aeroflow.empty.coalesce(alternate).run(done, fail);
+          }), alternate);
         });
       });
     });
@@ -1651,7 +1697,7 @@
     });
   };
 
-  var tests$2 = [averageTests, catchTests, countTests, distinctTests, everyTests, filterTests, maxTests, minTests, reduceTests, someTests, takeTests, skipTests, sortTests, sliceTests, sumTests, toStringTests, mapTests, meanTests, reverseTests, tapTests, groupTests];
+  var tests$2 = [averageTests, catchTests, coalesceTests, countTests, distinctTests, everyTests, filterTests, maxTests, minTests, reduceTests, someTests, takeTests, skipTests, sortTests, sliceTests, sumTests, toStringTests, mapTests, meanTests, reverseTests, tapTests, groupTests];
 
   var instanceMethodsTests = function instanceMethodsTests(aeroflow, assert) {
     return describe('instance members', function () {

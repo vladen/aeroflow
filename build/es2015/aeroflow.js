@@ -162,7 +162,9 @@ function promiseAdapter(source) {
     result => done(toError(result)));
 }
 
-const adapters = objectDefineProperties([iterableAdapter], {
+const adapters = [iterableAdapter];
+
+objectDefineProperties(adapters, {
   [AEROFLOW]: { value: flowAdapter },
   [ARRAY]: { configurable: true, value: arrayAdapter, writable: true },
   [ERROR]: { configurable: true, value: errorAdapter, writable: true },
@@ -170,7 +172,13 @@ const adapters = objectDefineProperties([iterableAdapter], {
   [PROMISE]: { configurable: true, value: promiseAdapter, writable: true }
 });
 
-function adapterSelector(source, def) {
+function valueAdapter(value) {
+  return (next, done) => {
+    if (!unsync(next(value), done, done)) done(true);
+  };
+}
+
+function adapt(source, ignorant) {
   const sourceClass = classOf(source);
   let adapter = adapters[sourceClass];
   if (isFunction(adapter)) return adapter(source);
@@ -178,13 +186,7 @@ function adapterSelector(source, def) {
     adapter = adapters[i](source, sourceClass);
     if (isFunction(adapter)) return adapter;
   }
-  return def;
-}
-
-function valueAdapter(value) {
-  return (next, done) => {
-    if (!unsync(next(value), done, done)) done(true);
-  };
+  if (!ignorant) return valueAdapter(source);
 }
 
 function emptyGenerator(result) {
@@ -338,16 +340,33 @@ function averageOperator(forced) {
   return reduceOperator((average, result, index) => (average * index + result) / (index + 1), 0, false);
 }
 
-function catchOperator(alternative) {
-  const regressor = isDefined(alternative) 
-    ? adapterSelector(alternative, valueAdapter(alternative))
+function catchOperator(alternate) {
+  alternate = isDefined(alternate) 
+    ? adapt(alternate)
     : emptyGenerator(false);
   return emitter => (next, done, context) => emitter(
     next,
     result => isError(result)
-      ? regressor(next, done, context)
+      ? alternate(next, done, context)
       : done(result),
     context);
+}
+
+function coalesceOperator(alternates) {
+  if (!alternates.length) return identity;
+  return emitter => (next, done, context) => {
+    let empty = true, index = 0;
+    emitter(onNext, onDone, context);
+    function onDone(result) {
+      if (!isError(result) && empty && index < alternates.length)
+        adapt(alternates[index++])(onNext, onDone, context);
+      else done(result);
+    }
+    function onNext(result) {
+      empty = false;
+      return next(result);
+    }
+  }
 }
 
 function countOperator() {
@@ -501,7 +520,7 @@ function flattenOperator(depth) {
     let level = 0;
     const flatten = result => {
       if (level === depth) return next(result);
-      const adapter = adapterSelector(result);
+      const adapter = adapt(result, true);
       if (adapter) {
         level++;
         return new Promise(resolve => adapter(
@@ -565,11 +584,9 @@ function toArrayOperator(required) {
   };
 }
 
-function mapOperator(mapping) {
-  if (isUndefined(mapping)) return identity;
-  const mapper = isFunction(mapping)
-    ? mapping
-    : constant(mapping);
+function mapOperator(mapper) {
+  if (isUndefined(mapper)) return identity;
+  mapper = toFunction(mapper);
   return emitter => (next, done, context) => {
     let index = 0;
     emitter(
@@ -582,7 +599,7 @@ function mapOperator(mapping) {
 function joinOperator(right, condition) {
   const
     comparer = toFunction(condition, truthy),
-    toArray = toArrayOperator()(adapterSelector(right, valueAdapter(right)));
+    toArray = toArrayOperator()(adapt(right));
   return emitter => (next, done, context) => toArray(
     rightArray => new Promise(rightResolve => emitter(
       leftResult => new Promise(leftResolve => {
@@ -996,11 +1013,10 @@ function emit(next, done, context) {
     if (result !== true || ++index >= context.sources.length) done(result);
     else try {
       const source = context.sources[index];
-      let adapter = adapterSelector(source, valueAdapter(source));
-      adapter(next, proceed, context);
+      adapt(source)(next, proceed, context);
     }
-    catch (err) {
-      done(err);
+    catch (error) {
+      done(error);
     }
   }(true);
 }
@@ -1329,6 +1345,33 @@ function chain(operator) {
 }
 
 /**
+Returns new flow emitting values from alternate data sources
+when this flow is empty (emits only "done" event).
+
+@alias Flow#coalesce
+
+@param {any[]} [alternates]
+Data sources to emit values from in case this flow is empty.
+
+@return {Flow}
+New flow emitting all values emitted by this flow first
+and then all provided values.
+
+@example
+aeroflow().coalesce().dump().run();
+// done true
+aeroflow().coalesce('alternate').dump().run();
+// next alternate
+// done true
+aeroflow().coalesce([], 'alternate').dump().run();
+// next alternate
+// done true
+*/
+function coalesce(...alternates) {
+  return this.chain(coalesceOperator(alternates));
+}
+
+/**
 Returns new flow emitting values from this flow first 
 and then from all provided sources in series.
 
@@ -1645,7 +1688,7 @@ function join(right, comparer) {
 /**
 @alias Flow#map
 
-@param {function|any} [mapping]
+@param {function|any} [mapper]
 
 @return {Flow}
 
@@ -1665,8 +1708,8 @@ aeroflow(1, 2).map(value => value * 10).dump().run();
 // next 20
 // done true
 */
-function map(mapping) {
-  return this.chain(mapOperator(mapping));
+function map(mapper) {
+  return this.chain(mapOperator(mapper));
 }
 
 /**
@@ -1741,7 +1784,7 @@ to reduce it to a single value, returns new flow emitting the reduced value.
 
 @alias Flow#reduce
 
-@param {function|any} iteratee
+@param {function|any} [reducer]
 Function to execute on each emitted value, taking four arguments:
   result - the value previously returned in the last invocation of the reducer, or seed, if supplied;
   value - the current value emitted by this flow;
@@ -1786,8 +1829,8 @@ aeroflow(['a', 'b', 'c'])
 // next a0b1c2
 // done
 */
-function reduce(iteratee, accumulator) {
-  return this.chain(reduceOperator(iteratee, accumulator, isDefined(accumulator)));
+function reduce(reducer, accumulator) {
+  return this.chain(reduceOperator(reducer, accumulator, isDefined(accumulator)));
 }
 
 /**
@@ -1917,8 +1960,8 @@ function run(next, done, data) {
       try {
         done(result, data);
       }
-      catch (err) {
-        result = err;
+      catch (error) {
+        result = error;
       }
       (isError(result) ? reject : resolve)(result);
     },
@@ -2258,6 +2301,7 @@ function toString(separator, required) {
 const operators = objectCreate(Object[PROTOTYPE], {
   average: { value: average, writable: true },
   catch: { value: catch_, writable: true },
+  coalesce: { value: coalesce, writable: true },
   count: { value: count, writable: true },
   delay: { value: delay, writable: true },
   distinct: { value: distinct, writable: true },

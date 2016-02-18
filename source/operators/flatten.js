@@ -1,7 +1,7 @@
 'use strict';
 
 import { identity, maxInteger, toNumber } from '../utilites';
-import { adapterSelector } from '../adapters/index';
+import { adapt } from '../adapt';
 
 export function flattenOperator(depth) {
   depth = toNumber(depth, maxInteger);
@@ -10,7 +10,7 @@ export function flattenOperator(depth) {
     let level = 0;
     const flatten = result => {
       if (level === depth) return next(result);
-      const adapter = adapterSelector(result);
+      const adapter = adapt(result, true);
       if (adapter) {
         level++;
         return new Promise(resolve => adapter(

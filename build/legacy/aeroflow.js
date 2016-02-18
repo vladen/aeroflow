@@ -245,7 +245,8 @@
     };
   }
 
-  var adapters = objectDefineProperties([iterableAdapter], (_objectDefineProperti = {}, _defineProperty(_objectDefineProperti, AEROFLOW, {
+  var adapters = [iterableAdapter];
+  objectDefineProperties(adapters, (_objectDefineProperti = {}, _defineProperty(_objectDefineProperti, AEROFLOW, {
     value: flowAdapter
   }), _defineProperty(_objectDefineProperti, ARRAY, {
     configurable: true,
@@ -265,7 +266,13 @@
     writable: true
   }), _objectDefineProperti));
 
-  function adapterSelector(source, def) {
+  function valueAdapter(value) {
+    return function (next, done) {
+      if (!unsync(next(value), done, done)) done(true);
+    };
+  }
+
+  function adapt(source, ignorant) {
     var sourceClass = classOf(source);
     var adapter = adapters[sourceClass];
     if (isFunction(adapter)) return adapter(source);
@@ -275,13 +282,7 @@
       if (isFunction(adapter)) return adapter;
     }
 
-    return def;
-  }
-
-  function valueAdapter(value) {
-    return function (next, done) {
-      if (!unsync(next(value), done, done)) done(true);
-    };
+    if (!ignorant) return valueAdapter(source);
   }
 
   function emptyGenerator(result) {
@@ -445,13 +446,33 @@
     }, 0, false);
   }
 
-  function catchOperator(alternative) {
-    var regressor = isDefined(alternative) ? adapterSelector(alternative, valueAdapter(alternative)) : emptyGenerator(false);
+  function catchOperator(alternate) {
+    alternate = isDefined(alternate) ? adapt(alternate) : emptyGenerator(false);
     return function (emitter) {
       return function (next, done, context) {
         return emitter(next, function (result) {
-          return isError(result) ? regressor(next, done, context) : done(result);
+          return isError(result) ? alternate(next, done, context) : done(result);
         }, context);
+      };
+    };
+  }
+
+  function coalesceOperator(alternates) {
+    if (!alternates.length) return identity;
+    return function (emitter) {
+      return function (next, done, context) {
+        var empty = true,
+            index = 0;
+        emitter(onNext, onDone, context);
+
+        function onDone(result) {
+          if (!isError(result) && empty && index < alternates.length) adapt(alternates[index++])(onNext, onDone, context);else done(result);
+        }
+
+        function onNext(result) {
+          empty = false;
+          return next(result);
+        }
       };
     };
   }
@@ -631,7 +652,7 @@
 
         var flatten = function flatten(result) {
           if (level === depth) return next(result);
-          var adapter = adapterSelector(result);
+          var adapter = adapt(result, true);
 
           if (adapter) {
             level++;
@@ -697,9 +718,9 @@
     };
   }
 
-  function mapOperator(mapping) {
-    if (isUndefined(mapping)) return identity;
-    var mapper = isFunction(mapping) ? mapping : constant(mapping);
+  function mapOperator(mapper) {
+    if (isUndefined(mapper)) return identity;
+    mapper = toFunction(mapper);
     return function (emitter) {
       return function (next, done, context) {
         var index = 0;
@@ -712,7 +733,7 @@
 
   function joinOperator(right, condition) {
     var comparer = toFunction(condition, truthy),
-        toArray = toArrayOperator()(adapterSelector(right, valueAdapter(right)));
+        toArray = toArrayOperator()(adapt(right));
     return function (emitter) {
       return function (next, done, context) {
         return toArray(function (rightArray) {
@@ -1163,10 +1184,9 @@
     !function proceed(result) {
       if (result !== true || ++index >= context.sources.length) done(result);else try {
         var source = context.sources[index];
-        var adapter = adapterSelector(source, valueAdapter(source));
-        adapter(next, proceed, context);
-      } catch (err) {
-        done(err);
+        adapt(source)(next, proceed, context);
+      } catch (error) {
+        done(error);
       }
     }(true);
   }
@@ -1234,9 +1254,17 @@
     return new Flow(operator(this.emitter), this.sources);
   }
 
+  function coalesce() {
+    for (var _len4 = arguments.length, alternates = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+      alternates[_key4] = arguments[_key4];
+    }
+
+    return this.chain(coalesceOperator(alternates));
+  }
+
   function concat() {
-    for (var _len4 = arguments.length, sources = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-      sources[_key4] = arguments[_key4];
+    for (var _len5 = arguments.length, sources = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+      sources[_key5] = arguments[_key5];
     }
 
     return new Flow(this.emitter, this.sources.concat(sources));
@@ -1271,8 +1299,8 @@
   }
 
   function group() {
-    for (var _len5 = arguments.length, selectors = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-      selectors[_key5] = arguments[_key5];
+    for (var _len6 = arguments.length, selectors = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+      selectors[_key6] = arguments[_key6];
     }
 
     return this.chain(groupOperator(selectors));
@@ -1282,8 +1310,8 @@
     return this.chain(joinOperator(right, comparer));
   }
 
-  function map(mapping) {
-    return this.chain(mapOperator(mapping));
+  function map(mapper) {
+    return this.chain(mapOperator(mapper));
   }
 
   function max() {
@@ -1298,8 +1326,8 @@
     return this.chain(minOperator());
   }
 
-  function reduce(iteratee, accumulator) {
-    return this.chain(reduceOperator(iteratee, accumulator, isDefined(accumulator)));
+  function reduce(reducer, accumulator) {
+    return this.chain(reduceOperator(reducer, accumulator, isDefined(accumulator)));
   }
 
   function replay(interval, timing) {
@@ -1341,8 +1369,8 @@
       }, function (result) {
         try {
           done(result, data);
-        } catch (err) {
-          result = err;
+        } catch (error) {
+          result = error;
         }
 
         (isError(result) ? reject : resolve)(result);
@@ -1363,8 +1391,8 @@
   }
 
   function sort() {
-    for (var _len6 = arguments.length, parameters = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
-      parameters[_key6] = arguments[_key6];
+    for (var _len7 = arguments.length, parameters = Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
+      parameters[_key7] = arguments[_key7];
     }
 
     return this.chain(sortOperator(parameters));
@@ -1405,6 +1433,10 @@
     },
     catch: {
       value: catch_,
+      writable: true
+    },
+    coalesce: {
+      value: coalesce,
       writable: true
     },
     count: {
