@@ -50,7 +50,7 @@
   var STRING = 'String';
   var SYMBOL = 'Symbol';
   var UNDEFINED = 'Undefined';
-  var primitives = new Set([BOOLEAN, NULL, NUMBER, REGEXP, STRING, SYMBOL, UNDEFINED]);
+  var primitives = new Set([BOOLEAN, NULL, NUMBER, STRING, SYMBOL, UNDEFINED]);
   var dateNow = Date.now;
   var mathFloor = Math.floor;
   var mathPow = Math.pow;
@@ -102,7 +102,6 @@
   };
 
   var isInteger = Number.isInteger;
-  var isNumber = classIs(NUMBER);
   var isPromise = classIs(PROMISE);
 
   var isUndefined = function isUndefined(value) {
@@ -145,16 +144,12 @@
   };
 
   var toFunction = function toFunction(value, def) {
-    return isFunction(value) ? value : isDefined(def) ? def : constant(value);
+    return isFunction(value) ? value : isDefined(def) ? isFunction(def) ? def : constant(def) : constant(value);
   };
 
   var toNumber = function toNumber(value, def) {
-    if (!isNumber(value)) {
-      value = +value;
-      if (isNaN(value)) return def;
-    }
-
-    return value;
+    value = +value;
+    return isNaN(value) ? def : value;
   };
 
   var toError = function toError(value) {
@@ -414,14 +409,17 @@
     return isDefined(interval) ? repeatDeferredGenerator(repeater, toFunction(interval)) : repeatImmediateGenerator(repeater);
   }
 
-  function reduceOperator(reducer, seed, required) {
-    if (isUndefined(reducer)) return tie(emptyGenerator, false);
-    if (!isFunction(reducer)) return tie(valueAdapter, reducer);
+  function reduceOperator(reducer, seed, forced) {
+    if (isUndefined(reducer)) {
+      reducer = identity;
+      seed = constant();
+    } else if (isFunction(reducer)) seed = toFunction(seed);else return tie(valueAdapter, reducer);
+
     return function (emitter) {
       return function (next, done, context) {
-        var empty = !required,
+        var empty = !forced,
             index = 0,
-            reduced = seed;
+            reduced = seed();
         emitter(function (result) {
           if (empty) {
             empty = false;
@@ -441,10 +439,10 @@
     };
   }
 
-  function averageOperator(required) {
+  function averageOperator(forced) {
     return reduceOperator(function (average, result, index) {
       return (average * index + result) / (index + 1);
-    }, 0);
+    }, 0, false);
   }
 
   function catchOperator(alternative) {
@@ -737,7 +735,7 @@
     };
   }
 
-  function maxOperator(required) {
+  function maxOperator() {
     return reduceOperator(function (maximum, result) {
       return maximum < result ? result : maximum;
     });
@@ -1032,7 +1030,7 @@
   function sumOperator() {
     return reduceOperator(function (sum, result) {
       return +result + sum;
-    }, 0);
+    }, 0, false);
   }
 
   function takeFirstOperator(count) {
@@ -1300,8 +1298,8 @@
     return this.chain(minOperator());
   }
 
-  function reduce(iteratee, accumulator, required) {
-    return this.chain(reduceOperator(iteratee, accumulator, required));
+  function reduce(iteratee, accumulator) {
+    return this.chain(reduceOperator(iteratee, accumulator, isDefined(accumulator)));
   }
 
   function replay(interval, timing) {

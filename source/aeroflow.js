@@ -2,7 +2,7 @@
 
 import { AEROFLOW, CLASS, PROTOTYPE } from './symbols';
 
-import { isError, isFunction, noop, objectDefineProperties, objectCreate } from './utilites';
+import { isDefined, isError, isFunction, noop, objectDefineProperties, objectCreate } from './utilites';
 
 import { adapters, adapterSelector } from './adapters/index';
 import { valueAdapter } from './adapters/value';
@@ -735,7 +735,7 @@ New flow emitting the maximum value only.
 @example
 aeroflow().max().dump().run();
 // done true
-aeroflow(3, 1, 2).max().dump().run();
+aeroflow(1, 3, 2).max().dump().run();
 // next 3
 // done true
 aeroflow('b', 'a', 'c').max().dump().run();
@@ -824,8 +824,6 @@ aeroflow().reduce('test').dump().run();
 // next test
 // done true
 aeroflow().reduce((product, value) => product * value).dump().run();
-// done true
-aeroflow().reduce((product, value) => product * value, true).dump().run();
 // next undefined
 // done true
 aeroflow().reduce((product, value) => product * value, 1, true).dump().run();
@@ -843,8 +841,8 @@ aeroflow(['a', 'b', 'c'])
 // next a0b1c2
 // done
 */
-function reduce(iteratee, accumulator, required) {
-  return this.chain(reduceOperator(iteratee, accumulator, required));
+function reduce(iteratee, accumulator) {
+  return this.chain(reduceOperator(iteratee, accumulator, isDefined(accumulator)));
 }
 
 /**

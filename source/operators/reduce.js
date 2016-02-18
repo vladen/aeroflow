@@ -1,15 +1,18 @@
 'use strict';
 
-import { isError, isFunction, isUndefined, tie } from '../utilites';
+import { constant, identity, isError, isFunction, isUndefined, tie, toFunction } from '../utilites';
 import { unsync } from '../unsync';
 import { valueAdapter } from '../adapters/value';
-import { emptyGenerator } from '../generators/empty';
 
-export function reduceOperator(reducer, seed, required) {
-  if (isUndefined(reducer)) return tie(emptyGenerator, false);
-  if (!isFunction(reducer)) return tie(valueAdapter, reducer);
+export function reduceOperator(reducer, seed, forced) {
+  if (isUndefined(reducer)) {
+    reducer = identity;
+    seed = constant();
+  }
+  else if (isFunction(reducer)) seed = toFunction(seed);
+  else return tie(valueAdapter, reducer);
   return emitter => (next, done, context) => {
-    let empty = !required, index = 0, reduced = seed;
+    let empty = !forced, index = 0, reduced = seed();
     emitter(
       result => {
         if (empty) {

@@ -493,10 +493,11 @@
             return aeroflow.empty.reduce().run(fail, done);
           }));
         });
-        it('Emits nothing ("done" event only) when flow is not empty', function () {
-          return assert.isFulfilled(new Promise(function (done, fail) {
-            return aeroflow('test').reduce().run(fail, done);
-          }));
+        it('Emits first value emitted by flow when flow is not empty', function () {
+          var values = [1, 2];
+          assert.eventually.strictEqual(new Promise(function (done, fail) {
+            return aeroflow(values).reduce().run(done, fail);
+          }), values[0]);
         });
       });
       describe('reduce(@reducer:function)', function () {
@@ -548,12 +549,11 @@
           }), values);
         });
         it('Passes zero-based @index of iteration to @reducer as third argument', function () {
-          var expectation = 0;
           return assert.eventually.strictEqual(new Promise(function (done, fail) {
             return aeroflow(1, 2).reduce(function (_, __, index) {
               return done(index);
             }).run(fail, fail);
-          }), expectation);
+          }), 0);
         });
         it('Passes context @data to @reducer as forth argument', function () {
           var expectation = {};
@@ -565,10 +565,11 @@
         });
       });
       describe('reduce(@reducer:function, @seed)', function () {
-        it('Emits nothing ("done" event only) when flow is empty', function () {
-          return assert.isFulfilled(new Promise(function (done, fail) {
-            return aeroflow.empty.reduce(function () {}, 42).run(fail, done);
-          }));
+        it('Emits @seed value when flow is empty', function () {
+          var seed = 'test';
+          return assert.eventually.strictEqual(new Promise(function (done, fail) {
+            return aeroflow.empty.reduce(function () {}, seed).run(done, fail);
+          }), seed);
         });
         it('Passes @seed to @reducer as first argument on first iteration', function () {
           var seed = 42;
@@ -577,26 +578,18 @@
           }), seed);
         });
       });
-      describe('reduce(@reducer:function, @seed, true)', function () {
-        it('Emits @seed value when flow is empty', function () {
-          var seed = 'test';
+      describe('reduce(@reducer:!function)', function () {
+        it('Emits @reducer value when flow is empty', function () {
+          var reducer = 42;
           return assert.eventually.strictEqual(new Promise(function (done, fail) {
-            return aeroflow.empty.reduce(function () {}, seed, true).run(done, fail);
-          }), seed);
+            return aeroflow.empty.reduce(reducer).run(done, fail);
+          }), reducer);
         });
-      });
-      describe('reduce(@seed:!function)', function () {
-        it('Emits @seed value when flow is empty', function () {
-          var seed = 42;
+        it('Emits @reducer value when flow is not empty', function () {
+          var reducer = 42;
           return assert.eventually.strictEqual(new Promise(function (done, fail) {
-            return aeroflow.empty.reduce(seed).run(done, fail);
-          }), seed);
-        });
-        it('Emits @seed value when flow is not empty', function () {
-          var seed = 42;
-          return assert.eventually.strictEqual(new Promise(function (done, fail) {
-            return aeroflow(1, 2).reduce(seed).run(done, fail);
-          }), seed);
+            return aeroflow(1, 2).reduce(reducer).run(done, fail);
+          }), reducer);
         });
       });
     });
@@ -1568,7 +1561,7 @@
         });
       });
       describe('group(@selectors:array)', function () {
-        it('Emits nested named groups divided @values by @selectors', function () {
+        it('Emits nested named groups which divide @values by first predicate from @selectors', function () {
           var values = [{
             name: 'test1',
             sex: 'female'
@@ -1611,7 +1604,49 @@
             }).run(done, fail);
           }), 'Map');
         });
-        it('Emits nested named groups divided @values by @selectors 1', function () {});
+        it('Emits nested named groups which divide @values by second predicate from @selectors', function () {
+          var values = [{
+            name: 'test1',
+            sex: 'female'
+          }, {
+            name: 'test2',
+            sex: 'male'
+          }],
+              expectation = [[values[0].sex], [values[1].sex]],
+              selectors = [function (value) {
+            return value.name;
+          }, function (value) {
+            return value.sex;
+          }];
+          return assert.eventually.sameDeepMembers(new Promise(function (done, fail) {
+            var _aeroflow5;
+
+            return (_aeroflow5 = aeroflow(values)).group.apply(_aeroflow5, selectors).map(function (group) {
+              return Array.from(group[1].keys());
+            }).toArray().run(done, fail);
+          }), expectation);
+        });
+        it('Emits @values on the root of nested groups', function () {
+          var values = [{
+            name: 'test1',
+            sex: 'female'
+          }, {
+            name: 'test2',
+            sex: 'male'
+          }],
+              selectors = [function (value) {
+            return value.name;
+          }, function (value) {
+            return value.sex;
+          }];
+          return assert.eventually.sameDeepMembers(new Promise(function (done, fail) {
+            var _aeroflow6;
+
+            return (_aeroflow6 = aeroflow(values)).group.apply(_aeroflow6, selectors).map(function (group) {
+              return Array.from(group[1].values())[0][0];
+            }).toArray().run(done, fail);
+          }), values);
+        });
       });
     });
   };
@@ -1628,9 +1663,9 @@
 
   var tests = [staticMethodsTests, instanceMethodsTests];
 
-  var aeroflow = function aeroflow(_aeroflow5, assert) {
+  var aeroflow = function aeroflow(_aeroflow7, assert) {
     return tests.forEach(function (test) {
-      return test(_aeroflow5, assert);
+      return test(_aeroflow7, assert);
     });
   };
 

@@ -10,9 +10,12 @@ export default (aeroflow, assert) => describe('reduce', () => {
       assert.isFulfilled(new Promise((done, fail) =>
         aeroflow.empty.reduce().run(fail, done))));
 
-    it('Emits nothing ("done" event only) when flow is not empty', () =>
-      assert.isFulfilled(new Promise((done, fail) => 
-        aeroflow('test').reduce().run(fail, done))));
+    it('Emits first value emitted by flow when flow is not empty', () => {
+      const values = [1, 2];
+      assert.eventually.strictEqual(new Promise((done, fail) => 
+        aeroflow(values).reduce().run(done, fail)),
+        values[0]);
+    });
   });
 
   describe('reduce(@reducer:function)', () => {
@@ -56,12 +59,10 @@ export default (aeroflow, assert) => describe('reduce', () => {
         values);
     });
 
-    it('Passes zero-based @index of iteration to @reducer as third argument', () => {
-      const expectation = 0;
-      return assert.eventually.strictEqual(new Promise((done, fail) =>
+    it('Passes zero-based @index of iteration to @reducer as third argument', () =>
+      assert.eventually.strictEqual(new Promise((done, fail) =>
         aeroflow(1, 2).reduce((_, __, index) => done(index)).run(fail, fail)),
-        expectation);
-    });
+        0));
 
     it('Passes context @data to @reducer as forth argument', () => {
       const expectation = {};
@@ -72,9 +73,12 @@ export default (aeroflow, assert) => describe('reduce', () => {
   });
 
   describe('reduce(@reducer:function, @seed)', () => {
-    it('Emits nothing ("done" event only) when flow is empty', () =>
-      assert.isFulfilled(new Promise((done, fail) =>
-        aeroflow.empty.reduce(() => {}, 42).run(fail, done))));
+    it('Emits @seed value when flow is empty', () => {
+      const seed = 'test';
+      return assert.eventually.strictEqual(new Promise((done, fail) => 
+        aeroflow.empty.reduce(() => {}, seed).run(done, fail)),
+        seed);
+    });
 
     it('Passes @seed to @reducer as first argument on first iteration', () => {
       const seed = 42;
@@ -84,28 +88,19 @@ export default (aeroflow, assert) => describe('reduce', () => {
     });
   });
 
-  describe('reduce(@reducer:function, @seed, true)', () => {
-    it('Emits @seed value when flow is empty', () => {
-      const seed = 'test';
-      return assert.eventually.strictEqual(new Promise((done, fail) => 
-        aeroflow.empty.reduce(() => {}, seed, true).run(done, fail)),
-        seed);
-    });
-  });
-
-  describe('reduce(@seed:!function)', () => {
-    it('Emits @seed value when flow is empty', () => {
-      const seed = 42;
-      return assert.eventually.strictEqual(new Promise((done, fail) => 
-        aeroflow.empty.reduce(seed).run(done, fail)),
-        seed);
+  describe('reduce(@reducer:!function)', () => {
+    it('Emits @reducer value when flow is empty', () => {
+      const reducer = 42;
+      return assert.eventually.strictEqual(new Promise((done, fail) =>
+        aeroflow.empty.reduce(reducer).run(done, fail)),
+        reducer);
     });
 
-    it('Emits @seed value when flow is not empty', () => {
-      const seed = 42;
+    it('Emits @reducer value when flow is not empty', () => {
+      const reducer = 42;
       return assert.eventually.strictEqual(new Promise((done, fail) => 
-        aeroflow(1, 2).reduce(seed).run(done, fail)),
-        seed);
+        aeroflow(1, 2).reduce(reducer).run(done, fail)),
+        reducer);
     });
   });
 });

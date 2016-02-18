@@ -16,7 +16,7 @@ const SYMBOL = 'Symbol';
 const UNDEFINED = 'Undefined';
 
 const primitives = new Set([
-  BOOLEAN, NULL, NUMBER, REGEXP, STRING, SYMBOL, UNDEFINED
+  BOOLEAN, NULL, NUMBER, STRING, SYMBOL, UNDEFINED
 ]);
 
 const dateNow = Date.now;
@@ -46,7 +46,6 @@ const isDefined = value => value !== undefined;
 const isError = classIs(ERROR);
 const isFunction = value => typeof value == 'function';
 const isInteger = Number.isInteger;
-const isNumber = classIs(NUMBER);
 const isPromise = classIs(PROMISE);
 const isUndefined = value => value === undefined;
 
@@ -72,15 +71,14 @@ const toDelay = (value, def) => {
 const toFunction = (value, def) => isFunction(value)
   ? value
   : isDefined(def)
-    ? def
+    ? isFunction(def)
+      ? def
+      : constant(def)
     : constant(value);
 
 const toNumber = (value, def) => {
-  if (!isNumber(value)) {
-    value = +value;
-    if (isNaN(value)) return def;
-  }
-  return value;
+  value = +value;
+  return isNaN(value) ? def : value;
 };
 
 const toError = value => isError(value)
@@ -307,11 +305,15 @@ function repeatGenerator(value, interval) {
     : repeatImmediateGenerator(repeater);
 }
 
-function reduceOperator(reducer, seed, required) {
-  if (isUndefined(reducer)) return tie(emptyGenerator, false);
-  if (!isFunction(reducer)) return tie(valueAdapter, reducer);
+function reduceOperator(reducer, seed, forced) {
+  if (isUndefined(reducer)) {
+    reducer = identity;
+    seed = constant();
+  }
+  else if (isFunction(reducer)) seed = toFunction(seed);
+  else return tie(valueAdapter, reducer);
   return emitter => (next, done, context) => {
-    let empty = !required, index = 0, reduced = seed;
+    let empty = !forced, index = 0, reduced = seed();
     emitter(
       result => {
         if (empty) {
@@ -332,9 +334,8 @@ function reduceOperator(reducer, seed, required) {
   };
 }
 
-function averageOperator(required) {
-  return reduceOperator(
-    (average, result, index) => (average * index + result) / (index + 1), 0);
+function averageOperator(forced) {
+  return reduceOperator((average, result, index) => (average * index + result) / (index + 1), 0, false);
 }
 
 function catchOperator(alternative) {
@@ -598,7 +599,7 @@ function joinOperator(right, condition) {
     context);
 }
 
-function maxOperator (required) {
+function maxOperator () {
   return reduceOperator((maximum, result) => maximum < result ? result : maximum);
 }
 
@@ -847,7 +848,7 @@ function sortOperator(parameters) {
 }
 
 function sumOperator() {
-  return reduceOperator((sum, result) => +result + sum, 0);
+  return reduceOperator((sum, result) => +result + sum, 0, false);
 }
 
 function takeFirstOperator(count) {
@@ -1679,7 +1680,7 @@ New flow emitting the maximum value only.
 @example
 aeroflow().max().dump().run();
 // done true
-aeroflow(3, 1, 2).max().dump().run();
+aeroflow(1, 3, 2).max().dump().run();
 // next 3
 // done true
 aeroflow('b', 'a', 'c').max().dump().run();
@@ -1768,8 +1769,6 @@ aeroflow().reduce('test').dump().run();
 // next test
 // done true
 aeroflow().reduce((product, value) => product * value).dump().run();
-// done true
-aeroflow().reduce((product, value) => product * value, true).dump().run();
 // next undefined
 // done true
 aeroflow().reduce((product, value) => product * value, 1, true).dump().run();
@@ -1787,8 +1786,8 @@ aeroflow(['a', 'b', 'c'])
 // next a0b1c2
 // done
 */
-function reduce(iteratee, accumulator, required) {
-  return this.chain(reduceOperator(iteratee, accumulator, required));
+function reduce(iteratee, accumulator) {
+  return this.chain(reduceOperator(iteratee, accumulator, isDefined(accumulator)));
 }
 
 /**

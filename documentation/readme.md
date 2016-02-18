@@ -630,7 +630,7 @@ Determines the maximum value emitted by this flow.
 ```js
 aeroflow().max().dump().run();
 // done true
-aeroflow(3, 1, 2).max().dump().run();
+aeroflow(1, 3, 2).max().dump().run();
 // next 3
 // done true
 aeroflow('b', 'a', 'c').max().dump().run();
@@ -703,8 +703,6 @@ aeroflow().reduce('test').dump().run();
 // next test
 // done true
 aeroflow().reduce((product, value) => product * value).dump().run();
-// done true
-aeroflow().reduce((product, value) => product * value, true).dump().run();
 // next undefined
 // done true
 aeroflow().reduce((product, value) => product * value, 1, true).dump().run();

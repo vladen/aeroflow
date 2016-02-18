@@ -418,9 +418,12 @@ var reduceTests = (aeroflow, assert) => describe('reduce', () => {
       assert.isFulfilled(new Promise((done, fail) =>
         aeroflow.empty.reduce().run(fail, done))));
 
-    it('Emits nothing ("done" event only) when flow is not empty', () =>
-      assert.isFulfilled(new Promise((done, fail) => 
-        aeroflow('test').reduce().run(fail, done))));
+    it('Emits first value emitted by flow when flow is not empty', () => {
+      const values = [1, 2];
+      assert.eventually.strictEqual(new Promise((done, fail) => 
+        aeroflow(values).reduce().run(done, fail)),
+        values[0]);
+    });
   });
 
   describe('reduce(@reducer:function)', () => {
@@ -464,12 +467,10 @@ var reduceTests = (aeroflow, assert) => describe('reduce', () => {
         values);
     });
 
-    it('Passes zero-based @index of iteration to @reducer as third argument', () => {
-      const expectation = 0;
-      return assert.eventually.strictEqual(new Promise((done, fail) =>
+    it('Passes zero-based @index of iteration to @reducer as third argument', () =>
+      assert.eventually.strictEqual(new Promise((done, fail) =>
         aeroflow(1, 2).reduce((_, __, index) => done(index)).run(fail, fail)),
-        expectation);
-    });
+        0));
 
     it('Passes context @data to @reducer as forth argument', () => {
       const expectation = {};
@@ -480,9 +481,12 @@ var reduceTests = (aeroflow, assert) => describe('reduce', () => {
   });
 
   describe('reduce(@reducer:function, @seed)', () => {
-    it('Emits nothing ("done" event only) when flow is empty', () =>
-      assert.isFulfilled(new Promise((done, fail) =>
-        aeroflow.empty.reduce(() => {}, 42).run(fail, done))));
+    it('Emits @seed value when flow is empty', () => {
+      const seed = 'test';
+      return assert.eventually.strictEqual(new Promise((done, fail) => 
+        aeroflow.empty.reduce(() => {}, seed).run(done, fail)),
+        seed);
+    });
 
     it('Passes @seed to @reducer as first argument on first iteration', () => {
       const seed = 42;
@@ -492,28 +496,19 @@ var reduceTests = (aeroflow, assert) => describe('reduce', () => {
     });
   });
 
-  describe('reduce(@reducer:function, @seed, true)', () => {
-    it('Emits @seed value when flow is empty', () => {
-      const seed = 'test';
-      return assert.eventually.strictEqual(new Promise((done, fail) => 
-        aeroflow.empty.reduce(() => {}, seed, true).run(done, fail)),
-        seed);
-    });
-  });
-
-  describe('reduce(@seed:!function)', () => {
-    it('Emits @seed value when flow is empty', () => {
-      const seed = 42;
-      return assert.eventually.strictEqual(new Promise((done, fail) => 
-        aeroflow.empty.reduce(seed).run(done, fail)),
-        seed);
+  describe('reduce(@reducer:!function)', () => {
+    it('Emits @reducer value when flow is empty', () => {
+      const reducer = 42;
+      return assert.eventually.strictEqual(new Promise((done, fail) =>
+        aeroflow.empty.reduce(reducer).run(done, fail)),
+        reducer);
     });
 
-    it('Emits @seed value when flow is not empty', () => {
-      const seed = 42;
+    it('Emits @reducer value when flow is not empty', () => {
+      const reducer = 42;
       return assert.eventually.strictEqual(new Promise((done, fail) => 
-        aeroflow(1, 2).reduce(seed).run(done, fail)),
-        seed);
+        aeroflow(1, 2).reduce(reducer).run(done, fail)),
+        reducer);
     });
   });
 });
@@ -1333,17 +1328,8 @@ var groupTests = (aeroflow, assert) => describe('group', () => {
     });
   });
 
-  // describe('group(@selector:!function)', () => {
-  //   it('Emits group with @selector name contains @values', () => {
-  //     const values = [1, 2], name = 'integers', expectation = [name, values];
-  //     return assert.eventually.sameDeepMembers(new Promise((done, fail) =>
-  //       aeroflow(values).group(name).run(done, fail)),
-  //       expectation);
-  //   });
-  // });
-
   describe('group(@selectors:array)', () => {
-    it('Emits nested named groups divided @values by @selectors', () => {
+    it('Emits nested named groups which divide @values by first predicate from @selectors', () => {
       const values  = [{name: 'test1', sex: 'female'}, {name: 'test2', sex: 'male'}],
         expectation = [values[0].name, values[1].name],
         selectors = [(value) => value.name, (value) => value.sex];
@@ -1362,16 +1348,24 @@ var groupTests = (aeroflow, assert) => describe('group', () => {
         'Map');
     });
 
-    it('Emits nested named groups divided @values by @selectors 1', () => {
-      // const values  = [{name: 'test1', sex: 'female'}, {name: 'test2', sex: 'male'}],
-      //   expectation = [values[0].name, values[1].name],
-      //   selectors = [(value) => value.name, (value) => value.sex];
+    it('Emits nested named groups which divide @values by second predicate from @selectors', () => {
+       const values  = [{name: 'test1', sex: 'female'}, {name: 'test2', sex: 'male'}],
+         expectation = [[values[0].sex], [values[1].sex]],
+       selectors = [(value) => value.name, (value) => value.sex];
 
-      // return assert.eventually.sameMembers(new Promise((done, fail) =>
-      //   aeroflow(values).group(...selectors).map(group => group[1].keys()).toArray().run(done, fail)),
-      //   expectation);
+      return assert.eventually.sameDeepMembers(new Promise((done, fail) =>
+        aeroflow(values).group(...selectors).map(group => Array.from(group[1].keys())).toArray().run(done, fail)),
+        expectation);
     });
 
+    it('Emits @values on the root of nested groups', () => {
+      const values  = [{name: 'test1', sex: 'female'}, {name: 'test2', sex: 'male'}],
+         selectors = [(value) => value.name, (value) => value.sex];
+
+      return assert.eventually.sameDeepMembers(new Promise((done, fail) =>
+        aeroflow(values).group(...selectors).map(group => Array.from(group[1].values())[0][0]).toArray().run(done, fail)),
+        values);
+    });
   });
 });
 

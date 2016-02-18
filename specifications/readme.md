@@ -40,8 +40,7 @@
        - [reduce()](#instance-members-reduce-reduce)
        - [reduce(@reducer:function)](#instance-members-reduce-reducereducerfunction)
        - [reduce(@reducer:function, @seed)](#instance-members-reduce-reducereducerfunction-seed)
-       - [reduce(@reducer:function, @seed, true)](#instance-members-reduce-reducereducerfunction-seed-true)
-       - [reduce(@seed:!function)](#instance-members-reduce-reduceseedfunction)
+       - [reduce(@reducer:!function)](#instance-members-reduce-reducereducerfunction)
      - [some](#instance-members-some)
        - [some()](#instance-members-some-some)
        - [every(@condition:function)](#instance-members-some-everyconditionfunction)
@@ -922,12 +921,13 @@ return assert.isFulfilled(new Promise(function (done, fail) {
 }));
 ```
 
-Emits nothing ("done" event only) when flow is not empty.
+Emits first value emitted by flow when flow is not empty.
 
 ```js
-return assert.isFulfilled(new Promise(function (done, fail) {
-  return aeroflow('test').reduce().run(fail, done);
-}));
+var values = [1, 2];
+assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow(values).reduce().run(done, fail);
+}), values[0]);
 ```
 
 <a name="instance-members-reduce-reducereducerfunction"></a>
@@ -1003,12 +1003,11 @@ return assert.eventually.sameMembers(new Promise(function (done, fail) {
 Passes zero-based @index of iteration to @reducer as third argument.
 
 ```js
-var expectation = 0;
 return assert.eventually.strictEqual(new Promise(function (done, fail) {
   return aeroflow(1, 2).reduce(function (_, __, index) {
     return done(index);
   }).run(fail, fail);
-}), expectation);
+}), 0);
 ```
 
 Passes context @data to @reducer as forth argument.
@@ -1024,12 +1023,13 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 
 <a name="instance-members-reduce-reducereducerfunction-seed"></a>
 ### reduce(@reducer:function, @seed)
-Emits nothing ("done" event only) when flow is empty.
+Emits @seed value when flow is empty.
 
 ```js
-return assert.isFulfilled(new Promise(function (done, fail) {
-  return aeroflow.empty.reduce(function () {}, 42).run(fail, done);
-}));
+var seed = 'test';
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow.empty.reduce(function () {}, seed).run(done, fail);
+}), seed);
 ```
 
 Passes @seed to @reducer as first argument on first iteration.
@@ -1041,35 +1041,24 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 }), seed);
 ```
 
-<a name="instance-members-reduce-reducereducerfunction-seed-true"></a>
-### reduce(@reducer:function, @seed, true)
-Emits @seed value when flow is empty.
+<a name="instance-members-reduce-reducereducerfunction"></a>
+### reduce(@reducer:!function)
+Emits @reducer value when flow is empty.
 
 ```js
-var seed = 'test';
+var reducer = 42;
 return assert.eventually.strictEqual(new Promise(function (done, fail) {
-  return aeroflow.empty.reduce(function () {}, seed, true).run(done, fail);
-}), seed);
+  return aeroflow.empty.reduce(reducer).run(done, fail);
+}), reducer);
 ```
 
-<a name="instance-members-reduce-reduceseedfunction"></a>
-### reduce(@seed:!function)
-Emits @seed value when flow is empty.
+Emits @reducer value when flow is not empty.
 
 ```js
-var seed = 42;
+var reducer = 42;
 return assert.eventually.strictEqual(new Promise(function (done, fail) {
-  return aeroflow.empty.reduce(seed).run(done, fail);
-}), seed);
-```
-
-Emits @seed value when flow is not empty.
-
-```js
-var seed = 42;
-return assert.eventually.strictEqual(new Promise(function (done, fail) {
-  return aeroflow(1, 2).reduce(seed).run(done, fail);
-}), seed);
+  return aeroflow(1, 2).reduce(reducer).run(done, fail);
+}), reducer);
 ```
 
 <a name="instance-members-some"></a>
@@ -2182,7 +2171,7 @@ return assert.eventually.sameDeepMembers(new Promise(function (done, fail) {
 
 <a name="instance-members-group-groupselectorsarray"></a>
 ### group(@selectors:array)
-Emits nested named groups divided @values by @selectors.
+Emits nested named groups which divide @values by first predicate from @selectors.
 
 ```js
 var values = [{
@@ -2229,9 +2218,50 @@ return assert.eventually.typeOf(new Promise(function (done, fail) {
 }), 'Map');
 ```
 
-Emits nested named groups divided @values by @selectors 1.
+Emits nested named groups which divide @values by second predicate from @selectors.
 
 ```js
-}
+var values = [{
+  name: 'test1',
+  sex: 'female'
+}, {
+  name: 'test2',
+  sex: 'male'
+}],
+    expectation = [[values[0].sex], [values[1].sex]],
+    selectors = [function (value) {
+  return value.name;
+}, function (value) {
+  return value.sex;
+}];
+return assert.eventually.sameDeepMembers(new Promise(function (done, fail) {
+  var _aeroflow5;
+  return (_aeroflow5 = aeroflow(values)).group.apply(_aeroflow5, selectors).map(function (group) {
+    return Array.from(group[1].keys());
+  }).toArray().run(done, fail);
+}), expectation);
+```
+
+Emits @values on the root of nested groups.
+
+```js
+var values = [{
+  name: 'test1',
+  sex: 'female'
+}, {
+  name: 'test2',
+  sex: 'male'
+}],
+    selectors = [function (value) {
+  return value.name;
+}, function (value) {
+  return value.sex;
+}];
+return assert.eventually.sameDeepMembers(new Promise(function (done, fail) {
+  var _aeroflow6;
+  return (_aeroflow6 = aeroflow(values)).group.apply(_aeroflow6, selectors).map(function (group) {
+    return Array.from(group[1].values())[0][0];
+  }).toArray().run(done, fail);
+}), values);
 ```
 

@@ -1,11 +1,11 @@
 'use strict';
 
 import {
-  BOOLEAN, DATE, ERROR, NUMBER, NULL, PROMISE, REGEXP, STRING, SYMBOL, UNDEFINED
+  BOOLEAN, DATE, ERROR, NUMBER, NULL, PROMISE, STRING, SYMBOL, UNDEFINED
 } from './symbols';
 
 export const primitives = new Set([
-  BOOLEAN, NULL, NUMBER, REGEXP, STRING, SYMBOL, UNDEFINED
+  BOOLEAN, NULL, NUMBER, STRING, SYMBOL, UNDEFINED
 ]);
 
 export const dateNow = Date.now;
@@ -34,14 +34,11 @@ export const classOf = value => objectToString.call(value).slice(8, -1);
 export const classIs = className => value => classOf(value) === className;
 
 export const isBoolean = value => value === true || value === false;
-export const isDate = classIs(DATE);
 export const isDefined = value => value !== undefined;
 export const isError = classIs(ERROR);
 export const isFunction = value => typeof value == 'function';
 export const isInteger = Number.isInteger;
-export const isNumber = classIs(NUMBER);
 export const isPromise = classIs(PROMISE);
-export const isString = classIs(STRING);
 export const isUndefined = value => value === undefined;
 
 export const tie = (func, ...args) => () => func(...args);
@@ -66,15 +63,14 @@ export const toDelay = (value, def) => {
 export const toFunction = (value, def) => isFunction(value)
   ? value
   : isDefined(def)
-    ? def
+    ? isFunction(def)
+      ? def
+      : constant(def)
     : constant(value);
 
 export const toNumber = (value, def) => {
-  if (!isNumber(value)) {
-    value = +value;
-    if (isNaN(value)) return def;
-  }
-  return value;
+  value = +value;
+  return isNaN(value) ? def : value;
 };
 
 export const toError = value => isError(value)
