@@ -1,5 +1,3 @@
-'use strict';
-
 import { AEROFLOW, ARRAY, ERROR, FUNCTION, PROMISE } from '../symbols';
 import { objectDefineProperties } from '../utilites';
 import { arrayAdapter } from './array';

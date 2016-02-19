@@ -1,16 +1,16 @@
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
-    define(['module', 'exports'], factory);
+    define(['exports'], factory);
   } else if (typeof exports !== "undefined") {
-    factory(module, exports);
+    factory(exports);
   } else {
     var mod = {
       exports: {}
     };
-    factory(mod, mod.exports);
+    factory(mod.exports);
     global.aeroflow = mod.exports;
   }
-})(this, function (module, exports) {
+})(this, function (exports) {
   'use strict';
 
   Object.defineProperty(exports, "__esModule", {
@@ -443,7 +443,7 @@
   function averageOperator(forced) {
     return reduceOperator(function (average, result, index) {
       return (average * index + result) / (index + 1);
-    }, 0, false);
+    }, 0);
   }
 
   function catchOperator(alternate) {
@@ -702,17 +702,15 @@
     };
   }
 
-  function toArrayOperator(required) {
+  function toArrayOperator() {
     return function (emitter) {
       return function (next, done, context) {
-        var array = [],
-            empty = !required;
+        var array = [];
         emitter(function (result) {
-          empty = false;
           array.push(result);
           return true;
         }, function (result) {
-          if (isError(result) || empty || !unsync(next(array), tie(done, result), done)) done(result);
+          if (isError(result) || !unsync(next(array), tie(done, result), done)) done(result);
         }, context);
       };
     };
@@ -1051,7 +1049,7 @@
   function sumOperator() {
     return reduceOperator(function (sum, result) {
       return +result + sum;
-    }, 0, false);
+    }, 0);
   }
 
   function takeFirstOperator(count) {
@@ -1120,63 +1118,42 @@
     };
   }
 
-  function toMapOperator(keySelector, valueSelector, required) {
+  function toMapOperator(keySelector, valueSelector) {
     keySelector = isUndefined(keySelector) ? identity : toFunction(keySelector);
     valueSelector = isUndefined(valueSelector) ? identity : toFunction(valueSelector);
     return function (emitter) {
       return function (next, done, context) {
-        var empty = !required,
-            index = 0,
-            map = new Map();
+        var map = new Map();
+        var index = 0;
         emitter(function (result) {
-          empty = false;
           map.set(keySelector(result, index++, context.data), valueSelector(result, index++, context.data));
           return true;
         }, function (result) {
-          if (isError(result) || empty || !unsync(next(map), tie(done, result), done)) done(result);
+          if (isError(result) || !unsync(next(map), tie(done, result), done)) done(result);
         }, context);
       };
     };
   }
 
-  function toSetOperator(required) {
+  function toSetOperator() {
     return function (emitter) {
       return function (next, done, context) {
-        var empty = !required,
-            set = new Set();
+        var set = new Set();
         emitter(function (result) {
-          empty = false;
           set.add(result);
           return true;
         }, function (result) {
-          if (isError(result) || empty || !unsync(next(set), tie(done, result), done)) done(result);
+          if (isError(result) || !unsync(next(set), tie(done, result), done)) done(result);
         }, context);
       };
     };
   }
 
-  function toStringOperator(separator, required) {
-    var joiner = undefined;
-
-    switch (classOf(separator)) {
-      case FUNCTION:
-        joiner = separator;
-        break;
-
-      case BOOLEAN:
-        if (isUndefined(required)) required = separator;
-
-      case UNDEFINED:
-        separator = ',';
-
-      default:
-        joiner = constant(separator);
-        break;
-    }
-
+  function toStringOperator(separator) {
+    separator = toFunction(separator, separator || ',');
     return reduceOperator(function (string, result, index, data) {
-      return string.length ? string + joiner(result, index, data) + result : '' + result;
-    }, '', required);
+      return string.length ? string + separator(result, index, data) + result : '' + result;
+    }, '', true);
   }
 
   function emit(next, done, context) {
@@ -1410,20 +1387,20 @@
     return this.chain(tapOperator(callback));
   }
 
-  function toArray(required) {
-    return this.chain(toArrayOperator(required));
+  function toArray() {
+    return this.chain(toArrayOperator());
   }
 
-  function toMap(keySelector, valueSelector, required) {
+  function toMap(keySelector, valueSelector) {
     return this.chain(toMapOperator(keySelector, valueSelector));
   }
 
-  function toSet(required) {
-    return this.chain(toSetOperator(required));
+  function toSet() {
+    return this.chain(toSetOperator());
   }
 
-  function toString(separator, required) {
-    return this.chain(toStringOperator(separator, required));
+  function toString(separator) {
+    return this.chain(toStringOperator(separator));
   }
 
   var operators = objectCreate(Object[PROTOTYPE], {
@@ -1597,5 +1574,4 @@
     }
   });
   exports.default = aeroflow;
-  module.exports = exports['default'];
 });

@@ -1,5 +1,3 @@
-'use strict';
-
 import { toDelay, toFunction } from '../utilites';
 import { unsync } from '../unsync';
 

@@ -1,5 +1,3 @@
-'use strict';
-
 import { isFunction } from '../utilites';
 
 export function tapOperator(callback) {

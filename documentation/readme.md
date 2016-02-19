@@ -284,7 +284,7 @@ aeroflow.repeat(index => index, index => 500 + 500 * index).take(3).dump().run()
     * [.toArray()](#Flow+toArray) ⇒ <code>[Flow](#Flow)</code>
     * [.toMap([keySelector], [valueSelector])](#Flow+toMap) ⇒ <code>[Flow](#Flow)</code>
     * [.toSet()](#Flow+toSet) ⇒ <code>[Flow](#Flow)</code>
-    * [.toString([separator], [required])](#Flow+toString) ⇒ <code>[Flow](#Flow)</code>
+    * [.toString([separator])](#Flow+toString) ⇒ <code>[Flow](#Flow)</code>
 
 <a name="Flow+average"></a>
 ### flow.average() ⇒ <code>[Flow](#Flow)</code>
@@ -1044,8 +1044,6 @@ Collects all values emitted by this flow to array, returns flow emitting this ar
 **Example**  
 ```js
 aeroflow().toArray().dump().run();
-// done true
-aeroflow().toArray(true).dump().run();
 // next []
 // done true
 aeroflow('test').toArray().dump().run();
@@ -1092,8 +1090,6 @@ Collects all values emitted by this flow to ES6 set, returns flow emitting this 
 **Example**  
 ```js
 aeroflow().toSet().dump().run();
-// done true
-aeroflow().toSet(true).dump().run();
 // next Set {}
 // done true
 aeroflow(1, 2, 3).toSet().dump().run();
@@ -1101,7 +1097,7 @@ aeroflow(1, 2, 3).toSet().dump().run();
 // done true
 ```
 <a name="Flow+toString"></a>
-### flow.toString([separator], [required]) ⇒ <code>[Flow](#Flow)</code>
+### flow.toString([separator]) ⇒ <code>[Flow](#Flow)</code>
 Returns new flow joining all values emitted by this flow into a string
 and emitting this string.
 
@@ -1114,15 +1110,10 @@ The separator is converted to a string if necessary.
 If omitted, the array elements are separated with a comma.
 If separator is an empty string, all values are joined without any characters in between them.
 If separator is a boolean value, it is used instead a second parameter of this method.
-- [required] <code>boolean</code> <code> = false</code> - Optional. Defines whether to emit an empty string value from empty flow or not.
-When false (default), an empty flow will emit 'done' event only.
-When true, an empty flow will emit 'next' event with an empty result and then 'done' event.
 
 **Example**  
 ```js
 aeroflow().toString().dump().run();
-// done true
-aeroflow().toString(true).dump().run();
 // next
 // done true
 aeroflow('test').toString().dump().run();

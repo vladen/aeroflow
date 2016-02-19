@@ -1,5 +1,3 @@
-'use strict';
-
 import { objectDefineProperties } from '../utilites';
 
 export function flowAdapter(flow) {

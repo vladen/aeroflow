@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for aeroflow\source\utilites.js</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../prettify.css" />
+    <link rel="stylesheet" href="../../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../../index.html">all files</a> / <a href="index.html">aeroflow/source/</a> utilites.js
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">85.94% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>55/64</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">8.7% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>2/23</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">30% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>6/20</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">79.07% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>34/43</span>
+      </div>
+      <div class='fl pad1y'>
+        <span class="strong">13 statements</span>
+        <span class="quiet">Ignored</span>  &nbsp;&nbsp;&nbsp;&nbsp;
+      </div>
+    </div>
+  </div>
+  <div class='status-line high'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import {
+  BOOLEAN, DATE, ERROR, NUMBER, NULL, PROMISE, STRING, SYMBOL, UNDEFINED
+} from './symbols';
+&nbsp;
+export const primitives = new Set([
+  BOOLEAN, NULL, NUMBER, STRING, SYMBOL, UNDEFINED
+]);
+&nbsp;
+export const dateNow = Date.now;
+export const mathFloor = Math.floor;
+export const mathPow = Math.pow;
+export const mathRandom = Math.random;
+export const mathMax = Math.max;
+export const mathMin = Math.min;
+export const maxInteger = Number.MAX_SAFE_INTEGER;
+export const minInteger = Number.MIN_SAFE_INTEGER;
+export const objectCreate = Object.create;
+export const objectDefineProperties = Object.defineProperties;
+export const objectDefineProperty = Object.defineProperty;
+export const objectToString = Object.prototype.toString;
+&nbsp;
+export const compare = <span class="fstat-no" title="function not covered" >(</span>left, right, direction) =&gt; left &lt; right
+  ? -direction
+  : left &gt; right
+    ? direction
+    : 0;
+export const constant = <span class="fstat-no" title="function not covered" >v</span>alue =&gt; <span class="fstat-no" title="function not covered" >(</span>) =&gt; value;
+export const identity = <span class="fstat-no" title="function not covered" >v</span>alue =&gt; value;
+export const noop = <span class="fstat-no" title="function not covered" >() =&gt; {</span>};
+&nbsp;
+export const classOf = value =&gt; objectToString.call(value).slice(8, -1);
+export const classIs = className =&gt; value =&gt; classOf(value) === className;
+&nbsp;
+export const isBoolean = value =&gt; value === true || <span class="branch-1 cbranch-no" title="branch not covered" >v</span>alue === false;
+export const isDefined = <span class="fstat-no" title="function not covered" >v</span>alue =&gt; value !== undefined;
+export const isError = classIs(ERROR);
+export const isFunction = value =&gt; typeof value == 'function';
+export const isInteger = Number.isInteger;
+export const isPromise = classIs(PROMISE);
+export const isUndefined = <span class="fstat-no" title="function not covered" >v</span>alue =&gt; value === undefined;
+&nbsp;
+export const tie = <span class="fstat-no" title="function not covered" >(</span>func, ...args) =&gt; <span class="fstat-no" title="function not covered" >(</span>) =&gt; func(...args);
+&nbsp;
+export const falsey = <span class="fstat-no" title="function not covered" >(</span>) =&gt; false;
+export const truthy = <span class="fstat-no" title="function not covered" >(</span>) =&gt; true;
+&nbsp;
+export const toDelay = <span class="fstat-no" title="function not covered" >(value, def) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  switch (classOf(value)) {</span>
+    case DATE:
+<span class="cstat-no" title="statement not covered" >      value = value - dateNow();</span>
+<span class="cstat-no" title="statement not covered" >      break;</span>
+    case NUMBER:
+<span class="cstat-no" title="statement not covered" >      break;</span>
+    default:
+<span class="cstat-no" title="statement not covered" >      value = +value;</span>
+<span class="cstat-no" title="statement not covered" >      break;</span>
+  }
+<span class="cstat-no" title="statement not covered" >  return isNaN(value) ? def : value &lt; 0 ? 0 : value;</span>
+}
+&nbsp;
+export const toFunction = <span class="fstat-no" title="function not covered" >(</span>value, def) =&gt; isFunction(value)
+  ? value
+  : isDefined(def)
+    ? isFunction(def)
+      ? def
+      : constant(def)
+    : constant(value);
+&nbsp;
+export const toNumber = <span class="fstat-no" title="function not covered" >(value, def) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  value = +value;</span>
+<span class="cstat-no" title="statement not covered" >  return isNaN(value) ? def : value;</span>
+};
+&nbsp;
+export const toError = value =&gt; isError(value)
+  ? value
+  : <span class="branch-1 cbranch-no" title="branch not covered" >new Error(value);</span>
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Fri Feb 19 2016 20:01:19 GMT+0300 (Belarus Standard Time)
+</div>
+</div>
+<script src="../../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../../sorter.js"></script>
+</body>
+</html>

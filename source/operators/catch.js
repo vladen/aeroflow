@@ -1,5 +1,3 @@
-'use strict';
-
 import { isDefined, isError } from '../utilites';
 import { adapt } from '../adapt';
 import { emptyGenerator } from '../generators/empty';

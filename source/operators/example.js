@@ -1,5 +1,3 @@
-'use strict';
-
 import aeroflow from '../aeroflow';
 
 // example extension

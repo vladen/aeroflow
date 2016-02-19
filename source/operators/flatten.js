@@ -1,5 +1,3 @@
-'use strict';
-
 import { identity, maxInteger, toNumber } from '../utilites';
 import { adapt } from '../adapt';
 

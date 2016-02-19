@@ -1,9 +1,7 @@
-'use strict';
-
 import { identity, isError, isUndefined, tie, toFunction } from '../utilites';
 import { unsync } from '../unsync';
 
-export function toMapOperator(keySelector, valueSelector, required) {
+export function toMapOperator(keySelector, valueSelector) {
   keySelector = isUndefined(keySelector)
     ? identity
     : toFunction(keySelector);
@@ -11,17 +9,17 @@ export function toMapOperator(keySelector, valueSelector, required) {
     ? identity
     : toFunction(valueSelector);
   return emitter => (next, done, context) => {
-    let empty = !required, index = 0, map = new Map;
+    const map = new Map;
+    let index = 0;
     emitter(
       result => {
-        empty = false;
         map.set(
           keySelector(result, index++, context.data),
           valueSelector(result, index++, context.data));
         return true;
       },
       result => {
-        if (isError(result) || empty || !unsync(next(map), tie(done, result), done)) done(result);
+        if (isError(result) || !unsync(next(map), tie(done, result), done)) done(result);
       },
       context);
   };

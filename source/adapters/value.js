@@ -1,5 +1,3 @@
-'use strict';
-
 import { unsync } from '../unsync';
 
 export function valueAdapter(value) {

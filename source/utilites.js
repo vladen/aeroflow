@@ -1,5 +1,3 @@
-'use strict';
-
 import {
   BOOLEAN, DATE, ERROR, NUMBER, NULL, PROMISE, STRING, SYMBOL, UNDEFINED
 } from './symbols';

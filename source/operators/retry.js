@@ -1,5 +1,3 @@
-'use strict';
-
 import { isError, identity, toNumber } from '../utilites';
 
 export function retryOperator(attempts) {

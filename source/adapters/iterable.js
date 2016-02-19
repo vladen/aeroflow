@@ -1,5 +1,3 @@
-'use strict';
-
 import { ITERATOR } from '../symbols';
 import { primitives } from '../utilites';
 import { unsync } from '../unsync';

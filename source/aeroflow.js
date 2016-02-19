@@ -1,5 +1,3 @@
-'use strict';
-
 import { AEROFLOW, CLASS, PROTOTYPE } from './symbols';
 
 import { isDefined, isError, isFunction, noop, objectDefineProperties, objectCreate } from './utilites';
@@ -1245,8 +1243,6 @@ New flow emitting array containing all results emitted by this flow.
 
 @example
 aeroflow().toArray().dump().run();
-// done true
-aeroflow().toArray(true).dump().run();
 // next []
 // done true
 aeroflow('test').toArray().dump().run();
@@ -1256,8 +1252,8 @@ aeroflow(1, 2, 3).toArray().dump().run();
 // next [1, 2, 3]
 // done true
 */
-function toArray(required) {
-  return this.chain(toArrayOperator(required));
+function toArray() {
+  return this.chain(toArrayOperator());
 }
 
 /**
@@ -1289,7 +1285,7 @@ aeroflow(1, 2, 3).toMap(v => 'key' + v, v => 10 * v).dump().run();
 // next Map {"key1" => 10, "key2" => 20, "key3" => 30}
 // done true
 */
-function toMap(keySelector, valueSelector, required) {
+function toMap(keySelector, valueSelector) {
    return this.chain(toMapOperator(keySelector, valueSelector));
 }
 
@@ -1303,16 +1299,14 @@ New flow emitting set containing all results emitted by this flow.
 
 @example
 aeroflow().toSet().dump().run();
-// done true
-aeroflow().toSet(true).dump().run();
 // next Set {}
 // done true
 aeroflow(1, 2, 3).toSet().dump().run();
 // next Set {1, 2, 3}
 // done true
 */
-function toSet(required) {
-  return this.chain(toSetOperator(required)); 
+function toSet() {
+  return this.chain(toSetOperator()); 
 }
 
 /**
@@ -1327,18 +1321,12 @@ The separator is converted to a string if necessary.
 If omitted, the array elements are separated with a comma.
 If separator is an empty string, all values are joined without any characters in between them.
 If separator is a boolean value, it is used instead a second parameter of this method.
-@param {boolean} [required=false]
-Optional. Defines whether to emit an empty string value from empty flow or not.
-When false (default), an empty flow will emit 'done' event only.
-When true, an empty flow will emit 'next' event with an empty result and then 'done' event.
 
 @return {Flow}
 New flow emitting string representation of this flow.
 
 @example
 aeroflow().toString().dump().run();
-// done true
-aeroflow().toString(true).dump().run();
 // next
 // done true
 aeroflow('test').toString().dump().run();
@@ -1355,8 +1343,8 @@ aeroflow(1, 2, 3).toString((value, index) => '-'.repeat(index + 1)).dump().run()
 // done true
 */
 /*eslint no-shadow: 0*/
-function toString(separator, required) {
-  return this.chain(toStringOperator(separator, required)); 
+function toString(separator) {
+  return this.chain(toStringOperator(separator));
 }
 
 const operators = objectCreate(Object[PROTOTYPE], {

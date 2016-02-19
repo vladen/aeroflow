@@ -1,5 +1,3 @@
-'use strict';
-
 import { mathMin, maxInteger, toNumber } from '../utilites';
 import { unsync } from '../unsync';
 import { toArrayOperator } from './toArray';

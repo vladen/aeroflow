@@ -1,5 +1,3 @@
-'use strict';
-
 import { reduceOperator } from './reduce';
 
 export function minOperator() {

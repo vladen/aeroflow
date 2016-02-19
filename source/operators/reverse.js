@@ -1,5 +1,3 @@
-'use strict';
-
 import { unsync } from '../unsync';
 import { toArrayOperator } from './toArray';
 

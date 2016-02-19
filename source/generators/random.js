@@ -1,5 +1,3 @@
-'use strict';
-
 import { identity, isInteger, mathFloor, mathPow, mathRandom, toNumber } from '../utilites';
 import { unsync } from '../unsync';
 

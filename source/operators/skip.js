@@ -1,5 +1,3 @@
-'use strict';
-
 import { FUNCTION, NUMBER, UNDEFINED } from '../symbols';
 import { classOf, identity, isError, truthy } from '../utilites';
 import { arrayAdapter } from '../adapters/array';

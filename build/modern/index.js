@@ -1,1 +1,3 @@
-module.exports = require('./aeroflow.js');
+import aeroflow from './aeroflow.js';
+
+export default aeroflow;

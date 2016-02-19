@@ -1,5 +1,3 @@
-'use strict';
-
 import { constant, identity, isError, isFunction, isUndefined, tie, toFunction } from '../utilites';
 import { unsync } from '../unsync';
 import { valueAdapter } from '../adapters/value';

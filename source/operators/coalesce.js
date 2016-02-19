@@ -1,5 +1,3 @@
-'use strict';
-
 import { identity, isError } from '../utilites';
 import { adapt } from '../adapt';
 

@@ -1,5 +1,3 @@
-'use strict';
-
 import { classOf, isFunction } from './utilites';
 import { adapters } from './adapters/index';
 import { valueAdapter } from './adapters/value';

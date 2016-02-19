@@ -1,5 +1,3 @@
-'use strict';
-
 import { maxInteger, toNumber } from '../utilites';
 import { unsync } from '../unsync';
 import { valueAdapter } from '../adapters/value';

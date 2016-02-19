@@ -1,5 +1,3 @@
-'use strict';
-
 import { mathFloor } from '../utilites';
 import { toArrayOperator } from './toArray';
 

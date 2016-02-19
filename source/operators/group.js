@@ -1,5 +1,3 @@
-'use strict';
-
 import { constant, isError, tie, toFunction } from '../utilites';
 import { iterableAdapter } from '../adapters/iterable';
 

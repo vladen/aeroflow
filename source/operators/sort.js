@@ -1,5 +1,3 @@
-'use strict';
-
 import { FUNCTION, NUMBER, STRING } from '../symbols';
 import { classOf, compare } from '../utilites';
 import { arrayAdapter } from '../adapters/array';

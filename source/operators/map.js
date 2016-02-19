@@ -1,5 +1,3 @@
-'use strict';
-
 import { identity, isUndefined, toFunction } from '../utilites';
 
 export function mapOperator(mapper) {

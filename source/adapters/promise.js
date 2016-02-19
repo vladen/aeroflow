@@ -1,5 +1,3 @@
-'use strict';
-
 import { toError } from '../utilites';
 import { unsync } from '../unsync';
 

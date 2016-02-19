@@ -1,5 +1,3 @@
-'use strict';
-
 export const AEROFLOW = 'Aeroflow';
 export const ARRAY = 'Array';
 export const BOOLEAN = 'Boolean';

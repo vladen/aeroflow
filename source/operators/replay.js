@@ -1,5 +1,3 @@
-'use strict';
-
 import { dateNow, isError, toFunction, toNumber, tie } from '../utilites';
 import { unsync } from '../unsync';
 

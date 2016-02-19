@@ -1,5 +1,3 @@
-'use strict';
-
 export function distinctOperator(untilChanged) {
   return emitter => untilChanged
     ? (next, done, context) => {

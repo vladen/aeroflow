@@ -1,5 +1,3 @@
-'use strict';
-
 import { FUNCTION, REGEXP, UNDEFINED } from '../symbols';
 import { classOf } from '../utilites';
 

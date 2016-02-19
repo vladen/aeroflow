@@ -1,5 +1,3 @@
-'use strict';
-
 import { toFunction, truthy} from '../utilites';
 import { arrayAdapter } from '../adapters/array';
 import { adapt } from '../adapt';

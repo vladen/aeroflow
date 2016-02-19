@@ -1,5 +1,3 @@
-'use strict';
-
 import { ERROR, PROMISE } from './symbols';
 import { classOf, toError } from './utilites';
 

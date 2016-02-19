@@ -1,5 +1,3 @@
-'use strict';
-
 import { isError, isFunction, isUndefined } from '../utilites';
 
 export function dumpToConsoleOperator(prefix) {
