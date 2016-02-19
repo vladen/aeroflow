@@ -18,7 +18,7 @@ export default (aeroflow, assert) => describe('expand', () => {
       assert.eventually.isUndefined(new Promise((done, fail) =>
         aeroflow.expand(done).take(1).run(fail, fail))));
 
-    it('Passes value returned by @expander to @expander again as first argument on next iteration', () => {
+    it('Passes value returned by @expander to @expander as first argument on sybsequent iteration', () => {
       const expectation = {};
       let iteration = 0;
       return assert.eventually.strictEqual(new Promise((done, fail) =>
@@ -42,10 +42,10 @@ export default (aeroflow, assert) => describe('expand', () => {
     });
 
     it('Passes context data to @expander as third argument', () => {
-      const expectation = {};
+      const data = {};
       return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow.expand((_, __, data) => done(data)).take(1).run(fail, fail, expectation)),
-        expectation);
+        aeroflow.expand((_, __, data) => done(data)).take(1).run(fail, fail, data)),
+        data);
     });
 
     it('Emits value returned by @expander', () => {

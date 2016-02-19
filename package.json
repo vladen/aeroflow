@@ -23,7 +23,7 @@
     "concatenate": "npm run concatenate:library && npm run concatenate:library:modern && npm run concatenate:tests && npm run concatenate:tests:modern",
     "concatenate:library": "rollup --input source/aeroflow.js --name tests --output build/es2015/aeroflow.js",
     "concatenate:library:modern": "rollup --format umd --input source/aeroflow.js --name aeroflow --output build/modern/aeroflow.js",
-    "concatenate:tests": "rollup --input tests/aeroflow.js --name tests --output build/es2015/aeroflow.tests.js",
+    "concatenate:tests": "rollup --input tests/index.js --name tests --output build/es2015/aeroflow.tests.js",
     "concatenate:tests:modern": "rollup --format umd --input tests/aeroflow.js --name aeroflowTests --output build/modern/aeroflow.tests.js",
     "document": "npm run document:library && npm run document:tests",
     "document:library": "jsdoc2md source/aeroflow.js > documentation/readme.md --global-index-format none --member-index-format grouped --module-index-format dl --param-list-format list --property-list-format list --sort-by none",

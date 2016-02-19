@@ -6,7 +6,7 @@ export default (aeroflow, assert) => describe('coalesce', () => {
     it('Returns instance of Aeroflow', () =>
       assert.typeOf(aeroflow.empty.coalesce(), 'Aeroflow'));
 
-    it('Emits nothing ("done" event only) when flow is empty', () =>
+    it('Emits "done" notification only when flow is empty', () =>
       assert.isFulfilled(new Promise((done, fail) =>
         aeroflow.empty.coalesce().run(fail, done))));
   });
@@ -20,7 +20,7 @@ export default (aeroflow, assert) => describe('coalesce', () => {
       assert.isFulfilled(new Promise((done, fail) =>
         aeroflow(new Error('test')).coalesce(fail).run(fail, done))));
 
-    it('Emits value returned by @alternate when flow is empty', () => {
+    it('Emits "next" notification with value returned by @alternate when flow is empty', () => {
       const alternate = 'alternate';
       return assert.eventually.strictEqual(new Promise((done, fail) =>
         aeroflow.empty.coalesce(() => alternate).run(done, fail)),
@@ -29,7 +29,7 @@ export default (aeroflow, assert) => describe('coalesce', () => {
   });
 
   describe('catch(@alternate:!function)', () => {
-    it('Emits @alternate value when flow is empty', () => {
+    it('Emits "next" notification with @alternate value when flow is empty', () => {
       const alternate = 'alternate';
       return assert.eventually.strictEqual(new Promise((done, fail) =>
         aeroflow.empty.coalesce(alternate).run(done, fail)),

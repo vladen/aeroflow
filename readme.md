@@ -10,6 +10,6 @@ Inspired by [Reactive Extensions](http://reactivex.io/) but simplier to use and 
 * [API documentation](https://github.com/vladen/aeroflow/tree/master/documentation)
 * [Test specifications](https://github.com/vladen/aeroflow/tree/master/specifications)
 
-# ~ LICENSE ~
+# ~ License ~
 
 [The MIT License (MIT)](https://github.com/vladen/aeroflow/blob/master/LICENSE)

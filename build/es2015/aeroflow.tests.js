@@ -1,18 +1,226 @@
+const noop = () => {};
+
+var factoryTests = (aeroflow, assert) => {
+  describe('aeroflow', () => {
+    it('Is a function', () =>
+      assert.isFunction(aeroflow));
+
+    describe('aeroflow()', () => {
+      it('Returns instance of Aeroflow', () =>
+        assert.typeOf(aeroflow(), 'Aeroflow'));
+
+      it('Returns empty flow emitting "done" notification argumented with "true"', () =>
+        assert.eventually.isTrue(new Promise((done, fail) =>
+          aeroflow().run(fail, done))));
+    });
+
+    describe('aeroflow(@source:aeroflow)', () => {
+      it('Returns flow emitting "done" notification argumented with "true" when @source is empty', () =>
+        assert.eventually.isTrue(new Promise(done =>
+          aeroflow(aeroflow.empty).run(noop, done))));
+
+      it('Returns flow eventually emitting "done" notification argumented with "true" when @source is not empty and enumerated till end', () =>
+        assert.eventually.isTrue(new Promise(done =>
+          aeroflow(aeroflow([1, 2])).run(noop, done))));
+
+      it('Returns flow eventually emitting "done" notification argumented with "false" when @source is not empty but not enumerated till end', () =>
+        assert.eventually.isFalse(new Promise(done =>
+          aeroflow(aeroflow([1, 2]).take(1)).run(noop, done))));
+
+      it('Returns flow not emitting "next" notification when @source is empty', () =>
+        assert.isFulfilled(new Promise((done, fail) =>
+          aeroflow(aeroflow.empty).run(fail, done))));
+
+      it('Returns flow emitting several "next" notifications argumented with each subsequent item of @source', () => {
+        const source = [1, 2], results = [];
+        assert.eventually.sameMembers(new Promise((done, fail) =>
+          aeroflow(aeroflow(source)).run((result, index) => {
+            results.push(value);
+            if (index === source.length - 1) done(results);
+          }, fail)),
+          source);
+      });
+    });
+
+    describe('aeroflow(@source:array)', () => {
+      it('Returns flow emitting "done" notification argumented with "true" when @source is empty', () =>
+        assert.eventually.isTrue(new Promise(done =>
+          aeroflow([]).run(noop, done))));
+
+      it('Returns flow eventually emitting "done" notification argumented with "true" when @source is not empty and enumerated till end', () =>
+        assert.eventually.isTrue(new Promise(done =>
+          aeroflow([1, 2]).run(noop, done))));
+
+      it('Returns flow eventually emitting "done" notification argumented with "false" when @source is not empty but not enumerated till end', () =>
+        assert.eventually.isFalse(new Promise(done =>
+          aeroflow([1, 2]).take(1).run(noop, done))));
+
+      it('Returns flow not emitting "next" notification when @source is empty', () =>
+        assert.isFulfilled(new Promise((done, fail) =>
+          aeroflow([]).run(fail, done))));
+
+      it('Returns flow emitting several "next" notifications argumented with each subsequent item of @source', () => {
+        const source = [1, 2], results = [];
+        assert.eventually.sameMembers(new Promise((done, fail) =>
+          aeroflow(source).run((result, index) => {
+            results.push(value);
+            if (index === source.length - 1) done(results);
+          }, fail)),
+          source);
+      });
+    });
+
+    describe('aeroflow(@source:date)', () => {
+      it('Returns flow eventually emitting "done" notification argumented with "true"', () =>
+        assert.eventually.isTrue(new Promise(done =>
+          aeroflow(noop).run(noop, done))));
+
+      it('Returns flow emitting "next" notification argumented with @source', () => {
+        const source = new Date;
+        assert.eventually.strictEqual(new Promise((done, fail) =>
+          aeroflow(source).run(done, fail)),
+          source);
+      });
+    });
+
+    describe('aeroflow(@source:error)', () => {
+      it('Returns flow not emitting "next" notification', () =>
+        assert.isFulfilled(new Promise((done, fail) =>
+          aeroflow(new Error('test')).run(fail, done))));
+
+      it('Returns flow emitting "done" notification argumented with @source', () => {
+        const source = new Error('test');
+        assert.eventually.strictEqual(new Promise((done, fail) =>
+          aeroflow(source).run(fail, done)),
+          source);
+      });
+    });
+
+    describe('aeroflow(@source:function)', () => {
+      it('Calls @source and passes context data as first argument', () => {
+        const data = {};
+        return assert.eventually.strictEqual(new Promise((done, fail) =>
+          aeroflow(data => done(data)).run(fail, fail, data)),
+          data);
+      });
+
+      it('Returns flow eventually emitting "done" notification argumented with "true"', () =>
+        assert.eventually.isTrue(new Promise(done =>
+          aeroflow(noop).run(noop, done))));
+
+      it('Returns flow emitting "done" notification argumented with error thrown by @source', () => {
+        const error = new Error('test');
+        assert.eventually.strictEqual(new Promise((done, fail) =>
+          aeroflow(() => { throw error }).run(fail, done)),
+          error);
+      });
+
+      it('Returns flow emitting "next" notification argumented with result of @source invocation', () => {
+        const result = 42;
+        assert.eventually.strictEqual(new Promise((done, fail) =>
+          aeroflow(() => result).run(done, fail)),
+          result);
+      });
+    });
+
+    describe('aeroflow(@source:iterable)', () => {
+      it('Returns empty flow emitting "done" notification argumented with "true" when source is empty', () =>
+        assert.eventually.isTrue(new Promise((done, fail) =>
+          aeroflow(new Set).run(fail, done))));
+
+      it('Returns flow eventually emitting "done" notification argumented with "true" when source is not empty', () =>
+        assert.eventually.isTrue(new Promise(done =>
+          aeroflow(new Set([1, 2])).run(noop, done))));
+
+      it('Returns flow not emitting "next" notification when source is empty', () =>
+        assert.isFulfilled(new Promise((done, fail) =>
+          aeroflow(new Set).run(fail, done))));
+
+      it('Returns flow emitting several "next" notifications argumented with each subsequent item of @source', () => {
+        const source = [1, 2], results = [];
+        assert.eventually.sameMembers(new Promise((done, fail) =>
+          aeroflow(new Set(source)).run((result, index) => {
+            results.push(value);
+            if (index === source.length - 1) done(results);
+          }, fail)),
+          source);
+      });
+    });
+
+    describe('aeroflow(@source:null)', () => {
+      it('Returns flow eventually emitting "done" notification argumented with "true"', () =>
+        assert.eventually.isTrue(new Promise(done =>
+          aeroflow(noop).run(noop, done))));
+
+      it('Returns flow emitting "next" notification with @source', () => {
+        const source = null;
+        assert.eventually.strictEqual(new Promise((done, fail) =>
+          aeroflow(source).run(done, fail)),
+          source);
+      });
+    });
+
+    describe('aeroflow(@source:promise)', () => {
+      it('Returns flow eventually emitting "done" notification argumented with "true" when @source resolves', () =>
+        assert.eventually.isTrue(new Promise(done =>
+          aeroflow(Promise.resolve()).run(noop, done))));
+
+      it('Returns flow emitting "done" notification argumented with error rejected by @source', () => {
+        const error = new Error('test'), source = Promise.reject(error);
+        assert.eventually.strictEqual(new Promise((done, fail) =>
+          aeroflow(source).run(fail, done)),
+          error);
+      });
+
+      it('Returns flow emitting "next" notification argumented with result resolved by @source', () => {
+        const result = 42, source = Promise.resolve(result);
+        assert.eventually.strictEqual(new Promise((done, fail) =>
+          aeroflow(source).run(done, fail)),
+          result);
+      });
+    });
+
+    describe('aeroflow(@source:string)', () => {
+      it('Returns flow eventually emitting "done" notification argumented with "true"', () =>
+        assert.eventually.isTrue(new Promise(done =>
+          aeroflow('test').run(noop, done))));
+
+      it('Returns flow emitting "next" notification argumented with @source', () => {
+        const source = 'test';
+        assert.eventually.strictEqual(new Promise((done, fail) =>
+          aeroflow(source).run(done, fail)),
+          source);
+      });
+    });
+
+    describe('aeroflow(@source:undefined)', () => {
+      it('Returns flow eventually emitting "done" notification argumented with "true"', () =>
+        assert.eventually.isTrue(new Promise(done =>
+          aeroflow(noop).run(noop, done))));
+
+      it('Returns flow emitting "next" notification argumented with @source', () => {
+        const source = undefined;
+        assert.eventually.strictEqual(new Promise((done, fail) =>
+          aeroflow(source).run(done, fail)),
+          source);
+      });
+    });
+  });
+}
+
 var emptyTests = (aeroflow, assert) => describe('empty', () => {
   it('Is static property', () =>
     assert.isDefined(aeroflow.empty));
 
-  describe('empty', () => {
     it('Returns instance of Aeroflow', () =>
       assert.typeOf(aeroflow.empty, 'Aeroflow'));
 
-    it('Returns instance of Aeroflow emitting nothing ("done" event only)', () =>
+    it('Returns empty instance of Aeroflow emitting nothing ("done" event only)', () =>
       assert.isFulfilled(new Promise((done, fail) =>
         aeroflow.empty.run(fail, done))));
-  });
 });
 
-const noop = () => {};
+const noop$1 = () => {};
 
 var expandTests = (aeroflow, assert) => describe('expand', () => {
   it('Is static method', () =>
@@ -32,7 +240,7 @@ var expandTests = (aeroflow, assert) => describe('expand', () => {
       assert.eventually.isUndefined(new Promise((done, fail) =>
         aeroflow.expand(done).take(1).run(fail, fail))));
 
-    it('Passes value returned by @expander to @expander again as first argument on next iteration', () => {
+    it('Passes value returned by @expander to @expander as first argument on sybsequent iteration', () => {
       const expectation = {};
       let iteration = 0;
       return assert.eventually.strictEqual(new Promise((done, fail) =>
@@ -41,7 +249,7 @@ var expandTests = (aeroflow, assert) => describe('expand', () => {
               ? done(value)
               : expectation)
           .take(2)
-          .run(noop, fail)),
+          .run(noop$1, fail)),
         expectation);
     });
 
@@ -51,15 +259,15 @@ var expandTests = (aeroflow, assert) => describe('expand', () => {
         aeroflow
           .expand((_, index) => indices.push(index))
           .take(expectation.length)
-          .run(noop, () => done(indices))),
+          .run(noop$1, () => done(indices))),
         expectation);
     });
 
     it('Passes context data to @expander as third argument', () => {
-      const expectation = {};
+      const data = {};
       return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow.expand((_, __, data) => done(data)).take(1).run(fail, fail, expectation)),
-        expectation);
+        aeroflow.expand((_, __, data) => done(data)).take(1).run(fail, fail, data)),
+        data);
     });
 
     it('Emits value returned by @expander', () => {
@@ -132,30 +340,29 @@ var averageTests = (aeroflow, assert) => describe('average', () => {
     it('Returns instance of Aeroflow', () =>
       assert.typeOf(aeroflow.empty.average(), 'Aeroflow'));
 
-    it('Emits nothing ("done" event only) when flow is empty', () =>
+    it('Emits "done" notification only when flow is empty', () =>
       assert.isFulfilled(new Promise((done, fail) =>
         aeroflow.empty.average().run(fail, done))));
 
-    it('Emits @value when flow emits single numeric @value', () => {
+    it('Emits "next" notification parameterized with @value when flow emits single numeric @value', () => {
       const value = 42;
       return assert.eventually.strictEqual(new Promise((done, fail) =>
         aeroflow(value).average().run(done, fail)),
         value);
     });
 
-    it('Emits NaN when flow emits single not numeric @value', () =>
+    it('Emits "next" notification parameterized with NaN when flow emits single not numeric @value', () =>
       assert.eventually.isNaN(new Promise((done, fail) =>
         aeroflow('test').average().run(done, fail))));
 
-    it('Emits average of @values when flow emits several numeric @values', () => {
-      const values = [1, 3, 2],
-        expectation = values.reduce((sum, value) => sum + value, 0) / values.length;
+    it('Emits "next" notification parameterized with average of @values when flow emits several numeric @values', () => {
+      const values = [1, 3, 2], average = values.reduce((sum, value) => sum + value, 0) / values.length;
       return assert.eventually.strictEqual(new Promise((done, fail) => 
         aeroflow(values).average().run(done, fail)),
-        expectation);
+        average);
     });
 
-    it('Emits NaN when flow emits several not numeric @values', () =>
+    it('Emits "next" notification parameterized with NaN when flow emits several not numeric @values', () =>
       assert.eventually.isNaN(new Promise((done, fail) => 
         aeroflow('a', 'b').average().run(done, fail))));
   });
@@ -169,7 +376,7 @@ var catchTests = (aeroflow, assert) => describe('catch', () => {
     it('Returns instance of Aeroflow', () =>
       assert.typeOf(aeroflow.empty.catch(), 'Aeroflow'));
 
-    it('Emits nothing ("done" event only) when flow is empty', () =>
+    it('Emits "done" notification only when flow is empty', () =>
       assert.isFulfilled(new Promise((done, fail) =>
         aeroflow.empty.catch().run(fail, done))));
 
@@ -191,7 +398,7 @@ var catchTests = (aeroflow, assert) => describe('catch', () => {
       assert.isFulfilled(new Promise((done, fail) =>
         aeroflow(new Error('test')).catch(done).run(fail, fail))));
 
-    it('Emits value returned by @alternate when flow emits error', () => {
+    it('Emits "next" notification with value returned by @alternate when flow emits error', () => {
       const alternate = 'alternate';
       return assert.eventually.strictEqual(new Promise((done, fail) =>
         aeroflow(new Error('test')).catch(() => alternate).run(done, fail)),
@@ -200,7 +407,7 @@ var catchTests = (aeroflow, assert) => describe('catch', () => {
   });
 
   describe('catch(@alternate:!function)', () => {
-    it('Emits @alternate value instead of error emitted by flow', () => {
+    it('Emits "next" notification with @alternate value instead of error emitted by flow', () => {
       const alternate = 'alternate';
       return assert.eventually.strictEqual(new Promise((done, fail) =>
         aeroflow(new Error('test')).catch(alternate).run(done, fail)),
@@ -217,7 +424,7 @@ var coalesceTests = (aeroflow, assert) => describe('coalesce', () => {
     it('Returns instance of Aeroflow', () =>
       assert.typeOf(aeroflow.empty.coalesce(), 'Aeroflow'));
 
-    it('Emits nothing ("done" event only) when flow is empty', () =>
+    it('Emits "done" notification only when flow is empty', () =>
       assert.isFulfilled(new Promise((done, fail) =>
         aeroflow.empty.coalesce().run(fail, done))));
   });
@@ -231,7 +438,7 @@ var coalesceTests = (aeroflow, assert) => describe('coalesce', () => {
       assert.isFulfilled(new Promise((done, fail) =>
         aeroflow(new Error('test')).coalesce(fail).run(fail, done))));
 
-    it('Emits value returned by @alternate when flow is empty', () => {
+    it('Emits "next" notification with value returned by @alternate when flow is empty', () => {
       const alternate = 'alternate';
       return assert.eventually.strictEqual(new Promise((done, fail) =>
         aeroflow.empty.coalesce(() => alternate).run(done, fail)),
@@ -240,7 +447,7 @@ var coalesceTests = (aeroflow, assert) => describe('coalesce', () => {
   });
 
   describe('catch(@alternate:!function)', () => {
-    it('Emits @alternate value when flow is empty', () => {
+    it('Emits "next" notification with @alternate value when flow is empty', () => {
       const alternate = 'alternate';
       return assert.eventually.strictEqual(new Promise((done, fail) =>
         aeroflow.empty.coalesce(alternate).run(done, fail)),
@@ -1438,11 +1645,12 @@ var instanceMethodsTests = (aeroflow, assert) => describe('instance members', ()
   tests$2.forEach(test => test(aeroflow, assert)));
 
 const tests = [
+  factoryTests,
   staticMethodsTests,
   instanceMethodsTests
 ];
 
-var aeroflow = (aeroflow, assert) =>
+var index = (aeroflow, assert) =>
   tests.forEach(test => test(aeroflow, assert));
 
-export default aeroflow;
+export default index;
