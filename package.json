@@ -33,8 +33,8 @@
     "test:library": "mocha test.js --check-leaks --colors --prof --compilers babel:babel-core/register --require core-js",
     "test:coverage": "babel-node node_modules/isparta/bin/isparta cover node_modules/mocha/bin/_mocha -- test.js --reporter dot",
     "transpile": "npm run transpile:library && npm run transpile:tests",
-    "transpile:library": "babel build/modern/aeroflow.js --out-file build/legacy/aeroflow.js --plugins transform-es2015-modules-umd",
-    "transpile:tests": "babel build/modern/aeroflow.test.js --out-file build/legacy/aeroflow.test.js --plugins transform-es2015-modules-umd",
+    "transpile:library": "babel build/modern/aeroflow.js --out-file build/legacy/aeroflow.js --plugins babel-plugin-add-module-exports,transform-es2015-modules-umd",
+    "transpile:tests": "babel build/modern/aeroflow.test.js --out-file build/legacy/aeroflow.test.js --plugins babel-plugin-add-module-exports,transform-es2015-modules-umd",
     "validate": "npm run validate:library && npm run validate:tests",
     "validate:library": "eslint source/**",
     "validate:tests": "eslint test/**"
