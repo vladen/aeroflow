@@ -17,7 +17,7 @@ export default (aeroflow, assert) => describe('.repeat', () => {
         aeroflow.repeat(done).take(1).run(fail, fail))));
 
     it('Emits @value returned by @repeater', () => {
-      const value = 'a', repeater = () => value;
+      const value = 'a';
       return assert.eventually.isTrue(new Promise((done, fail) => 
         aeroflow.repeat(value).take(5).every(value).run(done, fail)));
     });

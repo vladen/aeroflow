@@ -32,7 +32,7 @@ export default (aeroflow, assert) => describe('#join', () => {
       const values = [{a: 'test', b: 'tests'}], joiner = [{a: 'test', c: 'tests3'}],
         comparer = (left, right) => left.a === right.a, expectation = [...values, ...joiner];
       return assert.eventually.sameDeepMembers(new Promise((done, fail) => {
-        aeroflow(values).join(joiner).toArray().map(res => res[0]).run(done, fail);
+        aeroflow(values).join(joiner, comparer).toArray().map(res => res[0]).run(done, fail);
       }), expectation);
     });
   });

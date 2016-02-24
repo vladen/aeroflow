@@ -28,10 +28,10 @@ export default (aeroflow, assert) => describe('#tap', () => {
     });
 
     it('Passes context data to @callback as third argument', () => {
-      const data = {};
+      const expectation = {};
       return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow('test').tap((_, __, data) => done(data)).run(fail, fail, data)),
-        data);
+        aeroflow('test').tap((_, __, data) => done(data)).run(fail, fail, expectation)),
+        expectation);
     });
 
     it('Emits immutable @values after tap @callback was applied', () => {
