@@ -1,5 +1,3 @@
-const noop = () => {};
-
 export default (aeroflow, assert) => describe('.random', () => {
   it('Is static method', () =>
     assert.isFunction(aeroflow.random));
@@ -15,7 +13,7 @@ export default (aeroflow, assert) => describe('.random', () => {
     });
   });
 
-  describe('random(@start:number)', () => {
+  describe('(@start:number)', () => {
     it('Emits random demical values less than @start if @start', () => {
       const start = 2, count = 10, expectation = (value) => !Number.isInteger(value) && value <= start;
       return assert.eventually.isTrue(new Promise((done, fail) => 
@@ -23,7 +21,7 @@ export default (aeroflow, assert) => describe('.random', () => {
     });
   });
 
-  describe('random(@start:!number)', () => {
+  describe('(@start:!number)', () => {
     it('Emits random decimals values within 0 and 1', () => {
       const start = 'test', count = 10, 
         expectation = (value) => !Number.isInteger(value) && value >= 0 && value <= 1;
@@ -32,7 +30,7 @@ export default (aeroflow, assert) => describe('.random', () => {
     });
   });
 
-  describe('random(@start, @end:number)', () => {
+  describe('(@start, @end:number)', () => {
     it('Emits random integer values within @start and @end if @start and @end is integer', () => {
       const start = 10, end = 20, count = 10, 
         expectation = (value) => Number.isInteger(value) && value >= start && value <= end;
@@ -48,7 +46,7 @@ export default (aeroflow, assert) => describe('.random', () => {
     });
   });
 
-  describe('random(@start, @end:!number)', () => {
+  describe('(@start, @end:!number)', () => {
     it('Emits random demical values less than @start if @start', () => {
       const start = 2, end = 'test', count = 10,
         expectation = (value) => !Number.isInteger(value) && value <= start;

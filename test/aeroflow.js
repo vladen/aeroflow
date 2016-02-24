@@ -1,6 +1,8 @@
 import emptyGeneratorTests from './generators/empty';
 import expandGeneratorTests from './generators/expand';
 import justGeneratorTests from './generators/just';
+import randomGeneratorTests from './generators/random';
+import repeatGeneratorTests from './generators/repeat';
 
 import averageOperatorTests from './operators/average';
 import catchOperatorTests from './operators/catch';
@@ -10,6 +12,7 @@ import distinctOperatorTests from './operators/distinct';
 import everyOperatorTests from './operators/every';
 import filterOperatorTests from './operators/filter';
 import groupOperatorTests from './operators/group';
+import joinOperatorTests from './operators/join';
 import mapOperatorTests from './operators/map';
 import maxOperatorTests from './operators/max';
 import meanOperatorTests from './operators/mean';
@@ -239,7 +242,9 @@ export default (aeroflow, assert) => describe('aeroflow', () => {
     emptyGeneratorTests,
     expandGeneratorTests,
     justGeneratorTests,
-
+    randomGeneratorTests,
+    repeatGeneratorTests,
+    
     averageOperatorTests,
     catchOperatorTests,
     coalesceOperatorTests,
@@ -248,6 +253,7 @@ export default (aeroflow, assert) => describe('aeroflow', () => {
     everyOperatorTests,
     filterOperatorTests,
     groupOperatorTests,
+    joinOperatorTests,
     mapOperatorTests,
     maxOperatorTests,
     meanOperatorTests,
