@@ -61,7 +61,7 @@
             return aeroflow.expand(done).take(1).run(fail, fail);
           }));
         });
-        it('Passes value returned by @expander to @expander as first argument on sybsequent iteration', function () {
+        it('Passes value returned by @expander to @expander as first argument on subsequent iteration', function () {
           var expectation = {};
           var iteration = 0;
           return assert.eventually.strictEqual(new Promise(function (done, fail) {
@@ -142,6 +142,175 @@
           return assert.eventually.strictEqual(new Promise(function (done, fail) {
             return aeroflow.just(iterable).run(done, fail);
           }), expectation);
+        });
+      });
+    });
+  };
+
+  var randomGeneratorTests = function randomGeneratorTests(aeroflow, assert) {
+    return describe('.random', function () {
+      it('Is static method', function () {
+        return assert.isFunction(aeroflow.random);
+      });
+      describe('()', function () {
+        it('Returns instance of Aeroflow', function () {
+          return assert.typeOf(aeroflow.random(), 'Aeroflow');
+        });
+        it('Emits random values decimals within 0 and 1', function () {
+          var count = 10,
+              expectation = function expectation(value) {
+            return !Number.isInteger(value) && value >= 0 && value <= 1;
+          };
+
+          return assert.eventually.isTrue(new Promise(function (done, fail) {
+            return aeroflow.random().take(count).every(expectation).run(done, fail);
+          }));
+        });
+      });
+      describe('(@start:number)', function () {
+        it('Emits random demical values less than @start if @start', function () {
+          var start = 2,
+              count = 10,
+              expectation = function expectation(value) {
+            return !Number.isInteger(value) && value <= start;
+          };
+
+          return assert.eventually.isTrue(new Promise(function (done, fail) {
+            return aeroflow.random(start).take(count).every(expectation).run(done, fail);
+          }));
+        });
+      });
+      describe('(@start:!number)', function () {
+        it('Emits random decimals values within 0 and 1', function () {
+          var start = 'test',
+              count = 10,
+              expectation = function expectation(value) {
+            return !Number.isInteger(value) && value >= 0 && value <= 1;
+          };
+
+          return assert.eventually.isTrue(new Promise(function (done, fail) {
+            return aeroflow.random(start).take(count).every(expectation).run(done, fail);
+          }));
+        });
+      });
+      describe('(@start, @end:number)', function () {
+        it('Emits random integer values within @start and @end if @start and @end is integer', function () {
+          var start = 10,
+              end = 20,
+              count = 10,
+              expectation = function expectation(value) {
+            return Number.isInteger(value) && value >= start && value <= end;
+          };
+
+          return assert.eventually.isTrue(new Promise(function (done, fail) {
+            return aeroflow.random(start, end).take(count).every(expectation).run(done, fail);
+          }));
+        });
+        it('Emits random demical values within @start and @end if @start or @end is demical', function () {
+          var start = 1,
+              end = 2.3,
+              count = 10,
+              expectation = function expectation(value) {
+            return !Number.isInteger(value) && value >= start && value <= end;
+          };
+
+          return assert.eventually.isTrue(new Promise(function (done, fail) {
+            return aeroflow.random(start, end).take(count).every(expectation).run(done, fail);
+          }));
+        });
+      });
+      describe('(@start, @end:!number)', function () {
+        it('Emits random demical values less than @start if @start', function () {
+          var start = 2,
+              end = 'test',
+              count = 10,
+              expectation = function expectation(value) {
+            return !Number.isInteger(value) && value <= start;
+          };
+
+          return assert.eventually.isTrue(new Promise(function (done, fail) {
+            return aeroflow.random(start, end).take(count).every(expectation).run(done, fail);
+          }));
+        });
+      });
+    });
+  };
+
+  var repeatGeneratorTests = function repeatGeneratorTests(aeroflow, assert) {
+    return describe('.repeat', function () {
+      it('Is static method', function () {
+        return assert.isFunction(aeroflow.repeat);
+      });
+      describe('()', function () {
+        it('Returns instance of Aeroflow', function () {
+          return assert.typeOf(aeroflow.repeat(), 'Aeroflow');
+        });
+        it('Emits undefined @values if no params passed', function () {
+          return assert.eventually.isUndefined(new Promise(function (done, fail) {
+            return aeroflow.repeat().take(1).run(done, fail);
+          }));
+        });
+      });
+      describe('(@repeater:function)', function () {
+        it('Calls @repeater', function () {
+          return assert.isFulfilled(new Promise(function (done, fail) {
+            return aeroflow.repeat(done).take(1).run(fail, fail);
+          }));
+        });
+        it('Emits @value returned by @repeater', function () {
+          var value = 'a';
+          return assert.eventually.isTrue(new Promise(function (done, fail) {
+            return aeroflow.repeat(value).take(5).every(value).run(done, fail);
+          }));
+        });
+        it('Emits geometric progression recalculating @repeater each time', function () {
+          var expectation = [0, 2, 4, 6];
+          return assert.eventually.sameMembers(new Promise(function (done, fail) {
+            return aeroflow.repeat(function (index) {
+              return index * 2;
+            }).take(expectation.length).toArray().run(done, fail);
+          }), expectation);
+        });
+        it('Passes zero-based @index of iteration to @repeater as first argument', function () {
+          var values = [0, 1, 2, 3, 4];
+          return assert.eventually.sameMembers(new Promise(function (done, fail) {
+            return aeroflow.repeat(function (index) {
+              return index;
+            }).take(values.length).toArray().run(done, fail);
+          }), values);
+        });
+      });
+      describe('(@repeater:!function)', function () {
+        it('Emits @repeater value if @repeater is not function', function () {
+          var value = 'a';
+          return assert.eventually.isTrue(new Promise(function (done, fail) {
+            return aeroflow.repeat(value).take(5).every(value).run(done, fail);
+          }));
+        });
+      });
+      describe('(@repeater, @interval:number)', function () {
+        it('Emits value of @repeater each @interval ms', function () {
+          var interval = 10,
+              take = 3,
+              actual = [];
+          return assert.eventually.strictEqual(new Promise(function (done, fail) {
+            return aeroflow.repeat(function () {
+              return actual.push('test');
+            }, interval).take(take).count().run(done, fail);
+          }), take);
+        });
+      });
+      describe('(@repeater, @interval:!number)', function () {
+        it('Emits value of @repeater each 1000 ms', function () {
+          var take = 1,
+              actualTime = new Date().getSeconds();
+          return assert.eventually.isTrue(new Promise(function (done, fail) {
+            return aeroflow.repeat(function () {
+              return new Date().getSeconds();
+            }, 'tests').take(take).every(function (val) {
+              return val - actualTime >= 1;
+            }).run(done, fail);
+          }));
         });
       });
     });
@@ -517,12 +686,12 @@
           }));
         });
         it('Passes context @data to @condition as third argument', function () {
-          var data = {};
+          var expectation = {};
           return assert.eventually.strictEqual(new Promise(function (done, fail) {
             return aeroflow('test').filter(function (_, __, data) {
               return done(data);
-            }).run(fail, fail, data);
-          }), data);
+            }).run(fail, fail, expectation);
+          }), expectation);
         });
         it('Emits only @values emitted by flow and passing @condition test', function () {
           var values = [0, 1, 2, 3],
@@ -598,12 +767,12 @@
           }), error);
         });
         it('Passes context data to @selector as third argument', function () {
-          var data = {};
+          var expectation = {};
           return assert.eventually.strictEqual(new Promise(function (done, fail) {
             return aeroflow('test').group(function (_, __, data) {
               return done(data);
-            }).run(fail, fail, data);
-          }), data);
+            }).run(fail, fail, expectation);
+          }), expectation);
         });
         it('Passes zero-based @index of iteration to @condition as second argument', function () {
           var values = [1, 2, 3, 4],
@@ -729,6 +898,74 @@
     });
   };
 
+  var joinOperatorTests = function joinOperatorTests(aeroflow, assert) {
+    return describe('#join', function () {
+      it('Is instance method', function () {
+        return assert.isFunction(aeroflow.empty.join);
+      });
+      describe('()', function () {
+        it('Returns instance of Aeroflow', function () {
+          return assert.typeOf(aeroflow.empty.join(), 'Aeroflow');
+        });
+        it('Emits nothing when flow is empty', function () {
+          return assert.isFulfilled(new Promise(function (done, fail) {
+            return aeroflow.empty.join().run(fail, done);
+          }));
+        });
+        it('Emits @values from flow concatenated with undefined when flow is not empty', function () {
+          var values = [1, 2],
+              expectation = [[1, undefined], [2, undefined]];
+          return assert.eventually.sameDeepMembers(new Promise(function (done, fail) {
+            aeroflow(values).join().toArray().run(done, fail);
+          }), expectation);
+        });
+      });
+      describe('(@joiner:any)', function () {
+        it('Emits nested arrays with @values concatenated with @joiner values by one to one', function () {
+          var values = [1, 2],
+              joiner = [3, 4],
+              expectation = [[1, 3], [1, 4], [2, 3], [2, 4]];
+          return assert.eventually.sameDeepMembers(new Promise(function (done, fail) {
+            aeroflow(values).join(joiner).toArray().run(done, fail);
+          }), expectation);
+        });
+      });
+      describe('(@joiner:any, @comparer:function)', function () {
+        it('Emits nested arrays with @values concatenated with @joiner through @comparer function', function () {
+          var values = [{
+            a: 'test',
+            b: 'tests'
+          }],
+              joiner = [{
+            a: 'test',
+            c: 'tests3'
+          }],
+              comparer = function comparer(left, right) {
+            return left.a === right.a;
+          },
+              expectation = [].concat(values, joiner);
+
+          return assert.eventually.sameDeepMembers(new Promise(function (done, fail) {
+            aeroflow(values).join(joiner, comparer).toArray().map(function (res) {
+              return res[0];
+            }).run(done, fail);
+          }), expectation);
+        });
+      });
+      describe('(@joiner:any, @comparer:!function)', function () {
+        it('Emits nested arrays with @values concatenated with @joiner values by one to one ignored @comparer', function () {
+          var values = [1, 2],
+              joiner = 3,
+              comparer = 'test',
+              expectation = [[1, 3], [2, 3]];
+          return assert.eventually.sameDeepMembers(new Promise(function (done, fail) {
+            aeroflow(values).join(joiner, comparer).toArray().run(done, fail);
+          }), expectation);
+        });
+      });
+    });
+  };
+
   var mapOperatorTests = function mapOperatorTests(aeroflow, assert) {
     return describe('#map', function () {
       it('Is instance method', function () {
@@ -781,12 +1018,12 @@
           }), expectation);
         });
         it('Passes context data to @mapping as third argument', function () {
-          var data = {};
+          var expectation = {};
           return assert.eventually.strictEqual(new Promise(function (done, fail) {
             return aeroflow('test').map(function (_, __, data) {
               return done(data);
-            }).run(fail, fail, data);
-          }), data);
+            }).run(fail, fail, expectation);
+          }), expectation);
         });
       });
       describe('(@mapping:!function)', function () {
@@ -1584,12 +1821,12 @@
           }), error);
         });
         it('Passes context data to @callback as third argument', function () {
-          var data = {};
+          var expectation = {};
           return assert.eventually.strictEqual(new Promise(function (done, fail) {
             return aeroflow('test').tap(function (_, __, data) {
               return done(data);
-            }).run(fail, fail, data);
-          }), data);
+            }).run(fail, fail, expectation);
+          }), expectation);
         });
         it('Emits immutable @values after tap @callback was applied', function () {
           var values = [1, 2, 3];
@@ -2049,7 +2286,7 @@
           }), source);
         });
       });
-      [emptyGeneratorTests, expandGeneratorTests, justGeneratorTests, averageOperatorTests, catchOperatorTests, coalesceOperatorTests, countOperatorTests, distinctOperatorTests, everyOperatorTests, filterOperatorTests, groupOperatorTests, mapOperatorTests, maxOperatorTests, meanOperatorTests, minOperatorTests, reduceOperatorTests, reverseOperatorTests, skipOperatorTests, sliceOperatorTests, someOperatorTests, sortOperatorTests, sumOperatorTests, takeOperatorTests, tapOperatorTests, toArrayOperatorTests, toMapOperatorTests, toSetOperatorTests, toStringOperatorTests].forEach(function (test) {
+      [emptyGeneratorTests, expandGeneratorTests, justGeneratorTests, randomGeneratorTests, repeatGeneratorTests, averageOperatorTests, catchOperatorTests, coalesceOperatorTests, countOperatorTests, distinctOperatorTests, everyOperatorTests, filterOperatorTests, groupOperatorTests, joinOperatorTests, mapOperatorTests, maxOperatorTests, meanOperatorTests, minOperatorTests, reduceOperatorTests, reverseOperatorTests, skipOperatorTests, sliceOperatorTests, someOperatorTests, sortOperatorTests, sumOperatorTests, takeOperatorTests, tapOperatorTests, toArrayOperatorTests, toMapOperatorTests, toSetOperatorTests, toStringOperatorTests].forEach(function (test) {
         return test(_aeroflow7, assert);
       });
     });

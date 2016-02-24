@@ -20,6 +20,18 @@
        - [()](#aeroflow-just-)
        - [(@value:array)](#aeroflow-just-valuearray)
        - [(@value:iterable)](#aeroflow-just-valueiterable)
+     - [.random](#aeroflow-random)
+       - [()](#aeroflow-random-)
+       - [(@start:number)](#aeroflow-random-startnumber)
+       - [(@start:!number)](#aeroflow-random-startnumber)
+       - [(@start, @end:number)](#aeroflow-random-start-endnumber)
+       - [(@start, @end:!number)](#aeroflow-random-start-endnumber)
+     - [.repeat](#aeroflow-repeat)
+       - [()](#aeroflow-repeat-)
+       - [(@repeater:function)](#aeroflow-repeat-repeaterfunction)
+       - [(@repeater:!function)](#aeroflow-repeat-repeaterfunction)
+       - [(@repeater, @interval:number)](#aeroflow-repeat-repeater-intervalnumber)
+       - [(@repeater, @interval:!number)](#aeroflow-repeat-repeater-intervalnumber)
      - [#average](#aeroflow-average)
        - [()](#aeroflow-average-)
      - [#catch](#aeroflow-catch)
@@ -49,6 +61,11 @@
        - [()](#aeroflow-group-)
        - [(@selector:function)](#aeroflow-group-selectorfunction)
        - [(@selectors:array)](#aeroflow-group-selectorsarray)
+     - [#join](#aeroflow-join)
+       - [()](#aeroflow-join-)
+       - [(@joiner:any)](#aeroflow-join-joinerany)
+       - [(@joiner:any, @comparer:function)](#aeroflow-join-joinerany-comparerfunction)
+       - [(@joiner:any, @comparer:!function)](#aeroflow-join-joinerany-comparerfunction)
      - [#map](#aeroflow-map)
        - [()](#aeroflow-map-)
        - [(@mapping:function)](#aeroflow-map-mappingfunction)
@@ -502,7 +519,7 @@ return assert.eventually.isUndefined(new Promise(function (done, fail) {
 }));
 ```
 
-Passes value returned by @expander to @expander as first argument on sybsequent iteration.
+Passes value returned by @expander to @expander as first argument on subsequent iteration.
 
 ```js
 var expectation = {};
@@ -609,6 +626,217 @@ var iterable = new Set([1, 2, 3]),
 return assert.eventually.strictEqual(new Promise(function (done, fail) {
   return aeroflow.just(iterable).run(done, fail);
 }), expectation);
+```
+
+<a name="aeroflow-random"></a>
+## .random
+Is static method.
+
+```js
+return assert.isFunction(aeroflow.random);
+```
+
+<a name="aeroflow-random-"></a>
+### ()
+Returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow.random(), 'Aeroflow');
+```
+
+Emits random values decimals within 0 and 1.
+
+```js
+var count = 10,
+    expectation = function expectation(value) {
+  return !Number.isInteger(value) && value >= 0 && value <= 1;
+};
+return assert.eventually.isTrue(new Promise(function (done, fail) {
+  return aeroflow.random().take(count).every(expectation).run(done, fail);
+}));
+```
+
+<a name="aeroflow-random-startnumber"></a>
+### (@start:number)
+Emits random demical values less than @start if @start.
+
+```js
+var start = 2,
+    count = 10,
+    expectation = function expectation(value) {
+  return !Number.isInteger(value) && value <= start;
+};
+return assert.eventually.isTrue(new Promise(function (done, fail) {
+  return aeroflow.random(start).take(count).every(expectation).run(done, fail);
+}));
+```
+
+<a name="aeroflow-random-startnumber"></a>
+### (@start:!number)
+Emits random decimals values within 0 and 1.
+
+```js
+var start = 'test',
+    count = 10,
+    expectation = function expectation(value) {
+  return !Number.isInteger(value) && value >= 0 && value <= 1;
+};
+return assert.eventually.isTrue(new Promise(function (done, fail) {
+  return aeroflow.random(start).take(count).every(expectation).run(done, fail);
+}));
+```
+
+<a name="aeroflow-random-start-endnumber"></a>
+### (@start, @end:number)
+Emits random integer values within @start and @end if @start and @end is integer.
+
+```js
+var start = 10,
+    end = 20,
+    count = 10,
+    expectation = function expectation(value) {
+  return Number.isInteger(value) && value >= start && value <= end;
+};
+return assert.eventually.isTrue(new Promise(function (done, fail) {
+  return aeroflow.random(start, end).take(count).every(expectation).run(done, fail);
+}));
+```
+
+Emits random demical values within @start and @end if @start or @end is demical.
+
+```js
+var start = 1,
+    end = 2.3,
+    count = 10,
+    expectation = function expectation(value) {
+  return !Number.isInteger(value) && value >= start && value <= end;
+};
+return assert.eventually.isTrue(new Promise(function (done, fail) {
+  return aeroflow.random(start, end).take(count).every(expectation).run(done, fail);
+}));
+```
+
+<a name="aeroflow-random-start-endnumber"></a>
+### (@start, @end:!number)
+Emits random demical values less than @start if @start.
+
+```js
+var start = 2,
+    end = 'test',
+    count = 10,
+    expectation = function expectation(value) {
+  return !Number.isInteger(value) && value <= start;
+};
+return assert.eventually.isTrue(new Promise(function (done, fail) {
+  return aeroflow.random(start, end).take(count).every(expectation).run(done, fail);
+}));
+```
+
+<a name="aeroflow-repeat"></a>
+## .repeat
+Is static method.
+
+```js
+return assert.isFunction(aeroflow.repeat);
+```
+
+<a name="aeroflow-repeat-"></a>
+### ()
+Returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow.repeat(), 'Aeroflow');
+```
+
+Emits undefined @values if no params passed.
+
+```js
+return assert.eventually.isUndefined(new Promise(function (done, fail) {
+  return aeroflow.repeat().take(1).run(done, fail);
+}));
+```
+
+<a name="aeroflow-repeat-repeaterfunction"></a>
+### (@repeater:function)
+Calls @repeater.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow.repeat(done).take(1).run(fail, fail);
+}));
+```
+
+Emits @value returned by @repeater.
+
+```js
+var value = 'a';
+return assert.eventually.isTrue(new Promise(function (done, fail) {
+  return aeroflow.repeat(value).take(5).every(value).run(done, fail);
+}));
+```
+
+Emits geometric progression recalculating @repeater each time.
+
+```js
+var expectation = [0, 2, 4, 6];
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow.repeat(function (index) {
+    return index * 2;
+  }).take(expectation.length).toArray().run(done, fail);
+}), expectation);
+```
+
+Passes zero-based @index of iteration to @repeater as first argument.
+
+```js
+var values = [0, 1, 2, 3, 4];
+return assert.eventually.sameMembers(new Promise(function (done, fail) {
+  return aeroflow.repeat(function (index) {
+    return index;
+  }).take(values.length).toArray().run(done, fail);
+}), values);
+```
+
+<a name="aeroflow-repeat-repeaterfunction"></a>
+### (@repeater:!function)
+Emits @repeater value if @repeater is not function.
+
+```js
+var value = 'a';
+return assert.eventually.isTrue(new Promise(function (done, fail) {
+  return aeroflow.repeat(value).take(5).every(value).run(done, fail);
+}));
+```
+
+<a name="aeroflow-repeat-repeater-intervalnumber"></a>
+### (@repeater, @interval:number)
+Emits value of @repeater each @interval ms.
+
+```js
+var interval = 10,
+    take = 3,
+    actual = [];
+return assert.eventually.strictEqual(new Promise(function (done, fail) {
+  return aeroflow.repeat(function () {
+    return actual.push('test');
+  }, interval).take(take).count().run(done, fail);
+}), take);
+```
+
+<a name="aeroflow-repeat-repeater-intervalnumber"></a>
+### (@repeater, @interval:!number)
+Emits value of @repeater each 1000 ms.
+
+```js
+var take = 1,
+    actualTime = new Date().getSeconds();
+return assert.eventually.isTrue(new Promise(function (done, fail) {
+  return aeroflow.repeat(function () {
+    return new Date().getSeconds();
+  }, 'tests').take(take).every(function (val) {
+    return val - actualTime >= 1;
+  }).run(done, fail);
+}));
 ```
 
 <a name="aeroflow-average"></a>
@@ -1126,12 +1354,12 @@ return assert.isFulfilled(new Promise(function (done, fail) {
 Passes context @data to @condition as third argument.
 
 ```js
-var data = {};
+var expectation = {};
 return assert.eventually.strictEqual(new Promise(function (done, fail) {
   return aeroflow('test').filter(function (_, __, data) {
     return done(data);
-  }).run(fail, fail, data);
-}), data);
+  }).run(fail, fail, expectation);
+}), expectation);
 ```
 
 Emits only @values emitted by flow and passing @condition test.
@@ -1233,12 +1461,12 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 Passes context data to @selector as third argument.
 
 ```js
-var data = {};
+var expectation = {};
 return assert.eventually.strictEqual(new Promise(function (done, fail) {
   return aeroflow('test').group(function (_, __, data) {
     return done(data);
-  }).run(fail, fail, data);
-}), data);
+  }).run(fail, fail, expectation);
+}), expectation);
 ```
 
 Passes zero-based @index of iteration to @condition as second argument.
@@ -1354,6 +1582,85 @@ return assert.eventually.sameDeepMembers(new Promise(function (done, fail) {
 }), values);
 ```
 
+<a name="aeroflow-join"></a>
+## #join
+Is instance method.
+
+```js
+return assert.isFunction(aeroflow.empty.join);
+```
+
+<a name="aeroflow-join-"></a>
+### ()
+Returns instance of Aeroflow.
+
+```js
+return assert.typeOf(aeroflow.empty.join(), 'Aeroflow');
+```
+
+Emits nothing when flow is empty.
+
+```js
+return assert.isFulfilled(new Promise(function (done, fail) {
+  return aeroflow.empty.join().run(fail, done);
+}));
+```
+
+Emits @values from flow concatenated with undefined when flow is not empty.
+
+```js
+var values = [1, 2],
+    expectation = [[1, undefined], [2, undefined]];
+return assert.eventually.sameDeepMembers(new Promise(function (done, fail) {
+  aeroflow(values).join().toArray().run(done, fail);
+}), expectation);
+```
+
+<a name="aeroflow-join-joinerany"></a>
+### (@joiner:any)
+Emits nested arrays with @values concatenated with @joiner values by one to one.
+
+```js
+var values = [1, 2],
+    joiner = [3, 4],
+    expectation = [[1, 3], [1, 4], [2, 3], [2, 4]];
+return assert.eventually.sameDeepMembers(new Promise(function (done, fail) {
+  aeroflow(values).join(joiner).toArray().run(done, fail);
+}), expectation);
+```
+
+<a name="aeroflow-join-joinerany-comparerfunction"></a>
+### (@joiner:any, @comparer:function)
+Emits nested arrays with @values concatenated with @joiner through @comparer function.
+
+```js
+var values = [{ a: 'test', b: 'tests' }],
+    joiner = [{ a: 'test', c: 'tests3' }],
+    comparer = function comparer(left, right) {
+  return left.a === right.a;
+},
+    expectation = [].concat(values, joiner);
+return assert.eventually.sameDeepMembers(new Promise(function (done, fail) {
+  aeroflow(values).join(joiner, comparer).toArray().map(function (res) {
+    return res[0];
+  }).run(done, fail);
+}), expectation);
+```
+
+<a name="aeroflow-join-joinerany-comparerfunction"></a>
+### (@joiner:any, @comparer:!function)
+Emits nested arrays with @values concatenated with @joiner values by one to one ignored @comparer.
+
+```js
+var values = [1, 2],
+    joiner = 3,
+    comparer = 'test',
+    expectation = [[1, 3], [2, 3]];
+return assert.eventually.sameDeepMembers(new Promise(function (done, fail) {
+  aeroflow(values).join(joiner, comparer).toArray().run(done, fail);
+}), expectation);
+```
+
 <a name="aeroflow-map"></a>
 ## #map
 Is instance method.
@@ -1432,12 +1739,12 @@ return assert.eventually.sameMembers(new Promise(function (done, fail) {
 Passes context data to @mapping as third argument.
 
 ```js
-var data = {};
+var expectation = {};
 return assert.eventually.strictEqual(new Promise(function (done, fail) {
   return aeroflow('test').map(function (_, __, data) {
     return done(data);
-  }).run(fail, fail, data);
-}), data);
+  }).run(fail, fail, expectation);
+}), expectation);
 ```
 
 <a name="aeroflow-map-mappingfunction"></a>
@@ -2505,12 +2812,12 @@ return assert.eventually.strictEqual(new Promise(function (done, fail) {
 Passes context data to @callback as third argument.
 
 ```js
-var data = {};
+var expectation = {};
 return assert.eventually.strictEqual(new Promise(function (done, fail) {
   return aeroflow('test').tap(function (_, __, data) {
     return done(data);
-  }).run(fail, fail, data);
-}), data);
+  }).run(fail, fail, expectation);
+}), expectation);
 ```
 
 Emits immutable @values after tap @callback was applied.

@@ -34,7 +34,7 @@ var expandGeneratorTests = (aeroflow, assert) => describe('.expand', () => {
       assert.eventually.isUndefined(new Promise((done, fail) =>
         aeroflow.expand(done).take(1).run(fail, fail))));
 
-    it('Passes value returned by @expander to @expander as first argument on sybsequent iteration', () => {
+    it('Passes value returned by @expander to @expander as first argument on subsequent iteration', () => {
       const expectation = {};
       let iteration = 0;
       return assert.eventually.strictEqual(new Promise((done, fail) =>
@@ -113,6 +113,131 @@ var justGeneratorTests = (aeroflow, assert) => describe('.just', () => {
       return assert.eventually.strictEqual(new Promise((done, fail) =>
         aeroflow.just(iterable).run(done, fail)),
         expectation);
+    });
+  });
+});
+
+var randomGeneratorTests = (aeroflow, assert) => describe('.random', () => {
+  it('Is static method', () =>
+    assert.isFunction(aeroflow.random));
+
+  describe('()', () => {
+    it('Returns instance of Aeroflow', () =>
+      assert.typeOf(aeroflow.random(), 'Aeroflow'));
+
+    it('Emits random values decimals within 0 and 1', () => {
+      const count = 10, expectation = (value) => !Number.isInteger(value) && value >= 0 && value <= 1;
+      return assert.eventually.isTrue(new Promise((done, fail) => 
+        aeroflow.random().take(count).every(expectation).run(done, fail)));
+    });
+  });
+
+  describe('(@start:number)', () => {
+    it('Emits random demical values less than @start if @start', () => {
+      const start = 2, count = 10, expectation = (value) => !Number.isInteger(value) && value <= start;
+      return assert.eventually.isTrue(new Promise((done, fail) => 
+        aeroflow.random(start).take(count).every(expectation).run(done, fail)));
+    });
+  });
+
+  describe('(@start:!number)', () => {
+    it('Emits random decimals values within 0 and 1', () => {
+      const start = 'test', count = 10, 
+        expectation = (value) => !Number.isInteger(value) && value >= 0 && value <= 1;
+      return assert.eventually.isTrue(new Promise((done, fail) => 
+        aeroflow.random(start).take(count).every(expectation).run(done, fail)));
+    });
+  });
+
+  describe('(@start, @end:number)', () => {
+    it('Emits random integer values within @start and @end if @start and @end is integer', () => {
+      const start = 10, end = 20, count = 10, 
+        expectation = (value) => Number.isInteger(value) && value >= start && value <= end;
+      return assert.eventually.isTrue(new Promise((done, fail) => 
+        aeroflow.random(start, end).take(count).every(expectation).run(done, fail)));
+    });
+
+    it('Emits random demical values within @start and @end if @start or @end is demical', () => {
+      const start = 1, end = 2.3, count = 10, 
+        expectation = (value) => !Number.isInteger(value) && value >= start && value <= end;
+      return assert.eventually.isTrue(new Promise((done, fail) => 
+        aeroflow.random(start, end).take(count).every(expectation).run(done, fail)));
+    });
+  });
+
+  describe('(@start, @end:!number)', () => {
+    it('Emits random demical values less than @start if @start', () => {
+      const start = 2, end = 'test', count = 10,
+        expectation = (value) => !Number.isInteger(value) && value <= start;
+      return assert.eventually.isTrue(new Promise((done, fail) => 
+        aeroflow.random(start, end).take(count).every(expectation).run(done, fail)));
+    });
+  });
+});
+
+var repeatGeneratorTests = (aeroflow, assert) => describe('.repeat', () => {
+  it('Is static method', () =>
+    assert.isFunction(aeroflow.repeat));
+
+  describe('()', () => {
+    it('Returns instance of Aeroflow', () =>
+      assert.typeOf(aeroflow.repeat(), 'Aeroflow'));
+
+    it('Emits undefined @values if no params passed', () =>
+      assert.eventually.isUndefined(new Promise((done, fail) => 
+        aeroflow.repeat().take(1).run(done, fail))));
+  });
+
+  describe('(@repeater:function)', () => {
+    it('Calls @repeater', () =>
+      assert.isFulfilled(new Promise((done, fail) =>
+        aeroflow.repeat(done).take(1).run(fail, fail))));
+
+    it('Emits @value returned by @repeater', () => {
+      const value = 'a';
+      return assert.eventually.isTrue(new Promise((done, fail) => 
+        aeroflow.repeat(value).take(5).every(value).run(done, fail)));
+    });
+
+    it('Emits geometric progression recalculating @repeater each time', () => {
+      const expectation = [0, 2, 4, 6];
+      return assert.eventually.sameMembers(new Promise((done, fail) =>
+        aeroflow.repeat(index => index * 2).take(expectation.length).toArray().run(done, fail)),
+        expectation);
+    });
+
+    it('Passes zero-based @index of iteration to @repeater as first argument', () => {
+      const values = [0, 1, 2, 3, 4];
+      return assert.eventually.sameMembers(new Promise((done, fail) =>
+        aeroflow.repeat(index => index).take(values.length).toArray().run(done, fail)),
+        values);
+    });
+  });
+
+  describe('(@repeater:!function)', () => {
+    it('Emits @repeater value if @repeater is not function', () => {
+      const value = 'a';
+      return assert.eventually.isTrue(new Promise((done, fail) => 
+        aeroflow.repeat(value).take(5).every(value).run(done, fail)));
+    });
+  });
+
+  //TODO: rethink this tests
+  describe('(@repeater, @interval:number)', () => {
+    it('Emits value of @repeater each @interval ms', () => {
+      const interval = 10, take = 3, actual = [];
+
+      return assert.eventually.strictEqual(new Promise((done, fail) =>
+        aeroflow.repeat(() => actual.push('test'), interval).take(take).count().run(done, fail)),
+        take);
+    });
+  });
+
+  describe('(@repeater, @interval:!number)', () => {
+    it('Emits value of @repeater each 1000 ms', () => {
+      const take = 1, actualTime = new Date().getSeconds();
+      return assert.eventually.isTrue(new Promise((done, fail) =>
+        aeroflow.repeat(() => new Date().getSeconds(), 'tests').take(take).every(val => val - actualTime >= 1).run(done, fail)));
     });
   });
 });
@@ -436,10 +561,10 @@ var filterOperatorTests = (aeroflow, assert) => describe('#filter', () => {
     });
 
     it('Passes context @data to @condition as third argument', () => {
-      const data = {};
+      const expectation = {};
       return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow('test').filter((_, __, data) => done(data)).run(fail, fail, data)),
-        data);
+        aeroflow('test').filter((_, __, data) => done(data)).run(fail, fail, expectation)),
+        expectation);
     });
 
     it('Emits only @values emitted by flow and passing @condition test', () => {
@@ -502,10 +627,10 @@ var groupOperatorTests = (aeroflow, assert) => describe('#group', () => {
     });
 
     it('Passes context data to @selector as third argument', () => {
-      const data = {};
+      const expectation = {};
       return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow('test').group((_, __, data) => done(data)).run(fail, fail, data)),
-        data);
+        aeroflow('test').group((_, __, data) => done(data)).run(fail, fail, expectation)),
+        expectation);
     });
 
     it('Passes zero-based @index of iteration to @condition as second argument', () => {
@@ -536,7 +661,7 @@ var groupOperatorTests = (aeroflow, assert) => describe('#group', () => {
 
   describe('(@selectors:array)', () => {
     it('Emits nested named groups which divide @values by first predicate from @selectors', () => {
-      const values  = [{name: 'test1', sex: 'female'}, {name: 'test2', sex: 'male'}],
+      const values = [{name: 'test1', sex: 'female'}, {name: 'test2', sex: 'male'}],
         expectation = [values[0].name, values[1].name],
         selectors = [(value) => value.name, (value) => value.sex];
 
@@ -546,7 +671,7 @@ var groupOperatorTests = (aeroflow, assert) => describe('#group', () => {
     });
 
     it('Use maps to contain nested groups which divided @values by @selectors', () => {
-      const values  = [{name: 'test1', sex: 'female'}, {name: 'test2', sex: 'male'}],
+      const values = [{name: 'test1', sex: 'female'}, {name: 'test2', sex: 'male'}],
         selectors = [(value) => value.name, (value) => value.sex];
 
       return assert.eventually.typeOf(new Promise((done, fail) =>
@@ -555,7 +680,7 @@ var groupOperatorTests = (aeroflow, assert) => describe('#group', () => {
     });
 
     it('Emits nested named groups which divide @values by second predicate from @selectors', () => {
-       const values  = [{name: 'test1', sex: 'female'}, {name: 'test2', sex: 'male'}],
+       const values = [{name: 'test1', sex: 'female'}, {name: 'test2', sex: 'male'}],
          expectation = [[values[0].sex], [values[1].sex]],
        selectors = [(value) => value.name, (value) => value.sex];
 
@@ -565,12 +690,61 @@ var groupOperatorTests = (aeroflow, assert) => describe('#group', () => {
     });
 
     it('Emits @values on the root of nested groups', () => {
-      const values  = [{name: 'test1', sex: 'female'}, {name: 'test2', sex: 'male'}],
+      const values = [{name: 'test1', sex: 'female'}, {name: 'test2', sex: 'male'}],
          selectors = [(value) => value.name, (value) => value.sex];
 
       return assert.eventually.sameDeepMembers(new Promise((done, fail) =>
         aeroflow(values).group(...selectors).map(group => Array.from(group[1].values())[0][0]).toArray().run(done, fail)),
         values);
+    });
+  });
+});
+
+var joinOperatorTests = (aeroflow, assert) => describe('#join', () => {
+  it('Is instance method', () =>
+    assert.isFunction(aeroflow.empty.join));
+
+  describe('()', () => {
+    it('Returns instance of Aeroflow', () =>
+      assert.typeOf(aeroflow.empty.join(), 'Aeroflow'));
+
+    it('Emits nothing when flow is empty', () =>
+      assert.isFulfilled(new Promise((done, fail) =>
+        aeroflow.empty.join().run(fail, done))));
+
+    it('Emits @values from flow concatenated with undefined when flow is not empty', () => {
+      const values = [1, 2], expectation = [[1, undefined], [2, undefined]];
+      return assert.eventually.sameDeepMembers(new Promise((done, fail) => {
+        aeroflow(values).join().toArray().run(done, fail);
+      }), expectation);
+    });
+  });
+
+  describe('(@joiner:any)', () => {
+    it('Emits nested arrays with @values concatenated with @joiner values by one to one', () => {
+      const values = [1, 2], joiner = [3, 4], expectation = [[1, 3], [1, 4], [2, 3], [2, 4]];
+      return assert.eventually.sameDeepMembers(new Promise((done, fail) => {
+        aeroflow(values).join(joiner).toArray().run(done, fail);
+      }), expectation);
+    });
+  });
+
+  describe('(@joiner:any, @comparer:function)', () => {
+    it('Emits nested arrays with @values concatenated with @joiner through @comparer function', () => {
+      const values = [{a: 'test', b: 'tests'}], joiner = [{a: 'test', c: 'tests3'}],
+        comparer = (left, right) => left.a === right.a, expectation = [...values, ...joiner];
+      return assert.eventually.sameDeepMembers(new Promise((done, fail) => {
+        aeroflow(values).join(joiner, comparer).toArray().map(res => res[0]).run(done, fail);
+      }), expectation);
+    });
+  });
+
+  describe('(@joiner:any, @comparer:!function)', () => {
+    it('Emits nested arrays with @values concatenated with @joiner values by one to one ignored @comparer', () => {
+      const values = [1, 2], joiner = 3, comparer ='test', expectation = [[1, 3], [2, 3]];
+      return assert.eventually.sameDeepMembers(new Promise((done, fail) => {
+        aeroflow(values).join(joiner, comparer).toArray().run(done, fail);
+      }), expectation);
     });
   });
 });
@@ -619,10 +793,10 @@ var mapOperatorTests = (aeroflow, assert) => describe('#map', () => {
     });
 
     it('Passes context data to @mapping as third argument', () => {
-      const data = {};
+      const expectation = {};
       return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow('test').map((_, __, data) => done(data)).run(fail, fail, data)),
-        data);
+        aeroflow('test').map((_, __, data) => done(data)).run(fail, fail, expectation)),
+        expectation);
     });
   });
 
@@ -1303,10 +1477,10 @@ var tapOperatorTests = (aeroflow, assert) => describe('#tap', () => {
     });
 
     it('Passes context data to @callback as third argument', () => {
-      const data = {};
+      const expectation = {};
       return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow('test').tap((_, __, data) => done(data)).run(fail, fail, data)),
-        data);
+        aeroflow('test').tap((_, __, data) => done(data)).run(fail, fail, expectation)),
+        expectation);
     });
 
     it('Emits immutable @values after tap @callback was applied', () => {
@@ -1727,7 +1901,9 @@ var aeroflow = (aeroflow, assert) => describe('aeroflow', () => {
     emptyGeneratorTests,
     expandGeneratorTests,
     justGeneratorTests,
-
+    randomGeneratorTests,
+    repeatGeneratorTests,
+    
     averageOperatorTests,
     catchOperatorTests,
     coalesceOperatorTests,
@@ -1736,6 +1912,7 @@ var aeroflow = (aeroflow, assert) => describe('aeroflow', () => {
     everyOperatorTests,
     filterOperatorTests,
     groupOperatorTests,
+    joinOperatorTests,
     mapOperatorTests,
     maxOperatorTests,
     meanOperatorTests,
