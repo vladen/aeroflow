@@ -1,11 +1,12 @@
 import { AEROFLOW, ARRAY, ERROR, FUNCTION, PROMISE } from '../symbols';
-import { objectDefineProperties } from '../utilites';
+import { classOf, isFunction, objectDefineProperties } from '../utilites';
 import { arrayAdapter } from './array';
 import { errorAdapter } from './error';
 import { flowAdapter } from './flow';
 import { functionAdapter } from './function';
 import { iterableAdapter } from './iterable';
 import { promiseAdapter } from './promise';
+import { valueAdapter } from './value';
 
 export const adapters = [iterableAdapter];
 
@@ -16,3 +17,14 @@ objectDefineProperties(adapters, {
   [FUNCTION]: { configurable: true, value: functionAdapter, writable: true },
   [PROMISE]: { configurable: true, value: promiseAdapter, writable: true }
 });
+
+export function selectAdapter(source, fallback = true) {
+  const sourceClass = classOf(source);
+  let adapter = adapters[sourceClass];
+  if (isFunction(adapter)) return adapter(source);
+  for (let i = -1, l = adapters.length; ++i < l;) {
+    adapter = adapters[i](source, sourceClass);
+    if (isFunction(adapter)) return adapter;
+  }
+  if (fallback) return valueAdapter(source);
+}

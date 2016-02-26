@@ -10,16 +10,12 @@
     <script src="../../node_modules/core-js/client/core.js"></script>
     <script src="../../node_modules/mocha/mocha.js"></script>
     <script src="../../node_modules/chai/chai.js"></script>
-    <script src="../../node_modules/chai-as-promised/lib/chai-as-promised.js"></script>
-    <script>
-      mocha.setup({
-        ui: 'bdd'
-      });
-    </script>
+    <script src="../../node_modules/chai-spies/chai-spies.js"></script>
     <script src="aeroflow.js"></script>
-    <script src="aeroflow.test.js"></script>
+    <script src="aeroflow.tests.js"></script>
     <script>
-      aeroflowTest(aeroflow, chai.assert);
+      mocha.setup({ ui: 'bdd' });
+      aeroflowTests(aeroflow, chai);
       mocha.run();
     </script>
   </body>

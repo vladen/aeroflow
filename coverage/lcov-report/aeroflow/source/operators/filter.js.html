@@ -20,28 +20,32 @@
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">100% </span>
+        <span class="strong">43.48% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>23/23</span>
+        <span class='fraction'>10/23</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">100% </span>
+        <span class="strong">0% </span>
         <span class="quiet">Branches</span>
-        <span class='fraction'>6/6</span>
+        <span class='fraction'>0/6</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">100% </span>
+        <span class="strong">0% </span>
         <span class="quiet">Functions</span>
-        <span class='fraction'>7/7</span>
+        <span class='fraction'>0/7</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">100% </span>
+        <span class="strong">13.33% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>15/15</span>
+        <span class='fraction'>2/15</span>
+      </div>
+      <div class='fl pad1y'>
+        <span class="strong">5 statements</span>
+        <span class="quiet">Ignored</span>  &nbsp;&nbsp;&nbsp;&nbsp;
       </div>
     </div>
   </div>
-  <div class='status-line high'></div>
+  <div class='status-line low'></div>
 <pre><table class="coverage">
 <tr><td class="line-count quiet">1
 2
@@ -74,24 +78,24 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-yes">11×</span>
-<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">6×</span>
-<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3×</span>
-<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">11×</span>
-<span class="cline-any cline-yes">10×</span>
-<span class="cline-any cline-yes">10×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -100,26 +104,26 @@
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { FUNCTION, REGEXP, UNDEFINED } from '../symbols';
 import { classOf } from '../utilites';
 &nbsp;
-export function filterOperator(condition) {
-  let predicate;
-  switch (classOf(condition)) {
+export <span class="fstat-no" title="function not covered" >function filterOperator(condition) {</span>
+<span class="cstat-no" title="statement not covered" >  let predicate;</span>
+<span class="cstat-no" title="statement not covered" >  switch (classOf(condition)) {</span>
     case FUNCTION:
-      predicate = condition;
-      break;
+<span class="cstat-no" title="statement not covered" >      predicate = condition;</span>
+<span class="cstat-no" title="statement not covered" >      break;</span>
     case REGEXP:
-      predicate = result =&gt; condition.test(result);
-      break;
+<span class="cstat-no" title="statement not covered" >      predicate = <span class="fstat-no" title="function not covered" >r</span>esult =&gt; condition.test(result);</span>
+<span class="cstat-no" title="statement not covered" >      break;</span>
     case UNDEFINED:
-      predicate = result =&gt; !!result;
-      break;
+<span class="cstat-no" title="statement not covered" >      predicate = <span class="fstat-no" title="function not covered" >r</span>esult =&gt; !!result;</span>
+<span class="cstat-no" title="statement not covered" >      break;</span>
     default:
-      predicate = result =&gt; result === condition
-      break;
+<span class="cstat-no" title="statement not covered" >      predicate = <span class="fstat-no" title="function not covered" >r</span>esult =&gt; result === condition</span>
+<span class="cstat-no" title="statement not covered" >      break;</span>
   }
-  return emitter =&gt; (next, done, context) =&gt; {
-    let index = 0;
-    emitter(
-      result =&gt; !predicate(result, index++, context.data) || next(result),
+<span class="cstat-no" title="statement not covered" >  return <span class="fstat-no" title="function not covered" >e</span>mitter =&gt; <span class="fstat-no" title="function not covered" >(next, done, context) =&gt; {</span></span>
+<span class="cstat-no" title="statement not covered" >    let index = 0;</span>
+<span class="cstat-no" title="statement not covered" >    emitter(</span>
+<span class="fstat-no" title="function not covered" >      r</span>esult =&gt; !predicate(result, index++, context.data) || next(result),
       done,
       context);
   };
@@ -130,7 +134,7 @@ export function filterOperator(condition) {
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Fri Feb 19 2016 20:20:24 GMT+0300 (Belarus Standard Time)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Fri Feb 26 2016 18:32:30 GMT+0300 (Belarus Standard Time)
 </div>
 </div>
 <script src="../../../prettify.js"></script>

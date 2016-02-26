@@ -20,28 +20,32 @@
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">100% </span>
+        <span class="strong">37.5% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>16/16</span>
+        <span class='fraction'>6/16</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">100% </span>
+        <span class="strong">0% </span>
         <span class="quiet">Branches</span>
-        <span class='fraction'>8/8</span>
+        <span class='fraction'>0/8</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">100% </span>
+        <span class="strong">0% </span>
         <span class="quiet">Functions</span>
-        <span class='fraction'>5/5</span>
+        <span class='fraction'>0/5</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">100% </span>
+        <span class="strong">18.18% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>11/11</span>
+        <span class='fraction'>2/11</span>
+      </div>
+      <div class='fl pad1y'>
+        <span class="strong">1 statement</span>
+        <span class="quiet">Ignored</span>  &nbsp;&nbsp;&nbsp;&nbsp;
       </div>
     </div>
   </div>
-  <div class='status-line high'></div>
+  <div class='status-line low'></div>
 <pre><table class="coverage">
 <tr><td class="line-count quiet">1
 2
@@ -73,24 +77,24 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-yes">10×</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">10×</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">10×</span>
-<span class="cline-any cline-yes">9×</span>
-<span class="cline-any cline-yes">9×</span>
-<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">21×</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">21×</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -98,25 +102,25 @@
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { identity, isError, isUndefined, tie, toFunction } from '../utilites';
 import { unsync } from '../unsync';
 &nbsp;
-export function toMapOperator(keySelector, valueSelector) {
-  keySelector = isUndefined(keySelector)
+export <span class="fstat-no" title="function not covered" >function toMapOperator(keySelector, valueSelector) {</span>
+<span class="cstat-no" title="statement not covered" >  keySelector = isUndefined(keySelector)</span>
     ? identity
     : toFunction(keySelector);
-  valueSelector = isUndefined(valueSelector)
+<span class="cstat-no" title="statement not covered" >  valueSelector = isUndefined(valueSelector)</span>
     ? identity
     : toFunction(valueSelector);
-  return emitter =&gt; (next, done, context) =&gt; {
-    const map = new Map;
-    let index = 0;
-    emitter(
-      result =&gt; {
-        map.set(
+<span class="cstat-no" title="statement not covered" >  return <span class="fstat-no" title="function not covered" >e</span>mitter =&gt; <span class="fstat-no" title="function not covered" >(next, done, context) =&gt; {</span></span>
+<span class="cstat-no" title="statement not covered" >    const map = new Map;</span>
+<span class="cstat-no" title="statement not covered" >    let index = 0;</span>
+<span class="cstat-no" title="statement not covered" >    emitter(</span>
+<span class="fstat-no" title="function not covered" >      result =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >        map.set(</span>
           keySelector(result, index++, context.data),
           valueSelector(result, index++, context.data));
-        return true;
+<span class="cstat-no" title="statement not covered" >        return true;</span>
       },
-      result =&gt; {
-        if (isError(result) || !unsync(next(map), tie(done, result), done)) done(result);
+<span class="fstat-no" title="function not covered" >      result =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >        i</span></span>f (isError(result) || !unsync(next(map), tie(done, result), done)) <span class="cstat-no" title="statement not covered" >done(result);
       },
       context);
   };
@@ -127,7 +131,7 @@ export function toMapOperator(keySelector, valueSelector) {
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Fri Feb 19 2016 20:20:24 GMT+0300 (Belarus Standard Time)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Fri Feb 26 2016 18:32:30 GMT+0300 (Belarus Standard Time)
 </div>
 </div>
 <script src="../../../prettify.js"></script>

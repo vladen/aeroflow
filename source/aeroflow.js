@@ -1,10 +1,11 @@
 import { AEROFLOW, CLASS, PROTOTYPE } from './symbols';
 
-import { isDefined, isError, isFunction, noop, objectDefineProperties, objectCreate } from './utilites';
+import { isDefined, isError, objectDefineProperties, objectCreate, truthy } from './utilites';
 
-import { adapters } from './adapters/index';
+import { adapters, selectAdapter } from './adapters/index';
 import { valueAdapter } from './adapters/value';
-import { adapt } from './adapt';
+
+import { notifiers, selectNotifier } from './notifiers/index';
 
 import { customGenerator } from './generators/custom';
 import { emptyGenerator } from './generators/empty';
@@ -51,7 +52,7 @@ function emit(next, done, context) {
     if (result !== true || ++index >= context.sources.length) done(result);
     else try {
       const source = context.sources[index];
-      adapt(source)(next, proceed, context);
+      selectAdapter(source)(next, proceed, context);
     }
     catch (error) {
       done(error);
@@ -837,6 +838,10 @@ function min() {
   return this.chain(minOperator());
 }
 
+function notify(target, ...parameters) {
+  return this.chain(selectNotifier(target, parameters));
+}
+
 /**
 Applies a function against an accumulator and each value emitted by this flow
 to reduce it to a single value, returns new flow emitting the reduced value.
@@ -965,28 +970,18 @@ function reverse() {
 }
 
 /**
-Runs this flow asynchronously, initiating source to emit values,
-applying declared operators to emitted values and invoking provided callbacks.
-If no callbacks provided, runs this flow for its side-effects only.
+Runs this flow.
 
 @alias Flow#run
 
-@param {function} [next]
-Callback to execute for each emitted value, taking two arguments: result, data.
-@param {function} [done]
-If next parameter is callback,
-then callback to execute as emission is complete, taking two arguments: result, data.
-Or data argument.
 @param {function} [data]
 Arbitrary value passed to each callback invoked by this flow as the last argument.
 
-@return {Promise}
-A promise resolving when this flow completes successfully or rejecting otherwise.
+@return {Flow}
+This flow.
 
 @example
-aeroflow(1, 2, 3).run(
-  result => console.log('next', result),
-  result => console.log('done', result));
+aeroflow(1, 2, 3).dump().run();
 // next 1
 // next 2
 // next 3
@@ -998,33 +993,18 @@ aeroflow(Promise.reject('test')).dump().run();
 // done Error: test(…)
 // Uncaught (in promise) Error: test(…)
 */
-function run(next, done, data) {
-  if (isFunction(next)) {
-    if (!isFunction(done)) {
-      data = done;
-      done = noop;
-    }
-  }
-  else {
-    data = next;
-    done = next = noop;
-  }
-  const context = objectDefineProperties({}, {
-    data: { value: data },
-    sources: { value: this.sources }
+function run(data) {
+  return new Promise((resolve, reject) => {
+    this.emitter(
+      truthy,
+      result => isError(result)
+        ? reject(result)
+        : resolve(this),
+      objectDefineProperties({}, {
+        data: { value: data },
+        sources: { value: this.sources }
+      }));
   });
-  return new Promise((resolve, reject) => this.emitter(
-    result => false !== next(result, data),
-    result => {
-      try {
-        done(result, data);
-      }
-      catch (error) {
-        result = error;
-      }
-      (isError(result) ? reject : resolve)(result);
-    },
-    context));
 }
 
 /**
@@ -1386,6 +1366,7 @@ Flow[PROTOTYPE] = objectCreate(operators, {
   bind: { value: bind },
   chain: { value: chain },
   concat: { value: concat },
+  notify: { value: notify },
   run: { value: run }
 });
 
@@ -1395,6 +1376,7 @@ objectDefineProperties(aeroflow, {
   empty: { enumerable: true, value: new Flow(emptyGenerator(true)) },
   expand: { value: expand },
   just: { value: just },
+  notifiers: { value: notifiers },
   operators: { value: operators },
   random: { value: random },
   range: { value: range },

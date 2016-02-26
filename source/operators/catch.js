@@ -1,15 +1,13 @@
-import { isDefined, isError } from '../utilites';
-import { adapt } from '../adapt';
+import { isError, toFunction } from '../utilites';
+import { selectAdapter } from '../adapters/index';
 import { emptyGenerator } from '../generators/empty';
 
-export function catchOperator(alternate) {
-  alternate = isDefined(alternate) 
-    ? adapt(alternate)
-    : emptyGenerator(false);
+export function catchOperator(alternative) {
+  alternative = toFunction(alternative, alternative || []);
   return emitter => (next, done, context) => emitter(
     next,
     result => isError(result)
-      ? alternate(next, done, context)
+      ? selectAdapter(alternative(result, context.data))(next, done, context)
       : done(result),
     context);
 } 

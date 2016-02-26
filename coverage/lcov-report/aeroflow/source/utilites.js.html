@@ -20,27 +20,27 @@
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">89.06% </span>
+        <span class="strong">86.96% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>57/64</span>
+        <span class='fraction'>60/69</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">56.52% </span>
+        <span class="strong">55.56% </span>
         <span class="quiet">Branches</span>
-        <span class='fraction'>13/23</span>
+        <span class='fraction'>20/36</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">85% </span>
+        <span class="strong">73.91% </span>
         <span class="quiet">Functions</span>
-        <span class='fraction'>17/20</span>
+        <span class='fraction'>17/23</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">83.72% </span>
+        <span class="strong">79.55% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>36/43</span>
+        <span class='fraction'>35/44</span>
       </div>
       <div class='fl pad1y'>
-        <span class="strong">1 statement</span>
+        <span class="strong">5 statements, 1 function, 6 branches</span>
         <span class="quiet">Ignored</span>  &nbsp;&nbsp;&nbsp;&nbsp;
       </div>
     </div>
@@ -123,7 +123,8 @@
 74
 75
 76
-77</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+77
+78</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -156,6 +157,7 @@
 <span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-yes">1×</span>
@@ -192,8 +194,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-yes">20×</span>
-<span class="cline-any cline-yes">20×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
@@ -220,14 +222,14 @@ export const objectDefineProperties = Object.defineProperties;
 export const objectDefineProperty = Object.defineProperty;
 export const objectToString = Object.prototype.toString;
 &nbsp;
-export const compare = (left, right, direction) =&gt; left &lt; right
+export const compare = <span class="fstat-no" title="function not covered" >(</span>left, right, direction) =&gt; left &lt; right
   ? -direction
   : left &gt; right
     ? direction
     : 0;
 export const constant = value =&gt; () =&gt; value;
-export const identity = value =&gt; value;
-export const noop = <span class="fstat-no" title="function not covered" >() =&gt; {</span>};
+export const identity = <span class="fstat-no" title="function not covered" >v</span>alue =&gt; value;
+export const noop = () =&gt; {};
 &nbsp;
 export const classOf = value =&gt; objectToString.call(value).slice(8, -1);
 export const classIs = className =&gt; value =&gt; classOf(value) === className;
@@ -237,10 +239,11 @@ export const isDefined = value =&gt; value !== undefined;
 export const isError = classIs(ERROR);
 export const isFunction = value =&gt; typeof value == 'function';
 export const isInteger = Number.isInteger;
+export const isObject = value =&gt; value != null &amp;&amp; typeof <span class="branch-0 cbranch-no" title="branch not covered" >v</span>alue === 'object';
 export const isPromise = classIs(PROMISE);
 export const isUndefined = value =&gt; value === undefined;
 &nbsp;
-export const tie = (func, ...args) =&gt; () =&gt; func(...args);
+export const tie = (func, ...args) =&gt; <span class="fstat-no" title="function not covered" >(</span>) =&gt; func(...args);
 &nbsp;
 export const falsey = <span class="fstat-no" title="function not covered" >(</span>) =&gt; false;
 export const truthy = () =&gt; true;
@@ -263,13 +266,13 @@ export const toFunction = (value, def) =&gt; isFunction(value)
   ? value
   : isDefined(def)
     ? isFunction(def)
-      ? <span class="branch-0 cbranch-no" title="branch not covered" >def</span>
+      ? def
       : constant(def)
     : constant(value);
 &nbsp;
-export const toNumber = (value, def) =&gt; {
-  value = +value;
-  return isNaN(value) ? def : value;
+export const toNumber = <span class="fstat-no" title="function not covered" >(value, def) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  value = +value;</span>
+<span class="cstat-no" title="statement not covered" >  return isNaN(value) ? def : value;</span>
 };
 &nbsp;
 export const toError = value =&gt; isError(value)
@@ -281,7 +284,7 @@ export const toError = value =&gt; isError(value)
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Fri Feb 19 2016 20:20:24 GMT+0300 (Belarus Standard Time)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Fri Feb 26 2016 18:32:30 GMT+0300 (Belarus Standard Time)
 </div>
 </div>
 <script src="../../prettify.js"></script>

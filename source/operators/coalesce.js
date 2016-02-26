@@ -1,5 +1,5 @@
 import { identity, isError } from '../utilites';
-import { adapt } from '../adapt';
+import { selectAdapter } from '../adapters/index';
 
 export function coalesceOperator(alternates) {
   if (!alternates.length) return identity;
@@ -8,7 +8,7 @@ export function coalesceOperator(alternates) {
     emitter(onNext, onDone, context);
     function onDone(result) {
       if (!isError(result) && empty && index < alternates.length)
-        adapt(alternates[index++])(onNext, onDone, context);
+        selectAdapter(alternates[index++])(onNext, onDone, context);
       else done(result);
     }
     function onNext(result) {

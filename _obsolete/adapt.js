@@ -2,7 +2,7 @@ import { classOf, isFunction } from './utilites';
 import { adapters } from './adapters/index';
 import { valueAdapter } from './adapters/value';
 
-export function adapt(source, ignorant) {
+export function adapt(source, lazy) {
   const sourceClass = classOf(source);
   let adapter = adapters[sourceClass];
   if (isFunction(adapter)) return adapter(source);
@@ -10,5 +10,5 @@ export function adapt(source, ignorant) {
     adapter = adapters[i](source, sourceClass);
     if (isFunction(adapter)) return adapter;
   }
-  if (!ignorant) return valueAdapter(source);
+  if (!lazy) return valueAdapter(source);
 }

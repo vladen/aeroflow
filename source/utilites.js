@@ -36,6 +36,7 @@ export const isDefined = value => value !== undefined;
 export const isError = classIs(ERROR);
 export const isFunction = value => typeof value == 'function';
 export const isInteger = Number.isInteger;
+export const isObject = value => value != null && typeof value === 'object';
 export const isPromise = classIs(PROMISE);
 export const isUndefined = value => value === undefined;
 

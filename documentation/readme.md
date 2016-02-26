@@ -273,7 +273,7 @@ aeroflow.repeat(index => index, index => 500 + 500 * index).take(3).dump().run()
     * [.replay(delay, timing)](#Flow+replay) ⇒ <code>[Flow](#Flow)</code>
     * [.retry(attempts)](#Flow+retry) ⇒ <code>[Flow](#Flow)</code>
     * [.reverse()](#Flow+reverse) ⇒ <code>[Flow](#Flow)</code>
-    * [.run([next], [done], [data])](#Flow+run) ⇒ <code>Promise</code>
+    * [.run([data])](#Flow+run) ⇒ <code>[Flow](#Flow)</code>
     * [.skip([condition])](#Flow+skip) ⇒ <code>[Flow](#Flow)</code>
     * [.slice([begin], [end])](#Flow+slice) ⇒ <code>[Flow](#Flow)</code>
     * [.some([predicate])](#Flow+some) ⇒ <code>[Flow](#Flow)</code>
@@ -824,26 +824,18 @@ aeroflow(1, 2, 3).reverse().dump().run();
 // done true
 ```
 <a name="Flow+run"></a>
-### flow.run([next], [done], [data]) ⇒ <code>Promise</code>
-Runs this flow asynchronously, initiating source to emit values,
-applying declared operators to emitted values and invoking provided callbacks.
-If no callbacks provided, runs this flow for its side-effects only.
+### flow.run([data]) ⇒ <code>[Flow](#Flow)</code>
+Runs this flow.
 
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
-**Returns**: <code>Promise</code> - A promise resolving when this flow completes successfully or rejecting otherwise.  
+**Returns**: <code>[Flow](#Flow)</code> - This flow.  
 **Params**
 
-- [next] <code>function</code> - Callback to execute for each emitted value, taking two arguments: result, data.
-- [done] <code>function</code> - If next parameter is callback,
-then callback to execute as emission is complete, taking two arguments: result, data.
-Or data argument.
 - [data] <code>function</code> - Arbitrary value passed to each callback invoked by this flow as the last argument.
 
 **Example**  
 ```js
-aeroflow(1, 2, 3).run(
-  result => console.log('next', result),
-  result => console.log('done', result));
+aeroflow(1, 2, 3).dump().run();
 // next 1
 // next 2
 // next 3

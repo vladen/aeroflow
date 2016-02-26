@@ -46,6 +46,7 @@ const isDefined = value => value !== undefined;
 const isError = classIs(ERROR);
 const isFunction = value => typeof value == 'function';
 const isInteger = Number.isInteger;
+const isObject = value => value != null && typeof value === 'object';
 const isPromise = classIs(PROMISE);
 const isUndefined = value => value === undefined;
 
@@ -143,7 +144,7 @@ function functionAdapter(source) {
 function iterableAdapter(source, sourceClass) {
   if (!primitives.has(sourceClass) && ITERATOR in source)
     return (next, done, context) => {
-      let iteration, iterator = iterator = source[ITERATOR]();
+      let iteration, iterator = source[ITERATOR]();
       !function proceed() {
         while (!(iteration = iterator.next()).done)
           if (unsync(next(iteration.value), proceed, done))
@@ -156,10 +157,15 @@ function iterableAdapter(source, sourceClass) {
 function promiseAdapter(source) {
   return (next, done, context) => source.then(
     result => {
-      if (!unsync(next(result), done, done))
-        done(true);
+      if (!unsync(next(result), done, done)) done(true);
     },
     result => done(toError(result)));
+}
+
+function valueAdapter(value) {
+  return (next, done) => {
+    if (!unsync(next(value), done, done)) done(true);
+  };
 }
 
 const adapters = [iterableAdapter];
@@ -172,13 +178,7 @@ objectDefineProperties(adapters, {
   [PROMISE]: { configurable: true, value: promiseAdapter, writable: true }
 });
 
-function valueAdapter(value) {
-  return (next, done) => {
-    if (!unsync(next(value), done, done)) done(true);
-  };
-}
-
-function adapt(source, ignorant) {
+function selectAdapter(source, fallback = true) {
   const sourceClass = classOf(source);
   let adapter = adapters[sourceClass];
   if (isFunction(adapter)) return adapter(source);
@@ -186,7 +186,78 @@ function adapt(source, ignorant) {
     adapter = adapters[i](source, sourceClass);
     if (isFunction(adapter)) return adapter;
   }
-  if (!ignorant) return valueAdapter(source);
+  if (fallback) return valueAdapter(source);
+}
+
+function customNotifier(next, done) {
+  if (isFunction(next)) return {
+    done: toFunction(done, noop),
+    next
+  };
+}
+
+function eventEmitterNotifier(target, nextEventName = 'next', doneEventName = 'done') {
+  if (!isObject(target) || !isFunction(target.emit)) return;
+  const emit = eventName => result => target.emit(eventName, result);
+  return {
+    done: emit(doneEventName),
+    next: emit(nextEventName)
+  };
+}
+
+function eventTargetNotifier(target, nextEventName = 'next', doneEventName = 'done') {
+  if (!isObject(target) || !isFunction(target.dispatchEvent)) return;
+  const dispatch = eventName => detail => target.dispatchEvent(new CustomEvent(eventName, { detail }));
+  return {
+    done: dispatch(doneEventName),
+    next: dispatch(nextEventName)
+  };
+}
+
+function observerNotifier(target) {
+  if (!isObject(target) || !isFunction(target.onNext) || !isFunction(target.onError) || !isFunction(target.onCompleted)) return;
+  return {
+    done: result => (isError(result) ? target.onError : target.onCompleted)(result),
+    next: result => target.onNext(result)
+  };
+}
+
+const notifiers = [
+  eventEmitterNotifier,
+  eventTargetNotifier,
+  observerNotifier
+];
+
+objectDefineProperties(notifiers, {
+  [FUNCTION]: { configurable: true, value: customNotifier, writable: true }
+});
+
+const isNotifier = notifier => isObject(notifier) && isFunction(notifier.done) && isFunction(notifier.next);
+
+function selectNotifier(target, parameters) {
+  let notifier = notifiers[classOf(target)];
+  if (notifier) notifier = notifier(target, ...parameters);
+  if (!isNotifier(notifier)) for (let i = -1, l = notifiers.length; ++i < l;) {
+    notifier = notifiers[i](target, ...parameters);
+    if (isNotifier(notifier)) break;
+    else notifier = null;
+  }
+  return notifier
+    ? emitter =>
+      (next, done, context) => {
+        let index = 0;
+        emitter(
+          result => {
+            notifier.next(result, index++, context.data);
+            return next(result);
+          },
+          result => {
+            notifier.done(result, context.data);
+            return done(result);
+          },
+          context)
+      }
+    : identity;
 }
 
 function emptyGenerator(result) {
@@ -197,34 +268,35 @@ function customGenerator(generator) {
   if (isUndefined(generator)) return emptyGenerator(true);
   if (!isFunction(generator)) return valueAdapter(generator);
   return (next, done, context) => {
-    let buffer = [], busy = false, idle = false, finalizer;
+    let buffer = [], conveying = false, finalizer, finished = false;
     finalizer = generator(
       result => {
-        if (idle) return false;
+        if (finished) return false;
         buffer.push(result);
-        if (!busy) proceed(true);
+        if (!conveying) convey(true);
         return true;
       },
       result => {
-        if (idle) return false;
-        idle = true;
+        if (finished) return false;
+        finished = true;
         buffer.result = isUndefined(result) || result;
-        if (!busy) proceed(true);
+        if (!conveying) convey(true);
         return true;
       },
       context.data);
-    function complete(result) {
-      idle = true;
-      if (isFunction(finalizer)) setTimeout(finalizer, 0);
-      done(result && buffer.result);
+    function convey(result) {
+      conveying = false;
+      if (result) while (buffer.length)
+        if (unsync(next(buffer.shift()), convey, finish)) {
+          conveying = true;
+          return;
+        }
+      if (finished) finish(result);
     }
-    function proceed(result) {
-      busy = false;
-      if (result) while (buffer.length) if (unsync(next(buffer.shift()), proceed, complete)) {
-        busy = true;
-        return;
-      }
-      complete(result);
+    function finish(result) {
+      finished = true;
+      if (isFunction(finalizer)) setImmediate(finalizer);
+      done(result && buffer.result);
     }
   };
 }
@@ -340,14 +412,12 @@ function averageOperator(forced) {
   return reduceOperator((average, result, index) => (average * index + result) / (index + 1), 0);
 }
 
-function catchOperator(alternate) {
-  alternate = isDefined(alternate) 
-    ? adapt(alternate)
-    : emptyGenerator(false);
+function catchOperator(alternative) {
+  alternative = toFunction(alternative, alternative || []);
   return emitter => (next, done, context) => emitter(
     next,
     result => isError(result)
-      ? alternate(next, done, context)
+      ? selectAdapter(alternative(result, context.data))(next, done, context)
       : done(result),
     context);
 }
@@ -359,7 +429,7 @@ function coalesceOperator(alternates) {
     emitter(onNext, onDone, context);
     function onDone(result) {
       if (!isError(result) && empty && index < alternates.length)
-        adapt(alternates[index++])(onNext, onDone, context);
+        selectAdapter(alternates[index++])(onNext, onDone, context);
       else done(result);
     }
     function onNext(result) {
@@ -520,7 +590,7 @@ function flattenOperator(depth) {
     let level = 0;
     const flatten = result => {
       if (level === depth) return next(result);
-      const adapter = adapt(result, true);
+      const adapter = selectAdapter(result, false);
       if (adapter) {
         level++;
         return new Promise(resolve => adapter(
@@ -594,10 +664,11 @@ function mapOperator(mapper) {
   };
 }
 
+// todo: laziness, early results
 function joinOperator(right, condition) {
   const
     comparer = toFunction(condition, truthy),
-    toArray = toArrayOperator()(adapt(right));
+    toArray = toArrayOperator()(selectAdapter(right));
   return emitter => (next, done, context) => toArray(
     rightArray => new Promise(rightResolve => emitter(
       leftResult => new Promise(leftResolve => {
@@ -996,7 +1067,7 @@ function emit(next, done, context) {
     if (result !== true || ++index >= context.sources.length) done(result);
     else try {
       const source = context.sources[index];
-      adapt(source)(next, proceed, context);
+      selectAdapter(source)(next, proceed, context);
     }
     catch (error) {
       done(error);
@@ -1782,6 +1853,10 @@ function min() {
   return this.chain(minOperator());
 }
 
+function notify(target, ...parameters) {
+  return this.chain(selectNotifier(target, parameters));
+}
+
 /**
 Applies a function against an accumulator and each value emitted by this flow
 to reduce it to a single value, returns new flow emitting the reduced value.
@@ -1910,28 +1985,18 @@ function reverse() {
 }
 
 /**
-Runs this flow asynchronously, initiating source to emit values,
-applying declared operators to emitted values and invoking provided callbacks.
-If no callbacks provided, runs this flow for its side-effects only.
+Runs this flow.
 
 @alias Flow#run
 
-@param {function} [next]
-Callback to execute for each emitted value, taking two arguments: result, data.
-@param {function} [done]
-If next parameter is callback,
-then callback to execute as emission is complete, taking two arguments: result, data.
-Or data argument.
 @param {function} [data]
 Arbitrary value passed to each callback invoked by this flow as the last argument.
 
-@return {Promise}
-A promise resolving when this flow completes successfully or rejecting otherwise.
+@return {Flow}
+This flow.
 
 @example
-aeroflow(1, 2, 3).run(
-  result => console.log('next', result),
-  result => console.log('done', result));
+aeroflow(1, 2, 3).dump().run();
 // next 1
 // next 2
 // next 3
@@ -1943,33 +2008,18 @@ aeroflow(Promise.reject('test')).dump().run();
 // done Error: test(…)
 // Uncaught (in promise) Error: test(…)
 */
-function run(next, done, data) {
-  if (isFunction(next)) {
-    if (!isFunction(done)) {
-      data = done;
-      done = noop;
-    }
-  }
-  else {
-    data = next;
-    done = next = noop;
-  }
-  const context = objectDefineProperties({}, {
-    data: { value: data },
-    sources: { value: this.sources }
+function run(data) {
+  return new Promise((resolve, reject) => {
+    this.emitter(
+      truthy,
+      result => isError(result)
+        ? reject(result)
+        : resolve(this),
+      objectDefineProperties({}, {
+        data: { value: data },
+        sources: { value: this.sources }
+      }));
   });
-  return new Promise((resolve, reject) => this.emitter(
-    result => false !== next(result, data),
-    result => {
-      try {
-        done(result, data);
-      }
-      catch (error) {
-        result = error;
-      }
-      (isError(result) ? reject : resolve)(result);
-    },
-    context));
 }
 
 /**
@@ -2331,6 +2381,7 @@ Flow[PROTOTYPE] = objectCreate(operators, {
   bind: { value: bind },
   chain: { value: chain },
   concat: { value: concat },
+  notify: { value: notify },
   run: { value: run }
 });
 
@@ -2340,6 +2391,7 @@ objectDefineProperties(aeroflow, {
   empty: { enumerable: true, value: new Flow(emptyGenerator(true)) },
   expand: { value: expand },
   just: { value: just },
+  notifiers: { value: notifiers },
   operators: { value: operators },
   random: { value: random },
   range: { value: range },

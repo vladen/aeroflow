@@ -1,4 +1,9 @@
-var chai = require("chai");
-chai.use(require("chai-as-promised"));
+import chai from 'chai';
+import spies from 'chai-spies';
 
-require('./test/aeroflow.js')(require('./source/aeroflow.js'), chai.assert);
+chai.use(spies);
+
+import aeroflow from './source/aeroflow.js';
+import aeroflowTests from './tests/aeroflow.js';
+
+aeroflowTests(aeroflow, chai);
