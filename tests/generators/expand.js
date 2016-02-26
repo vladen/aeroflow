@@ -23,8 +23,8 @@ export default (aeroflow, exec, expect, sinon) => describe('.expand', () => {
     it('Passes undefined to @expander as first argument when no seed has been specified', () =>
       exec(
         () => sinon.spy(),
-        spy => aeroflow.expand(arg => spy(typeof arg)).take(1).run(),
-        spy => expect(spy).to.have.been.calledWith('undefined')));
+        spy => aeroflow.expand(spy).take(1).run(),
+        spy => expect(spy).to.have.been.calledWith(undefined)));
 
     it('Passes value returned by @expander to @expander as first argument on subsequent iteration', () =>
       exec(
@@ -32,21 +32,21 @@ export default (aeroflow, exec, expect, sinon) => describe('.expand', () => {
           const value = 'test';
           return { value, spy: sinon.spy(() => value) };
         },
-        ctx => aeroflow.expand(result => ctx.spy(result)).take(2).run(),
+        ctx => aeroflow.expand(ctx.spy).take(2).run(),
         ctx => expect(ctx.spy).to.have.been.calledWith(ctx.value)));
 
     it('Passes zero-based index of iteration to @expander as second argument', () =>
       exec(
         () => ({ limit: 3, spy: sinon.spy() }),
-        ctx => aeroflow.expand((_, index) => ctx.spy(index)).take(ctx.limit).run(),
+        ctx => aeroflow.expand(ctx.spy).take(ctx.limit).run(),
         ctx => Array(ctx.limit).fill(0).forEach(
-          (_, i) => expect(ctx.spy).to.have.been.calledWith(i))));
+          (_, i) => expect(ctx.spy).to.have.been.calledWith(undefined, i))));
 
     it('Passes context data to @expander as third argument', () =>
       exec(
         () => ({ data: 'test', spy: sinon.spy() }),
-        ctx => aeroflow.expand((_, __, data) => ctx.spy(data)).take(1).run(ctx.data),
-        ctx => expect(ctx.spy).to.have.been.calledWith(ctx.data)));
+        ctx => aeroflow.expand(ctx.spy).take(1).run(ctx.data),
+        ctx => expect(ctx.spy).to.have.been.calledWith(undefined, 0, ctx.data)));
 
     it('Emits "next" notification with value returned by @expander', () =>
       exec(
@@ -59,7 +59,7 @@ export default (aeroflow, exec, expect, sinon) => describe('.expand', () => {
     it('Passes @seed to @expander as first argument at first iteration', () =>
       exec(
         () => ({ seed: 'test', spy: sinon.spy() }),
-        ctx => aeroflow.expand(seed => ctx.spy(seed), ctx.seed).take(1).run(),
+        ctx => aeroflow.expand(ctx.spy, ctx.seed).take(1).run(),
         ctx => expect(ctx.spy).to.have.been.calledWith(ctx.seed)));
   });
 });

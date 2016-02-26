@@ -44,17 +44,11 @@ export default (aeroflow, exec, expect, sinon) => describe('#catch', () => {
         spy => aeroflow('test').catch(spy).run(),
         spy => expect(spy).not.to.have.been.called));
 
-    it('Calls @alternative and passes error as first argument when flow emits error', () =>
+    it('Calls @alternative and passes error and context data when flow emits error', () =>
       exec(
-        () => ({ error: new Error('test'), spy: sinon.spy() }),
-        ctx => aeroflow(ctx.error).catch(ctx.spy).run(),
-        ctx => expect(ctx.spy).to.have.been.calledWith(ctx.error)));
-
-    it('Calls @alternative and passes context data as second argument when flow emits error', () =>
-      exec(
-        () => ({ data: 'test', spy: sinon.spy() }),
-        ctx => aeroflow(new Error('test')).catch((_, data) => ctx.spy(data)).run(ctx.data),
-        ctx => expect(ctx.spy).to.have.been.calledWith(ctx.data)));
+        () => ({ data: 'test', error: new Error('test'), spy: sinon.spy() }),
+        ctx => aeroflow(ctx.error).catch(ctx.spy).run(ctx.data),
+        ctx => expect(ctx.spy).to.have.been.calledWith(ctx.error, ctx.data)));
 
     it('Emits "next" notification argumented with value returned by @alternative when flow emits error', () =>
       exec(

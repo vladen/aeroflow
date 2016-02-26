@@ -164,7 +164,7 @@ describe('aeroflow', () => {
   });
 
   describe('(@source:function)', () => {
-    it('Calls @source and passes ctx data as first argument', () =>
+    it('Calls @source and passes context data', () =>
       exec(
         () => ({ data: {}, source: sinon.spy() }),
         ctx => aeroflow(ctx.source).run(ctx.data),
