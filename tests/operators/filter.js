@@ -44,10 +44,10 @@ export default (aeroflow, assert) => describe('#filter', () => {
     });
 
     it('Passes context @data to @condition as third argument', () => {
-      const data = {};
+      const expectation = {};
       return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow('test').filter((_, __, data) => done(data)).run(fail, fail, data)),
-        data);
+        aeroflow('test').filter((_, __, data) => done(data)).run(fail, fail, expectation)),
+        expectation);
     });
 
     it('Emits only @values emitted by flow and passing @condition test', () => {

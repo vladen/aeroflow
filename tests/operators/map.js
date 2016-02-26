@@ -42,10 +42,10 @@ export default (aeroflow, assert) => describe('#map', () => {
     });
 
     it('Passes context data to @mapping as third argument', () => {
-      const data = {};
+      const expectation = {};
       return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow('test').map((_, __, data) => done(data)).run(fail, fail, data)),
-        data);
+        aeroflow('test').map((_, __, data) => done(data)).run(fail, fail, expectation)),
+        expectation);
     });
   });
 

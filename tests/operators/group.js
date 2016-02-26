@@ -28,10 +28,10 @@ export default (aeroflow, assert) => describe('#group', () => {
     });
 
     it('Passes context data to @selector as third argument', () => {
-      const data = {};
+      const expectation = {};
       return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow('test').group((_, __, data) => done(data)).run(fail, fail, data)),
-        data);
+        aeroflow('test').group((_, __, data) => done(data)).run(fail, fail, expectation)),
+        expectation);
     });
 
     it('Passes zero-based @index of iteration to @condition as second argument', () => {
@@ -62,7 +62,7 @@ export default (aeroflow, assert) => describe('#group', () => {
 
   describe('(@selectors:array)', () => {
     it('Emits nested named groups which divide @values by first predicate from @selectors', () => {
-      const values  = [{name: 'test1', sex: 'female'}, {name: 'test2', sex: 'male'}],
+      const values = [{name: 'test1', sex: 'female'}, {name: 'test2', sex: 'male'}],
         expectation = [values[0].name, values[1].name],
         selectors = [(value) => value.name, (value) => value.sex];
 
@@ -72,7 +72,7 @@ export default (aeroflow, assert) => describe('#group', () => {
     });
 
     it('Use maps to contain nested groups which divided @values by @selectors', () => {
-      const values  = [{name: 'test1', sex: 'female'}, {name: 'test2', sex: 'male'}],
+      const values = [{name: 'test1', sex: 'female'}, {name: 'test2', sex: 'male'}],
         selectors = [(value) => value.name, (value) => value.sex];
 
       return assert.eventually.typeOf(new Promise((done, fail) =>
@@ -81,7 +81,7 @@ export default (aeroflow, assert) => describe('#group', () => {
     });
 
     it('Emits nested named groups which divide @values by second predicate from @selectors', () => {
-       const values  = [{name: 'test1', sex: 'female'}, {name: 'test2', sex: 'male'}],
+       const values = [{name: 'test1', sex: 'female'}, {name: 'test2', sex: 'male'}],
          expectation = [[values[0].sex], [values[1].sex]],
        selectors = [(value) => value.name, (value) => value.sex];
 
@@ -91,7 +91,7 @@ export default (aeroflow, assert) => describe('#group', () => {
     });
 
     it('Emits @values on the root of nested groups', () => {
-      const values  = [{name: 'test1', sex: 'female'}, {name: 'test2', sex: 'male'}],
+      const values = [{name: 'test1', sex: 'female'}, {name: 'test2', sex: 'male'}],
          selectors = [(value) => value.name, (value) => value.sex];
 
       return assert.eventually.sameDeepMembers(new Promise((done, fail) =>
