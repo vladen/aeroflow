@@ -1,19 +1,19 @@
-export default (aeroflow, chai, exec, noop) => describe('.empty', () => {
+export default (aeroflow, exec, expect, sinon) => describe('.empty', () => {
   it('Gets instance of Aeroflow', () =>
     exec(
-      noop,
+      null,
       () => aeroflow.empty,
-      result => chai.expect(result).to.be.an('Aeroflow')));
+      result => expect(result).to.be.an('Aeroflow')));
 
   it('Gets flow emitting "done" notification argumented with "true"', () =>
     exec(
-      () => chai.spy(),
-      spy => aeroflow.empty.notify(noop, spy).run(),
-      spy => chai.expect(spy).to.have.been.called.with(true)));
+      () => sinon.spy(),
+      spy => aeroflow.empty.notify(Function(), spy).run(),
+      spy => expect(spy).to.have.been.calledWith(true)));
 
   it('Gets flow not emitting "next" notification', () =>
     exec(
-      () => chai.spy(),
+      () => sinon.spy(),
       spy => aeroflow.empty.notify(spy).run(),
-      spy => chai.expect(spy).not.to.have.been.called()));
+      spy => expect(spy).not.to.have.been.called));
 });

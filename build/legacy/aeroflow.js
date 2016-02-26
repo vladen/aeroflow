@@ -568,8 +568,8 @@
     };
   }
 
-  function coalesceOperator(alternates) {
-    if (!alternates.length) return identity;
+  function coalesceOperator(alternatives) {
+    if (!alternatives.length) return identity;
     return function (emitter) {
       return function (next, done, context) {
         var empty = true,
@@ -577,7 +577,7 @@
         emitter(onNext, onDone, context);
 
         function onDone(result) {
-          if (!isError(result) && empty && index < alternates.length) selectAdapter(alternates[index++])(onNext, onDone, context);else done(result);
+          if (!isError(result) && empty && index < alternatives.length) selectAdapter(alternatives[index++])(onNext, onDone, context);else done(result);
         }
 
         function onNext(result) {
@@ -1343,11 +1343,11 @@
   }
 
   function coalesce() {
-    for (var _len4 = arguments.length, alternates = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-      alternates[_key4] = arguments[_key4];
+    for (var _len4 = arguments.length, alternatives = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+      alternatives[_key4] = arguments[_key4];
     }
 
-    return this.chain(coalesceOperator(alternates));
+    return this.chain(coalesceOperator(alternatives));
   }
 
   function concat() {

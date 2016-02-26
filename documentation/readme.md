@@ -254,7 +254,7 @@ aeroflow.repeat(index => index, index => 500 + 500 * index).take(3).dump().run()
     * [.bind([...sources])](#Flow+bind) ⇒ <code>[Flow](#Flow)</code>
     * [.catch([alternative])](#Flow+catch) ⇒ <code>[Flow](#Flow)</code>
     * [.chain([operator])](#Flow+chain) ⇒ <code>[Flow](#Flow)</code>
-    * [.coalesce([...alternates])](#Flow+coalesce) ⇒ <code>[Flow](#Flow)</code>
+    * [.coalesce([...alternatives])](#Flow+coalesce) ⇒ <code>[Flow](#Flow)</code>
     * [.concat([...sources])](#Flow+concat) ⇒ <code>[Flow](#Flow)</code>
     * [.count()](#Flow+count) ⇒ <code>[Flow](#Flow)</code>
     * [.delay([interval])](#Flow+delay) ⇒ <code>[Flow](#Flow)</code>
@@ -344,7 +344,7 @@ aeroflow(new Error('test')).dump('before ').catch('success').dump('after ').run(
 - [operator] <code>function</code>
 
 <a name="Flow+coalesce"></a>
-### flow.coalesce([...alternates]) ⇒ <code>[Flow](#Flow)</code>
+### flow.coalesce([...alternatives]) ⇒ <code>[Flow](#Flow)</code>
 Returns new flow emitting values from alternate data sources
 when this flow is empty (emits only "done" event).
 
@@ -353,7 +353,7 @@ when this flow is empty (emits only "done" event).
 and then all provided values.  
 **Params**
 
-- [...alternates] <code>Array.&lt;any&gt;</code> - Data sources to emit values from in case this flow is empty.
+- [...alternatives] <code>Array.&lt;any&gt;</code> - Data sources to emit values from in case this flow is empty.
 
 **Example**  
 ```js

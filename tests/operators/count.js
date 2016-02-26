@@ -1,28 +1,33 @@
-export default (aeroflow, assert) => describe('#count', () => {
+export default (aeroflow, exec, expect, sinon) => describe('#count', () => {
   it('Is instance method', () =>
-    assert.isFunction(aeroflow.empty.count));
+    exec(
+      null,
+      () => aeroflow.empty.count,
+      result => expect(result).to.be.a('function')));
 
   describe('()', () => {
     it('Returns instance of Aeroflow', () =>
-      assert.typeOf(aeroflow.empty.count(), 'Aeroflow'));
+      exec(
+        null,
+        () => aeroflow.empty.count(),
+        result => expect(result).to.be.an('Aeroflow')));
 
-    it('Emits 0 when flow is empty', () =>
-      assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow.empty.count().run(done, fail)),
-        0));
+    it('Emits "next" notification argumented with "0" when flow is empty', () =>
+      exec(
+        () => sinon.spy(),
+        spy => aeroflow.empty.count().notify(result => spy(result)).run(),
+        spy => expect(spy).to.have.been.calledWith(0)));
 
-    it('Emits 1 when flow emits single @value', () => {
-      const expectation = 1;
-      return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow(expectation).count().run(done, fail)),
-        expectation);
-    });
+    it('Emits "next" notification argumented with "1" when flow emits single value', () =>
+      exec(
+        () => sinon.spy(),
+        spy => aeroflow('test').count().notify(spy).run(),
+        spy => expect(spy).to.have.been.calledWith(1)));
 
-    it('Emits number of @values emitted by flow when flow emits several @values', () => {
-      const values = [1, 2, 3], expectation = values.length;
-      return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow(values).count().run(done, fail)),
-        expectation);
-    });
+    it('Emits number of @values emitted by flow when flow emits several @values', () =>
+      exec(
+        () => ({ values: [1, 2, 3], spy: sinon.spy() }),
+        ctx => aeroflow(ctx.values).count().notify(ctx.spy).run(),
+        ctx => expect(ctx.spy).to.have.been.calledWith(ctx.values.length)));
   });
 });

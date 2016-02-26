@@ -10,12 +10,13 @@
     <script src="../../node_modules/core-js/client/core.js"></script>
     <script src="../../node_modules/mocha/mocha.js"></script>
     <script src="../../node_modules/chai/chai.js"></script>
-    <script src="../../node_modules/chai-spies/chai-spies.js"></script>
+    <script src="../sinon-1.17.3.js"></script>
+    <script src="../../node_modules/sinon-chai/lib/sinon-chai.js"></script>
     <script src="aeroflow.js"></script>
     <script src="aeroflow.tests.js"></script>
     <script>
       mocha.setup({ ui: 'bdd' });
-      aeroflowTests(aeroflow, chai);
+      aeroflowTests(aeroflow, chai.expect, sinon);
       mocha.run();
     </script>
   </body>

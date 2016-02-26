@@ -410,7 +410,7 @@ when this flow is empty (emits only "done" event).
 
 @alias Flow#coalesce
 
-@param {any[]} [alternates]
+@param {any[]} [alternatives]
 Data sources to emit values from in case this flow is empty.
 
 @return {Flow}
@@ -427,8 +427,8 @@ aeroflow().coalesce([], 'alternate').dump().run();
 // next alternate
 // done true
 */
-function coalesce(...alternates) {
-  return this.chain(coalesceOperator(alternates));
+function coalesce(...alternatives) {
+  return this.chain(coalesceOperator(alternatives));
 }
 
 /**

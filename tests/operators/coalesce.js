@@ -1,39 +1,49 @@
-export default (aeroflow, assert) => describe('#coalesce', () => {
+export default (aeroflow, exec, expect, sinon) => describe('#coalesce', () => {
   it('Is instance method', () =>
-    assert.isFunction(aeroflow.empty.coalesce));
+    exec(
+      null,
+      () => aeroflow.empty.coalesce,
+      result => expect(result).to.be.a('function')));
 
   describe('()', () => {
     it('Returns instance of Aeroflow', () =>
-      assert.typeOf(aeroflow.empty.coalesce(), 'Aeroflow'));
+      exec(
+        null,
+        () => aeroflow.empty.coalesce(),
+        result => expect(result).to.be.an('Aeroflow')));
 
-    it('Emits "done" notification only when flow is empty', () =>
-      assert.isFulfilled(new Promise((done, fail) =>
-        aeroflow.empty.coalesce().run(fail, done))));
+    it('Does not emit "next" notification when flow is empty', () =>
+      exec(
+        () => sinon.spy(),
+        spy => aeroflow.empty.coalesce().notify(spy).run(),
+        spy => expect(spy).not.to.have.been.called));
   });
 
-  describe('(@alternate:function)', () => {
-    it('Does not call @alternate when flow is not empty', () =>
-      assert.isFulfilled(new Promise((done, fail) =>
-        aeroflow('test').coalesce(fail).run(done, fail))));
+  describe('(@alternative:function)', () => {
+    it('Calls @alternative when flow is empty', () =>
+      exec(
+        () => sinon.spy(),
+        spy => aeroflow.empty.coalesce(spy).run(),
+        spy => expect(spy).to.have.been.called));
 
-    it('Does not call @alternate when flow emits error', () =>
-      assert.isFulfilled(new Promise((done, fail) =>
-        aeroflow(new Error('test')).coalesce(fail).run(fail, done))));
+    it('Does not call @alternative when flow emits error', () =>
+      exec(
+        () => sinon.spy(),
+        spy => aeroflow(new Error('test')).coalesce(spy).run(),
+        spy => expect(spy).not.to.have.been.called));
 
-    it('Emits "next" notification with value returned by @alternate when flow is empty', () => {
-      const alternate = 'alternate';
-      return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow.empty.coalesce(() => alternate).run(done, fail)),
-        alternate);
-    });
+    it('Emits "next" notification argumented with value returned by @alternative when flow is empty', () =>
+      exec(
+        () => ({ value: 'test', spy: sinon.spy() }),
+        ctx => aeroflow.empty.coalesce(() => ctx.value).notify(ctx.spy).run(),
+        ctx => expect(ctx.spy).to.have.been.calledWith(ctx.value)));
   });
 
-  describe('(@alternate:!function)', () => {
-    it('Emits "next" notification with @alternate value when flow is empty', () => {
-      const alternate = 'alternate';
-      return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow.empty.coalesce(alternate).run(done, fail)),
-        alternate);
-    });
+  describe('(@alternative:!function)', () => {
+    it('Emits "next" notification argumented with @alternative value when flow is empty', () =>
+      exec(
+        () => ({ alternative: 'test', spy: sinon.spy() }),
+        ctx => aeroflow.empty.coalesce(ctx.alternative).notify(ctx.spy).run(),
+        ctx => expect(ctx.spy).to.have.been.calledWith(ctx.alternative)));
   });
 });

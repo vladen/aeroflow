@@ -1,9 +1,10 @@
 import chai from 'chai';
-import spies from 'chai-spies';
+import sinon from 'sinon';
+import sinonChai from 'sinon-chai';
 
-chai.use(spies);
+chai.use(sinonChai);
 
 import aeroflow from './source/aeroflow.js';
 import aeroflowTests from './tests/aeroflow.js';
 
-aeroflowTests(aeroflow, chai);
+aeroflowTests(aeroflow, chai.expect, sinon);

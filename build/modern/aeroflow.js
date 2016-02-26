@@ -422,14 +422,14 @@ function catchOperator(alternative) {
     context);
 }
 
-function coalesceOperator(alternates) {
-  if (!alternates.length) return identity;
+function coalesceOperator(alternatives) {
+  if (!alternatives.length) return identity;
   return emitter => (next, done, context) => {
     let empty = true, index = 0;
     emitter(onNext, onDone, context);
     function onDone(result) {
-      if (!isError(result) && empty && index < alternates.length)
-        selectAdapter(alternates[index++])(onNext, onDone, context);
+      if (!isError(result) && empty && index < alternatives.length)
+        selectAdapter(alternatives[index++])(onNext, onDone, context);
       else done(result);
     }
     function onNext(result) {
@@ -1425,7 +1425,7 @@ when this flow is empty (emits only "done" event).
 
 @alias Flow#coalesce
 
-@param {any[]} [alternates]
+@param {any[]} [alternatives]
 Data sources to emit values from in case this flow is empty.
 
 @return {Flow}
@@ -1442,8 +1442,8 @@ aeroflow().coalesce([], 'alternate').dump().run();
 // next alternate
 // done true
 */
-function coalesce(...alternates) {
-  return this.chain(coalesceOperator(alternates));
+function coalesce(...alternatives) {
+  return this.chain(coalesceOperator(alternatives));
 }
 
 /**
