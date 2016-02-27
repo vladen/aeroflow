@@ -1,65 +1,68 @@
-export default (aeroflow, exec, expect, sinon) => describe('.expand', () => {
+export default (aeroflow, execute, expect, sinon) => describe('.expand', () => {
   it('Is static method', () =>
-    exec(
-      null,
-      () => aeroflow.expand,
-      result => expect(result).to.be.a('function')));
+    execute(
+      context => aeroflow.expand,
+      context => expect(context.result).to.be.a('function')));
 
   describe('()', () => {
     it('Returns instance of Aeroflow', () =>
-      exec(
-        null,
-        () => aeroflow.expand(),
-        result => expect(result).to.be.an('Aeroflow')));
+      execute(
+        context => aeroflow.expand(),
+        context => expect(context.result).to.be.an('Aeroflow')));
   });
 
   describe('(@expander:function)', () => {
-    it('Calls @expander', () =>
-      exec(
-        () => sinon.spy(),
-        spy => aeroflow.expand(spy).take(1).run(),
-        spy => expect(spy).to.have.been.called));
+    it('Calls @expander(undefined, 0, @context) at first iteration', () =>
+      execute(
+        context => aeroflow.expand(context.spy).take(1).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(undefined, 0, context)));
 
-    it('Passes undefined to @expander as first argument when no seed has been specified', () =>
-      exec(
-        () => sinon.spy(),
-        spy => aeroflow.expand(spy).take(1).run(),
-        spy => expect(spy).to.have.been.calledWith(undefined)));
-
-    it('Passes value returned by @expander to @expander as first argument on subsequent iteration', () =>
-      exec(
-        () => {
-          const value = 'test';
-          return { value, spy: sinon.spy(() => value) };
+    it('Calls @expander(@value, @index, @context) at subsequent iterations with @value previously returned by @expander', () =>
+      execute(
+        context => {
+          context.expander = (value, ...args) => {
+            context.spy(value, ...args);
+            return value ? value + 1 : 1;
+          };
+          context.iterations = 3;
         },
-        ctx => aeroflow.expand(ctx.spy).take(2).run(),
-        ctx => expect(ctx.spy).to.have.been.calledWith(ctx.value)));
+        context => aeroflow.expand(context.expander).take(context.iterations).run(context),
+        context => Array(context.iterations).fill(0).forEach(
+          (_, index) => expect(context.spy.getCall(index)).to.have.been.calledWithExactly(index || undefined, index, context))));
 
-    it('Passes zero-based index of iteration to @expander as second argument', () =>
-      exec(
-        () => ({ limit: 3, spy: sinon.spy() }),
-        ctx => aeroflow.expand(ctx.spy).take(ctx.limit).run(),
-        ctx => Array(ctx.limit).fill(0).forEach(
-          (_, i) => expect(ctx.spy).to.have.been.calledWith(undefined, i))));
+    it('Emits done(@error, @context) notification with @error thrown by @expander', () =>
+      execute(
+        context => {
+          context.error = new Error('test');
+          context.expander = () => { throw context.error };
+        },
+        context => aeroflow(context.expander).notify(context.nop, context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(context.error, context)));
 
-    it('Passes context data to @expander as third argument', () =>
-      exec(
-        () => ({ data: 'test', spy: sinon.spy() }),
-        ctx => aeroflow.expand(ctx.spy).take(1).run(ctx.data),
-        ctx => expect(ctx.spy).to.have.been.calledWith(undefined, 0, ctx.data)));
-
-    it('Emits "next" notification with value returned by @expander', () =>
-      exec(
-        () => ({ value: 'test', spy: sinon.spy() }),
-        ctx => aeroflow.expand(() => ctx.value).take(1).notify(ctx.spy).run(),
-        ctx => expect(ctx.spy).to.have.been.calledWith(ctx.value)));
+    it('Emits next(@value, @index, @context) notification for each @value returned by @expander', () =>
+      execute(
+        context => {
+          context.expander = value => value ? value + 1 : 1;
+          context.iterations = 3;
+        },
+        context => aeroflow.expand(context.expander).take(context.iterations).notify(context.spy).run(context),
+        context => Array(context.iterations).fill(0).forEach(
+          (_, index) => expect(context.spy.getCall(index)).to.have.been.calledWithExactly(index + 1, index, context))));
   });
 
-  describe('(@expander:function, @seed:any)', () => {
-    it('Passes @seed to @expander as first argument at first iteration', () =>
-      exec(
-        () => ({ seed: 'test', spy: sinon.spy() }),
-        ctx => aeroflow.expand(ctx.spy, ctx.seed).take(1).run(),
-        ctx => expect(ctx.spy).to.have.been.calledWith(ctx.seed)));
+  describe('(@expander:function, @seed)', () => {
+    it('Calls @expander(@seed, 0, @context) at first iteration', () =>
+      execute(
+        context => context.seed = 'test',
+        context => aeroflow.expand(context.spy, context.seed).take(1).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(context.seed, 0, context)));
+  });
+
+  describe('(@expander:!function)', () => {
+    it('Emits next(@expander, 0, @context) notification', () =>
+      execute(
+        context => context.expander = 'test',
+        context => aeroflow.expand(context.expander).take(1).notify(context.spy).run(),
+        context => expect(context.spy).to.have.been.calledWith(context.expander)));
   });
 });

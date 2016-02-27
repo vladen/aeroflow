@@ -1,26 +1,32 @@
-export default (aeroflow, assert) => describe('#toArray', () => {
+export default (aeroflow, execute, expect, sinon) => describe('#toArray', () => {
   it('Is instance method', () =>
-    assert.isFunction(aeroflow.empty.toArray));
+    execute(
+      context => aeroflow.empty.toArray,
+      context => expect(context.result).to.be.a('function')));
 
   describe('()', () => {
     it('Returns instance of Aeroflow', () =>
-      assert.typeOf(aeroflow.empty.toArray(), 'Aeroflow'));
+      execute(
+        context => aeroflow.empty.toArray(),
+        context => expect(context.result).to.be.an('Aeroflow')));
 
-    it('Emits "next" notification aergumented with array when flow is empty', () =>
-      assert.eventually.typeOf(new Promise((done, fail) =>
-        aeroflow.empty.toArray(true).run(done, fail)),
-        'Array'));
+    it('Emits "next" notification with empty array when flow is empty', () =>
+      execute(
+        context => aeroflow.empty.toArray().notify(context.next).run(),
+        context => {
+          const array = context.next.args[0][0];
+          expect(array).to.be.an('array');
+          expect(array).to.have.lengthOf(0);
+        }));
 
-    it('Emits "next" notification aergumented with empty array when flow is empty', () =>
-      assert.eventually.lengthOf(new Promise((done, fail) =>
-        aeroflow.empty.toArray(true).run(done, fail)),
-        0));
-
-    it('Emits array of @values when flow emits several @values', () => {
-      const values = [1, 2];
-      return assert.eventually.sameMembers(new Promise((done, fail) =>
-        aeroflow(values).toArray().run(done, fail)),
-        values);
-    });
+    it('Emits "next" notification with array of values emitted by flow', () =>
+      execute(
+        context => context.values = [1, 2],
+        context => aeroflow(context.values).toArray().notify(context.next).run(),
+        context => {
+          const array = context.next.args[0][0];
+          expect(array).to.include.members(context.values);
+          expect(context.values).to.include.members(array);
+        }));
   });
 });

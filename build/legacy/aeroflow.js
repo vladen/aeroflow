@@ -1212,21 +1212,12 @@
       case FUNCTION:
         return takeWhileOperator(condition);
 
+      case UNDEFINED:
+        return identity;
+
       default:
         return condition ? identity : tie(emptyGenerator, false);
     }
-  }
-
-  function tapOperator(callback) {
-    return function (emitter) {
-      return isFunction(callback) ? function (next, done, context) {
-        var index = 0;
-        emitter(function (result) {
-          callback(result, index++, context.data);
-          return next(result);
-        }, done, context);
-      } : emitter;
-    };
   }
 
   function toMapOperator(keySelector, valueSelector) {
@@ -1442,8 +1433,13 @@
     var _this = this;
 
     return new Promise(function (resolve, reject) {
-      _this.emitter(truthy, function (result) {
-        return isError(result) ? reject(result) : resolve(_this);
+      var last = undefined;
+
+      _this.emitter(function (result) {
+        last = result;
+        return true;
+      }, function (result) {
+        return isError(result) ? reject(result) : resolve(last);
       }, objectDefineProperties({}, {
         data: {
           value: data
@@ -1481,10 +1477,6 @@
 
   function take(condition) {
     return this.chain(takeOperator(condition));
-  }
-
-  function tap(callback) {
-    return this.chain(tapOperator(callback));
   }
 
   function toArray() {
@@ -1606,10 +1598,6 @@
     },
     take: {
       value: take,
-      writable: true
-    },
-    tap: {
-      value: tap,
       writable: true
     },
     toArray: {

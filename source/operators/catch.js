@@ -1,6 +1,5 @@
 import { isError, toFunction } from '../utilites';
 import { selectAdapter } from '../adapters/index';
-import { emptyGenerator } from '../generators/empty';
 
 export function catchOperator(alternative) {
   alternative = toFunction(alternative, alternative || []);

@@ -1,6 +1,6 @@
 import { AEROFLOW, CLASS, PROTOTYPE } from './symbols';
 
-import { isDefined, isError, objectDefineProperties, objectCreate, truthy } from './utilites';
+import { isDefined, isError, objectDefineProperties, objectCreate } from './utilites';
 
 import { adapters, selectAdapter } from './adapters/index';
 import { valueAdapter } from './adapters/value';
@@ -40,7 +40,6 @@ import { someOperator } from './operators/some';
 import { sortOperator } from './operators/sort';
 import { sumOperator } from './operators/sum';
 import { takeOperator } from './operators/take';
-import { tapOperator } from './operators/tap';
 import { toArrayOperator } from './operators/toArray';
 import { toMapOperator } from './operators/toMap';
 import { toSetOperator } from './operators/toSet';
@@ -204,6 +203,7 @@ aeroflow.just([1, 2, 3]).dump().run();
 // next [1, 2, 3]
 // done
 */
+// TODO: multiple arguments
 function just(value) {
   return new Flow(valueAdapter(value));
 }
@@ -986,20 +986,29 @@ aeroflow(1, 2, 3).dump().run();
 // next 2
 // next 3
 // done true
-aeroflow(1, 2, 3).dump().run(() => false);
-// next 1
-// done false
+aeroflow(data => console.log('source:', data))
+  .map((_, __, data) => console.log('map:', data))
+  .filter((_, __, data) => console.log('filter:', data))
+  .run('data');
+// source: data
+// map: data
+// filter: data
+// done true
 aeroflow(Promise.reject('test')).dump().run();
 // done Error: test(…)
 // Uncaught (in promise) Error: test(…)
 */
 function run(data) {
   return new Promise((resolve, reject) => {
+    let last;
     this.emitter(
-      truthy,
+      result => {
+        last = result;
+        return true;
+      },
       result => isError(result)
         ? reject(result)
-        : resolve(this),
+        : resolve(last),
       objectDefineProperties({}, {
         data: { value: data },
         sources: { value: this.sources }
@@ -1190,30 +1199,6 @@ function take(condition) {
 }
 
 /**
-Executes provided callback once per each value emitted by this flow,
-returns new tapped flow or this flow if no callback provided.
-
-@alias Flow#tap
-
-@param {function} [callback]
-Function to execute for each value emitted, taking three arguments:
-  value emitted by this flow,
-  index of the value,
-  context object.
-
-@return {Flow}
-
-@example
-aeroflow(1, 2, 3).tap((value, index) => console.log('value:', value, 'index:', index)).run();
-// value: 1 index: 0
-// value: 2 index: 1
-// value: 3 index: 2
-*/
-function tap(callback) {
-  return this.chain(tapOperator(callback));
-}
-
-/**
 Collects all values emitted by this flow to array, returns flow emitting this array.
 
 @alias Flow#toArray
@@ -1354,7 +1339,6 @@ const operators = objectCreate(Object[PROTOTYPE], {
   sort: { value: sort, writable: true },
   sum: { value: sum, writable: true },
   take: { value: take, writable: true },
-  tap: { value: tap, writable: true },
   toArray: { value: toArray, writable: true },
   toMap: { value: toMap, writable: true },
   toSet: { value: toSet, writable: true },

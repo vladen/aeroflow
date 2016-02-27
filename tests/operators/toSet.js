@@ -1,28 +1,31 @@
-export default (aeroflow, assert) => describe('#toSet', () => {
-  it('Is instance method', () => {
-    assert.isFunction(aeroflow.empty.toSet);
-  });
+export default (aeroflow, execute, expect, sinon) => describe('#toSet', () => {
+  it('Is instance method', () =>
+    execute(
+      context => aeroflow.empty.toSet,
+      context => expect(context.result).to.be.a('function')));
 
   describe('()', () => {
     it('Returns instance of Aeroflow', () =>
-      assert.typeOf(aeroflow.empty.toSet(), 'Aeroflow'));
-
-    it('Emits "next" notification with set when flow is empty', () =>
-      assert.eventually.typeOf(new Promise((done, fail) =>
-        aeroflow.empty.toSet(true).run(done, fail)),
-        'Set'));
+      execute(
+        context => aeroflow.empty.toSet(),
+        context => expect(context.result).to.be.an('Aeroflow')));
 
     it('Emits "next" notification with empty set when flow is empty', () =>
-      assert.eventually.propertyVal(new Promise((done, fail) =>
-        aeroflow.empty.toSet(true).run(done, fail)),
-        'size',
-        0));
+      execute(
+        context => aeroflow.empty.toSet().notify(context.next).run(),
+        context => {
+          const set = context.next.args[0][0];
+          expect(set).to.be.a('Set');
+          expect(set).to.have.property('size', 0);
+        }));
 
-    it('Emits "next" notification with set containing unique of @values when flow emits several @values', () => {
-      const values = [1, 2, 1, 3, 2, 3], expectation = Array.from(new Set(values));
-      return assert.eventually.sameMembers(new Promise((done, fail) => 
-        aeroflow(values).toSet().map(set => Array.from(set)).run(done, fail)),
-        expectation);
-    });
+    it('Emits "next" notification with set containing values emitted by flow', () =>
+      execute(
+        context => context.values = [1, 3, 5],
+        context => aeroflow(context.values).toSet().notify(context.next).run(),
+        context => {
+          const set = context.next.args[0][0];
+          context.values.forEach(value => expect(set.has(value)).to.be.true);
+        }));
   });
 });

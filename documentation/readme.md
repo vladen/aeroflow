@@ -280,7 +280,6 @@ aeroflow.repeat(index => index, index => 500 + 500 * index).take(3).dump().run()
     * [.sort([...parameters])](#Flow+sort) ⇒ <code>[Flow](#Flow)</code> &#124; <code>[Flow](#Flow)</code>
     * [.sum([required])](#Flow+sum) ⇒ <code>[Flow](#Flow)</code>
     * [.take([condition])](#Flow+take) ⇒ <code>[Flow](#Flow)</code>
-    * [.tap([callback])](#Flow+tap) ⇒ <code>[Flow](#Flow)</code>
     * [.toArray()](#Flow+toArray) ⇒ <code>[Flow](#Flow)</code>
     * [.toMap([keySelector], [valueSelector])](#Flow+toMap) ⇒ <code>[Flow](#Flow)</code>
     * [.toSet()](#Flow+toSet) ⇒ <code>[Flow](#Flow)</code>
@@ -840,9 +839,14 @@ aeroflow(1, 2, 3).dump().run();
 // next 2
 // next 3
 // done true
-aeroflow(1, 2, 3).dump().run(() => false);
-// next 1
-// done false
+aeroflow(data => console.log('source:', data))
+  .map((_, __, data) => console.log('map:', data))
+  .filter((_, __, data) => console.log('filter:', data))
+  .run('data');
+// source: data
+// map: data
+// filter: data
+// done true
 aeroflow(Promise.reject('test')).dump().run();
 // done Error: test(…)
 // Uncaught (in promise) Error: test(…)
@@ -1006,26 +1010,6 @@ aeroflow(1, 2, 3).take(1).dump().run();
 aeroflow(1, 2, 3).take(-1).dump().run();
 // next 3
 // done true
-```
-<a name="Flow+tap"></a>
-### flow.tap([callback]) ⇒ <code>[Flow](#Flow)</code>
-Executes provided callback once per each value emitted by this flow,
-returns new tapped flow or this flow if no callback provided.
-
-**Kind**: instance method of <code>[Flow](#Flow)</code>  
-**Params**
-
-- [callback] <code>function</code> - Function to execute for each value emitted, taking three arguments:
-  value emitted by this flow,
-  index of the value,
-  context object.
-
-**Example**  
-```js
-aeroflow(1, 2, 3).tap((value, index) => console.log('value:', value, 'index:', index)).run();
-// value: 1 index: 0
-// value: 2 index: 1
-// value: 3 index: 2
 ```
 <a name="Flow+toArray"></a>
 ### flow.toArray() ⇒ <code>[Flow](#Flow)</code>

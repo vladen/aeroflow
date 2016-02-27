@@ -22,265 +22,276 @@ import someOperatorTests from './operators/some';
 import sortOperatorTests from './operators/sort';
 import sumOperatorTests from './operators/sum';
 import takeOperatorTests from './operators/take';
-import tapOperatorTests from './operators/tap';
 import toArrayOperatorTests from './operators/toArray';
 import toMapOperatorTests from './operators/toMap';
 import toSetOperatorTests from './operators/toSet';
 import toStringOperatorTests from './operators/toString';
 
-const exec = (arrange, act, ...asserts) => {
-  let input = typeof arrange === 'function'
-    ? arrange()
-    : arrange;
+const aeroflowTests = (aeroflow, expect, sinon) => {
+
+function execute(arrange, act, assert) {
+  if (arguments.length < 3) {
+    assert = act;
+    act = arrange;
+    arrange = null;
+  }
+  const context = {
+    nop: Function(),
+    spy: sinon.spy()
+  };
+  if (arrange) arrange(context);
   return Promise
-    .resolve(act(input))
-    .catch(() => {})
+    .resolve(act(context))
+    .catch(Function())
     .then(result => {
-      input
-        ? input.result = result
-        : input = result;
-      asserts.forEach(assert => assert(input));
+      context.result = result;
+      assert(context);
     });
 }
 
-const aeroflowTests = (aeroflow, expect, sinon) =>
 describe('aeroflow', () => {
   it('Is function', () =>
-    exec(
-      () => {}, /* arrange */
-      () => aeroflow, /* act */
-      result => expect(result).to.be.a('function') /* assert */ ));
+    execute(
+      context => {}, /* arrange (optional) */
+      context => aeroflow, /* act */
+      context => expect(context.result).to.be.a('function') /* assert */ ));
 
   describe('()', () => {
     it('Returns instance of Aeroflow', () =>
-      exec(
-        null,
-        () => aeroflow(),
-        result => expect(result).to.be.an('Aeroflow')));
+      execute(
+        context => aeroflow(),
+        context => expect(context.result).to.be.an('Aeroflow')));
 
-    it('Returns empty flow emitting "done" notification argumented with "true"', () =>
-      exec(
-        () => sinon.spy(),
-        spy => aeroflow().notify(Function(), spy).run(),
-        spy => expect(spy).to.have.been.calledWith(true)));
+    it('Emits done(true, @context) notification', () =>
+      execute(
+        context => aeroflow().notify(context.nop, context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(true, context)));
 
-    it('Returns empty flow not emitting "next" notification', () =>
-      exec(
-        () => sinon.spy(),
-        spy => aeroflow().notify(spy).run(),
-        spy => expect(spy).to.have.not.been.called));
+    it('Does not emit next notification', () =>
+      execute(
+        context => aeroflow().notify(context.spy).run(),
+        context => expect(context.spy).to.have.not.been.called));
   });
 
   describe('(@source:aeroflow)', () => {
-    it('Returns flow emitting "done" notification argumented with "true" when @source is empty', () =>
-      exec(
-        () => sinon.spy(),
-        spy => aeroflow(aeroflow.empty).notify(Function(), spy).run(),
-        spy => expect(spy).to.have.been.calledWith(true)));
+    it('Emits done(true, @context) notification when @source is empty', () =>
+      execute(
+        context => aeroflow(aeroflow.empty).notify(context.nop, context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(true, context)));
 
-    it('Returns flow emitting "done" notification argumented with "true" when @source is not empty and has been entirely enumerated', () =>
-      exec(
-        () => sinon.spy(),
-        spy => aeroflow(aeroflow([1, 2])).notify(Function(), spy).run(),
-        spy => expect(spy).to.have.been.calledWith(true)));
+    it('Emits done(true, @context) notification when @source is not empty and has been entirely enumerated', () =>
+      execute(
+        context => aeroflow(aeroflow([1, 2])).notify(context.nop, context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(true, context)));
 
-    it('Returns flow emitting "done" notification argumented with "false" when @source is not empty but has not been entirely enumerated', () =>
-      exec(
-        () => sinon.spy(),
-        spy => aeroflow(aeroflow([1, 2])).take(1).notify(Function(), spy).run(),
-        spy => expect(spy).to.have.been.calledWith(false)));
+    it('Emits done(false, @context) notification when @source is not empty but has not been entirely enumerated', () =>
+      execute(
+        context => aeroflow(aeroflow([1, 2])).take(1).notify(context.nop, context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(false, context)));
 
-    it('Returns flow not emitting "next" notification when @source is empty', () =>
-      exec(
-        () => sinon.spy(),
-        spy => aeroflow(aeroflow.empty).notify(spy).run(),
-        spy => expect(spy).to.have.not.been.called));
+    it('Does not emit next notification when @source is empty', () =>
+      execute(
+        context => aeroflow(aeroflow.empty).notify(context.spy).run(),
+        context => expect(context.spy).to.have.not.been.called));
 
-    it('Returns flow emitting several "next" notifications argumented with subsequent items from @source', () =>
-      exec(
-        () => ({ source: [1, 2], spy: sinon.spy() }),
-        ctx => aeroflow(aeroflow(ctx.source)).notify(ctx.spy).run(),
-        ctx => ctx.source.forEach(value => expect(ctx.spy).to.have.been.calledWith(value))));
+    it('Emits several next(@value, @index, @context) notifications for each @value from @source', () =>
+      execute(
+        context => context.values = [1, 2],
+        context => aeroflow(aeroflow(context.values)).notify(context.spy).run(context),
+        context => context.values.forEach(
+          (value, index) => expect(context.spy.getCall(index)).to.have.been.calledWithExactly(value, index, context))));
   });
 
   describe('(@source:array)', () => {
-    it('Returns flow emitting "done" notification argumented with "true" when @source is empty', () =>
-      exec(
-        () => sinon.spy(),
-        spy => aeroflow([]).notify(Function(), spy).run(),
-        spy => expect(spy).to.have.been.calledWith(true)));
+    it('Emits done(true, @context) notification when @source is empty', () =>
+      execute(
+        context => aeroflow([]).notify(context.nop, context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWith(true, context)));
 
-    it('Returns flow emitting "done" notification argumented with "true" when @source is not empty and has been entirely enumerated', () =>
-      exec(
-        () => sinon.spy(),
-        spy => aeroflow([1, 2]).notify(Function(), spy).run(),
-        spy => expect(spy).to.have.been.calledWith(true)));
+    it('Emits done(true, @context) notification when @source is not empty and has been entirely enumerated', () =>
+      execute(
+        context => aeroflow([1, 2]).notify(context.nop, context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(true, context)));
 
-    it('Returns flow emitting "done" notification argumented with "false" when @source is not empty and has not been entirely enumerated', () =>
-      exec(
-        () => sinon.spy(),
-        spy => aeroflow([1, 2]).take(1).notify(Function(), spy).run(),
-        spy => expect(spy).to.have.been.calledWith(false)));
+    it('Emits done(false, @context) notification when @source is not empty and has not been entirely enumerated', () =>
+      execute(
+        context => aeroflow([1, 2]).take(1).notify(context.nop, context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(false, context)));
 
-    it('Returns flow not emitting "next" notification when @source is empty', () =>
-      exec(
-        () => sinon.spy(),
-        spy => aeroflow([]).notify(spy).run(),
-        spy => expect(spy).to.have.not.been.called));
+    it('Does not emit next notification when @source is empty', () =>
+      execute(
+        context => aeroflow([]).notify(context.spy).run(),
+        context => expect(context.spy).to.have.not.been.called));
 
-    it('Returns flow emitting several "next" notifications argumented with subsequent items from @source', () =>
-      exec(
-        () => ({ source: [1, 2], spy: sinon.spy() }),
-        ctx => aeroflow(ctx.source).notify(ctx.spy).run(),
-        ctx => ctx.source.forEach(value => expect(ctx.spy).to.have.been.calledWith(value))));
+    it('Emits several next(@value, @index, @context) notifications for each subsequent @value from @source', () =>
+      execute(
+        context => context.source = [1, 2],
+        context => aeroflow(context.source).notify(context.spy).run(context),
+        context => context.source.forEach(
+          (value, index) => expect(context.spy.getCall(index)).to.have.been.calledWithExactly(value, index, context))));
   });
 
   describe('(@source:date)', () => {
-    it('Returns flow emitting "done" notification argumented with "true"', () =>
-      exec(
-        () => sinon.spy(),
-        spy => aeroflow(new Date).notify(Function(), spy).run(),
-        spy => expect(spy).to.have.been.calledWith(true)));
+    it('Emits done(true, @context) notification', () =>
+      execute(
+        context => context.source = new Date,
+        context => aeroflow(context.source).notify(context.nop, context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(true, context)));
 
-    it('Returns flow emitting "next" notification argumented with @source', () =>
-      exec(
-        () => ({ source: new Date, spy: sinon.spy() }),
-        ctx => aeroflow(ctx.source).notify(ctx.spy).run(),
-        ctx => expect(ctx.spy).to.have.been.calledWith(ctx.source)));
+    it('Emits next(@source, 0, @context) notification', () =>
+      execute(
+        context => context.source = new Date,
+        context => aeroflow(context.source).notify(context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(context.source, 0, context)));
   });
 
   describe('(@source:error)', () => {
-    it('Returns flow emitting "done" notification argumented with @source', () =>
-      exec(
-        () => ({ source: new Error('test'), spy: sinon.spy() }),
-        ctx => aeroflow(ctx.source).notify(Function(), ctx.spy).run(),
-        ctx => expect(ctx.spy).to.have.been.calledWith(ctx.source)));
+    it('Emits done(true, @context) notification', () =>
+      execute(
+        context => context.source = new Error('test'),
+        context => aeroflow(context.source).notify(context.nop, context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(context.source, context)));
 
-    it('Returns flow not emitting "next" notification', () =>
-      exec(
-        () => sinon.spy(),
-        spy => aeroflow(new Error('test')).notify(spy).run(),
-        spy => expect(spy).to.have.not.been.called));
+    it('Does not emit next notification', () =>
+      execute(
+        context => aeroflow(new Error('test')).notify(context.spy).run(),
+        context => expect(context.spy).to.have.not.been.called));
   });
 
   describe('(@source:function)', () => {
-    it('Calls @source and passes context data', () =>
-      exec(
-        () => ({ data: {}, source: sinon.spy() }),
-        ctx => aeroflow(ctx.source).run(ctx.data),
-        ctx => expect(ctx.source).to.have.been.calledWith(ctx.data)));
+    it('Calls @source(context data)', () =>
+      execute(
+        context => context = 42,
+        context => aeroflow(context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWith(context)));
 
-    it('Returns flow emitting "done" notification argumented with "true" when @source does not throw', () =>
-      exec(
-        () => sinon.spy(),
-        spy => aeroflow(Function()).notify(Function(), spy).run(),
-        spy => expect(spy).to.have.been.calledWith(true)));
+    it('Emits done(true, @context) notification when @source does not throw', () =>
+      execute(
+        context => aeroflow(context.nop).notify(context.nop, context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(true, context)));
 
-    it('Returns flow emitting "done" notification argumented with error thrown by @source', () =>
-      exec(
-        () => ({ error: new Error('test'), spy: sinon.spy() }),
-        ctx => aeroflow(() => { throw ctx.error }).notify(Function(), ctx.spy).run(),
-        ctx => expect(ctx.spy).to.have.been.calledWith(ctx.error)));
+    it('Emits done(@error, @context) notification when @source throws @error', () =>
+      execute(
+        context => context.error = new Error('test'),
+        context => aeroflow(() => { throw context.error }).notify(context.nop, context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(context.error, context)));
 
-    it('Returns flow emitting "next" notification argumented with value returned by @source', () =>
-      exec(
-        () => ({ value: 'test', spy: sinon.spy() }),
-        ctx => aeroflow(() => ctx.value).notify(ctx.spy).run(),
-        ctx => expect(ctx.spy).to.have.been.calledWith(ctx.value)));
+    it('Emits next(@value, 0, @context) notification when @source returns @value', () =>
+      execute(
+        context => context.value = 42,
+        context => aeroflow(() => context.value).notify(context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(context.value, 0, context)));
   });
 
   describe('(@source:iterable)', () => {
-    it('Returns empty flow emitting "done" notification argumented with "true" when source is empty', () =>
-      exec(
-        () => sinon.spy(),
-        spy => aeroflow(new Set).notify(Function(), spy).run(),
-        spy => expect(spy).to.have.been.calledWith(true)));
+    it('Emits done(true, @context) notification when source is empty', () =>
+      execute(
+        context => aeroflow(new Set).notify(context.nop, context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(true, context)));
 
-    it('Returns flow emitting "done" notification argumented with "true" when source is not empty and has been entirely enumerated', () =>
-      exec(
-        () => sinon.spy(),
-        spy => aeroflow(new Set([1, 2])).notify(Function(), spy).run(),
-        spy => expect(spy).to.have.been.calledWith(true)));
+    it('Emits done(true, @context) notification when source is not empty and has been entirely enumerated', () =>
+      execute(
+        context => aeroflow(new Set([1, 2])).notify(context.nop, context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(true, context)));
 
-    it('Returns flow emitting "done" notification argumented with "false" when source is not empty but has not been entirely enumerated', () =>
-      exec(
-        () => sinon.spy(),
-        spy => aeroflow(new Set([1, 2])).take(1).notify(Function(), spy).run(),
-        spy => expect(spy).to.have.been.calledWith(false)));
+    it('Emits done(false, @context) notification when source is not empty but has not been entirely enumerated', () =>
+      execute(
+        context => aeroflow(new Set([1, 2])).take(1).notify(context.nop, context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(false, context)));
 
-    it('Returns flow not emitting "next" notification when source is empty', () =>
-      exec(
-        () => sinon.spy(),
-        spy => aeroflow(new Set).notify(spy).run(),
-        spy => expect(spy).to.have.not.been.called));
+    it('Does not emit next notification when source is empty', () =>
+      execute(
+        context => aeroflow(new Set).notify(context.spy).run(),
+        context => expect(context.spy).to.have.not.been.called));
 
-    it('Returns flow emitting several "next" notifications argumented with subsequent items from @source', () =>
-      exec(
-        () => ({ source: [1, 2], spy: sinon.spy() }),
-        ctx => aeroflow(new Set(ctx.source)).notify(ctx.spy).run(),
-        ctx => ctx.source.forEach(value => expect(ctx.spy).to.have.been.calledWith(value))));
+    it('Emits several next(@value, @index, @context) notifications for each subsequent @value from @source', () =>
+      execute(
+        context => context.values = [1, 2],
+        context => aeroflow(new Set(context.values)).notify(context.spy).run(context),
+        context => context.values.forEach(
+          (value, index) => expect(context.spy.getCall(index)).to.have.been.calledWithExactly(value, index, context))));
   });
 
   describe('(@source:null)', () => {
-    it('Returns flow emitting "done" notification argumented with "true"', () =>
-      exec(
-        () => sinon.spy(),
-        spy => aeroflow(null).notify(Function(), spy).run(),
-        spy => expect(spy).to.have.been.calledWith(true)));
+    it('Emits done(true, @context) notification', () =>
+      execute(
+        context => aeroflow(null).notify(context.nop, context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(true, context)));
 
-    it('Returns flow emitting "next" notification argumented with @source', () =>
-      exec(
-        () => ({ source: null, spy: sinon.spy() }),
-        ctx => aeroflow(ctx.source).notify(ctx.spy).run(),
-        ctx => expect(ctx.spy).to.have.been.calledWith(ctx.source)));
+    it('Emits next(@source, 0, @context) notification', () =>
+      execute(
+        context => context.source = null,
+        context => aeroflow(context.source).notify(context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(context.source, 0, context)));
   });
 
   describe('(@source:promise)', () => {
-    it('Returns flow emitting "done" notification argumented with "true" when @source resolves', () =>
-      exec(
-        () => sinon.spy(),
-        spy => aeroflow(Promise.resolve()).notify(Function(), spy).run(),
-        spy => expect(spy).to.have.been.calledWith(true)));
+    it('Emits done(true, @context) notification when @source resolves', () =>
+      execute(
+        context => aeroflow(Promise.resolve()).notify(context.nop, context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(true, context)));
 
-    it('Returns flow emitting "done" notification argumented with rejection error when @source rejects', () =>
-      exec(
-        () => ({ error: new Error('test'), spy: sinon.spy() }),
-        ctx => aeroflow(Promise.reject(ctx.error)).notify(Function(), ctx.spy).run(),
-        ctx => expect(ctx.spy).to.have.been.calledWith(ctx.error)));
+    it('Emits done(@error, @context) notification when @source rejects with @error', () =>
+      execute(
+        context => context.error = new Error('test'),
+        context => aeroflow(Promise.reject(context.error)).notify(context.nop, context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(context.error, context)));
 
-    it('Returns flow emitting "next" notification argumented with value resolved by @source', () =>
-      exec(
-        () => ({ value: 'test', spy: sinon.spy() }),
-        ctx => aeroflow(Promise.resolve(ctx.value)).notify(ctx.spy).run(),
-        ctx => expect(ctx.spy).to.have.been.calledWith(ctx.value)));
+    it('Emits next(@value, 0, @context) notification when @source resolves with @value', () =>
+      execute(
+        context => context.value = 42,
+        context => aeroflow(Promise.resolve(context.value)).notify(context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(context.value, 0, context)));
+
+    it('Does not emit next notification when @source rejects', () =>
+      execute(
+        context => aeroflow(Promise.reject()).notify(context.spy).run(),
+        context => expect(context.spy).to.have.not.been.called));
   });
 
   describe('(@source:string)', () => {
-    it('Returns flow emitting "done" notification argumented with "true"', () =>
-      exec(
-        () => sinon.spy(),
-        spy => aeroflow('test').notify(Function(), spy).run(),
-        spy => expect(spy).to.have.been.calledWith(true)));
+    it('Emits done(true, @context) notification', () =>
+      execute(
+        context => aeroflow('test').notify(context.nop, context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(true, context)));
 
-    it('Returns flow emitting "next" notification argumented with @source', () =>
-      exec(
-        () => ({ source: 'test', spy: sinon.spy() }),
-        ctx => aeroflow(ctx.source).notify(ctx.spy).run(),
-        ctx => expect(ctx.spy).to.have.been.calledWith(ctx.source)));
+    it('Emits next(@source, 0, @context) notification', () =>
+      execute(
+        context => context.source = 'test',
+        context => aeroflow(context.source).notify(context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWith(context.source, 0, context)));
   });
 
   describe('(@source:undefined)', () => {
-    it('Returns flow emitting "done" notification argumented with "true"', () =>
-      exec(
-        () => sinon.spy(),
-        spy => aeroflow(undefined).notify(Function(), spy).run(),
-        spy => expect(spy).to.have.been.calledWith(true)));
+    it('Emits done(true, @context) notification', () =>
+      execute(
+        context => aeroflow(undefined).notify(context.nop, context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(true, context)));
 
-    it('Returns flow emitting "next" notification argumented with @source', () =>
-      exec(
-        () => sinon.spy(),
-        spy => aeroflow(undefined).notify(arg => spy(typeof arg), Function()).run(),
-        spy => expect(spy).to.have.been.calledWith('undefined')));
+    it('Emits next(@source, 0, @context) notification', () =>
+      execute(
+        context => context.source = undefined,
+        context => aeroflow(context.source).notify(context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(context.source, 0, context)));
+  });
+
+  describe('(...@sources)', () => {
+    it('Emits serveral next(@value, @index, @context) notifications for each subsequent @value from @sources', () =>
+      execute(
+        context => {
+          const values = context.values = [true, new Date, null, 42, 'test', Symbol('test'), undefined];
+          context.sources = [
+            values[0],
+            [values[1]],
+            new Set([values[2], values[3]]),
+            () => values[4],
+            Promise.resolve(values[5]),
+            new Promise(resolve => setTimeout(() => resolve(values[6])))
+          ];
+        },
+        context => aeroflow(...context.sources).notify(context.spy).run(context),
+        context => context.values.forEach(
+          (value, index) => expect(context.spy.getCall(index)).to.have.been.calledWithExactly(value, index, context))));
   });
 
   [
@@ -289,33 +300,32 @@ describe('aeroflow', () => {
     justGeneratorTests,
 
     averageOperatorTests,
-    catchOperatorTests,
-    coalesceOperatorTests,
-    countOperatorTests /*,
-
-    distinctOperatorTests,
-    everyOperatorTests,
-    filterOperatorTests,
-    groupOperatorTests,
-    mapOperatorTests,
+    // catchOperatorTests,
+    // coalesceOperatorTests,
+    countOperatorTests,
+    // distinctOperatorTests,
+    // everyOperatorTests,
+    // filterOperatorTests,
+    // groupOperatorTests,
+    // mapOperatorTests,
     maxOperatorTests,
-    meanOperatorTests,
-    minOperatorTests,
-    reduceOperatorTests,
-    reverseOperatorTests,
-    skipOperatorTests,
-    sliceOperatorTests,
-    someOperatorTests,
-    sortOperatorTests,
-    sumOperatorTests,
-    takeOperatorTests,
-    tapOperatorTests,
-    toArrayOperatorTests,
-    toMapOperatorTests,
-    toSetOperatorTests,
-    toStringOperatorTests
-*/
-  ].forEach(test => test(aeroflow, exec, expect, sinon));
+    // meanOperatorTests,
+    minOperatorTests //,
+    // reduceOperatorTests,
+    // reverseOperatorTests,
+    // skipOperatorTests,
+    // sliceOperatorTests,
+    // someOperatorTests,
+    // sortOperatorTests,
+    // sumOperatorTests,
+    // takeOperatorTests,
+    // toArrayOperatorTests,
+    // toMapOperatorTests,
+    // toSetOperatorTests,
+    // toStringOperatorTests
+  ].forEach(test => test(aeroflow, execute, expect, sinon));
 });
+
+}
 
 export default aeroflowTests;

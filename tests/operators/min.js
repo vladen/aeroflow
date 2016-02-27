@@ -1,41 +1,31 @@
-export default (aeroflow, assert) => describe('#min', () => {
-  it('Is instance method', () =>
-    assert.isFunction(aeroflow.empty.min));
+export default (aeroflow, execute, expect, sinon) => describe('#min', () => {
+  it('Is instance method', () => 
+    execute(
+      context => aeroflow.empty.min,
+      context => expect(context.result).to.be.a('function')));
 
   describe('()', () => {
     it('Returns instance of Aeroflow', () =>
-      assert.typeOf(aeroflow.empty.min(), 'Aeroflow'));
+      execute(
+        context => aeroflow.empty.min(),
+        context => expect(context.result).to.be.an('Aeroflow')));
 
-    it('Emits nothing ("done" event only) when flow is empty', () =>
-      assert.isFulfilled(new Promise((done, fail) => 
-        aeroflow.empty.min().run(fail, done))));
+    it('Does not emit next notification when flow is empty', () => 
+       execute(
+        context => aeroflow.empty.min().notify(context.spy).run(),
+        context => expect(context.spy).to.have.not.been.called));
 
-    it('Emits @value when flow emits single numeric @value', () => {
-      const value = 42;
-      return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow(value).min().run(done, fail)),
-        value);
-    });
+    it('Emits next(@min, 0, @context) notification with @min as minimum value emitted by flow when flow emits numeric values', () =>
+      execute(
+        context => context.values = [1, 3, 2],
+        context => aeroflow(context.values).min().notify(context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(Math.min(...context.values), 0, context)));
 
-    it('Emits @value when flow emits single string @value', () => {
-      const value = 'test';
-      return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow(value).min().run(done, fail)),
-        value);
-    });
-
-    it('Emits minimum of @values when flow emits several numeric @values', () => {
-      const values = [1, 3, 2], expectation = Math.min(...values);
-      return assert.eventually.strictEqual(new Promise((done, fail) => 
-        aeroflow(values).min().run(done, fail)),
-        expectation);
-    });
-
-    it('Emits minimum of @values when flow emits several string @values', () => {
-      const values = ['a', 'c', 'b'], expectation = values.reduce((min, value) => value < min ? value : min);
-      return assert.eventually.strictEqual(new Promise((done, fail) => 
-        aeroflow(values).min().run(done, fail)),
-        expectation);
-    });
+    it('Emits next(@min, 0, @context) notification with @min as minimum value emitted by flow when flow emits string values', () =>
+      execute(
+        context => context.values = ['a', 'c', 'b'],
+        context => aeroflow(context.values).min().notify(context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWith(
+          context.values.reduce((min, value) => value < min ? value : min), 0, context)));
   });
 });

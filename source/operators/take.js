@@ -1,4 +1,4 @@
-import { FUNCTION, NUMBER } from '../symbols';
+import { FUNCTION, NUMBER, UNDEFINED } from '../symbols';
 import { classOf, falsey, identity, isBoolean, isError, isPromise, tie } from '../utilites';
 import { arrayAdapter } from '../adapters/array';
 import { emptyGenerator } from '../generators/empty';
@@ -56,6 +56,8 @@ export function takeOperator(condition) {
           : tie(emptyGenerator, false)
     case FUNCTION:
       return takeWhileOperator(condition);
+    case UNDEFINED:
+      return identity;
     default:
       return condition
         ? identity

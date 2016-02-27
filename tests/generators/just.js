@@ -1,67 +1,63 @@
-export default (aeroflow, exec, expect, sinon) => describe('.just', () => {
+export default (aeroflow, execute, expect, sinon) => describe('.just', () => {
   it('Is static method', () =>
-    exec(
-      null,
-      () => aeroflow.just,
-      result => expect(result).to.be.a('function')));
+    execute(
+      context => aeroflow.just,
+      context => expect(context.result).to.be.a('function')));
 
   describe('()', () => {
     it('Returns instance of Aeroflow', () =>
-      exec(
-        null,
-        () => aeroflow.just(),
-        result => expect(result).to.be.an('Aeroflow')));
+      execute(
+        context => aeroflow.just(),
+        context => expect(context.result).to.be.an('Aeroflow')));
 
-    it('Returns flow emitting "done" notification argumented with "true"', () =>
-      exec(
-        () => sinon.spy(),
-        spy => aeroflow.just().notify(Function(), spy).run(),
-        spy => expect(spy).to.have.been.calledWith(true)));
+    it('Emits done(true, @context) notification', () =>
+      execute(
+        context => aeroflow.just().notify(context.nop, context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(true, context)));
 
-    it('Returns flow emitting "next" notification argumented with undefined', () =>
-      exec(
-        () => sinon.spy(),
-        spy => aeroflow.just().notify(result => spy(typeof result)).run(),
-        spy => expect(spy).to.have.been.calledWith('undefined')));
+    it('Emits next(undefined, 0, @context) notification', () =>
+      execute(
+        context => aeroflow.just().notify(context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(undefined, 0, context)));
   });
 
   describe('(@value:aeroflow)', () => {
-    it('Returns flow emitting "next" notification argumented with @value', () =>
-      exec(
-        () => ({ value: aeroflow.empty, spy: sinon.spy() }),
-        ctx => aeroflow.just(ctx.value).notify(ctx.spy).run(),
-        ctx => expect(ctx.spy).to.have.been.calledWith(ctx.value)));
+    it('Emits next(@value, 0, @context) notification', () =>
+      execute(
+        context => context.value = aeroflow.empty,
+        context => aeroflow.just(context.value).notify(context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(context.value, 0, context)));
   });
 
   describe('(@value:array)', () => {
-    it('Returns flow emitting "next" notification argumented with @value', () =>
-      exec(
-        () => ({ value: [], spy: sinon.spy() }),
-        ctx => aeroflow.just(ctx.value).notify(ctx.spy).run(),
-        ctx => expect(ctx.spy).to.have.been.calledWith(ctx.value)));
+    it('Emits next(@value, 0, @context) notification', () =>
+      execute(
+        context => context.value = [],
+        context => aeroflow.just(context.value).notify(context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(context.value, 0, context)));
   });
 
   describe('(@value:function)', () => {
-    it('Returns flow emitting "next" notification argumented with @value', () =>
-      exec(
-        () => ({ value: Function(), spy: sinon.spy() }),
-        ctx => aeroflow.just(ctx.value).notify(ctx.spy).run(),
-        ctx => expect(ctx.spy).to.have.been.calledWith(ctx.value)));
+    it('Emits next(@value, 0, @context) notification', () =>
+      execute(
+        context => context.value = Function(),
+        context => aeroflow.just(context.value).notify(context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(context.value, 0, context)));
   });
 
   describe('(@value:iterable)', () => {
-    it('Returns flow emitting "next" notification argumented with @value', () =>
-      exec(
-        () => ({ value: new Set, spy: sinon.spy() }),
-        ctx => aeroflow.just(ctx.value).notify(ctx.spy).run(),
-        ctx => expect(ctx.spy).to.have.been.calledWith(ctx.value)));
+    it('Emits next(@value, 0, @context) notification', () =>
+      execute(
+        context => context.value = new Set,
+        context => aeroflow.just(context.value).notify(context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(context.value, 0, context)));
   });
 
   describe('(@value:promise)', () => {
-    it('Returns flow emitting "next" notification argumented with @value', () =>
-      exec(
-        () => ({ value: Promise.resolve, spy: sinon.spy() }),
-        ctx => aeroflow.just(ctx.value).notify(ctx.spy).run(),
-        ctx => expect(ctx.spy).to.have.been.calledWith(ctx.value)));
+    it('Emits next(@value, 0, @context) notification', () =>
+      execute(
+        context => context.value = Promise.resolve(),
+        context => aeroflow.just(context.value).notify(context.spy).run(context),
+        context => expect(context.spy).to.have.been.calledWithExactly(context.value, 0, context)));
   });
 });

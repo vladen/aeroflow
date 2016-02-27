@@ -11,11 +11,13 @@
      - [(@source:promise)](#aeroflow-sourcepromise)
      - [(@source:string)](#aeroflow-sourcestring)
      - [(@source:undefined)](#aeroflow-sourceundefined)
+     - [(...@sources)](#aeroflow-sources)
      - [.empty](#aeroflow-empty)
      - [.expand](#aeroflow-expand)
        - [()](#aeroflow-expand-)
        - [(@expander:function)](#aeroflow-expand-expanderfunction)
-       - [(@expander:function, @seed:any)](#aeroflow-expand-expanderfunction-seedany)
+       - [(@expander:function, @seed)](#aeroflow-expand-expanderfunction-seed)
+       - [(@expander:!function)](#aeroflow-expand-expanderfunction)
      - [.just](#aeroflow-just)
        - [()](#aeroflow-just-)
        - [(@value:aeroflow)](#aeroflow-just-valueaeroflow)
@@ -25,16 +27,12 @@
        - [(@value:promise)](#aeroflow-just-valuepromise)
      - [#average](#aeroflow-average)
        - [()](#aeroflow-average-)
-     - [#catch](#aeroflow-catch)
-       - [()](#aeroflow-catch-)
-       - [(@alternative:function)](#aeroflow-catch-alternativefunction)
-       - [(@alternative:!function)](#aeroflow-catch-alternativefunction)
-     - [#coalesce](#aeroflow-coalesce)
-       - [()](#aeroflow-coalesce-)
-       - [(@alternative:function)](#aeroflow-coalesce-alternativefunction)
-       - [(@alternative:!function)](#aeroflow-coalesce-alternativefunction)
      - [#count](#aeroflow-count)
        - [()](#aeroflow-count-)
+     - [#max](#aeroflow-max)
+       - [()](#aeroflow-max-)
+     - [#min](#aeroflow-min)
+       - [()](#aeroflow-min-)
 <a name=""></a>
  
 <a name="aeroflow"></a>
@@ -42,12 +40,12 @@
 Is function.
 
 ```js
-return exec(function () {}, /* arrange */
-function () {
+return execute(function (context) {}, /* arrange (optional) */
+function (context) {
   return aeroflow;
 }, /* act */
-function (result) {
-  return expect(result).to.be.a('function');
+function (context) {
+  return expect(context.result).to.be.a('function');
 } /* assert */);
 ```
 
@@ -56,450 +54,441 @@ function (result) {
 Returns instance of Aeroflow.
 
 ```js
-return exec(null, function () {
+return execute(function (context) {
   return aeroflow();
-}, function (result) {
-  return expect(result).to.be.an('Aeroflow');
+}, function (context) {
+  return expect(context.result).to.be.an('Aeroflow');
 });
 ```
 
-Returns empty flow emitting "done" notification argumented with "true".
+Emits done(true, @context) notification.
 
 ```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow().notify(Function(), spy).run();
-}, function (spy) {
-  return expect(spy).to.have.been.calledWith(true);
+return execute(function (context) {
+  return aeroflow().notify(context.nop, context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(true, context);
 });
 ```
 
-Returns empty flow not emitting "next" notification.
+Does not emit next notification.
 
 ```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow().notify(spy).run();
-}, function (spy) {
-  return expect(spy).to.have.not.been.called;
+return execute(function (context) {
+  return aeroflow().notify(context.spy).run();
+}, function (context) {
+  return expect(context.spy).to.have.not.been.called;
 });
 ```
 
 <a name="aeroflow-sourceaeroflow"></a>
 ## (@source:aeroflow)
-Returns flow emitting "done" notification argumented with "true" when @source is empty.
+Emits done(true, @context) notification when @source is empty.
 
 ```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow(aeroflow.empty).notify(Function(), spy).run();
-}, function (spy) {
-  return expect(spy).to.have.been.calledWith(true);
+return execute(function (context) {
+  return aeroflow(aeroflow.empty).notify(context.nop, context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(true, context);
 });
 ```
 
-Returns flow emitting "done" notification argumented with "true" when @source is not empty and has been entirely enumerated.
+Emits done(true, @context) notification when @source is not empty and has been entirely enumerated.
 
 ```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow(aeroflow([1, 2])).notify(Function(), spy).run();
-}, function (spy) {
-  return expect(spy).to.have.been.calledWith(true);
+return execute(function (context) {
+  return aeroflow(aeroflow([1, 2])).notify(context.nop, context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(true, context);
 });
 ```
 
-Returns flow emitting "done" notification argumented with "false" when @source is not empty but has not been entirely enumerated.
+Emits done(false, @context) notification when @source is not empty but has not been entirely enumerated.
 
 ```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow(aeroflow([1, 2])).take(1).notify(Function(), spy).run();
-}, function (spy) {
-  return expect(spy).to.have.been.calledWith(false);
+return execute(function (context) {
+  return aeroflow(aeroflow([1, 2])).take(1).notify(context.nop, context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(false, context);
 });
 ```
 
-Returns flow not emitting "next" notification when @source is empty.
+Does not emit next notification when @source is empty.
 
 ```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow(aeroflow.empty).notify(spy).run();
-}, function (spy) {
-  return expect(spy).to.have.not.been.called;
+return execute(function (context) {
+  return aeroflow(aeroflow.empty).notify(context.spy).run();
+}, function (context) {
+  return expect(context.spy).to.have.not.been.called;
 });
 ```
 
-Returns flow emitting several "next" notifications argumented with subsequent items from @source.
+Emits several next(@value, @index, @context) notifications for each @value from @source.
 
 ```js
-return exec(function () {
-  return { source: [1, 2], spy: sinon.spy() };
-}, function (ctx) {
-  return aeroflow(aeroflow(ctx.source)).notify(ctx.spy).run();
-}, function (ctx) {
-  return ctx.source.forEach(function (value) {
-    return expect(ctx.spy).to.have.been.calledWith(value);
+return execute(function (context) {
+  return context.values = [1, 2];
+}, function (context) {
+  return aeroflow(aeroflow(context.values)).notify(context.spy).run(context);
+}, function (context) {
+  return context.values.forEach(function (value, index) {
+    return expect(context.spy.getCall(index)).to.have.been.calledWithExactly(value, index, context);
   });
 });
 ```
 
 <a name="aeroflow-sourcearray"></a>
 ## (@source:array)
-Returns flow emitting "done" notification argumented with "true" when @source is empty.
+Emits done(true, @context) notification when @source is empty.
 
 ```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow([]).notify(Function(), spy).run();
-}, function (spy) {
-  return expect(spy).to.have.been.calledWith(true);
+return execute(function (context) {
+  return aeroflow([]).notify(context.nop, context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWith(true, context);
 });
 ```
 
-Returns flow emitting "done" notification argumented with "true" when @source is not empty and has been entirely enumerated.
+Emits done(true, @context) notification when @source is not empty and has been entirely enumerated.
 
 ```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow([1, 2]).notify(Function(), spy).run();
-}, function (spy) {
-  return expect(spy).to.have.been.calledWith(true);
+return execute(function (context) {
+  return aeroflow([1, 2]).notify(context.nop, context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(true, context);
 });
 ```
 
-Returns flow emitting "done" notification argumented with "false" when @source is not empty and has not been entirely enumerated.
+Emits done(false, @context) notification when @source is not empty and has not been entirely enumerated.
 
 ```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow([1, 2]).take(1).notify(Function(), spy).run();
-}, function (spy) {
-  return expect(spy).to.have.been.calledWith(false);
+return execute(function (context) {
+  return aeroflow([1, 2]).take(1).notify(context.nop, context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(false, context);
 });
 ```
 
-Returns flow not emitting "next" notification when @source is empty.
+Does not emit next notification when @source is empty.
 
 ```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow([]).notify(spy).run();
-}, function (spy) {
-  return expect(spy).to.have.not.been.called;
+return execute(function (context) {
+  return aeroflow([]).notify(context.spy).run();
+}, function (context) {
+  return expect(context.spy).to.have.not.been.called;
 });
 ```
 
-Returns flow emitting several "next" notifications argumented with subsequent items from @source.
+Emits several next(@value, @index, @context) notifications for each subsequent @value from @source.
 
 ```js
-return exec(function () {
-  return { source: [1, 2], spy: sinon.spy() };
-}, function (ctx) {
-  return aeroflow(ctx.source).notify(ctx.spy).run();
-}, function (ctx) {
-  return ctx.source.forEach(function (value) {
-    return expect(ctx.spy).to.have.been.calledWith(value);
+return execute(function (context) {
+  return context.source = [1, 2];
+}, function (context) {
+  return aeroflow(context.source).notify(context.spy).run(context);
+}, function (context) {
+  return context.source.forEach(function (value, index) {
+    return expect(context.spy.getCall(index)).to.have.been.calledWithExactly(value, index, context);
   });
 });
 ```
 
 <a name="aeroflow-sourcedate"></a>
 ## (@source:date)
-Returns flow emitting "done" notification argumented with "true".
+Emits done(true, @context) notification.
 
 ```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow(new Date()).notify(Function(), spy).run();
-}, function (spy) {
-  return expect(spy).to.have.been.calledWith(true);
+return execute(function (context) {
+  return context.source = new Date();
+}, function (context) {
+  return aeroflow(context.source).notify(context.nop, context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(true, context);
 });
 ```
 
-Returns flow emitting "next" notification argumented with @source.
+Emits next(@source, 0, @context) notification.
 
 ```js
-return exec(function () {
-  return { source: new Date(), spy: sinon.spy() };
-}, function (ctx) {
-  return aeroflow(ctx.source).notify(ctx.spy).run();
-}, function (ctx) {
-  return expect(ctx.spy).to.have.been.calledWith(ctx.source);
+return execute(function (context) {
+  return context.source = new Date();
+}, function (context) {
+  return aeroflow(context.source).notify(context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(context.source, 0, context);
 });
 ```
 
 <a name="aeroflow-sourceerror"></a>
 ## (@source:error)
-Returns flow emitting "done" notification argumented with @source.
+Emits done(true, @context) notification.
 
 ```js
-return exec(function () {
-  return { source: new Error('test'), spy: sinon.spy() };
-}, function (ctx) {
-  return aeroflow(ctx.source).notify(Function(), ctx.spy).run();
-}, function (ctx) {
-  return expect(ctx.spy).to.have.been.calledWith(ctx.source);
+return execute(function (context) {
+  return context.source = new Error('test');
+}, function (context) {
+  return aeroflow(context.source).notify(context.nop, context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(context.source, context);
 });
 ```
 
-Returns flow not emitting "next" notification.
+Does not emit next notification.
 
 ```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow(new Error('test')).notify(spy).run();
-}, function (spy) {
-  return expect(spy).to.have.not.been.called;
+return execute(function (context) {
+  return aeroflow(new Error('test')).notify(context.spy).run();
+}, function (context) {
+  return expect(context.spy).to.have.not.been.called;
 });
 ```
 
 <a name="aeroflow-sourcefunction"></a>
 ## (@source:function)
-Calls @source and passes ctx data as first argument.
+Calls @source(context data).
 
 ```js
-return exec(function () {
-  return { data: {}, source: sinon.spy() };
-}, function (ctx) {
-  return aeroflow(ctx.source).run(ctx.data);
-}, function (ctx) {
-  return expect(ctx.source).to.have.been.calledWith(ctx.data);
+return execute(function (context) {
+  return context = 42;
+}, function (context) {
+  return aeroflow(context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWith(context);
 });
 ```
 
-Returns flow emitting "done" notification argumented with "true" when @source does not throw.
+Emits done(true, @context) notification when @source does not throw.
 
 ```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow(Function()).notify(Function(), spy).run();
-}, function (spy) {
-  return expect(spy).to.have.been.calledWith(true);
+return execute(function (context) {
+  return aeroflow(context.nop).notify(context.nop, context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(true, context);
 });
 ```
 
-Returns flow emitting "done" notification argumented with error thrown by @source.
+Emits done(@error, @context) notification when @source throws @error.
 
 ```js
-return exec(function () {
-  return { error: new Error('test'), spy: sinon.spy() };
-}, function (ctx) {
+return execute(function (context) {
+  return context.error = new Error('test');
+}, function (context) {
   return aeroflow(function () {
-    throw ctx.error;
-  }).notify(Function(), ctx.spy).run();
-}, function (ctx) {
-  return expect(ctx.spy).to.have.been.calledWith(ctx.error);
+    throw context.error;
+  }).notify(context.nop, context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(context.error, context);
 });
 ```
 
-Returns flow emitting "next" notification argumented with value returned by @source.
+Emits next(@value, 0, @context) notification when @source returns @value.
 
 ```js
-return exec(function () {
-  return { value: 'test', spy: sinon.spy() };
-}, function (ctx) {
+return execute(function (context) {
+  return context.value = 42;
+}, function (context) {
   return aeroflow(function () {
-    return ctx.value;
-  }).notify(ctx.spy).run();
-}, function (ctx) {
-  return expect(ctx.spy).to.have.been.calledWith(ctx.value);
+    return context.value;
+  }).notify(context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(context.value, 0, context);
 });
 ```
 
 <a name="aeroflow-sourceiterable"></a>
 ## (@source:iterable)
-Returns empty flow emitting "done" notification argumented with "true" when source is empty.
+Emits done(true, @context) notification when source is empty.
 
 ```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow(new Set()).notify(Function(), spy).run();
-}, function (spy) {
-  return expect(spy).to.have.been.calledWith(true);
+return execute(function (context) {
+  return aeroflow(new Set()).notify(context.nop, context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(true, context);
 });
 ```
 
-Returns flow emitting "done" notification argumented with "true" when source is not empty and has been entirely enumerated.
+Emits done(true, @context) notification when source is not empty and has been entirely enumerated.
 
 ```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow(new Set([1, 2])).notify(Function(), spy).run();
-}, function (spy) {
-  return expect(spy).to.have.been.calledWith(true);
+return execute(function (context) {
+  return aeroflow(new Set([1, 2])).notify(context.nop, context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(true, context);
 });
 ```
 
-Returns flow emitting "done" notification argumented with "false" when source is not empty but has not been entirely enumerated.
+Emits done(false, @context) notification when source is not empty but has not been entirely enumerated.
 
 ```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow(new Set([1, 2])).take(1).notify(Function(), spy).run();
-}, function (spy) {
-  return expect(spy).to.have.been.calledWith(false);
+return execute(function (context) {
+  return aeroflow(new Set([1, 2])).take(1).notify(context.nop, context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(false, context);
 });
 ```
 
-Returns flow not emitting "next" notification when source is empty.
+Does not emit next notification when source is empty.
 
 ```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow(new Set()).notify(spy).run();
-}, function (spy) {
-  return expect(spy).to.have.not.been.called;
+return execute(function (context) {
+  return aeroflow(new Set()).notify(context.spy).run();
+}, function (context) {
+  return expect(context.spy).to.have.not.been.called;
 });
 ```
 
-Returns flow emitting several "next" notifications argumented with subsequent items from @source.
+Emits several next(@value, @index, @context) notifications for each subsequent @value from @source.
 
 ```js
-return exec(function () {
-  return { source: [1, 2], spy: sinon.spy() };
-}, function (ctx) {
-  return aeroflow(new Set(ctx.source)).notify(ctx.spy).run();
-}, function (ctx) {
-  return ctx.source.forEach(function (value) {
-    return expect(ctx.spy).to.have.been.calledWith(value);
+return execute(function (context) {
+  return context.values = [1, 2];
+}, function (context) {
+  return aeroflow(new Set(context.values)).notify(context.spy).run(context);
+}, function (context) {
+  return context.values.forEach(function (value, index) {
+    return expect(context.spy.getCall(index)).to.have.been.calledWithExactly(value, index, context);
   });
 });
 ```
 
 <a name="aeroflow-sourcenull"></a>
 ## (@source:null)
-Returns flow emitting "done" notification argumented with "true".
+Emits done(true, @context) notification.
 
 ```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow(null).notify(Function(), spy).run();
-}, function (spy) {
-  return expect(spy).to.have.been.calledWith(true);
+return execute(function (context) {
+  return aeroflow(null).notify(context.nop, context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(true, context);
 });
 ```
 
-Returns flow emitting "next" notification argumented with @source.
+Emits next(@source, 0, @context) notification.
 
 ```js
-return exec(function () {
-  return { source: null, spy: sinon.spy() };
-}, function (ctx) {
-  return aeroflow(ctx.source).notify(ctx.spy).run();
-}, function (ctx) {
-  return expect(ctx.spy).to.have.been.calledWith(ctx.source);
+return execute(function (context) {
+  return context.source = null;
+}, function (context) {
+  return aeroflow(context.source).notify(context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(context.source, 0, context);
 });
 ```
 
 <a name="aeroflow-sourcepromise"></a>
 ## (@source:promise)
-Returns flow emitting "done" notification argumented with "true" when @source resolves.
+Emits done(true, @context) notification when @source resolves.
 
 ```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow(Promise.resolve()).notify(Function(), spy).run();
-}, function (spy) {
-  return expect(spy).to.have.been.calledWith(true);
+return execute(function (context) {
+  return aeroflow(Promise.resolve()).notify(context.nop, context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(true, context);
 });
 ```
 
-Returns flow emitting "done" notification argumented with rejection error when @source rejects.
+Emits done(@error, @context) notification when @source rejects with @error.
 
 ```js
-return exec(function () {
-  return { error: new Error('test'), spy: sinon.spy() };
-}, function (ctx) {
-  return aeroflow(Promise.reject(ctx.error)).notify(Function(), ctx.spy).run();
-}, function (ctx) {
-  return expect(ctx.spy).to.have.been.calledWith(ctx.error);
+return execute(function (context) {
+  return context.error = new Error('test');
+}, function (context) {
+  return aeroflow(Promise.reject(context.error)).notify(context.nop, context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(context.error, context);
 });
 ```
 
-Returns flow emitting "next" notification argumented with value resolved by @source.
+Emits next(@value, 0, @context) notification when @source resolves with @value.
 
 ```js
-return exec(function () {
-  return { value: 'test', spy: sinon.spy() };
-}, function (ctx) {
-  return aeroflow(Promise.resolve(ctx.value)).notify(ctx.spy).run();
-}, function (ctx) {
-  return expect(ctx.spy).to.have.been.calledWith(ctx.value);
+return execute(function (context) {
+  return context.value = 42;
+}, function (context) {
+  return aeroflow(Promise.resolve(context.value)).notify(context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(context.value, 0, context);
+});
+```
+
+Does not emit next notification when @source rejects.
+
+```js
+return execute(function (context) {
+  return aeroflow(Promise.reject()).notify(context.spy).run();
+}, function (context) {
+  return expect(context.spy).to.have.not.been.called;
 });
 ```
 
 <a name="aeroflow-sourcestring"></a>
 ## (@source:string)
-Returns flow emitting "done" notification argumented with "true".
+Emits done(true, @context) notification.
 
 ```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow('test').notify(Function(), spy).run();
-}, function (spy) {
-  return expect(spy).to.have.been.calledWith(true);
+return execute(function (context) {
+  return aeroflow('test').notify(context.nop, context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(true, context);
 });
 ```
 
-Returns flow emitting "next" notification argumented with @source.
+Emits next(@source, 0, @context) notification.
 
 ```js
-return exec(function () {
-  return { source: 'test', spy: sinon.spy() };
-}, function (ctx) {
-  return aeroflow(ctx.source).notify(ctx.spy).run();
-}, function (ctx) {
-  return expect(ctx.spy).to.have.been.calledWith(ctx.source);
+return execute(function (context) {
+  return context.source = 'test';
+}, function (context) {
+  return aeroflow(context.source).notify(context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWith(context.source, 0, context);
 });
 ```
 
 <a name="aeroflow-sourceundefined"></a>
 ## (@source:undefined)
-Returns flow emitting "done" notification argumented with "true".
+Emits done(true, @context) notification.
 
 ```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow(undefined).notify(Function(), spy).run();
-}, function (spy) {
-  return expect(spy).to.have.been.calledWith(true);
+return execute(function (context) {
+  return aeroflow(undefined).notify(context.nop, context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(true, context);
 });
 ```
 
-Returns flow emitting "next" notification argumented with @source.
+Emits next(@source, 0, @context) notification.
 
 ```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow(undefined).notify(function (arg) {
-    return spy(typeof arg === 'undefined' ? 'undefined' : _typeof(arg));
-  }, Function()).run();
-}, function (spy) {
-  return expect(spy).to.have.been.calledWith('undefined');
+return execute(function (context) {
+  return context.source = undefined;
+}, function (context) {
+  return aeroflow(context.source).notify(context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(context.source, 0, context);
+});
+```
+
+<a name="aeroflow-sources"></a>
+## (...@sources)
+Emits serveral next(@value, @index, @context) notifications for each subsequent @value from @sources.
+
+```js
+return execute(function (context) {
+  var values = context.values = [true, new Date(), null, 42, 'test', Symbol('test'), undefined];
+  context.sources = [values[0], [values[1]], new Set([values[2], values[3]]), function () {
+    return values[4];
+  }, Promise.resolve(values[5]), new Promise(function (resolve) {
+    return setTimeout(function () {
+      return resolve(values[6]);
+    });
+  })];
+}, function (context) {
+  return aeroflow.apply(undefined, _toConsumableArray(context.sources)).notify(context.spy).run(context);
+}, function (context) {
+  return context.values.forEach(function (value, index) {
+    return expect(context.spy.getCall(index)).to.have.been.calledWithExactly(value, index, context);
+  });
 });
 ```
 
@@ -508,34 +497,30 @@ return exec(function () {
 Gets instance of Aeroflow.
 
 ```js
-return exec(null, function () {
+return execute(function (context) {
   return aeroflow.empty;
-}, function (result) {
-  return expect(result).to.be.an('Aeroflow');
+}, function (context) {
+  return expect(context.result).to.be.an('Aeroflow');
 });
 ```
 
-Gets flow emitting "done" notification argumented with "true".
+Emits done(true, @context) notification.
 
 ```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow.empty.notify(Function(), spy).run();
-}, function (spy) {
-  return expect(spy).to.have.been.calledWith(true);
+return execute(function (context) {
+  return aeroflow.empty.notify(context.nop, context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(true, context);
 });
 ```
 
-Gets flow not emitting "next" notification.
+Does not emit next notification.
 
 ```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow.empty.notify(spy).run();
-}, function (spy) {
-  return expect(spy).not.to.have.been.called;
+return execute(function (context) {
+  return aeroflow.empty.notify(context.spy).run();
+}, function (context) {
+  return expect(context.spy).not.to.have.been.called;
 });
 ```
 
@@ -544,10 +529,10 @@ return exec(function () {
 Is static method.
 
 ```js
-return exec(null, function () {
+return execute(function (context) {
   return aeroflow.expand;
-}, function (result) {
-  return expect(result).to.be.a('function');
+}, function (context) {
+  return expect(context.result).to.be.a('function');
 });
 ```
 
@@ -556,115 +541,103 @@ return exec(null, function () {
 Returns instance of Aeroflow.
 
 ```js
-return exec(null, function () {
+return execute(function (context) {
   return aeroflow.expand();
-}, function (result) {
-  return expect(result).to.be.an('Aeroflow');
+}, function (context) {
+  return expect(context.result).to.be.an('Aeroflow');
 });
 ```
 
 <a name="aeroflow-expand-expanderfunction"></a>
 ### (@expander:function)
-Calls @expander.
+Calls @expander(undefined, 0, @context) at first iteration.
 
 ```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow.expand(spy).take(1).run();
-}, function (spy) {
-  return expect(spy).to.have.been.called;
+return execute(function (context) {
+  return aeroflow.expand(context.spy).take(1).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(undefined, 0, context);
 });
 ```
 
-Passes undefined to @expander as first argument when no seed has been specified.
+Calls @expander(@value, @index, @context) at subsequent iterations with @value previously returned by @expander.
 
 ```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow.expand(function (arg) {
-    return spy(typeof arg === 'undefined' ? 'undefined' : _typeof(arg));
-  }).take(1).run();
-}, function (spy) {
-  return expect(spy).to.have.been.calledWith('undefined');
-});
-```
-
-Passes value returned by @expander to @expander as first argument on subsequent iteration.
-
-```js
-return exec(function () {
-  var value = 'test';
-  return { value: value, spy: sinon.spy(function () {
-      return value;
-    }) };
-}, function (ctx) {
-  return aeroflow.expand(function (result) {
-    return ctx.spy(result);
-  }).take(2).run();
-}, function (ctx) {
-  return expect(ctx.spy).to.have.been.calledWith(ctx.value);
-});
-```
-
-Passes zero-based index of iteration to @expander as second argument.
-
-```js
-return exec(function () {
-  return { limit: 3, spy: sinon.spy() };
-}, function (ctx) {
-  return aeroflow.expand(function (_, index) {
-    return ctx.spy(index);
-  }).take(ctx.limit).run();
-}, function (ctx) {
-  return Array(ctx.limit).fill(0).forEach(function (_, i) {
-    return expect(ctx.spy).to.have.been.calledWith(i);
+return execute(function (context) {
+  context.expander = function (value) {
+    for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+      args[_key - 1] = arguments[_key];
+    }
+    context.spy.apply(context, [value].concat(args));
+    return value ? value + 1 : 1;
+  };
+  context.iterations = 3;
+}, function (context) {
+  return aeroflow.expand(context.expander).take(context.iterations).run(context);
+}, function (context) {
+  return Array(context.iterations).fill(0).forEach(function (_, index) {
+    return expect(context.spy.getCall(index)).to.have.been.calledWithExactly(index || undefined, index, context);
   });
 });
 ```
 
-Passes context data to @expander as third argument.
+Emits done(@error, @context) notification with @error thrown by @expander.
 
 ```js
-return exec(function () {
-  return { data: 'test', spy: sinon.spy() };
-}, function (ctx) {
-  return aeroflow.expand(function (_, __, data) {
-    return ctx.spy(data);
-  }).take(1).run(ctx.data);
-}, function (ctx) {
-  return expect(ctx.spy).to.have.been.calledWith(ctx.data);
+return execute(function (context) {
+  context.error = new Error('test');
+  context.expander = function () {
+    throw context.error;
+  };
+}, function (context) {
+  return aeroflow(context.expander).notify(context.nop, context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(context.error, context);
 });
 ```
 
-Emits "next" notification with value returned by @expander.
+Emits next(@value, @index, @context) notification for each @value returned by @expander.
 
 ```js
-return exec(function () {
-  return { value: 'test', spy: sinon.spy() };
-}, function (ctx) {
-  return aeroflow.expand(function () {
-    return ctx.value;
-  }).take(1).notify(ctx.spy).run();
-}, function (ctx) {
-  return expect(ctx.spy).to.have.been.calledWith(ctx.value);
+return execute(function (context) {
+  context.expander = function (value) {
+    return value ? value + 1 : 1;
+  };
+  context.iterations = 3;
+}, function (context) {
+  return aeroflow.expand(context.expander).take(context.iterations).notify(context.spy).run(context);
+}, function (context) {
+  return Array(context.iterations).fill(0).forEach(function (_, index) {
+    return expect(context.spy.getCall(index)).to.have.been.calledWithExactly(index + 1, index, context);
+  });
 });
 ```
 
-<a name="aeroflow-expand-expanderfunction-seedany"></a>
-### (@expander:function, @seed:any)
-Passes @seed to @expander as first argument at first iteration.
+<a name="aeroflow-expand-expanderfunction-seed"></a>
+### (@expander:function, @seed)
+Calls @expander(@seed, 0, @context) at first iteration.
 
 ```js
-return exec(function () {
-  return { seed: 'test', spy: sinon.spy() };
-}, function (ctx) {
-  return aeroflow.expand(function (seed) {
-    return ctx.spy(seed);
-  }, ctx.seed).take(1).run();
-}, function (ctx) {
-  return expect(ctx.spy).to.have.been.calledWith(ctx.seed);
+return execute(function (context) {
+  return context.seed = 'test';
+}, function (context) {
+  return aeroflow.expand(context.spy, context.seed).take(1).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(context.seed, 0, context);
+});
+```
+
+<a name="aeroflow-expand-expanderfunction"></a>
+### (@expander:!function)
+Emits next(@expander, 0, @context) notification.
+
+```js
+return execute(function (context) {
+  return context.expander = 'test';
+}, function (context) {
+  return aeroflow.expand(context.expander).take(1).notify(context.spy).run();
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWith(context.expander);
 });
 ```
 
@@ -673,10 +646,10 @@ return exec(function () {
 Is static method.
 
 ```js
-return exec(null, function () {
+return execute(function (context) {
   return aeroflow.just;
-}, function (result) {
-  return expect(result).to.be.a('function');
+}, function (context) {
+  return expect(context.result).to.be.a('function');
 });
 ```
 
@@ -685,106 +658,100 @@ return exec(null, function () {
 Returns instance of Aeroflow.
 
 ```js
-return exec(null, function () {
+return execute(function (context) {
   return aeroflow.just();
-}, function (result) {
-  return expect(result).to.be.an('Aeroflow');
+}, function (context) {
+  return expect(context.result).to.be.an('Aeroflow');
 });
 ```
 
-Returns flow emitting "done" notification argumented with "true".
+Emits done(true, @context) notification.
 
 ```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow.just().notify(Function(), spy).run();
-}, function (spy) {
-  return expect(spy).to.have.been.calledWith(true);
+return execute(function (context) {
+  return aeroflow.just().notify(context.nop, context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(true, context);
 });
 ```
 
-Returns flow emitting "next" notification argumented with undefined.
+Emits next(undefined, 0, @context) notification.
 
 ```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow.just().notify(function (result) {
-    return spy(typeof result === 'undefined' ? 'undefined' : _typeof(result));
-  }).run();
-}, function (spy) {
-  return expect(spy).to.have.been.calledWith('undefined');
+return execute(function (context) {
+  return aeroflow.just().notify(context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(undefined, 0, context);
 });
 ```
 
 <a name="aeroflow-just-valueaeroflow"></a>
 ### (@value:aeroflow)
-Returns flow emitting "next" notification argumented with @value.
+Emits next(@value, 0, @context) notification.
 
 ```js
-return exec(function () {
-  return { value: aeroflow.empty, spy: sinon.spy() };
-}, function (ctx) {
-  return aeroflow.just(ctx.value).notify(ctx.spy).run();
-}, function (ctx) {
-  return expect(ctx.spy).to.have.been.calledWith(ctx.value);
+return execute(function (context) {
+  return context.value = aeroflow.empty;
+}, function (context) {
+  return aeroflow.just(context.value).notify(context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(context.value, 0, context);
 });
 ```
 
 <a name="aeroflow-just-valuearray"></a>
 ### (@value:array)
-Returns flow emitting "next" notification argumented with @value.
+Emits next(@value, 0, @context) notification.
 
 ```js
-return exec(function () {
-  return { value: [], spy: sinon.spy() };
-}, function (ctx) {
-  return aeroflow.just(ctx.value).notify(ctx.spy).run();
-}, function (ctx) {
-  return expect(ctx.spy).to.have.been.calledWith(ctx.value);
+return execute(function (context) {
+  return context.value = [];
+}, function (context) {
+  return aeroflow.just(context.value).notify(context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(context.value, 0, context);
 });
 ```
 
 <a name="aeroflow-just-valuefunction"></a>
 ### (@value:function)
-Returns flow emitting "next" notification argumented with @value.
+Emits next(@value, 0, @context) notification.
 
 ```js
-return exec(function () {
-  return { value: Function(), spy: sinon.spy() };
-}, function (ctx) {
-  return aeroflow.just(ctx.value).notify(ctx.spy).run();
-}, function (ctx) {
-  return expect(ctx.spy).to.have.been.calledWith(ctx.value);
+return execute(function (context) {
+  return context.value = Function();
+}, function (context) {
+  return aeroflow.just(context.value).notify(context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(context.value, 0, context);
 });
 ```
 
 <a name="aeroflow-just-valueiterable"></a>
 ### (@value:iterable)
-Returns flow emitting "next" notification argumented with @value.
+Emits next(@value, 0, @context) notification.
 
 ```js
-return exec(function () {
-  return { value: new Set(), spy: sinon.spy() };
-}, function (ctx) {
-  return aeroflow.just(ctx.value).notify(ctx.spy).run();
-}, function (ctx) {
-  return expect(ctx.spy).to.have.been.calledWith(ctx.value);
+return execute(function (context) {
+  return context.value = new Set();
+}, function (context) {
+  return aeroflow.just(context.value).notify(context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(context.value, 0, context);
 });
 ```
 
 <a name="aeroflow-just-valuepromise"></a>
 ### (@value:promise)
-Returns flow emitting "next" notification argumented with @value.
+Emits next(@value, 0, @context) notification.
 
 ```js
-return exec(function () {
-  return { value: Promise.resolve, spy: sinon.spy() };
-}, function (ctx) {
-  return aeroflow.just(ctx.value).notify(ctx.spy).run();
-}, function (ctx) {
-  return expect(ctx.spy).to.have.been.calledWith(ctx.value);
+return execute(function (context) {
+  return context.value = Promise.resolve();
+}, function (context) {
+  return aeroflow.just(context.value).notify(context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(context.value, 0, context);
 });
 ```
 
@@ -793,10 +760,10 @@ return exec(function () {
 Is instance method.
 
 ```js
-return exec(null, function () {
+return execute(function (context) {
   return aeroflow.empty.average;
-}, function (result) {
-  return expect(result).to.be.a('function');
+}, function (context) {
+  return expect(context.result).to.be.a('function');
 });
 ```
 
@@ -805,302 +772,58 @@ return exec(null, function () {
 Returns instance of Aeroflow.
 
 ```js
-return exec(null, function () {
+return execute(function (context) {
   return aeroflow.empty.average();
-}, function (result) {
-  return expect(result).to.be.an('Aeroflow');
+}, function (context) {
+  return expect(context.result).to.be.an('Aeroflow');
 });
 ```
 
-Does not emit "next" notification when flow is empty.
+Does not emit next notification when flow is empty.
 
 ```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow.empty.average().notify(spy).run();
-}, function (spy) {
-  return expect(spy).not.to.have.been.called;
+return execute(function (context) {
+  return aeroflow.empty.average().notify(context.spy).run();
+}, function (context) {
+  return expect(context.spy).to.have.not.been.called;
 });
 ```
 
-Emits "next" notification argumented with @value when flow emits single numeric @value.
+Emits next(@value, 0, @context) notification when flow emits single numeric @value.
 
 ```js
-return exec(function () {
-  return { value: 42, spy: sinon.spy() };
-}, function (ctx) {
-  return aeroflow(ctx.value).average().notify(ctx.spy).run();
-}, function (ctx) {
-  return expect(ctx.spy).to.have.been.calledWith(ctx.value);
+return execute(function (context) {
+  return context.value = 42;
+}, function (context) {
+  return aeroflow(context.value).average().notify(context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(context.value, 0, context);
 });
 ```
 
-Emits "next" notification argumented with NaN when flow emits single not numeric @value.
+Emits next(@average, 0, @context) notification with @average of serveral numeric values emitted by flow.
 
 ```js
-return exec(function () {
-  return { value: 'test', spy: sinon.spy() };
-}, function (ctx) {
-  return aeroflow(ctx.value).average().notify(ctx.spy).run();
-}, function (ctx) {
-  return expect(ctx.spy).to.have.been.calledWith(NaN);
-});
-```
-
-Emits "next" notification argumented with average of @values when flow emits several numeric @values.
-
-```js
-return exec(function () {
-  return { values: [1, 2, 5], spy: sinon.spy() };
-}, function (ctx) {
-  return aeroflow(ctx.values).average().notify(ctx.spy).run();
-}, function (ctx) {
-  return expect(ctx.spy).to.have.been.calledWith(ctx.values.reduce(function (sum, value) {
+return execute(function (context) {
+  return context.values = [1, 2, 5];
+}, function (context) {
+  return aeroflow(context.values).average().notify(context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(context.values.reduce(function (sum, value) {
     return sum + value;
-  }, 0) / ctx.values.length);
+  }, 0) / context.values.length, 0, context);
 });
 ```
 
-Emits "next" notification argumented with NaN when flow emits several not numeric @values.
+Emits next(NaN, 0, @context) notification when flow emits at least one value not convertible to numeric.
 
 ```js
-return exec(function () {
-  return { values: ['a', 'b'], spy: sinon.spy() };
-}, function (ctx) {
-  return aeroflow(ctx.value).average().notify(ctx.spy).run();
-}, function (ctx) {
-  return expect(ctx.spy).to.have.been.calledWith(NaN);
-});
-```
-
-<a name="aeroflow-catch"></a>
-## #catch
-Is instance method.
-
-```js
-return exec(null, function () {
-  return aeroflow.empty.catch;
-}, function (result) {
-  return expect(result).to.be.a('function');
-});
-```
-
-<a name="aeroflow-catch-"></a>
-### ()
-Returns instance of Aeroflow.
-
-```js
-return exec(null, function () {
-  return aeroflow.empty.catch();
-}, function (result) {
-  return expect(result).to.be.an('Aeroflow');
-});
-```
-
-Does not emit "next" notification when flow is empty.
-
-```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow.empty.catch().notify(spy).run();
-}, function (spy) {
-  return expect(spy).not.to.have.been.called;
-});
-```
-
-Does not emit "next" notification when flow emits single error.
-
-```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow(new Error('test')).catch().notify(spy).run();
-}, function (spy) {
-  return expect(spy).not.to.have.been.called;
-});
-```
-
-Emits "done" notification argumented with "true" when emits error.
-
-```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow(new Error('test')).catch().notify(Function(), spy).run();
-}, function (spy) {
-  return expect(spy).to.have.been.calledWith(true);
-});
-```
-
-<a name="aeroflow-catch-alternativefunction"></a>
-### (@alternative:function)
-Does not call @alternative when flow is empty.
-
-```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow.empty.catch(spy).run();
-}, function (spy) {
-  return expect(spy).not.to.have.been.called;
-});
-```
-
-Does not call @alternative when flow does not emit error.
-
-```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow('test').catch(spy).run();
-}, function (spy) {
-  return expect(spy).not.to.have.been.called;
-});
-```
-
-Calls @alternative and passes error as first argument when flow emits error.
-
-```js
-return exec(function () {
-  return { error: new Error('test'), spy: sinon.spy() };
-}, function (ctx) {
-  return aeroflow(ctx.error).catch(ctx.spy).run();
-}, function (ctx) {
-  return expect(ctx.spy).to.have.been.calledWith(ctx.error);
-});
-```
-
-Calls @alternative and passes context data as second argument when flow emits error.
-
-```js
-return exec(function () {
-  return { data: 'test', spy: sinon.spy() };
-}, function (ctx) {
-  return aeroflow(new Error('test')).catch(function (_, data) {
-    return ctx.spy(data);
-  }).run(ctx.data);
-}, function (ctx) {
-  return expect(ctx.spy).to.have.been.calledWith(ctx.data);
-});
-```
-
-Emits "next" notification argumented with value returned by @alternative when flow emits error.
-
-```js
-return exec(function () {
-  return { value: 'test', spy: sinon.spy() };
-}, function (ctx) {
-  return aeroflow(new Error('test')).catch(function () {
-    return ctx.value;
-  }).notify(ctx.spy).run();
-}, function (ctx) {
-  return expect(ctx.spy).to.have.been.calledWith(ctx.value);
-});
-```
-
-<a name="aeroflow-catch-alternativefunction"></a>
-### (@alternative:!function)
-Emits "next" notification argumented with @alternative when flow emits error.
-
-```js
-return exec(function () {
-  return { alternative: 'test', spy: sinon.spy() };
-}, function (ctx) {
-  return aeroflow(new Error('test')).catch(ctx.alternative).notify(ctx.spy).run();
-}, function (ctx) {
-  return expect(ctx.spy).to.have.been.calledWith(ctx.alternative);
-});
-```
-
-<a name="aeroflow-coalesce"></a>
-## #coalesce
-Is instance method.
-
-```js
-return exec(null, function () {
-  return aeroflow.empty.coalesce;
-}, function (result) {
-  return expect(result).to.be.a('function');
-});
-```
-
-<a name="aeroflow-coalesce-"></a>
-### ()
-Returns instance of Aeroflow.
-
-```js
-return exec(null, function () {
-  return aeroflow.empty.coalesce();
-}, function (result) {
-  return expect(result).to.be.an('Aeroflow');
-});
-```
-
-Does not emit "next" notification when flow is empty.
-
-```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow.empty.coalesce().notify(spy).run();
-}, function (spy) {
-  return expect(spy).not.to.have.been.called;
-});
-```
-
-<a name="aeroflow-coalesce-alternativefunction"></a>
-### (@alternative:function)
-Calls @alternative when flow is empty.
-
-```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow.empty.coalesce(spy).run();
-}, function (spy) {
-  return expect(spy).to.have.been.called;
-});
-```
-
-Does not call @alternative when flow emits error.
-
-```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow(new Error('test')).coalesce(spy).run();
-}, function (spy) {
-  return expect(spy).not.to.have.been.called;
-});
-```
-
-Emits "next" notification argumented with value returned by @alternative when flow is empty.
-
-```js
-return exec(function () {
-  return { value: 'test', spy: sinon.spy() };
-}, function (ctx) {
-  return aeroflow.empty.coalesce(function () {
-    return ctx.value;
-  }).notify(ctx.spy).run();
-}, function (ctx) {
-  return expect(ctx.spy).to.have.been.calledWith(ctx.value);
-});
-```
-
-<a name="aeroflow-coalesce-alternativefunction"></a>
-### (@alternative:!function)
-Emits "next" notification argumented with @alternative value when flow is empty.
-
-```js
-return exec(function () {
-  return { alternative: 'test', spy: sinon.spy() };
-}, function (ctx) {
-  return aeroflow.empty.coalesce(ctx.alternative).notify(ctx.spy).run();
-}, function (ctx) {
-  return expect(ctx.spy).to.have.been.calledWith(ctx.alternative);
+return execute(function (context) {
+  return context.values = [1, 'test', 2];
+}, function (context) {
+  return aeroflow(context.values).average().notify(context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWithExactly(NaN, 0, context);
 });
 ```
 
@@ -1109,10 +832,10 @@ return exec(function () {
 Is instance method.
 
 ```js
-return exec(null, function () {
+return execute(function (context) {
   return aeroflow.empty.count;
-}, function (result) {
-  return expect(result).to.be.a('function');
+}, function (context) {
+  return expect(context.result).to.be.a('function');
 });
 ```
 
@@ -1121,48 +844,154 @@ return exec(null, function () {
 Returns instance of Aeroflow.
 
 ```js
-return exec(null, function () {
+return execute(function (context) {
   return aeroflow.empty.count();
-}, function (result) {
-  return expect(result).to.be.an('Aeroflow');
+}, function (context) {
+  return expect(context.result).to.be.an('Aeroflow');
 });
 ```
 
-Emits "next" notification argumented with "0" when flow is empty.
+Emits next(0, 0, @context) notification when flow is empty.
 
 ```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow.empty.count().notify(function (result) {
-    return spy(result);
-  }).run();
-}, function (spy) {
-  return expect(spy).to.have.been.calledWith(0);
+return execute(function (context) {
+  return aeroflow.empty.count().notify(context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWith(0, 0, context);
 });
 ```
 
-Emits "next" notification argumented with "1" when flow emits single value.
+Emits next(@count, 0, @context) notification with @count of values emitted by flow.
 
 ```js
-return exec(function () {
-  return sinon.spy();
-}, function (spy) {
-  return aeroflow('test').count().notify(spy).run();
-}, function (spy) {
-  return expect(spy).to.have.been.calledWith(1);
+return execute(function (context) {
+  return context.values = [1, 2, 3];
+}, function (context) {
+  return aeroflow(context.values).count().notify(context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWith(context.values.length, 0, context);
 });
 ```
 
-Emits number of @values emitted by flow when flow emits several @values.
+<a name="aeroflow-max"></a>
+## #max
+Is instance method.
 
 ```js
-return exec(function () {
-  return { values: [1, 2, 3], spy: sinon.spy() };
-}, function (ctx) {
-  return aeroflow(ctx.values).count().notify(ctx.spy).run();
-}, function (ctx) {
-  return expect(ctx.spy).to.have.been.calledWith(ctx.values.length);
+return execute(function (context) {
+  return aeroflow.empty.max;
+}, function (context) {
+  return expect(context.result).to.be.a('function');
+});
+```
+
+<a name="aeroflow-max-"></a>
+### ()
+Returns instance of Aeroflow.
+
+```js
+return execute(function (context) {
+  return aeroflow.empty.max();
+}, function (context) {
+  return expect(context.result).to.be.an('Aeroflow');
+});
+```
+
+Does not emit next notification when flow is empty.
+
+```js
+return execute(function (context) {
+  return aeroflow.empty.max().notify(context.spy).run();
+}, function (context) {
+  return expect(context.spy).to.have.not.been.called;
+});
+```
+
+Emits next(@max, 0, @context) notification with @max as maximum value emitted by flow when flow emits numeric values.
+
+```js
+return execute(function (context) {
+  return context.values = [1, 3, 2];
+}, function (context) {
+  return aeroflow(context.values).max().notify(context.spy).run(context);
+}, function (context) {
+  var _Math;
+  return expect(context.spy).to.have.been.calledWithExactly((_Math = Math).max.apply(_Math, _toConsumableArray(context.values)), 0, context);
+});
+```
+
+Emits next(@max, 0, @context) notification with @max as maximum value emitted by flow when flow emits string values.
+
+```js
+return execute(function (context) {
+  return context.values = ['a', 'c', 'b'];
+}, function (context) {
+  return aeroflow(context.values).max().notify(context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWith(context.values.reduce(function (max, value) {
+    return value > max ? value : max;
+  }), 0, context);
+});
+```
+
+<a name="aeroflow-min"></a>
+## #min
+Is instance method.
+
+```js
+return execute(function (context) {
+  return aeroflow.empty.min;
+}, function (context) {
+  return expect(context.result).to.be.a('function');
+});
+```
+
+<a name="aeroflow-min-"></a>
+### ()
+Returns instance of Aeroflow.
+
+```js
+return execute(function (context) {
+  return aeroflow.empty.min();
+}, function (context) {
+  return expect(context.result).to.be.an('Aeroflow');
+});
+```
+
+Does not emit next notification when flow is empty.
+
+```js
+return execute(function (context) {
+  return aeroflow.empty.min().notify(context.spy).run();
+}, function (context) {
+  return expect(context.spy).to.have.not.been.called;
+});
+```
+
+Emits next(@min, 0, @context) notification with @min as minimum value emitted by flow when flow emits numeric values.
+
+```js
+return execute(function (context) {
+  return context.values = [1, 3, 2];
+}, function (context) {
+  return aeroflow(context.values).min().notify(context.spy).run(context);
+}, function (context) {
+  var _Math;
+  return expect(context.spy).to.have.been.calledWithExactly((_Math = Math).min.apply(_Math, _toConsumableArray(context.values)), 0, context);
+});
+```
+
+Emits next(@min, 0, @context) notification with @min as minimum value emitted by flow when flow emits string values.
+
+```js
+return execute(function (context) {
+  return context.values = ['a', 'c', 'b'];
+}, function (context) {
+  return aeroflow(context.values).min().notify(context.spy).run(context);
+}, function (context) {
+  return expect(context.spy).to.have.been.calledWith(context.values.reduce(function (min, value) {
+    return value < min ? value : min;
+  }), 0, context);
 });
 ```
 
