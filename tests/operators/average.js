@@ -10,28 +10,35 @@ export default (aeroflow, execute, expect, sinon) => describe('#average', () => 
         context => aeroflow.empty.average(),
         context => expect(context.result).to.be.an('Aeroflow')));
 
-    it('Does not emit next notification when flow is empty', () =>
+    it('When flow is empty, emits only single "done"', () =>
       execute(
-        context => aeroflow.empty.average().notify(context.spy).run(),
-        context => expect(context.spy).to.have.not.been.called));
+        context => aeroflow.empty.average().notify(context.next, context.done).run(),
+        context => {
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.next).to.have.not.been.called;
+        }));
 
-    it('Emits next(@value, 0, @context) notification when flow emits single numeric @value', () =>
-      execute(
-        context => context.value = 42,
-        context => aeroflow(context.value).average().notify(context.spy).run(context),
-        context => expect(context.spy).to.have.been.calledWithExactly(context.value, 0, context)));
-
-    it('Emits next(@average, 0, @context) notification with @average of serveral numeric values emitted by flow', () =>
+    it('When values are numeric, emits single "next" with average of values, then single "done"', () =>
       execute(
         context => context.values = [1, 2, 5],
-        context => aeroflow(context.values).average().notify(context.spy).run(context),
-        context => expect(context.spy).to.have.been.calledWithExactly(
-          context.values.reduce((sum, value) => sum + value, 0) / context.values.length, 0, context)));
+        context => aeroflow(context.values).average().notify(context.next, context.done).run(),
+        context => {
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.next).to.have.been.calledOnce;
+          expect(context.next).to.have.been.calledWith(
+            context.values.reduce((sum, value) => sum + value, 0) / context.values.length, 0, context);
+        }));
 
-    it('Emits next(NaN, 0, @context) notification when flow emits at least one value not convertible to numeric', () =>
+    it('When some values are not numeric, emits single "next" with NaN, then single "done"', () =>
       execute(
         context => context.values = [1, 'test', 2],
-        context => aeroflow(context.values).average().notify(context.spy).run(context),
-        context => expect(context.spy).to.have.been.calledWithExactly(NaN, 0, context)));
+        context => aeroflow(context.values).average().notify(context.next, context.done).run(context),
+        context => {
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.next).to.have.been.calledOnce;
+          expect(context.spy).to.have.been.calledWith(NaN);
+        }));
   });
 });
