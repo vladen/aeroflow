@@ -20,28 +20,24 @@
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">88.1% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>37/42</span>
+        <span class='fraction'>7/7</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">66.67% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Branches</span>
-        <span class='fraction'>10/15</span>
+        <span class='fraction'>0/0</span>
       </div>
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
         <span class="quiet">Functions</span>
-        <span class='fraction'>8/8</span>
+        <span class='fraction'>0/0</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">83.33% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>15/18</span>
-      </div>
-      <div class='fl pad1y'>
-        <span class="strong">2 statements, 2 branches</span>
-        <span class="quiet">Ignored</span>  &nbsp;&nbsp;&nbsp;&nbsp;
+        <span class='fraction'>2/2</span>
       </div>
     </div>
   </div>
@@ -56,43 +52,7 @@
 7
 8
 9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29
-30
-31
-32
-33
-34
-35
-36
-37
-38
-39
-40
-41
-42
-43
-44</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+10</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -101,88 +61,22 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-yes">59×</span>
-<span class="cline-any cline-yes">59×</span>
-<span class="cline-any cline-yes">59×</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">59×</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">59×</span>
-<span class="cline-any cline-yes">59×</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">54×</span>
-<span class="cline-any cline-yes">54×</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">59×</span>
-<span class="cline-any cline-yes">59×</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { FUNCTION } from '../symbols';
-import { classOf, identity, isFunction, isObject, objectDefineProperties } from '../utilites';
-import { customNotifier } from './custom';
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { registry } from '../registry';
 import { eventEmitterNotifier } from './eventEmitter';
 import { eventTargetNotifier } from './eventTarget';
 import { observerNotifier } from './observer';
 &nbsp;
-export const notifiers = [
-  eventEmitterNotifier,
-  eventTargetNotifier,
-  observerNotifier
-];
-&nbsp;
-objectDefineProperties(notifiers, {
-  [FUNCTION]: { configurable: true, value: customNotifier, writable: true }
-});
-&nbsp;
-const isNotifier = notifier =&gt; isObject(notifier) &amp;&amp; isFunction(notifier.done) &amp;&amp; isFunction(notifier.next);
-&nbsp;
-export function selectNotifier(target, parameters) {
-  let notifier = notifiers[classOf(target)];
-  <span class="missing-if-branch" title="else path not taken" >E</span>if (notifier) notifier = notifier(target, ...parameters);
-  <span class="missing-if-branch" title="if path not taken" >I</span>if (!isNotifier(notifier)) <span class="cstat-no" title="statement not covered" >f</span>or (let i = -1, l = notifiers.length; ++i &lt; l;) {
-<span class="cstat-no" title="statement not covered" >    notifier = notifiers[i](target, ...parameters);</span>
-<span class="cstat-no" title="statement not covered" >    i</span></span>f (isNotifier(notifier)) <span class="cstat-no" title="statement not covered" >break;
-    else <span class="cstat-no" title="statement not covered" >notifier = null;</span>
-  }
-  return notifier
-    ? <span class="branch-1 cbranch-no" title="branch not covered" >emitter =&gt;</span>
-      (next, done, context) =&gt; {
-        let index = 0;
-        emitter(
-          result =&gt; {
-            notifier.next(result, index++, context.data);
-            return next(result);
-          },
-          result =&gt; {
-            notifier.done(result, context.data);
-            return done(result);
-          },
-          context)
-      }
-    : identity;
-}</pre></td></tr>
+export const notifiers = registry()
+  .use(observerNotifier)
+  .use(eventTargetNotifier)
+  .use(eventEmitterNotifier);
+&nbsp;</pre></td></tr>
 </table></pre>
 <div class='push'></div><!-- for sticky footer -->
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Sat Feb 27 2016 20:43:57 GMT+0300 (Belarus Standard Time)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Mon Feb 29 2016 22:50:47 GMT+0300 (Belarus Standard Time)
 </div>
 </div>
 <script src="../../../prettify.js"></script>

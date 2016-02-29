@@ -1,11 +1,11 @@
 import { AEROFLOW, CLASS, PROTOTYPE } from './symbols';
 
-import { isDefined, isError, objectDefineProperties, objectCreate } from './utilites';
+import { isDefined, isError, isFunction, noop, objectDefineProperties, objectCreate } from './utilites';
 
-import { adapters, selectAdapter } from './adapters/index';
+import { adapters } from './adapters/index';
 import { valueAdapter } from './adapters/value';
 
-import { notifiers, selectNotifier } from './notifiers/index';
+import { notifiers } from './notifiers/index';
 
 import { customGenerator } from './generators/custom';
 import { emptyGenerator } from './generators/empty';
@@ -25,11 +25,12 @@ import { everyOperator } from './operators/every';
 import { filterOperator } from './operators/filter';
 import { flattenOperator } from './operators/flatten';
 import { groupOperator } from './operators/group';
-import { joinOperator } from './operators/join';
+// import { joinOperator } from './operators/join';
 import { mapOperator } from './operators/map';
 import { maxOperator } from './operators/max';
 import { meanOperator } from './operators/mean';
 import { minOperator } from './operators/min';
+import { notifyOperator } from './operators/notify';
 import { reduceOperator } from './operators/reduce';
 import { replayOperator } from './operators/replay';
 import { retryOperator } from './operators/retry';
@@ -45,20 +46,6 @@ import { toMapOperator } from './operators/toMap';
 import { toSetOperator } from './operators/toSet';
 import { toStringOperator } from './operators/toString';
 
-function emit(next, done, context) {
-  let index = -1;
-  !function proceed(result) {
-    if (result !== true || ++index >= context.sources.length) done(result);
-    else try {
-      const source = context.sources[index];
-      selectAdapter(source)(next, proceed, context);
-    }
-    catch (error) {
-      done(error);
-    }
-  }(true);
-}
-
 /**
 Creates new flow emitting values extracted from every provided data source in series.
 If no data sources provided, creates empty flow emitting "done" event only.
@@ -68,15 +55,19 @@ Data sources to extract values from.
 
 @return {Flow}
 
-@property {array|object} adapters
-Hybrid map/list of adapters to various types of data sources.
-As associative array maps type of data source to adapter function (Promise -> promiseAdapter).
-As indexed list contains functions performing complex testing of data source
-not mapped by their type via associative array
-and returning adpters for special types of data sources (Iterable -> iterableAdapter).
-When aeroflow adapts particular data source, first direct type based mapping is attempted.
-Then if source type matches no adapter, indexed adapters are tried until one of them returns a function.
-If no indexed adapter succeeds, this data source is treated as scalar value and emitted as is.
+@property {Adapters} adapters
+Mixed array/map of adapters for various types of data sources.
+As a map matches the type of a data source to adapter function (e.g. Promise -> promiseAdapter).
+As an array contains functions performing arbitrary (more complex than type matching) testing
+of a data source (e.g. some iterable -> iterableAdapter).
+When aeroflow adapts particular data source, direct type mapping is attempted first.
+Then, if mapping attempt did not return an adapter function,
+array is enumerated in reverse order, from last indexed adapter to first,
+until a function is returned.
+This returned function is used as adapter and called with single argument: the data source being adapted.
+Expected that adapter function being called with data source returns an emitter function accepting 2 arguments:
+next callback, done callback and execution context.
+If no adapter function has been found, the data source is treated as scalar value and emitted as is.
 See examples to find out how to create and register custom adapters.
 
 @property {object} operators
@@ -112,7 +103,7 @@ aeroflow(() => { throw new Error }).dump().run();
 aeroflow("test").dump().run();
 // next test
 // done true
-aeroflow.adapters['String'] = aeroflow.adapters['Array'];
+aeroflow.adapters.use('String', aeroflow.adapters['Array']);
 aeroflow("test").dump().run();
 // next t
 // next e
@@ -130,7 +121,21 @@ aeroflow(42).test().dump().run();
 // done true
 */
 function aeroflow(...sources) {
-  return new Flow(emit, sources);
+  return new Flow((next, done, context) => {
+    let index = -1;
+    !function proceed(result) {
+      if (result !== true || ++index >= context.sources.length) done(result);
+      else try {
+        const source = context.sources[index];
+        let adapter = adapters.get(source);
+        if (!adapter) adapter = valueAdapter(source);
+        adapter(next, proceed, context);
+      }
+      catch (error) {
+        done(error);
+      }
+    }(true);
+  }, sources);
 }
 
 /**
@@ -376,8 +381,16 @@ function bind(...sources) {
 
 /**
 @alias Flow#catch
+Returns new flow suppressing error, emitted by this flow, or replacing it with alternative data source.
 
-@param {any} [alternative]
+@param {function|any} [alternative]
+Optional alternative data source to replace error, emitted by this flow.
+If not passed, the emitted error is supressed.
+If a function passed, it is called with two arguments:
+the error, emitted by this flow,
+and context data (see {@link Flow#run} method for additional information about context data).
+The result, returned by this function, as well as any other value passed as alternative,
+is adapted with suitable adapter from {@link aeroflow.adapters} registry and emitted to this flow.
 
 @return {Flow}
 
@@ -387,7 +400,19 @@ aeroflow(new Error('test')).catch().dump().run();
 aeroflow(new Error('test')).dump('before ').catch('success').dump('after ').run();
 // before done Error: test(…)
 // after next success
-// after done true
+// after done false
+aeroflow(new Error('test')).catch([1, 2]).dump().run();
+// next 1
+// next 2
+// done false
+aeroflow(new Error('test')).catch(() => [1, 2]).dump().run();
+// next 1
+// next 2
+// done false
+aeroflow(new Error('test')).catch(() => [[1], [2]]).dump().run();
+// next [1]
+// next [2]
+// done false
 */
 function catch_(alternative) {
   return this.chain(catchOperator(alternative));
@@ -405,30 +430,38 @@ function chain(operator) {
 }
 
 /**
-Returns new flow emitting values from alternate data sources
-when this flow is empty (emits only "done" event).
+Returns new flow emitting values from alternate data source when this flow is empty.
 
 @alias Flow#coalesce
 
-@param {any[]} [alternatives]
-Data sources to emit values from in case this flow is empty.
+@param {any} [alternative]
+Optional alternative data source to use when this flow is empty.
+If not passed, this method does nothing.
+If a function passed, it is called with one argument:
+the context data (see {@link Flow#run} method for additional information about context data).
+The result, returned by this function, as well as any other value passed as alternative,
+is adapted with suitable adapter from {@link aeroflow.adapters} registry and emitted to this flow.
 
 @return {Flow}
-New flow emitting all values emitted by this flow first
-and then all provided values.
 
 @example
-aeroflow().coalesce().dump().run();
+aeroflow.empty.coalesce().dump().run();
 // done true
-aeroflow().coalesce('alternate').dump().run();
-// next alternate
+aeroflow.empty.coalesce([1, 2]).dump().run();
+// next 1
+// next 2
 // done true
-aeroflow().coalesce([], 'alternate').dump().run();
-// next alternate
+aeroflow.empty.coalesce(() => [1, 2]).dump().run();
+// next 1
+// next 2
+// done true
+aeroflow.empty.coalesce(() => [[1], [2]]).dump().run();
+// next [1]
+// next [2]
 // done true
 */
-function coalesce(...alternatives) {
-  return this.chain(coalesceOperator(alternatives));
+function coalesce(alternative) {
+  return this.chain(coalesceOperator(alternative));
 }
 
 /**
@@ -703,7 +736,7 @@ function group(...selectors) {
   return this.chain(groupOperator(selectors));
 }
 
-/**
+/*
 @alias Flow#join
 
 @param {any} right
@@ -740,10 +773,11 @@ aeroflow([
 // next Object {country: "USA", capital: "Washington", currency: "US Dollar"}
 // next Object {country: "Russia", capital: "Moskow", currency: "Russian Ruble"}
 // done true
-*/
+
 function join(right, comparer) {
   return this.chain(joinOperator(right, comparer));
 }
+*/
 
 /**
 @alias Flow#map
@@ -839,7 +873,7 @@ function min() {
 }
 
 function notify(target, ...parameters) {
-  return this.chain(selectNotifier(target, parameters));
+  return this.chain(notifyOperator(target, parameters));
 }
 
 /**
@@ -974,41 +1008,74 @@ Runs this flow.
 
 @alias Flow#run
 
-@param {function} [data]
-Arbitrary value passed to each callback invoked by this flow as the last argument.
+@param {function|any} [next]
+Optional callback called for each data value emitted by this flow with 3 arguments:
+1) the emitted value,
+2) zero-based index of emitted value,
+3) context data.
+When passed something other than a function, it considered as data.
+@param {function|any} [done]
+Optional callback called after this flow has finished emission of data with 2 arguments:
+1) the error thrown within this flow
+or boolean value indicating lazy (false) or eager (true) enumeration of data sources,
+2) context data.
+When passed something other than a function, it considered as data.
+@param {any} [data]
+Arbitrary value passed as context data to each callback invoked by this flow as the last argument.
 
-@return {Flow}
-This flow.
+@return {Promise}
+New promise,
+resolving to the latest value emitted by this flow (for compatibility with ES7 await operator),
+or rejecting to the error thrown within this flow.
 
 @example
-aeroflow(1, 2, 3).dump().run();
-// next 1
-// next 2
-// next 3
+aeroflow('test').dump().run();
+// next test
 // done true
+(async function() {
+  var result = await aeroflow('test').dump().run();
+  console.log(result);
+})();
+// test
+aeroflow('test').run(
+  (result, data) => console.log('next', result, data),
+  (result, data) => console.log('done', result, data),
+  'data');
+// next test data
+// done true data
 aeroflow(data => console.log('source:', data))
-  .map((_, __, data) => console.log('map:', data))
-  .filter((_, __, data) => console.log('filter:', data))
+  .map((result, index, data) => console.log('map:', data))
+  .filter((result, index, data) => console.log('filter:', data))
   .run('data');
 // source: data
 // map: data
 // filter: data
 // done true
-aeroflow(Promise.reject('test')).dump().run();
-// done Error: test(…)
+aeroflow(Promise.reject('test')).run();
 // Uncaught (in promise) Error: test(…)
 */
-function run(data) {
+function run(next, done, data) {
+  if (!isFunction(next)) {
+    data = next;
+    done = next = noop;
+  }
+  else if (!isFunction(done)) {
+    data = done;
+    done = noop;
+  }
   return new Promise((resolve, reject) => {
     let last;
     this.emitter(
       result => {
         last = result;
-        return true;
+        return next(result, data) !== false;
       },
-      result => isError(result)
-        ? reject(result)
-        : resolve(last),
+      result => {
+        done(result, data);
+        isError(result)
+          ? reject(result)
+          : resolve(last);
+      },
       objectDefineProperties({}, {
         data: { value: data },
         sources: { value: this.sources }
@@ -1324,7 +1391,7 @@ const operators = objectCreate(Object[PROTOTYPE], {
   filter: { value: filter, writable: true },
   flatten: { value: flatten, writable: true },
   group: { value: group, writable: true },
-  join: { value: join, writable: true },
+  // join: { value: join, writable: true },
   map: { value: map, writable: true },
   max: { value: max, writable: true },
   mean: { value: mean, writable: true },

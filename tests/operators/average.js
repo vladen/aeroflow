@@ -1,4 +1,4 @@
-export default (aeroflow, execute, expect, sinon) => describe('#average', () => {
+export default (aeroflow, execute, expect) => describe('#average', () => {
   it('Is instance method', () =>
     execute(
       context => aeroflow.empty.average,
@@ -10,35 +10,38 @@ export default (aeroflow, execute, expect, sinon) => describe('#average', () => 
         context => aeroflow.empty.average(),
         context => expect(context.result).to.be.an('Aeroflow')));
 
-    it('When flow is empty, emits only single "done"', () =>
+    it('When flow is empty, emits only single greedy "done"', () =>
       execute(
-        context => aeroflow.empty.average().notify(context.next, context.done).run(),
+        context => aeroflow.empty.average().run(context.next, context.done),
         context => {
-          expect(context.done).to.have.been.calledOnce;
           expect(context.next).to.have.not.been.called;
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
         }));
 
-    it('When values are numeric, emits single "next" with average of values, then single "done"', () =>
+    it('When flow emits numeric values, emits single "next" with average of values, then single greedy "done"', () =>
       execute(
         context => context.values = [1, 2, 5],
-        context => aeroflow(context.values).average().notify(context.next, context.done).run(),
+        context => aeroflow(context.values).average().run(context.next, context.done),
         context => {
-          expect(context.done).to.have.been.calledOnce;
-          expect(context.done).to.have.been.calledAfter(context.next);
           expect(context.next).to.have.been.calledOnce;
           expect(context.next).to.have.been.calledWith(
-            context.values.reduce((sum, value) => sum + value, 0) / context.values.length, 0, context);
+            context.values.reduce((sum, value) => sum + value, 0) / context.values.length);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+          expect(context.done).to.have.been.calledAfter(context.next);
         }));
 
-    it('When some values are not numeric, emits single "next" with NaN, then single "done"', () =>
+    it('When flow emits some not numeric values, emits single "next" with NaN, then single greedy "done"', () =>
       execute(
         context => context.values = [1, 'test', 2],
-        context => aeroflow(context.values).average().notify(context.next, context.done).run(context),
+        context => aeroflow(context.values).average().run(context.next, context.done),
         context => {
-          expect(context.done).to.have.been.calledOnce;
-          expect(context.done).to.have.been.calledAfter(context.next);
           expect(context.next).to.have.been.calledOnce;
-          expect(context.spy).to.have.been.calledWith(NaN);
+          expect(context.next).to.have.been.calledWith(NaN);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+          expect(context.done).to.have.been.calledAfter(context.next);
         }));
   });
 });

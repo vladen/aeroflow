@@ -1,4 +1,4 @@
-export default (aeroflow, execute, expect, sinon) => describe('.just', () => {
+export default (aeroflow, execute, expect) => describe('.just', () => {
   it('Is static method', () =>
     execute(
       context => aeroflow.just,
@@ -9,55 +9,72 @@ export default (aeroflow, execute, expect, sinon) => describe('.just', () => {
       execute(
         context => aeroflow.just(),
         context => expect(context.result).to.be.an('Aeroflow')));
-
-    it('Emits done(true, @context) notification', () =>
-      execute(
-        context => aeroflow.just().notify(context.nop, context.spy).run(context),
-        context => expect(context.spy).to.have.been.calledWithExactly(true, context)));
-
-    it('Emits next(undefined, 0, @context) notification', () =>
-      execute(
-        context => aeroflow.just().notify(context.spy).run(context),
-        context => expect(context.spy).to.have.been.calledWithExactly(undefined, 0, context)));
   });
 
   describe('(@value:aeroflow)', () => {
-    it('Emits next(@value, 0, @context) notification', () =>
+    it('Emits single "next" with @value, then single greedy "done"', () =>
       execute(
         context => context.value = aeroflow.empty,
-        context => aeroflow.just(context.value).notify(context.spy).run(context),
-        context => expect(context.spy).to.have.been.calledWithExactly(context.value, 0, context)));
+        context => aeroflow.just(context.value).run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.been.calledOnce;
+          expect(context.next).to.have.been.calledWith(context.value);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+          expect(context.done).to.have.been.calledAfter(context.next);
+        }));
   });
 
   describe('(@value:array)', () => {
-    it('Emits next(@value, 0, @context) notification', () =>
+    it('Emits single "next" with @value, then single greedy "done"', () =>
       execute(
-        context => context.value = [],
-        context => aeroflow.just(context.value).notify(context.spy).run(context),
-        context => expect(context.spy).to.have.been.calledWithExactly(context.value, 0, context)));
+        context => context.value = [42],
+        context => aeroflow.just(context.value).run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.been.calledOnce;
+          expect(context.next).to.have.been.calledWith(context.value);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+          expect(context.done).to.have.been.calledAfter(context.next);
+        }));
   });
 
   describe('(@value:function)', () => {
-    it('Emits next(@value, 0, @context) notification', () =>
+    it('Emits single "next" with @value, then single greedy "done"', () =>
       execute(
         context => context.value = Function(),
-        context => aeroflow.just(context.value).notify(context.spy).run(context),
-        context => expect(context.spy).to.have.been.calledWithExactly(context.value, 0, context)));
+        context => aeroflow.just(context.value).run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.been.calledOnce;
+          expect(context.next).to.have.been.calledWith(context.value);
+          expect(context.done).to.have.been.calledWith(true);
+          expect(context.done).to.have.been.calledAfter(context.next);
+        }));
   });
 
   describe('(@value:iterable)', () => {
-    it('Emits next(@value, 0, @context) notification', () =>
+    it('Emits single "next" with @value, then single greedy "done"', () =>
       execute(
         context => context.value = new Set,
-        context => aeroflow.just(context.value).notify(context.spy).run(context),
-        context => expect(context.spy).to.have.been.calledWithExactly(context.value, 0, context)));
+        context => aeroflow.just(context.value).run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.been.calledOnce;
+          expect(context.next).to.have.been.calledWith(context.value);
+          expect(context.done).to.have.been.calledWith(true);
+          expect(context.done).to.have.been.calledAfter(context.next);
+        }));
   });
 
   describe('(@value:promise)', () => {
-    it('Emits next(@value, 0, @context) notification', () =>
+    it('Emits single "next" with @value, then single greedy "done"', () =>
       execute(
         context => context.value = Promise.resolve(),
-        context => aeroflow.just(context.value).notify(context.spy).run(context),
-        context => expect(context.spy).to.have.been.calledWithExactly(context.value, 0, context)));
+        context => aeroflow.just(context.value).run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.been.calledOnce;
+          expect(context.next).to.have.been.calledWith(context.value);
+          expect(context.done).to.have.been.calledWith(true);
+          expect(context.done).to.have.been.calledAfter(context.next);
+        }));
   });
 });

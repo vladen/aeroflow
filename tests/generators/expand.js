@@ -1,4 +1,4 @@
-export default (aeroflow, execute, expect, sinon) => describe('.expand', () => {
+export default (aeroflow, execute, expect) => describe('.expand', () => {
   it('Is static method', () =>
     execute(
       context => aeroflow.expand,
@@ -12,57 +12,65 @@ export default (aeroflow, execute, expect, sinon) => describe('.expand', () => {
   });
 
   describe('(@expander:function)', () => {
-    it('Calls @expander(undefined, 0, @context) at first iteration', () =>
+    it('Calls @expander with undefined, 0  and context data on first iteration', () =>
       execute(
-        context => aeroflow.expand(context.spy).take(1).run(context),
-        context => expect(context.spy).to.have.been.calledWithExactly(undefined, 0, context)));
+        context => context.expander = context.spy(),
+        context => aeroflow.expand(context.expander).take(1).run(context.data),
+        context => expect(context.expander).to.have.been.calledWithExactly(undefined, 0, context.data)));
 
-    it('Calls @expander(@value, @index, @context) at subsequent iterations with @value previously returned by @expander', () =>
+    it('Calls @expander with value previously returned by @expander, iteration index and context data on subsequent iterations', () =>
       execute(
         context => {
-          context.expander = (value, ...args) => {
-            context.spy(value, ...args);
-            return value ? value + 1 : 1;
-          };
-          context.iterations = 3;
+          context.values = [1, 2];
+          context.expander = context.spy((_, index) => context.values[index]);
         },
-        context => aeroflow.expand(context.expander).take(context.iterations).run(context),
-        context => Array(context.iterations).fill(0).forEach(
-          (_, index) => expect(context.spy.getCall(index)).to.have.been.calledWithExactly(index || undefined, index, context))));
+        context => aeroflow.expand(context.expander).take(context.values.length + 1).run(context.data),
+        context => [undefined].concat(context.values).forEach((value, index) =>
+          expect(context.expander.getCall(index)).to.have.been.calledWithExactly(value, index, context.data))));
 
-    it('Emits done(@error, @context) notification with @error thrown by @expander', () =>
+    it('If @expander throws, emits only single faulty "done" with thrown error', () =>
+      execute(
+        context => context.expander = context.fail,
+        context => aeroflow(context.expander).run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.not.been.called;
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(context.error);
+        }));
+
+    it('Emits "next" for each serial value returned by @expander, then not being infinite, lazy "done"', () =>
       execute(
         context => {
-          context.error = new Error('test');
-          context.expander = () => { throw context.error };
+          context.values = [1, 2, 3];
+          context.expander = context.spy((_, index) => context.values[index]);
         },
-        context => aeroflow(context.expander).notify(context.nop, context.spy).run(context),
-        context => expect(context.spy).to.have.been.calledWithExactly(context.error, context)));
-
-    it('Emits next(@value, @index, @context) notification for each @value returned by @expander', () =>
-      execute(
+        context => aeroflow.expand(context.expander).take(context.values.length).run(context.next, context.done),
         context => {
-          context.expander = value => value ? value + 1 : 1;
-          context.iterations = 3;
-        },
-        context => aeroflow.expand(context.expander).take(context.iterations).notify(context.spy).run(context),
-        context => Array(context.iterations).fill(0).forEach(
-          (_, index) => expect(context.spy.getCall(index)).to.have.been.calledWithExactly(index + 1, index, context))));
+          expect(context.next).to.have.callCount(context.values.length);
+          context.values.forEach((value, index) =>
+            expect(context.next.getCall(index)).to.have.been.calledWith(value));
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(false);
+          expect(context.done).to.have.been.calledAfter(context.next);
+        }));
   });
 
   describe('(@expander:function, @seed)', () => {
-    it('Calls @expander(@seed, 0, @context) at first iteration', () =>
+    it('Calls @expander with @seed on first iteration', () =>
       execute(
-        context => context.seed = 'test',
-        context => aeroflow.expand(context.spy, context.seed).take(1).run(context),
-        context => expect(context.spy).to.have.been.calledWithExactly(context.seed, 0, context)));
+        context => {
+          context.expander = context.spy();
+          context.seed = 'test';
+        },
+        context => aeroflow.expand(context.expander, context.seed).take(1).run(),
+        context => expect(context.expander).to.have.been.calledWith(context.seed)));
   });
 
   describe('(@expander:!function)', () => {
-    it('Emits next(@expander, 0, @context) notification', () =>
+    it('Emits "next" with @expander', () =>
       execute(
         context => context.expander = 'test',
-        context => aeroflow.expand(context.expander).take(1).notify(context.spy).run(),
-        context => expect(context.spy).to.have.been.calledWith(context.expander)));
+        context => aeroflow.expand(context.expander).take(1).run(context.next),
+        context => expect(context.next).to.have.been.calledWith(context.expander)));
   });
 });

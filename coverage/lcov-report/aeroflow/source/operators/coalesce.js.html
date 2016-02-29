@@ -20,32 +20,28 @@
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">44.44% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>8/18</span>
+        <span class='fraction'>22/22</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">0% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Branches</span>
-        <span class='fraction'>0/7</span>
+        <span class='fraction'>8/8</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">0% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Functions</span>
-        <span class='fraction'>0/5</span>
+        <span class='fraction'>5/5</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">30.77% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>4/13</span>
-      </div>
-      <div class='fl pad1y'>
-        <span class="strong">1 statement</span>
-        <span class="quiet">Ignored</span>  &nbsp;&nbsp;&nbsp;&nbsp;
+        <span class='fraction'>15/15</span>
       </div>
     </div>
   </div>
-  <div class='status-line low'></div>
+  <div class='status-line high'></div>
 <pre><table class="coverage">
 <tr><td class="line-count quiet">1
 2
@@ -66,42 +62,63 @@
 17
 18
 19
-20</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+20
+21
+22
+23
+24
+25
+26
+27</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-yes">6×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { identity, isError } from '../utilites';
-import { selectAdapter } from '../adapters/index';
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { identity, isDefined, isError, toFunction } from '../utilites';
+import { adapters } from '../adapters/index';
+import { valueAdapter } from '../adapters/value';
 &nbsp;
-export <span class="fstat-no" title="function not covered" >function coalesceOperator(alternatives) {</span>
-<span class="cstat-no" title="statement not covered" >  i</span></span>f (!alternatives.length) <span class="cstat-no" title="statement not covered" >return identity;
-<span class="cstat-no" title="statement not covered" >  return <span class="fstat-no" title="function not covered" >e</span>mitter =&gt; <span class="fstat-no" title="function not covered" >(next, done, context) =&gt; {</span></span>
-<span class="cstat-no" title="statement not covered" >    let empty = true, index = 0;</span>
-<span class="cstat-no" title="statement not covered" >    emitter(onNext, onDone, context);</span>
-<span class="fstat-no" title="function not covered" >    function onDone(result) {</span>
-<span class="cstat-no" title="statement not covered" >      i</span>f (!isError(result) &amp;&amp; empty &amp;&amp; index &lt; alternatives.length)
-<span class="cstat-no" title="statement not covered" >        selectAdapter(alternatives[index++])(onNext, onDone, context);</span>
-      else <span class="cstat-no" title="statement not covered" >done(result);</span>
-    }
-<span class="fstat-no" title="function not covered" >    function onNext(result) {</span>
-<span class="cstat-no" title="statement not covered" >      empty = false;</span>
-<span class="cstat-no" title="statement not covered" >      return next(result);</span>
-    }
+export function coalesceOperator(alternative) {
+  if (!isDefined(alternative)) return identity;
+  alternative = toFunction(alternative);
+  return emitter =&gt; (next, done, context) =&gt; {
+    let empty = true;
+    emitter(
+      result =&gt; {
+        empty = false;
+        return next(result);
+      },
+      result =&gt; {
+        if (!isError(result) &amp;&amp; empty) {
+          const source = alternative(context.data);
+          let adapter = adapters.get(source);
+          if (!adapter) adapter = valueAdapter(source);
+          adapter(next, done, context);
+        }
+        else done(result);
+      },
+      context);
   }
 }
 &nbsp;</pre></td></tr>
@@ -110,7 +127,7 @@ export <span class="fstat-no" title="function not covered" >function coalesceOpe
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Sat Feb 27 2016 20:43:57 GMT+0300 (Belarus Standard Time)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Mon Feb 29 2016 22:50:47 GMT+0300 (Belarus Standard Time)
 </div>
 </div>
 <script src="../../../prettify.js"></script>

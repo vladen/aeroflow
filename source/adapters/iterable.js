@@ -1,16 +1,16 @@
 import { ITERATOR } from '../symbols';
-import { primitives } from '../utilites';
+import { isObject } from '../utilites';
 import { unsync } from '../unsync';
 
-export function iterableAdapter(source, sourceClass) {
-  if (!primitives.has(sourceClass) && ITERATOR in source)
-    return (next, done, context) => {
-      let iteration, iterator = source[ITERATOR]();
-      !function proceed() {
-        while (!(iteration = iterator.next()).done)
-          if (unsync(next(iteration.value), proceed, done))
-            return;
-        done(true);
-      }();
-    };
+export function iterableAdapter(source) {
+  if (isObject(source) && ITERATOR in source) return (next, done, context) => {
+    let iterator = source[ITERATOR]();
+    !function proceed() {
+      let iteration;
+      while (!(iteration = iterator.next()).done)
+        if (unsync(next(iteration.value), proceed, done))
+          return;
+      done(true);
+    }();
+  };
 }

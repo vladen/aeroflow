@@ -1,22 +1,27 @@
-'use strict';
- 
-import { isError, isFunction, truthy } from '../utilites';
-import { arrayEmitter } from '../emitters/array';
-import { adapterEmitter } from '../emitters/adapter';
+import { toFunction, truthy} from '../utilites';
+import { arrayAdapter } from '../adapters/array';
+import { selectAdapter } from '../adapters/index';
 import { toArrayOperator } from './toArray';
- 
-export function joinOperator(target, comparer) {
-  if (!isFunction(comparer)) comparer = truthy;
-  return emitter => (next, done, context) => toArrayOperator()(adapterEmitter(target, true))(
+import { filterOperator } from './filter';
+import { mapOperator } from './map';
+
+// todo: laziness, early results
+export function joinOperator(right, condition) {
+  const
+    comparer = toFunction(condition, truthy),
+    toArray = toArrayOperator()(selectAdapter(right));
+  return emitter => (next, done, context) => toArray(
     rightArray => new Promise(rightResolve => emitter(
       leftResult => new Promise(leftResolve => {
-        const array = arrayEmitter(rightArray);
-        const filter = filterOperator(rightResult => comparer(leftResult, rightResult));
-        const map = mapOperator(rightResult => [leftResult, rightResult]);
-        map(filter(array))(next, leftResolve, context);
-      },
+         const
+          array = arrayAdapter(rightArray),
+          filter = filterOperator(rightResult => comparer(leftResult, rightResult)),
+          map = mapOperator(rightResult => [leftResult, rightResult]);
+        return map(filter(array))(next, leftResolve, context);
+      }),
       rightResolve,
-      context)),
+      context)
+    ),
     done,
-    context));
+    context);
 }

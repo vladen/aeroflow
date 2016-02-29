@@ -20,28 +20,24 @@
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">80% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>8/10</span>
+        <span class='fraction'>22/22</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">0% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Branches</span>
-        <span class='fraction'>0/4</span>
+        <span class='fraction'>8/8</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">0% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Functions</span>
-        <span class='fraction'>0/4</span>
+        <span class='fraction'>7/7</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">50% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>2/4</span>
-      </div>
-      <div class='fl pad1y'>
-        <span class="strong">3 statements</span>
-        <span class="quiet">Ignored</span>  &nbsp;&nbsp;&nbsp;&nbsp;
+        <span class='fraction'>12/12</span>
       </div>
     </div>
   </div>
@@ -59,37 +55,76 @@
 10
 11
 12
-13</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { isError, toFunction } from '../utilites';
-import { selectAdapter } from '../adapters/index';
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { isDefined, isError, tie, toFunction } from '../utilites';
+import { adapters } from '../adapters/index';
+import { valueAdapter } from '../adapters/value';
 &nbsp;
-export <span class="fstat-no" title="function not covered" >function catchOperator(alternative) {</span>
-<span class="cstat-no" title="statement not covered" >  alternative = toFunction(alternative, alternative || []);</span>
-<span class="cstat-no" title="statement not covered" >  return <span class="fstat-no" title="function not covered" >e</span>mitter =&gt; <span class="fstat-no" title="function not covered" >(</span>next, done, context) =&gt; emitter(</span>
+export function catchOperator(alternative) {
+  if (isDefined(alternative)) {
+    alternative = toFunction(alternative);
+    return emitter =&gt; (next, done, context) =&gt; emitter(
+      next,
+      result =&gt; {
+        if (isError(result)) {
+          const source = alternative(result, context.data);
+          let adapter = adapters.get(source);
+          if (!adapter) adapter = valueAdapter(source);
+          adapter(next, tie(done, false), context);
+        }
+        else done(result);
+      },
+      context);
+  }
+  return emitter =&gt; (next, done, context) =&gt; emitter(
     next,
-<span class="fstat-no" title="function not covered" >    r</span>esult =&gt; isError(result)
-      ? selectAdapter(alternative(result, context.data))(next, done, context)
-      : done(result),
+    result =&gt; done(!isError(result) &amp;&amp; result),
     context);
-} 
+}
 &nbsp;</pre></td></tr>
 </table></pre>
 <div class='push'></div><!-- for sticky footer -->
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Sat Feb 27 2016 20:43:57 GMT+0300 (Belarus Standard Time)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Mon Feb 29 2016 22:50:47 GMT+0300 (Belarus Standard Time)
 </div>
 </div>
 <script src="../../../prettify.js"></script>

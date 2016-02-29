@@ -1,10 +1,4 @@
-import {
-  BOOLEAN, DATE, ERROR, NUMBER, NULL, PROMISE, STRING, SYMBOL, UNDEFINED
-} from './symbols';
-
-export const primitives = new Set([
-  BOOLEAN, NULL, NUMBER, STRING, SYMBOL, UNDEFINED
-]);
+import { DATE, ERROR, NUMBER, PROMISE } from './symbols';
 
 export const dateNow = Date.now;
 export const mathFloor = Math.floor;

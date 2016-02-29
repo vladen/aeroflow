@@ -1,19 +1,26 @@
-import { identity, isError } from '../utilites';
-import { selectAdapter } from '../adapters/index';
+import { identity, isDefined, isError, toFunction } from '../utilites';
+import { adapters } from '../adapters/index';
+import { valueAdapter } from '../adapters/value';
 
-export function coalesceOperator(alternatives) {
-  if (!alternatives.length) return identity;
+export function coalesceOperator(alternative) {
+  if (!isDefined(alternative)) return identity;
+  alternative = toFunction(alternative);
   return emitter => (next, done, context) => {
-    let empty = true, index = 0;
-    emitter(onNext, onDone, context);
-    function onDone(result) {
-      if (!isError(result) && empty && index < alternatives.length)
-        selectAdapter(alternatives[index++])(onNext, onDone, context);
-      else done(result);
-    }
-    function onNext(result) {
-      empty = false;
-      return next(result);
-    }
+    let empty = true;
+    emitter(
+      result => {
+        empty = false;
+        return next(result);
+      },
+      result => {
+        if (!isError(result) && empty) {
+          const source = alternative(context.data);
+          let adapter = adapters.get(source);
+          if (!adapter) adapter = valueAdapter(source);
+          adapter(next, done, context);
+        }
+        else done(result);
+      },
+      context);
   }
 }
