@@ -1,81 +1,112 @@
-export default (aeroflow, assert) => describe('#filter', () => {
+export default (aeroflow, execute, expect) => describe('#filter', () => {
   it('Is instance method', () =>
-    assert.isFunction(aeroflow.empty.filter));
+    execute(
+      context => aeroflow.empty.filter,
+      context => expect(context.result).to.be.a('function')));
 
   describe('()', () => {
     it('Returns instance of Aeroflow', () =>
-      assert.typeOf(aeroflow.empty.filter(), 'Aeroflow'));
+      execute(
+        context => aeroflow.empty.filter(),
+        context => expect(context.result).to.be.an('Aeroflow')));
 
-    it('Emits nothing ("done" event only) when flow is empty', () =>
-      assert.isFulfilled(new Promise((done, fail) =>
-        aeroflow.empty.filter().run(fail, done))));
+    it('When flow is empty, emits only single greedy "done"', () =>
+      execute(
+        context => aeroflow.empty.filter().run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.not.been.called;
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
 
-    it('Emits only truthy of @values emitted by flow', () => {
-      const values = [false, true, 0, 1, undefined, null, 'test'],
-        expectation = values.filter(value => value);
-      assert.eventually.sameMembers(new Promise((done, fail) => 
-        aeroflow(values).filter().toArray().run(done, fail)),
-        expectation);
-    });
+    it('When flow is not empty, emits "next" for each truthy value, then single greedy "done"', () =>
+      execute(
+        context => context.values = [0, 1, false, true, '', 'test'],
+        context => aeroflow(context.values).filter().run(context.next, context.done),
+        context => {
+          const filtered = context.values.filter(value => !!value);
+          expect(context.next).to.have.callCount(filtered.length);
+          filtered.forEach((value, index) =>
+            expect(context.next.getCall(index)).to.have.been.calledWith(value));
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
   });
 
   describe('(@condition:function)', () => {
-    it('Does not call @condition when flow is empty', () =>
-      assert.isFulfilled(new Promise((done, fail) =>
-        aeroflow.empty.filter(fail).run(fail, done))));
+    it('When flow is empty, does not call @condition', () => 
+      execute(
+        context => context.condition = context.spy(),
+        context => aeroflow.empty.filter(context.condition).run(),
+        context => expect(context.condition).to.have.not.been.called));
 
-    it('Calls @condition when flow is not empty', () =>
-      assert.isFulfilled(new Promise((done, fail) =>
-        aeroflow('test').filter(done).run(fail, fail))));
+    it('When flow is not empty, calls @condition with each emitted value, index of value and context data', () => 
+      execute(
+        context => {
+          context.values = [1, 2];
+          context.condition = context.spy();
+        },
+        context => aeroflow(context.values).filter(context.condition).run(context.data),
+        context => {
+          expect(context.condition).to.have.callCount(context.values.length);
+          context.values.forEach((value, index) =>
+            expect(context.condition.getCall(index)).to.have.been.calledWithExactly(value, index, context.data));
+        }));
 
-    it('Passes @value emitted by flow to @condition as first argument', () => {
-      const value = 'test';
-      assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow(value).filter(done).run(fail, fail)),
-        value);
-    });
-
-    it('Passes zero-based @index of iteration to @condition as second argument', () => {
-      const values = [1, 2, 3, 4], expectation = values.length - 1;
-      return assert.isFulfilled(new Promise((done, fail) =>
-        aeroflow(values).filter((_, index) => {
-          if (index === expectation) done();
-        }).run(fail, fail)));
-    });
-
-    it('Passes context @data to @condition as third argument', () => {
-      const expectation = {};
-      return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow('test').filter((_, __, data) => done(data)).run(fail, fail, expectation)),
-        expectation);
-    });
-
-    it('Emits only @values emitted by flow and passing @condition test', () => {
-      const values = [0, 1, 2, 3], condition = value => value > 1,
-        expectation = values.filter(condition);
-      assert.eventually.sameMembers(new Promise((done, fail) => 
-        aeroflow(values).filter(condition).toArray().run(done, fail)),
-        expectation);
-    });
+    it('When flow is not empty, emits "next" for each value passing the @condition test, then single greedy "done"', () =>
+      execute(
+        context => {
+          context.condition = value => 0 === value % 2;
+          context.values = [1, 2, 3];
+        },
+        context => aeroflow(context.values).filter(context.condition).run(context.next, context.done),
+        context => {
+          const filtered = context.values.filter(context.condition);
+          expect(context.next).to.have.callCount(filtered.length);
+          filtered.forEach((value, index) =>
+            expect(context.next.getCall(index)).to.have.been.calledWith(value));
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
   });
 
   describe('(@condition:regex)', () => {
-    it('Emits only @values emitted by flow and passing @condition test', () => {
-      const values = ['a', 'b', 'aa', 'bb'], condition = /a/,
-        expectation = values.filter(value => condition.test(value));
-      assert.eventually.sameMembers(new Promise((done, fail) => 
-        aeroflow(values).filter(condition).toArray().run(done, fail)),
-        expectation);
-    });
+    it('When flow is not empty, emits "next" for each value passing the @condition test, then single greedy "done"', () =>
+      execute(
+        context => {
+          context.condition = /b/;
+          context.values = ['a', 'b', 'c'];
+        },
+        context => aeroflow(context.values).filter(context.condition).run(context.next, context.done),
+        context => {
+          const filtered = context.values.filter(value => context.condition.test(value));
+          expect(context.next).to.have.callCount(filtered.length);
+          filtered.forEach((value, index) =>
+            expect(context.next.getCall(index)).to.have.been.calledWith(value));
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
   });
 
-  describe('(@condition:!function!regex)', () => {
-    it('Emits only @values emitted by flow and equal to @condition', () => {
-      const values = [1, 2, 3], condition = 2,
-        expectation = values.filter(value => value === condition);
-      assert.eventually.sameMembers(new Promise((done, fail) => 
-        aeroflow(values).filter(condition).toArray().run(done, fail)),
-        expectation);
-    });
+  describe('(@condition:number)', () => {
+    it('When flow is not empty, emits "next" for each value equal to @condition, then single greedy "done"', () =>
+      execute(
+        context => {
+          context.condition = 2;
+          context.values = [1, 2, 3];
+        },
+        context => aeroflow(context.values).filter(context.condition).run(context.next, context.done),
+        context => {
+          const filtered = context.values.filter(value => value === context.condition);
+          expect(context.next).to.have.callCount(filtered.length);
+          filtered.forEach((value, index) =>
+            expect(context.next.getCall(index)).to.have.been.calledWith(value));
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
   });
 });

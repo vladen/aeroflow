@@ -4,7 +4,7 @@ import sinonChai from 'sinon-chai';
 
 chai.use(sinonChai);
 
-import aeroflow from './source/aeroflow.js';
-import aeroflowTests from './tests/aeroflow.js';
+import aeroflow from './source/index';
+import aeroflowTests from './tests/index';
 
 aeroflowTests(aeroflow, chai.expect, sinon);

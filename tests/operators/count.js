@@ -1,4 +1,4 @@
-export default (aeroflow, execute, expect, sinon) => describe('#count', () => {
+export default (aeroflow, execute, expect) => describe('#count', () => {
   it('Is instance method', () =>
     execute(
       context => aeroflow.empty.count,
@@ -10,15 +10,36 @@ export default (aeroflow, execute, expect, sinon) => describe('#count', () => {
         context => aeroflow.empty.count(),
         context => expect(context.result).to.be.an('Aeroflow')));
 
-    it('Emits next(0, 0, @context) notification when flow is empty', () =>
+    it('When flow is empty, emits single "next" with 0, then single greedy "done"', () =>
       execute(
-        context => aeroflow.empty.count().notify(context.spy).run(context),
-        context => expect(context.spy).to.have.been.calledWith(0, 0, context)));
+        context => aeroflow.empty.count().run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.been.calledOnce;
+          expect(context.next).to.have.been.calledWith(0);
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
 
-    it('Emits next(@count, 0, @context) notification with @count of values emitted by flow', () =>
+    it('When flow is not empty, emits single "next" with number of values emitted by flow, then single greedy "done"', () =>
       execute(
         context => context.values = [1, 2, 3],
-        context => aeroflow(context.values).count().notify(context.spy).run(context),
-        context => expect(context.spy).to.have.been.calledWith(context.values.length, 0, context)));
+        context => aeroflow(context.values).count().run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.been.calledOnce;
+          expect(context.next).to.have.been.calledWith(context.values.length);
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
+
+    it('When flow emits error, emits only single faulty "done"', () =>
+      execute(
+        context => aeroflow(context.error).count().run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.not.been.called;
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(context.error);
+        }));
   });
 });

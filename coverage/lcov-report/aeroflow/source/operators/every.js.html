@@ -20,32 +20,28 @@
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">33.33% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>10/30</span>
+        <span class='fraction'>29/29</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">0% </span>
+        <span class="strong">91.67% </span>
         <span class="quiet">Branches</span>
-        <span class='fraction'>0/12</span>
+        <span class='fraction'>11/12</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">0% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Functions</span>
-        <span class='fraction'>0/8</span>
+        <span class='fraction'>8/8</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">10% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>2/20</span>
-      </div>
-      <div class='fl pad1y'>
-        <span class="strong">4 statements</span>
-        <span class="quiet">Ignored</span>  &nbsp;&nbsp;&nbsp;&nbsp;
+        <span class='fraction'>19/19</span>
       </div>
     </div>
   </div>
-  <div class='status-line low'></div>
+  <div class='status-line high'></div>
 <pre><table class="coverage">
 <tr><td class="line-count quiet">1
 2
@@ -81,38 +77,36 @@
 32
 33
 34
-35
-36</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+35</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">12×</span>
+<span class="cline-any cline-yes">12×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-yes">4×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-yes">2×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-yes">4×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-yes">2×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">12×</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-yes">11×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">20×</span>
+<span class="cline-any cline-yes">20×</span>
+<span class="cline-any cline-yes">5×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">11×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -121,33 +115,32 @@
 import { classOf, isError } from '../utilites';
 import { unsync } from '../unsync';
 &nbsp;
-export <span class="fstat-no" title="function not covered" >function everyOperator(condition) {</span>
-<span class="cstat-no" title="statement not covered" >  let predicate;</span>
-<span class="cstat-no" title="statement not covered" >  switch (classOf(condition)) {</span>
+export function everyOperator(condition) {
+  let predicate;
+  switch (classOf(condition)) {
     case FUNCTION:
-<span class="cstat-no" title="statement not covered" >      predicate = condition;</span>
-<span class="cstat-no" title="statement not covered" >      break;</span>
+      predicate = condition;
+      break;
     case REGEXP:
-<span class="cstat-no" title="statement not covered" >      predicate = <span class="fstat-no" title="function not covered" >r</span>esult =&gt; condition.test(result);</span>
-<span class="cstat-no" title="statement not covered" >      break;</span>
+      predicate = result =&gt; condition.test(result);
+      break;
     case UNDEFINED:
-<span class="cstat-no" title="statement not covered" >      predicate = <span class="fstat-no" title="function not covered" >r</span>esult =&gt; !!result;</span>
-<span class="cstat-no" title="statement not covered" >      break;</span>
+      predicate = result =&gt; !!result;
+      break;
     default:
-<span class="cstat-no" title="statement not covered" >      predicate = <span class="fstat-no" title="function not covered" >r</span>esult =&gt; result === condition;</span>
-<span class="cstat-no" title="statement not covered" >      break;</span>
+      predicate = result =&gt; result === condition;
+      break;
   }
-<span class="cstat-no" title="statement not covered" >  return <span class="fstat-no" title="function not covered" >e</span>mitter =&gt; <span class="fstat-no" title="function not covered" >(next, done, context) =&gt; {</span></span>
-<span class="cstat-no" title="statement not covered" >    let empty = true, every = true;</span>
-<span class="cstat-no" title="statement not covered" >    emitter(</span>
-<span class="fstat-no" title="function not covered" >      result =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >        empty = false;</span>
-<span class="cstat-no" title="statement not covered" >        i</span></span>f (predicate(result)) <span class="cstat-no" title="statement not covered" >return true;
-<span class="cstat-no" title="statement not covered" >        every = false;</span>
-<span class="cstat-no" title="statement not covered" >        return false;</span>
+  return emitter =&gt; (next, done, context) =&gt; {
+    let empty = true, every = true, index = 0;
+    emitter(
+      result =&gt; {
+        empty = false;
+        if (predicate(result, index++, context.data)) return true;
+        return every = false;
       },
-<span class="fstat-no" title="function not covered" >      result =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >        i</span></span>f (isError(result) || !unsync(next(every || empty), done, done)) <span class="cstat-no" title="statement not covered" >done(result);
+      result =&gt; {
+        <span class="missing-if-branch" title="else path not taken" >E</span>if (isError(result) || !unsync(next(every || empty), done, done)) done(result);
       },
       context);
   };
@@ -158,7 +151,7 @@ export <span class="fstat-no" title="function not covered" >function everyOperat
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Mon Feb 29 2016 22:50:47 GMT+0300 (Belarus Standard Time)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Tue Mar 01 2016 19:17:22 GMT+0300 (Belarus Standard Time)
 </div>
 </div>
 <script src="../../../prettify.js"></script>

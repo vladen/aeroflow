@@ -1,60 +1,90 @@
-export default (aeroflow, assert) => describe('#map', () => {
+export default (aeroflow, execute, expect) => describe('#map', () => {
   it('Is instance method', () =>
-    assert.isFunction(aeroflow.empty.map));
+    execute(
+      context => aeroflow.empty.map,
+      context => expect(context.result).to.be.a('function')));
 
   describe('()', () => {
     it('Returns instance of Aeroflow', () =>
-      assert.typeOf(aeroflow.empty.map(), 'Aeroflow'));
+      execute(
+        context => aeroflow.empty.map(),
+        context => expect(context.result).to.be.an('Aeroflow')));
 
-    it('Emits nothing when flow is empty', () =>
-      assert.isFulfilled(new Promise((done, fail) =>
-        aeroflow.empty.map().run(fail, done))));
+    it('When flow is empty, emits only single greedy "done"', () =>
+      execute(
+        context => aeroflow.empty.map().run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.not.been.called;
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
 
-    it('Emits same @values when no arguments passed', () => {
-      const values = [1, 2];
-      return assert.eventually.sameMembers(new Promise((done, fail) => 
-        aeroflow(values).map().toArray().run(done, fail)),
-        values);
-    });
+    it('When flow is not empty, emits "next" for each emitted value, then single greedy "done"', () =>
+      execute(
+        context => context.values = [1, 2],
+        context => aeroflow(context.values).map().run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.callCount(context.values.length);
+          context.values.forEach((value, index) =>
+            expect(context.next.getCall(index)).to.have.been.calledWith(value));
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
   });
 
-  describe('(@mapping:function)', () => {
-    it('Does not call @mapping when flow is empty', () =>
-      assert.isFulfilled(new Promise((done, fail) =>
-        aeroflow.empty.map(fail).run(fail, done))));
+  describe('(@mapper:function)', () => {
+    it('When flow is empty, does not call @mapper', () => 
+      execute(
+        context => context.mapper = context.spy(),
+        context => aeroflow.empty.map(context.mapper).run(),
+        context => expect(context.mapper).to.have.not.been.called));
 
-    it('Calls @mapping when flow emits several values', () =>
-      assert.isFulfilled(new Promise((done, fail) =>
-        aeroflow(1, 2).map(done).run(fail, fail))));
+    it('When flow is not empty, calls @mapper with each emitted value, index of value and context data', () => 
+      execute(
+        context => {
+          context.values = [1, 2];
+          context.mapper = context.spy();
+        },
+        context => aeroflow(context.values).map(context.mapper).run(context.data),
+        context => {
+          expect(context.mapper).to.have.callCount(context.values.length);
+          context.values.forEach((value, index) =>
+            expect(context.mapper.getCall(index)).to.have.been.calledWithExactly(value, index, context.data));
+        }));
 
-    it('Emits error thrown by @mapping', () => {
-      const error = new Error('test');
-      return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow(1, 2).map(() => { throw error; }).run(fail, done)),
-        error);
-    });
-
-    it('Emits @values processed through @mapping', () => {
-      const values = [1, 2, 3], mapping = (item) => item * 2, expectation = values.map(mapping);
-      return assert.eventually.sameMembers(new Promise((done, fail) => 
-        aeroflow(values).map(mapping).toArray().run(done, fail)),
-        expectation);
-    });
-
-    it('Passes context data to @mapping as third argument', () => {
-      const expectation = {};
-      return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow('test').map((_, __, data) => done(data)).run(fail, fail, expectation)),
-        expectation);
-    });
+    it('When flow is not empty, emits "next" for each emitted value with result returned by @mapper, then single greedy "done"', () =>
+      execute(
+        context => {
+          context.mapper = value => -value;
+          context.values = [1, 2];
+        },
+        context => aeroflow(context.values).map(context.mapper).run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.callCount(context.values.length);
+          context.values.forEach((value, index) =>
+            expect(context.next.getCall(index)).to.have.been.calledWith(context.mapper(value)));
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
   });
 
-  describe('(@mapping:!function)', () => {
-    it('Emits @mapping value instead of every value in @values', () => {
-      const values = [1, 2], mapping = 'a', expectation = [mapping, mapping];
-      return assert.eventually.sameMembers(new Promise((done, fail) => 
-        aeroflow(values).map(mapping).toArray().run(done, fail)),
-        expectation);
-    });
+  describe('(@mapper:number)', () => {
+    it('When flow is not empty, emits "next" for each emitted value with @mapper instead of value, then single greedy "done"', () =>
+      execute(
+        context => {
+          context.mapper = 42;
+          context.values = [1, 2];
+        },
+        context => aeroflow(context.values).map(context.mapper).run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.callCount(context.values.length);
+          context.values.forEach((_, index) =>
+            expect(context.next.getCall(index)).to.have.been.calledWith(context.mapper));
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
   });
 });

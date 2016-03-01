@@ -1,82 +1,163 @@
-export default (aeroflow, assert) => describe('#some', () => {
+export default (aeroflow, execute, expect) => describe('#some', () => {
   it('Is instance method', () =>
-    assert.isFunction(aeroflow.empty.some));
+    execute(
+      context => aeroflow.empty.some,
+      context => expect(context.result).to.be.a('function')));
 
   describe('()', () => {
-    it('Returns instance of Aeroflow', () => 
-      assert.typeOf(aeroflow.empty.some(), 'Aeroflow'));
+    it('Returns instance of Aeroflow', () =>
+      execute(
+        context => aeroflow.empty.some(),
+        context => expect(context.result).to.be.an('Aeroflow')));
 
-    it('Emits "false" when flow is empty', () =>
-      assert.eventually.isFalse(new Promise((done, fail) =>
-        aeroflow.empty.some().run(done, fail))));
+    it('When flow is empty, emits "next" with false, then single greedy "done"', () =>
+      execute(
+        context => aeroflow.empty.some().run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.been.calledOnce;
+          expect(context.next).to.have.been.calledWith(false);
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
 
-    it('Emits "true" when at least one @value emitted by flow is truthy', () =>
-      assert.eventually.isTrue(new Promise((done, fail) =>
-        aeroflow(true, 0).some().run(done, fail))));
+    it('When flow emits several falsey values, emits "next" with false, then single greedy "done"', () =>
+      execute(
+        context => context.values = [false, 0, ''],
+        context => aeroflow(context.values).some().run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.been.calledOnce;
+          expect(context.next).to.have.been.calledWith(false);
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
 
-    it('Emits "false" when all @value emitted by flow are falsey', () =>
-      assert.eventually.isFalse(new Promise((done, fail) =>
-        aeroflow(false, 0).some().run(done, fail))));
-
-    it('Emits single result when flow emits several values', () => {
-      const expectation = 1;
-      assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow(1, 2, 3).some().count().run(done, fail)),
-        expectation);
-    });
+    it('When flow emits at least one truthy value, emits "next" with true, then single lazy "done"', () =>
+      execute(
+        context => context.values = [false, 1, ''],
+        context => aeroflow(context.values).some().run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.been.calledOnce;
+          expect(context.next).to.have.been.calledWith(true);
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(false);
+        }));
   });
 
   describe('(@condition:function)', () => {
-    it('Emits "true" when at least one @value emitted by flow passes @condition test', () => {
-      const values = [2, 1], condition = (item) => item % 2 === 0,
-        expectation = values.some(condition);
-      return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow(values).some(condition).run(done, fail)),
-        expectation);
-    });
+    it('When flow is empty, does not call @condition', () => 
+      execute(
+        context => context.condition = context.spy(),
+        context => aeroflow.empty.some(context.condition).run(),
+        context => expect(context.condition).to.have.not.been.called));
 
-    it('Emits "false" when no @values emitted by flow pass @condition test', () => {
-      const values = [3, 1], condition = (item) => item % 2 === 0,
-        expectation = values.some(condition);
-      return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow(values).some(condition).run(done, fail)),
-        expectation);
-    });
+    it('When flow is not empty, calls @condition with each emitted value, index of value and context data until @condition returns truthy result', () => 
+      execute(
+        context => {
+          context.values = [1, 2];
+          context.condition = context.spy((_, index) => index === context.values.length - 1);
+        },
+        context => aeroflow(context.values, 3).some(context.condition).run(context.data),
+        context => {
+          expect(context.condition).to.have.callCount(context.values.length);
+          context.values.forEach((value, index) =>
+            expect(context.condition.getCall(index)).to.have.been.calledWithExactly(value, index, context.data));
+        }));
+
+    it('When flow emits several values and at least one value passes the @condition test, emits single "next" with true, then single lazy "done"', () =>
+      execute(
+        context => {
+          context.condition = value => value > 0;
+          context.values = [0, 1];
+        },
+        context => aeroflow(context.values).some(context.condition).run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.been.calledOnce;
+          expect(context.next).to.have.been.calledWith(true);
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(false);
+        }));
+
+    it('When flow emits several values and no values pass the @condition test, emits single "next" with false, then single greedy "done"', () =>
+      execute(
+        context => {
+          context.condition = value => value > 0;
+          context.values = [0, -1];
+        },
+        context => aeroflow(context.values).some(context.condition).run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.been.calledOnce;
+          expect(context.next).to.have.been.calledWith(false);
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
   });
 
   describe('(@condition:regex)', () => {
-    it('Emits "true" when at least one @value emitted by flow passes @condition test', () => {
-      const values = ['a', 'b'], condition = /a/,
-        expectation = values.some(value => condition.test(value));
-      return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow(values).some(condition).run(done, fail)),
-        expectation);
-    });
+    it('When flow emits several values and at least one value passes the @condition test, emits single "next" with true, then single lazy "done"', () =>
+      execute(
+        context => {
+          context.condition = /b/;
+          context.values = ['a', 'b'];
+        },
+        context => aeroflow(context.values).some(context.condition).run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.been.calledOnce;
+          expect(context.next).to.have.been.calledWith(true);
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(false);
+        }));
 
-    it('Emits "false" when no @values emitted by flow pass @condition test', () => {
-      const values = ['a', 'b'], condition = /c/,
-        expectation = values.some(value => condition.test(value));
-      return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow(values).some(condition).run(done, fail)),
-        expectation);
-    });
+    it('When flow emits several values and no values pass the @condition test, emits single "next" with false, then single greedy "done"', () =>
+      execute(
+        context => {
+          context.condition = /b/;
+          context.values = ['a', 'aa'];
+        },
+        context => aeroflow(context.values).some(context.condition).run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.been.calledOnce;
+          expect(context.next).to.have.been.calledWith(false);
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
   });
 
-  describe('(@condition:!function!regex)', () => {
-    it('Emits "true" when at least one @value emitted by flow equals @condition', () => {
-      const values = [1, 2], condition = 1,
-        expectation = values.some(value => value === condition);
-      return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow(values).some(condition).run(done, fail)),
-        expectation);
-    });
+  describe('(@condition:string)', () => {
+    it('When flow emits at least one value equal to @condition, emits single "next" with true, then single lazy "done"', () =>
+      execute(
+        context => {
+          context.condition = 1;
+          context.values = [1, 2];
+        },
+        context => aeroflow(context.values).some(context.condition).run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.been.calledOnce;
+          expect(context.next).to.have.been.calledWith(true);
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(false);
+        }));
 
-    it('Emits "false" when no @values emitted by flow equal @condition', () => {
-      const values = [1, 2], condition = 3,
-        expectation = values.some(value => value === condition);
-      return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow(values).some(condition).run(done, fail)),
-        expectation);
-    });
+    it('When flow emits several values not equal to @condition, emits single "next" with false, then single greedy "done"', () =>
+      execute(
+        context => {
+          context.condition = 1;
+          context.values = [2, 3];
+        },
+        context => aeroflow(context.values).some(context.condition).run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.been.calledOnce;
+          expect(context.next).to.have.been.calledWith(false);
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
   });
 });

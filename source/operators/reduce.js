@@ -10,7 +10,7 @@ export function reduceOperator(reducer, seed, forced) {
   else if (isFunction(reducer)) seed = toFunction(seed);
   else return tie(valueAdapter, reducer);
   return emitter => (next, done, context) => {
-    let empty = !forced, index = 0, reduced = seed();
+    let empty = !forced, index = 0, reduced = seed(context.data);
     emitter(
       result => {
         if (empty) {

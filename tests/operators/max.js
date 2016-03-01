@@ -1,4 +1,4 @@
-export default (aeroflow, execute, expect, sinon) => describe('#max', () => {
+export default (aeroflow, execute, expect) => describe('#max', () => {
   it('Is instance method', () => 
     execute(
       context => aeroflow.empty.max,
@@ -10,22 +10,38 @@ export default (aeroflow, execute, expect, sinon) => describe('#max', () => {
         context => aeroflow.empty.max(),
         context => expect(context.result).to.be.an('Aeroflow')));
 
-    it('Does not emit next notification when flow is empty', () => 
+    it('When flow is empty, emits only single greedy "done"', () => 
        execute(
-        context => aeroflow.empty.max().notify(context.spy).run(),
-        context => expect(context.spy).to.have.not.been.called));
+        context => aeroflow.empty.max().run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.not.been.called;
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
 
-    it('Emits next(@max, 0, @context) notification with @max as maximum value emitted by flow when flow emits numeric values', () =>
+    it('When flow emits several numeric values, emits single "next" with maximum emitted value, then single greedy "done"', () =>
       execute(
         context => context.values = [1, 3, 2],
-        context => aeroflow(context.values).max().notify(context.spy).run(context),
-        context => expect(context.spy).to.have.been.calledWithExactly(Math.max(...context.values), 0, context)));
+        context => aeroflow(context.values).max().run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.been.calledOnce;
+          expect(context.next).to.have.been.calledWith(Math.max(...context.values));
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
 
-    it('Emits next(@max, 0, @context) notification with @max as maximum value emitted by flow when flow emits string values', () =>
+    it('When flow emits several string values, emits single "next" with emitted value, then single greedy "done"', () =>
       execute(
         context => context.values = ['a', 'c', 'b'],
-        context => aeroflow(context.values).max().notify(context.spy).run(context),
-        context => expect(context.spy).to.have.been.calledWith(
-          context.values.reduce((max, value) => value > max ? value : max), 0, context)));
+        context => aeroflow(context.values).max().run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.been.calledOnce;
+          expect(context.next).to.have.been.calledWith(
+            context.values.reduce((max, value) => value > max ? value : max));
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
   });
 });

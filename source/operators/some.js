@@ -19,10 +19,10 @@ export function someOperator(condition) {
       break;
   }
   return emitter => (next, done, context) => {
-    let some = false;
+    let some = false, index = 0;
     emitter(
       result => {
-        if (!predicate(result)) return true;
+        if (!predicate(result, index++, context.data)) return true;
         some = true;
         return false;
       },

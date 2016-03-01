@@ -1,106 +1,126 @@
-export default (aeroflow, assert) => describe('#reduce', () => {
+export default (aeroflow, execute, expect) => describe('#reduce', () => {
   it('Is instance method', () =>
-    assert.isFunction(aeroflow.empty.reduce));
+    execute(
+      context => aeroflow.empty.reduce,
+      context => expect(context.result).to.be.a('function')));
 
   describe('()', () => {
     it('Returns instance of Aeroflow', () =>
-      assert.typeOf(aeroflow.empty.reduce(), 'Aeroflow'));
+      execute(
+        context => aeroflow.empty.reduce(),
+        context => expect(context.result).to.be.an('Aeroflow')));
 
-    it('Emits nothing ("done" event only) when flow is empty', () =>
-      assert.isFulfilled(new Promise((done, fail) =>
-        aeroflow.empty.reduce().run(fail, done))));
+    it('When flow is empty, emits only single greedy "done"', () =>
+      execute(
+        context => aeroflow.empty.reduce().run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.not.been.called;
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
 
-    it('Emits first value emitted by flow when flow is not empty', () => {
-      const values = [1, 2];
-      assert.eventually.strictEqual(new Promise((done, fail) => 
-        aeroflow(values).reduce().run(done, fail)),
-        values[0]);
-    });
+    it('When flow emits several values, emits single "next" with first emitted value, then emits single greedy "done"', () =>
+      execute(
+        context => context.value = 1,
+        context => aeroflow(context.value, 2).reduce().run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.been.calledOnce;
+          expect(context.next).to.have.been.calledWith(context.value);
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
   });
 
   describe('(@reducer:function)', () => {
-    it('Does not call @reducer when flow is empty', () =>
-      assert.isFulfilled(new Promise((done, fail) =>
-        aeroflow.empty.reduce(fail).run(fail, done))));
+    it('When flow is empty, does not call @reducer', () =>
+      execute(
+        context => context.reducer = context.spy(),
+        context => aeroflow.empty.reduce(context.reducer).run(),
+        context => expect(context.reducer).to.have.not.been.called));
 
-    it('Does not call @reducer when flow emits single @value', () =>
-      assert.isFulfilled(new Promise((done, fail) =>
-        aeroflow(1).reduce(fail).run(done, fail))));
+    it('When flow emits single value, does not call @reducer', () =>
+      execute(
+        context => context.reducer = context.spy(),
+        context => aeroflow(1).reduce(context.reducer).run(),
+        context => expect(context.reducer).to.have.not.been.called));
 
-    it('Calls @reducer when flow emits several v@alues', () =>
-      assert.isFulfilled(new Promise((done, fail) =>
-        aeroflow(1, 2).reduce(done).run(fail, fail))));
+    it('When flow emits several values, calls @reducer with first emitted value, second emitted value, 0 and context data on first iteration', () =>
+      execute(
+        context => {
+          context.values = [1, 2];
+          context.reducer = context.spy();
+        },
+        context => aeroflow(context.values).reduce(context.reducer).run(context.data),
+        context => expect(context.reducer).to.have.been.calledWithExactly(context.values[0], context.values[1], 0, context.data)));
 
-    it('Emits error thrown by @reducer', () => {
-      const error = new Error('test');
-      return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow(1, 2).reduce(() => { throw error; }).run(fail, done)),
-        error);
-    });
+    it('When flow is not empty, calls @reducer with result returned by @reducer on previous iteration, emitted value, index of value and context data on next iterations', () =>
+      execute(
+        context => {
+          context.values = [1, 2, 3];
+          context.reducer = context.spy((_, value) => value);
+        },
+        context => aeroflow(context.values).reduce(context.reducer).run(context.data),
+        context => {
+          expect(context.reducer).to.have.callCount(context.values.length - 1);
+          context.values.slice(0, -1).forEach((value, index) =>
+            expect(context.reducer.getCall(index)).to.have.been.calledWithExactly(value, context.values[index + 1], index, context.data));
+        }));
 
-    it('Emits @value emitted by flow when flow emits single @value', () => {
-      const value = 42;
-      return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow(value).reduce(() => 'test').run(done, fail)),
-        value);
-    });
-
-    it('Emits @value returned by @reducer when flow emits several @values', () => {
-      const value = 42;
-      return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow(1, 2, 3).reduce(() => value).run(done, fail)),
-        value);
-    });
-
-    it('Passes first and second @values emitted by flow to @reducer as first and second arguments on first iteration', () => {
-      const values = [1, 2];
-      return assert.eventually.sameMembers(new Promise((done, fail) =>
-        aeroflow(values).reduce((first, second) => done([first, second])).run(fail, fail)),
-        values);
-    });
-
-    it('Passes zero-based @index of iteration to @reducer as third argument', () =>
-      assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow(1, 2).reduce((_, __, index) => done(index)).run(fail, fail)),
-        0));
-
-    it('Passes context @data to @reducer as forth argument', () => {
-      const expectation = {};
-      return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow(1, 2).reduce((_, __, ___, data) => done(data)).run(fail, fail, expectation)),
-        expectation);
-    });
+    it('When flow emits several values, emits single "next" with last value returned by @reducer, then emits single greedy "done"', () =>
+      execute(
+        context => {
+          context.value = 3;
+          context.reducer = context.spy((_, value) => value);
+        },
+        context => aeroflow(1, 2, context.value).reduce(context.reducer).run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.been.calledOnce;
+          expect(context.next).to.have.been.calledWith(context.value);
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
   });
 
-  describe('(@reducer:function, @seed)', () => {
-    it('Emits @seed value when flow is empty', () => {
-      const seed = 'test';
-      return assert.eventually.strictEqual(new Promise((done, fail) => 
-        aeroflow.empty.reduce(() => {}, seed).run(done, fail)),
-        seed);
-    });
-
-    it('Passes @seed to @reducer as first argument on first iteration', () => {
-      const seed = 42;
-      return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow('test').reduce(done, seed).run(fail, fail)),
-        seed);
-    });
+  describe('(@reducer:function, @seed:function)', () => {
+    it('When flow is not empty, calls @seed with context data, calls @reducer with result returned by @seed, first emitted value, 0 and context data on first iteration', () =>
+      execute(
+        context => {
+          context.value = 42;
+          context.seed = context.spy(() => context.value);
+          context.reducer = context.spy();
+        },
+        context => aeroflow(context.value).reduce(context.reducer, context.seed).run(context.data),
+        context => {
+          expect(context.seed).to.have.been.calledWithExactly(context.data);
+          expect(context.reducer).to.have.been.calledWithExactly(context.value, context.value, 0, context.data);
+        }));
   });
 
-  describe('(@reducer:!function)', () => {
-    it('Emits @reducer value when flow is empty', () => {
-      const reducer = 42;
-      return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow.empty.reduce(reducer).run(done, fail)),
-        reducer);
-    });
+  describe('(@reducer:function, @seed:number)', () => {
+    it('When flow is not empty, calls @reducer with @seed, first emitted value, 0 and context data on first iteration', () =>
+      execute(
+        context => {
+          context.seed = 1;
+          context.value = 2;
+          context.reducer = context.spy();
+        },
+        context => aeroflow(context.value).reduce(context.reducer, context.seed).run(context.data),
+        context => expect(context.reducer).to.have.been.calledWithExactly(context.seed, context.value, 0, context.data)));
+  });
 
-    it('Emits @reducer value when flow is not empty', () => {
-      const reducer = 42;
-      return assert.eventually.strictEqual(new Promise((done, fail) => 
-        aeroflow(1, 2).reduce(reducer).run(done, fail)),
-        reducer);
-    });
+  describe('(@reducer:string)', () => {
+    it('When flow emits several values, emits single "next" with @reducer, then emits single greedy "done"', () =>
+      execute(
+        context => context.reducer = 42,
+        context => aeroflow(1, 2).reduce(context.reducer).run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.been.calledOnce;
+          expect(context.next).to.have.been.calledWith(context.reducer);
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
   });
 });

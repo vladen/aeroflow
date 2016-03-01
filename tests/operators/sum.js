@@ -1,28 +1,47 @@
-export default (aeroflow, assert) => describe('#sum', () => {
-  it('Is instance method', () =>
-    assert.isFunction(aeroflow.empty.sum));
+export default (aeroflow, execute, expect) => describe('#sum', () => {
+  it('Is instance method', () => 
+    execute(
+      context => aeroflow.empty.sum,
+      context => expect(context.result).to.be.a('function')));
 
   describe('()', () => {
     it('Returns instance of Aeroflow', () =>
-      assert.typeOf(aeroflow.empty.sum(), 'Aeroflow'));
+      execute(
+        context => aeroflow.empty.sum(),
+        context => expect(context.result).to.be.an('Aeroflow')));
 
-    it('Emits nothing ("done" event only) when flow is empty', () =>
-      assert.isFulfilled(new Promise((done, fail) =>
-        aeroflow.empty.sum().run(fail, done))));
+    it('When flow is empty, emits only single greedy "done"', () => 
+       execute(
+        context => aeroflow.empty.sum().run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.not.been.called;
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
 
-    it('Emits total sum of values when flow emits several numeric values', () => {
-      const values = [1, 3, 2], expectation = values.reduce((prev, curr) => prev + curr, 0);
-      return assert.eventually.strictEqual(new Promise((done, fail) => 
-        aeroflow(values).sum().run(done, fail)),
-        expectation);
-    });
+    it('When flow emits several numeric values, emits single "next" with sum of emitted values, then single greedy "done"', () =>
+      execute(
+        context => context.values = [1, 3, 2],
+        context => aeroflow(context.values).sum().run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.been.calledOnce;
+          expect(context.next).to.have.been.calledWith(context.values.reduce((sum, value) =>
+            sum + value, 0));
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
 
-    it('Emits NaN when flow emits single not numeric value', () =>
-      assert.eventually.isNaN(new Promise((done, fail) => 
-        aeroflow('q').sum().run(done, fail))));
-
-    it('Emits NaN when flow emits several not numeric values', () =>
-      assert.eventually.isNaN(new Promise((done, fail) => 
-        aeroflow('q', 'b').sum().run(done, fail))));
+    it('When flow emits at least one not numeric value, emits single "next" with NaN, then single greedy "done"', () =>
+      execute(
+        context => context.values = [1, 'test', 2],
+        context => aeroflow(context.values).sum().run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.been.calledOnce;
+          expect(context.next).to.have.been.calledWith(NaN);
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
   });
 });

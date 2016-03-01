@@ -10,22 +10,27 @@ export default (aeroflow, execute, expect, sinon) => describe('#toSet', () => {
         context => aeroflow.empty.toSet(),
         context => expect(context.result).to.be.an('Aeroflow')));
 
-    it('Emits "next" notification with empty set when flow is empty', () =>
+    it('When flow is empty, emits single "next" with empty set, then single greedy "done"', () =>
       execute(
-        context => aeroflow.empty.toSet().notify(context.next).run(),
+        context => aeroflow.empty.toSet().run(context.next, context.done),
         context => {
-          const set = context.next.args[0][0];
-          expect(set).to.be.a('Set');
-          expect(set).to.have.property('size', 0);
+          expect(context.next).to.have.been.calledOnce;
+          expect(context.next).to.have.been.calledWith(new Set);
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
         }));
 
-    it('Emits "next" notification with set containing values emitted by flow', () =>
+    it('When flow is not empty, emits single "next" with set containing all unique emitted values, then single greedy "done"', () =>
       execute(
-        context => context.values = [1, 3, 5],
-        context => aeroflow(context.values).toSet().notify(context.next).run(),
+        context => context.values = [1, 3, 5, 3, 1],
+        context => aeroflow(context.values).toSet().run(context.next, context.done),
         context => {
-          const set = context.next.args[0][0];
-          context.values.forEach(value => expect(set.has(value)).to.be.true);
+          expect(context.next).to.have.been.calledOnce;
+          expect(context.next).to.have.been.calledWith(new Set(context.values));
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
         }));
   });
 });

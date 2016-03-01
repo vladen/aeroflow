@@ -66,7 +66,7 @@ export default (aeroflow, execute, expect) => describe('.expand', () => {
         context => expect(context.expander).to.have.been.calledWith(context.seed)));
   });
 
-  describe('(@expander:!function)', () => {
+  describe('(@expander:string)', () => {
     it('Emits "next" with @expander', () =>
       execute(
         context => context.expander = 'test',

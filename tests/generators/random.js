@@ -21,7 +21,7 @@ export default (aeroflow, assert) => describe('.random', () => {
     });
   });
 
-  describe('(@start:!number)', () => {
+  describe('(@start:string)', () => {
     it('Emits random decimals values within 0 and 1', () => {
       const start = 'test', count = 10, 
         expectation = (value) => !Number.isInteger(value) && value >= 0 && value <= 1;
@@ -46,7 +46,7 @@ export default (aeroflow, assert) => describe('.random', () => {
     });
   });
 
-  describe('(@start, @end:!number)', () => {
+  describe('(@start, @end:string)', () => {
     it('Emits random demical values less than @start if @start', () => {
       const start = 2, end = 'test', count = 10,
         expectation = (value) => !Number.isInteger(value) && value <= start;

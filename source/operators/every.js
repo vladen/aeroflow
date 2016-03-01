@@ -19,13 +19,12 @@ export function everyOperator(condition) {
       break;
   }
   return emitter => (next, done, context) => {
-    let empty = true, every = true;
+    let empty = true, every = true, index = 0;
     emitter(
       result => {
         empty = false;
-        if (predicate(result)) return true;
-        every = false;
-        return false;
+        if (predicate(result, index++, context.data)) return true;
+        return every = false;
       },
       result => {
         if (isError(result) || !unsync(next(every || empty), done, done)) done(result);

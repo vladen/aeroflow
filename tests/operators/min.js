@@ -1,4 +1,4 @@
-export default (aeroflow, execute, expect, sinon) => describe('#min', () => {
+export default (aeroflow, execute, expect) => describe('#min', () => {
   it('Is instance method', () => 
     execute(
       context => aeroflow.empty.min,
@@ -10,22 +10,38 @@ export default (aeroflow, execute, expect, sinon) => describe('#min', () => {
         context => aeroflow.empty.min(),
         context => expect(context.result).to.be.an('Aeroflow')));
 
-    it('Does not emit next notification when flow is empty', () => 
+    it('When flow is empty, emits only single greedy "done"', () => 
        execute(
-        context => aeroflow.empty.min().notify(context.spy).run(),
-        context => expect(context.spy).to.have.not.been.called));
+        context => aeroflow.empty.min().run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.not.been.called;
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
 
-    it('Emits next(@min, 0, @context) notification with @min as minimum value emitted by flow when flow emits numeric values', () =>
+    it('When flow emits several numeric values, emits single "next" with maximum emitted value, then single greedy "done"', () =>
       execute(
         context => context.values = [1, 3, 2],
-        context => aeroflow(context.values).min().notify(context.spy).run(context),
-        context => expect(context.spy).to.have.been.calledWithExactly(Math.min(...context.values), 0, context)));
+        context => aeroflow(context.values).min().run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.been.calledOnce;
+          expect(context.next).to.have.been.calledWith(Math.min(...context.values));
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
 
-    it('Emits next(@min, 0, @context) notification with @min as minimum value emitted by flow when flow emits string values', () =>
+    it('When flow emits several string values, emits single "next" with minnimum emitted value, then single greedy "done"', () =>
       execute(
         context => context.values = ['a', 'c', 'b'],
-        context => aeroflow(context.values).min().notify(context.spy).run(context),
-        context => expect(context.spy).to.have.been.calledWith(
-          context.values.reduce((min, value) => value < min ? value : min), 0, context)));
+        context => aeroflow(context.values).min().run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.been.calledOnce;
+          expect(context.next).to.have.been.calledWith(
+            context.values.reduce((min, value) => value < min ? value : min));
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
   });
 });

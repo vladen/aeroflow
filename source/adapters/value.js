@@ -1,7 +1,7 @@
 import { unsync } from '../unsync';
 
-export function valueAdapter(value) {
+export function valueAdapter(source) {
   return (next, done) => {
-    if (!unsync(next(value), done, done)) done(true);
+    if (!unsync(next(source), done, done)) done(true);
   };
 }
