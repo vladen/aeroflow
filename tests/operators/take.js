@@ -1,10 +1,10 @@
-export default (aeroflow, execute, expect) => describe('#take', () => {
+export default (aeroflow, execute, expect) => describe('aeroflow().take', () => {
   it('Is instance method', () =>
     execute(
       context => aeroflow.empty.take,
       context => expect(context.result).to.be.a('function')));
 
-  describe('()', () => {
+  describe('aeroflow().take()', () => {
     it('Returns instance of Aeroflow', () =>
       execute(
         context => aeroflow.empty.take(),
@@ -33,7 +33,7 @@ export default (aeroflow, execute, expect) => describe('#take', () => {
         }));
   });
 
-  describe('(false)', () => {
+  describe('aeroflow().take(false)', () => {
     it('When flow is not empty, emits only single lazy "done"', () =>
       execute(
         context => aeroflow('test').take(false).run(context.next, context.done),
@@ -44,7 +44,7 @@ export default (aeroflow, execute, expect) => describe('#take', () => {
         }));
   });
 
-  describe('(true)', () => {
+  describe('aeroflow().take(true)', () => {
     it('When flow is not empty, emits "next" for each emitted value, then emits single greedy "done"', () =>
       execute(
         context => context.values = [1, 2],
@@ -59,7 +59,7 @@ export default (aeroflow, execute, expect) => describe('#take', () => {
         }));
   });
 
-  describe('(@condition:function)', () => {
+  describe('aeroflow().take(@condition:function)', () => {
     it('When flow is empty, does not call @condition', () => 
       execute(
         context => context.condition = context.spy(),
@@ -97,7 +97,7 @@ export default (aeroflow, execute, expect) => describe('#take', () => {
         }));
   });
 
-  describe('(@condition:number)', () => {
+  describe('aeroflow().take(@condition:number)', () => {
     it('When flow emits several values and @condition is positive, emits "next" for each @condition of first values, then emits single lazy "done"', () =>
       execute(
         context => {

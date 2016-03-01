@@ -1,10 +1,10 @@
-export default (aeroflow, execute, expect) => describe('#max', () => {
+export default (aeroflow, execute, expect) => describe('aeroflow().max', () => {
   it('Is instance method', () => 
     execute(
       context => aeroflow.empty.max,
       context => expect(context.result).to.be.a('function')));
 
-  describe('()', () => {
+  describe('aeroflow().max()', () => {
     it('Returns instance of Aeroflow', () =>
       execute(
         context => aeroflow.empty.max(),

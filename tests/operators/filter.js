@@ -1,10 +1,10 @@
-export default (aeroflow, execute, expect) => describe('#filter', () => {
+export default (aeroflow, execute, expect) => describe('aeroflow().filter', () => {
   it('Is instance method', () =>
     execute(
       context => aeroflow.empty.filter,
       context => expect(context.result).to.be.a('function')));
 
-  describe('()', () => {
+  describe('aeroflow().filter()', () => {
     it('Returns instance of Aeroflow', () =>
       execute(
         context => aeroflow.empty.filter(),
@@ -34,7 +34,7 @@ export default (aeroflow, execute, expect) => describe('#filter', () => {
         }));
   });
 
-  describe('(@condition:function)', () => {
+  describe('aeroflow().filter(@condition:function)', () => {
     it('When flow is empty, does not call @condition', () => 
       execute(
         context => context.condition = context.spy(),
@@ -72,7 +72,7 @@ export default (aeroflow, execute, expect) => describe('#filter', () => {
         }));
   });
 
-  describe('(@condition:regex)', () => {
+  describe('aeroflow().filter(@condition:regex)', () => {
     it('When flow is not empty, emits "next" for each value passing the @condition test, then single greedy "done"', () =>
       execute(
         context => {
@@ -91,7 +91,7 @@ export default (aeroflow, execute, expect) => describe('#filter', () => {
         }));
   });
 
-  describe('(@condition:number)', () => {
+  describe('aeroflow().filter(@condition:number)', () => {
     it('When flow is not empty, emits "next" for each value equal to @condition, then single greedy "done"', () =>
       execute(
         context => {

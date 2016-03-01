@@ -1,10 +1,10 @@
-export default (aeroflow, execute, expect, sinon) => describe('#toSet', () => {
+export default (aeroflow, execute, expect, sinon) => describe('aeroflow().toSet', () => {
   it('Is instance method', () =>
     execute(
       context => aeroflow.empty.toSet,
       context => expect(context.result).to.be.a('function')));
 
-  describe('()', () => {
+  describe('aeroflow().toSet()', () => {
     it('Returns instance of Aeroflow', () =>
       execute(
         context => aeroflow.empty.toSet(),

@@ -1,10 +1,10 @@
-export default (aeroflow, execute, expect) => describe('#count', () => {
+export default (aeroflow, execute, expect) => describe('aeroflow().count', () => {
   it('Is instance method', () =>
     execute(
       context => aeroflow.empty.count,
       context => expect(context.result).to.be.a('function')));
 
-  describe('()', () => {
+  describe('aeroflow().count()', () => {
     it('Returns instance of Aeroflow', () =>
       execute(
         context => aeroflow.empty.count(),

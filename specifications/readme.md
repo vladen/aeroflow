@@ -1,99 +1,99 @@
 # TOC
    - [aeroflow](#aeroflow)
-     - [()](#aeroflow-)
-     - [(@source:aeroflow)](#aeroflow-sourceaeroflow)
-     - [(@source:array)](#aeroflow-sourcearray)
-     - [(@source:date)](#aeroflow-sourcedate)
-     - [(@source:error)](#aeroflow-sourceerror)
-     - [(@source:function)](#aeroflow-sourcefunction)
-     - [(@source:iterable)](#aeroflow-sourceiterable)
-     - [(@source:null)](#aeroflow-sourcenull)
-     - [(@source:promise)](#aeroflow-sourcepromise)
-     - [(@source:string)](#aeroflow-sourcestring)
-     - [(@source:undefined)](#aeroflow-sourceundefined)
-     - [(...@sources)](#aeroflow-sources)
-   - [.empty](#empty)
-   - [.expand](#expand)
-     - [()](#expand-)
-     - [(@expander:function)](#expand-expanderfunction)
-     - [(@expander:function, @seed)](#expand-expanderfunction-seed)
-     - [(@expander:!function)](#expand-expanderfunction)
-   - [.just](#just)
-     - [()](#just-)
-     - [(@value:aeroflow)](#just-valueaeroflow)
-     - [(@value:array)](#just-valuearray)
-     - [(@value:function)](#just-valuefunction)
-     - [(@value:iterable)](#just-valueiterable)
-     - [(@value:promise)](#just-valuepromise)
-   - [#average](#average)
-     - [()](#average-)
-   - [#catch](#catch)
-     - [()](#catch-)
-     - [(@alternative:array)](#catch-alternativearray)
-     - [(@alternative:function)](#catch-alternativefunction)
-     - [(@alternative:string)](#catch-alternativestring)
-   - [#coalesce](#coalesce)
-     - [()](#coalesce-)
-     - [(@alternative:array)](#coalesce-alternativearray)
-     - [(@alternative:function)](#coalesce-alternativefunction)
-     - [(@alternative:promise)](#coalesce-alternativepromise)
-     - [(@alternative:string)](#coalesce-alternativestring)
-   - [#count](#count)
-     - [()](#count-)
-   - [#every](#every)
-     - [()](#every-)
-     - [(@condition:function)](#every-conditionfunction)
-     - [(@condition:regex)](#every-conditionregex)
-     - [(@condition:string)](#every-conditionstring)
-   - [#filter](#filter)
-     - [()](#filter-)
-     - [(@condition:function)](#filter-conditionfunction)
-     - [(@condition:regex)](#filter-conditionregex)
-     - [(@condition:number)](#filter-conditionnumber)
-   - [#map](#map)
-     - [()](#map-)
-     - [(@mapper:function)](#map-mapperfunction)
-     - [(@mapper:number)](#map-mappernumber)
-   - [#max](#max)
-     - [()](#max-)
-   - [#mean](#mean)
-     - [()](#mean-)
-   - [#min](#min)
-     - [()](#min-)
-   - [#reduce](#reduce)
-     - [()](#reduce-)
-     - [(@reducer:function)](#reduce-reducerfunction)
-     - [(@reducer:function, @seed:function)](#reduce-reducerfunction-seedfunction)
-     - [(@reducer:function, @seed:number)](#reduce-reducerfunction-seednumber)
-     - [(@reducer:string)](#reduce-reducerstring)
-   - [#reverse](#reverse)
-     - [()](#reverse-)
-   - [#skip](#skip)
-     - [()](#skip-)
-     - [(false)](#skip-false)
-     - [(true)](#skip-true)
-     - [(@condition:function)](#skip-conditionfunction)
-     - [(@condition:number)](#skip-conditionnumber)
-   - [#some](#some)
-     - [()](#some-)
-     - [(@condition:function)](#some-conditionfunction)
-     - [(@condition:regex)](#some-conditionregex)
-     - [(@condition:string)](#some-conditionstring)
-   - [#sum](#sum)
-     - [()](#sum-)
-   - [#take](#take)
-     - [()](#take-)
-     - [(false)](#take-false)
-     - [(true)](#take-true)
-     - [(@condition:function)](#take-conditionfunction)
-     - [(@condition:number)](#take-conditionnumber)
-   - [#toArray](#toarray)
-     - [()](#toarray-)
-   - [#toSet](#toset)
-     - [()](#toset-)
-   - [#toString](#tostring)
-     - [()](#tostring-)
-     - [(@seperator:string)](#tostring-seperatorstring)
+     - [aeroflow()](#aeroflow-aeroflow)
+     - [aeroflow(@source:aeroflow)](#aeroflow-aeroflowsourceaeroflow)
+     - [aeroflow(@source:array)](#aeroflow-aeroflowsourcearray)
+     - [aeroflow(@source:date)](#aeroflow-aeroflowsourcedate)
+     - [aeroflow(@source:error)](#aeroflow-aeroflowsourceerror)
+     - [aeroflow(@source:function)](#aeroflow-aeroflowsourcefunction)
+     - [aeroflow(@source:iterable)](#aeroflow-aeroflowsourceiterable)
+     - [aeroflow(@source:null)](#aeroflow-aeroflowsourcenull)
+     - [aeroflow(@source:promise)](#aeroflow-aeroflowsourcepromise)
+     - [aeroflow(@source:string)](#aeroflow-aeroflowsourcestring)
+     - [aeroflow(@source:undefined)](#aeroflow-aeroflowsourceundefined)
+     - [aeroflow(...@sources)](#aeroflow-aeroflowsources)
+   - [aeroflow.empty](#aeroflowempty)
+   - [aeroflow.expand](#aeroflowexpand)
+     - [aeroflow.expand()](#aeroflowexpand-aeroflowexpand)
+     - [aeroflow.expand(@expander:function)](#aeroflowexpand-aeroflowexpandexpanderfunction)
+     - [aeroflow.expand(@expander:function, @seed)](#aeroflowexpand-aeroflowexpandexpanderfunction-seed)
+     - [aeroflow.expand(@expander:string)](#aeroflowexpand-aeroflowexpandexpanderstring)
+   - [aeroflow.just](#aeroflowjust)
+     - [aeroflow.just()](#aeroflowjust-aeroflowjust)
+     - [aeroflow.just(@value:aeroflow)](#aeroflowjust-aeroflowjustvalueaeroflow)
+     - [aeroflow.just(@value:array)](#aeroflowjust-aeroflowjustvaluearray)
+     - [aeroflow.just(@value:function)](#aeroflowjust-aeroflowjustvaluefunction)
+     - [aeroflow.just(@value:iterable)](#aeroflowjust-aeroflowjustvalueiterable)
+     - [aeroflow.just(@value:promise)](#aeroflowjust-aeroflowjustvaluepromise)
+   - [aeroflow().average](#aeroflowaverage)
+     - [aeroflow().average()](#aeroflowaverage-aeroflowaverage)
+   - [aeroflow().catch](#aeroflowcatch)
+     - [aeroflow().catch()](#aeroflowcatch-aeroflowcatch)
+     - [aeroflow().catch(@alternative:array)](#aeroflowcatch-aeroflowcatchalternativearray)
+     - [aeroflow().catch(@alternative:function)](#aeroflowcatch-aeroflowcatchalternativefunction)
+     - [aeroflow().catch(@alternative:string)](#aeroflowcatch-aeroflowcatchalternativestring)
+   - [aeroflow().coalesce](#aeroflowcoalesce)
+     - [aeroflow().coalesce()](#aeroflowcoalesce-aeroflowcoalesce)
+     - [aeroflow().coalesce(@alternative:array)](#aeroflowcoalesce-aeroflowcoalescealternativearray)
+     - [aeroflow().coalesce(@alternative:function)](#aeroflowcoalesce-aeroflowcoalescealternativefunction)
+     - [aeroflow().coalesce(@alternative:promise)](#aeroflowcoalesce-aeroflowcoalescealternativepromise)
+     - [aeroflow().coalesce(@alternative:string)](#aeroflowcoalesce-aeroflowcoalescealternativestring)
+   - [aeroflow().count](#aeroflowcount)
+     - [aeroflow().count()](#aeroflowcount-aeroflowcount)
+   - [aeroflow().every](#aeroflowevery)
+     - [aeroflow().every()](#aeroflowevery-aeroflowevery)
+     - [aeroflow().every(@condition:function)](#aeroflowevery-aerofloweveryconditionfunction)
+     - [aeroflow().every(@condition:regex)](#aeroflowevery-aerofloweveryconditionregex)
+     - [aeroflow().every(@condition:string)](#aeroflowevery-aerofloweveryconditionstring)
+   - [aeroflow().filter](#aeroflowfilter)
+     - [aeroflow().filter()](#aeroflowfilter-aeroflowfilter)
+     - [aeroflow().filter(@condition:function)](#aeroflowfilter-aeroflowfilterconditionfunction)
+     - [aeroflow().filter(@condition:regex)](#aeroflowfilter-aeroflowfilterconditionregex)
+     - [aeroflow().filter(@condition:number)](#aeroflowfilter-aeroflowfilterconditionnumber)
+   - [aeroflow().map](#aeroflowmap)
+     - [aeroflow().map()](#aeroflowmap-aeroflowmap)
+     - [aeroflow().map(@mapper:function)](#aeroflowmap-aeroflowmapmapperfunction)
+     - [aeroflow().map(@mapper:number)](#aeroflowmap-aeroflowmapmappernumber)
+   - [aeroflow().max](#aeroflowmax)
+     - [aeroflow().max()](#aeroflowmax-aeroflowmax)
+   - [aeroflow().mean](#aeroflowmean)
+     - [aeroflow().mean()](#aeroflowmean-aeroflowmean)
+   - [aeroflow().min](#aeroflowmin)
+     - [aeroflow().min()](#aeroflowmin-aeroflowmin)
+   - [aeroflow().reduce](#aeroflowreduce)
+     - [aeroflow().reduce()](#aeroflowreduce-aeroflowreduce)
+     - [aeroflow().reduce(@reducer:function)](#aeroflowreduce-aeroflowreducereducerfunction)
+     - [aeroflow().reduce(@reducer:function, @seed:function)](#aeroflowreduce-aeroflowreducereducerfunction-seedfunction)
+     - [aeroflow().reduce(@reducer:function, @seed:number)](#aeroflowreduce-aeroflowreducereducerfunction-seednumber)
+     - [aeroflow().reduce(@reducer:string)](#aeroflowreduce-aeroflowreducereducerstring)
+   - [aeroflow().reverse](#aeroflowreverse)
+     - [aeroflow().reverse()](#aeroflowreverse-aeroflowreverse)
+   - [aeroflow().skip](#aeroflowskip)
+     - [aeroflow().skip()](#aeroflowskip-aeroflowskip)
+     - [aeroflow().skip(false)](#aeroflowskip-aeroflowskipfalse)
+     - [aeroflow().skip(true)](#aeroflowskip-aeroflowskiptrue)
+     - [aeroflow().skip(@condition:function)](#aeroflowskip-aeroflowskipconditionfunction)
+     - [aeroflow().skip(@condition:number)](#aeroflowskip-aeroflowskipconditionnumber)
+   - [aeroflow().some](#aeroflowsome)
+     - [aeroflow().some()](#aeroflowsome-aeroflowsome)
+     - [aeroflow().some(@condition:function)](#aeroflowsome-aeroflowsomeconditionfunction)
+     - [aeroflow().some(@condition:regex)](#aeroflowsome-aeroflowsomeconditionregex)
+     - [aeroflow().some(@condition:string)](#aeroflowsome-aeroflowsomeconditionstring)
+   - [aeroflow().sum](#aeroflowsum)
+     - [aeroflow().sum()](#aeroflowsum-aeroflowsum)
+   - [aeroflow().take](#aeroflowtake)
+     - [aeroflow().take()](#aeroflowtake-aeroflowtake)
+     - [aeroflow().take(false)](#aeroflowtake-aeroflowtakefalse)
+     - [aeroflow().take(true)](#aeroflowtake-aeroflowtaketrue)
+     - [aeroflow().take(@condition:function)](#aeroflowtake-aeroflowtakeconditionfunction)
+     - [aeroflow().take(@condition:number)](#aeroflowtake-aeroflowtakeconditionnumber)
+   - [aeroflow().toArray](#aeroflowtoarray)
+     - [aeroflow().toArray()](#aeroflowtoarray-aeroflowtoarray)
+   - [aeroflow().toSet](#aeroflowtoset)
+     - [aeroflow().toSet()](#aeroflowtoset-aeroflowtoset)
+   - [aeroflow().toString](#aeroflowtostring)
+     - [aeroflow().toString()](#aeroflowtostring-aeroflowtostring)
+     - [aeroflow().toString(@seperator:string)](#aeroflowtostring-aeroflowtostringseperatorstring)
 <a name=""></a>
  
 <a name="aeroflow"></a>
@@ -110,8 +110,8 @@ function (context) {
 } /* assert */);
 ```
 
-<a name="aeroflow-"></a>
-## ()
+<a name="aeroflow-aeroflow"></a>
+## aeroflow()
 Returns instance of Aeroflow.
 
 ```js
@@ -134,8 +134,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="aeroflow-sourceaeroflow"></a>
-## (@source:aeroflow)
+<a name="aeroflow-aeroflowsourceaeroflow"></a>
+## aeroflow(@source:aeroflow)
 When @source is empty, emits only single greedy "done".
 
 ```js
@@ -166,8 +166,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="aeroflow-sourcearray"></a>
-## (@source:array)
+<a name="aeroflow-aeroflowsourcearray"></a>
+## aeroflow(@source:array)
 When @source is empty, emits only single greedy "done".
 
 ```js
@@ -198,8 +198,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="aeroflow-sourcedate"></a>
-## (@source:date)
+<a name="aeroflow-aeroflowsourcedate"></a>
+## aeroflow(@source:date)
 Emits single "next" with @source, then single greedy "done".
 
 ```js
@@ -216,8 +216,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="aeroflow-sourceerror"></a>
-## (@source:error)
+<a name="aeroflow-aeroflowsourceerror"></a>
+## aeroflow(@source:error)
 Emits only single faulty "done" with @source.
 
 ```js
@@ -230,8 +230,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="aeroflow-sourcefunction"></a>
-## (@source:function)
+<a name="aeroflow-aeroflowsourcefunction"></a>
+## aeroflow(@source:function)
 Calls @source once with context data.
 
 ```js
@@ -273,8 +273,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="aeroflow-sourceiterable"></a>
-## (@source:iterable)
+<a name="aeroflow-aeroflowsourceiterable"></a>
+## aeroflow(@source:iterable)
 When @source is empty, emits only single greedy "done".
 
 ```js
@@ -305,8 +305,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="aeroflow-sourcenull"></a>
-## (@source:null)
+<a name="aeroflow-aeroflowsourcenull"></a>
+## aeroflow(@source:null)
 Emits single "next" with @source, then single greedy "done".
 
 ```js
@@ -323,8 +323,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="aeroflow-sourcepromise"></a>
-## (@source:promise)
+<a name="aeroflow-aeroflowsourcepromise"></a>
+## aeroflow(@source:promise)
 When @source rejects, emits single faulty "done" with rejected error.
 
 ```js
@@ -353,8 +353,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="aeroflow-sourcestring"></a>
-## (@source:string)
+<a name="aeroflow-aeroflowsourcestring"></a>
+## aeroflow(@source:string)
 Emits single "next" with @source, then single greedy "done".
 
 ```js
@@ -371,8 +371,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="aeroflow-sourceundefined"></a>
-## (@source:undefined)
+<a name="aeroflow-aeroflowsourceundefined"></a>
+## aeroflow(@source:undefined)
 Emits single "next" with @source, then single greedy "done".
 
 ```js
@@ -389,8 +389,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="aeroflow-sources"></a>
-## (...@sources)
+<a name="aeroflow-aeroflowsources"></a>
+## aeroflow(...@sources)
 Emits "next" with each serial value from @sources, then single greedy "done".
 
 ```js
@@ -416,8 +416,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="empty"></a>
-# .empty
+<a name="aeroflowempty"></a>
+# aeroflow.empty
 Gets instance of Aeroflow.
 
 ```js
@@ -440,8 +440,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="expand"></a>
-# .expand
+<a name="aeroflowexpand"></a>
+# aeroflow.expand
 Is static method.
 
 ```js
@@ -452,8 +452,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="expand-"></a>
-## ()
+<a name="aeroflowexpand-aeroflowexpand"></a>
+## aeroflow.expand()
 Returns instance of Aeroflow.
 
 ```js
@@ -464,8 +464,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="expand-expanderfunction"></a>
-## (@expander:function)
+<a name="aeroflowexpand-aeroflowexpandexpanderfunction"></a>
+## aeroflow.expand(@expander:function)
 Calls @expander with undefined, 0  and context data on first iteration.
 
 ```js
@@ -530,8 +530,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="expand-expanderfunction-seed"></a>
-## (@expander:function, @seed)
+<a name="aeroflowexpand-aeroflowexpandexpanderfunction-seed"></a>
+## aeroflow.expand(@expander:function, @seed)
 Calls @expander with @seed on first iteration.
 
 ```js
@@ -545,8 +545,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="expand-expanderfunction"></a>
-## (@expander:!function)
+<a name="aeroflowexpand-aeroflowexpandexpanderstring"></a>
+## aeroflow.expand(@expander:string)
 Emits "next" with @expander.
 
 ```js
@@ -559,8 +559,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="just"></a>
-# .just
+<a name="aeroflowjust"></a>
+# aeroflow.just
 Is static method.
 
 ```js
@@ -571,8 +571,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="just-"></a>
-## ()
+<a name="aeroflowjust-aeroflowjust"></a>
+## aeroflow.just()
 Returns instance of Aeroflow.
 
 ```js
@@ -583,8 +583,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="just-valueaeroflow"></a>
-## (@value:aeroflow)
+<a name="aeroflowjust-aeroflowjustvalueaeroflow"></a>
+## aeroflow.just(@value:aeroflow)
 Emits single "next" with @value, then single greedy "done".
 
 ```js
@@ -601,8 +601,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="just-valuearray"></a>
-## (@value:array)
+<a name="aeroflowjust-aeroflowjustvaluearray"></a>
+## aeroflow.just(@value:array)
 Emits single "next" with @value, then single greedy "done".
 
 ```js
@@ -619,8 +619,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="just-valuefunction"></a>
-## (@value:function)
+<a name="aeroflowjust-aeroflowjustvaluefunction"></a>
+## aeroflow.just(@value:function)
 Emits single "next" with @value, then single greedy "done".
 
 ```js
@@ -636,8 +636,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="just-valueiterable"></a>
-## (@value:iterable)
+<a name="aeroflowjust-aeroflowjustvalueiterable"></a>
+## aeroflow.just(@value:iterable)
 Emits single "next" with @value, then single greedy "done".
 
 ```js
@@ -653,8 +653,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="just-valuepromise"></a>
-## (@value:promise)
+<a name="aeroflowjust-aeroflowjustvaluepromise"></a>
+## aeroflow.just(@value:promise)
 Emits single "next" with @value, then single greedy "done".
 
 ```js
@@ -670,8 +670,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="average"></a>
-# #average
+<a name="aeroflowaverage"></a>
+# aeroflow().average
 Is instance method.
 
 ```js
@@ -682,8 +682,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="average-"></a>
-## ()
+<a name="aeroflowaverage-aeroflowaverage"></a>
+## aeroflow().average()
 Returns instance of Aeroflow.
 
 ```js
@@ -740,8 +740,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="catch"></a>
-# #catch
+<a name="aeroflowcatch"></a>
+# aeroflow().catch
 Is instance method.
 
 ```js
@@ -752,8 +752,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="catch-"></a>
-## ()
+<a name="aeroflowcatch-aeroflowcatch"></a>
+## aeroflow().catch()
 Returns instance of Aeroflow.
 
 ```js
@@ -806,8 +806,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="catch-alternativearray"></a>
-## (@alternative:array)
+<a name="aeroflowcatch-aeroflowcatchalternativearray"></a>
+## aeroflow().catch(@alternative:array)
 When flow emits error, emits "next" for each serial value from @alternative, then single lazy "done".
 
 ```js
@@ -826,8 +826,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="catch-alternativefunction"></a>
-## (@alternative:function)
+<a name="aeroflowcatch-aeroflowcatchalternativefunction"></a>
+## aeroflow().catch(@alternative:function)
 When flow is empty, does not call @alternative.
 
 ```js
@@ -874,8 +874,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="catch-alternativestring"></a>
-## (@alternative:string)
+<a name="aeroflowcatch-aeroflowcatchalternativestring"></a>
+## aeroflow().catch(@alternative:string)
 When flow emits error, emits "next" with @alternative, then single lazy "done".
 
 ```js
@@ -892,8 +892,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="coalesce"></a>
-# #coalesce
+<a name="aeroflowcoalesce"></a>
+# aeroflow().coalesce
 Is instance method.
 
 ```js
@@ -904,8 +904,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="coalesce-"></a>
-## ()
+<a name="aeroflowcoalesce-aeroflowcoalesce"></a>
+## aeroflow().coalesce()
 Returns instance of Aeroflow.
 
 ```js
@@ -928,8 +928,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="coalesce-alternativearray"></a>
-## (@alternative:array)
+<a name="aeroflowcoalesce-aeroflowcoalescealternativearray"></a>
+## aeroflow().coalesce(@alternative:array)
 When flow is empty, emits "next" for each serial value from @alternative, then emits single greedy "done".
 
 ```js
@@ -948,8 +948,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="coalesce-alternativefunction"></a>
-## (@alternative:function)
+<a name="aeroflowcoalesce-aeroflowcoalescealternativefunction"></a>
+## aeroflow().coalesce(@alternative:function)
 When flow is empty, calls @alternative once with context data, emits single "next" with value returned by @alternative, then emits single greedy "done".
 
 ```js
@@ -995,8 +995,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="coalesce-alternativepromise"></a>
-## (@alternative:promise)
+<a name="aeroflowcoalesce-aeroflowcoalescealternativepromise"></a>
+## aeroflow().coalesce(@alternative:promise)
 When flow is empty, emits single "next" with value resolved by @alternative, then emits single greedy "done".
 
 ```js
@@ -1014,8 +1014,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="coalesce-alternativestring"></a>
-## (@alternative:string)
+<a name="aeroflowcoalesce-aeroflowcoalescealternativestring"></a>
+## aeroflow().coalesce(@alternative:string)
 When flow is empty, emits single "next" with @alternative, then emits single greedy "done".
 
 ```js
@@ -1032,8 +1032,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="count"></a>
-# #count
+<a name="aeroflowcount"></a>
+# aeroflow().count
 Is instance method.
 
 ```js
@@ -1044,8 +1044,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="count-"></a>
-## ()
+<a name="aeroflowcount-aeroflowcount"></a>
+## aeroflow().count()
 Returns instance of Aeroflow.
 
 ```js
@@ -1098,8 +1098,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="every"></a>
-# #every
+<a name="aeroflowevery"></a>
+# aeroflow().every
 Is instance method.
 
 ```js
@@ -1110,8 +1110,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="every-"></a>
-## ()
+<a name="aeroflowevery-aeroflowevery"></a>
+## aeroflow().every()
 Returns instance of Aeroflow.
 
 ```js
@@ -1168,8 +1168,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="every-conditionfunction"></a>
-## (@condition:function)
+<a name="aeroflowevery-aerofloweveryconditionfunction"></a>
+## aeroflow().every(@condition:function)
 When flow is empty, does not call @condition.
 
 ```js
@@ -1238,8 +1238,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="every-conditionregex"></a>
-## (@condition:regex)
+<a name="aeroflowevery-aerofloweveryconditionregex"></a>
+## aeroflow().every(@condition:regex)
 When flow emits several values and all values pass the @condition test, emits single "next" with true, then single greedy "done".
 
 ```js
@@ -1274,8 +1274,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="every-conditionstring"></a>
-## (@condition:string)
+<a name="aeroflowevery-aerofloweveryconditionstring"></a>
+## aeroflow().every(@condition:string)
 When flow emits several values equal to @condition, emits single "next" with true, then single greedy "done".
 
 ```js
@@ -1310,8 +1310,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="filter"></a>
-# #filter
+<a name="aeroflowfilter"></a>
+# aeroflow().filter
 Is instance method.
 
 ```js
@@ -1322,8 +1322,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="filter-"></a>
-## ()
+<a name="aeroflowfilter-aeroflowfilter"></a>
+## aeroflow().filter()
 Returns instance of Aeroflow.
 
 ```js
@@ -1367,8 +1367,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="filter-conditionfunction"></a>
-## (@condition:function)
+<a name="aeroflowfilter-aeroflowfilterconditionfunction"></a>
+## aeroflow().filter(@condition:function)
 When flow is empty, does not call @condition.
 
 ```js
@@ -1419,8 +1419,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="filter-conditionregex"></a>
-## (@condition:regex)
+<a name="aeroflowfilter-aeroflowfilterconditionregex"></a>
+## aeroflow().filter(@condition:regex)
 When flow is not empty, emits "next" for each value passing the @condition test, then single greedy "done".
 
 ```js
@@ -1443,8 +1443,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="filter-conditionnumber"></a>
-## (@condition:number)
+<a name="aeroflowfilter-aeroflowfilterconditionnumber"></a>
+## aeroflow().filter(@condition:number)
 When flow is not empty, emits "next" for each value equal to @condition, then single greedy "done".
 
 ```js
@@ -1467,8 +1467,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="map"></a>
-# #map
+<a name="aeroflowmap"></a>
+# aeroflow().map
 Is instance method.
 
 ```js
@@ -1479,8 +1479,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="map-"></a>
-## ()
+<a name="aeroflowmap-aeroflowmap"></a>
+## aeroflow().map()
 Returns instance of Aeroflow.
 
 ```js
@@ -1521,8 +1521,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="map-mapperfunction"></a>
-## (@mapper:function)
+<a name="aeroflowmap-aeroflowmapmapperfunction"></a>
+## aeroflow().map(@mapper:function)
 When flow is empty, does not call @mapper.
 
 ```js
@@ -1572,8 +1572,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="map-mappernumber"></a>
-## (@mapper:number)
+<a name="aeroflowmap-aeroflowmapmappernumber"></a>
+## aeroflow().map(@mapper:number)
 When flow is not empty, emits "next" for each emitted value with @mapper instead of value, then single greedy "done".
 
 ```js
@@ -1593,8 +1593,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="max"></a>
-# #max
+<a name="aeroflowmax"></a>
+# aeroflow().max
 Is instance method.
 
 ```js
@@ -1605,8 +1605,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="max-"></a>
-## ()
+<a name="aeroflowmax-aeroflowmax"></a>
+## aeroflow().max()
 Returns instance of Aeroflow.
 
 ```js
@@ -1664,8 +1664,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="mean"></a>
-# #mean
+<a name="aeroflowmean"></a>
+# aeroflow().mean
 Is instance method.
 
 ```js
@@ -1676,8 +1676,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="mean-"></a>
-## ()
+<a name="aeroflowmean-aeroflowmean"></a>
+## aeroflow().mean()
 Returns instance of Aeroflow.
 
 ```js
@@ -1716,8 +1716,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="min"></a>
-# #min
+<a name="aeroflowmin"></a>
+# aeroflow().min
 Is instance method.
 
 ```js
@@ -1728,8 +1728,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="min-"></a>
-## ()
+<a name="aeroflowmin-aeroflowmin"></a>
+## aeroflow().min()
 Returns instance of Aeroflow.
 
 ```js
@@ -1787,8 +1787,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="reduce"></a>
-# #reduce
+<a name="aeroflowreduce"></a>
+# aeroflow().reduce
 Is instance method.
 
 ```js
@@ -1799,8 +1799,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="reduce-"></a>
-## ()
+<a name="aeroflowreduce-aeroflowreduce"></a>
+## aeroflow().reduce()
 Returns instance of Aeroflow.
 
 ```js
@@ -1839,8 +1839,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="reduce-reducerfunction"></a>
-## (@reducer:function)
+<a name="aeroflowreduce-aeroflowreducereducerfunction"></a>
+## aeroflow().reduce(@reducer:function)
 When flow is empty, does not call @reducer.
 
 ```js
@@ -1915,8 +1915,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="reduce-reducerfunction-seedfunction"></a>
-## (@reducer:function, @seed:function)
+<a name="aeroflowreduce-aeroflowreducereducerfunction-seedfunction"></a>
+## aeroflow().reduce(@reducer:function, @seed:function)
 When flow is not empty, calls @seed with context data, calls @reducer with result returned by @seed, first emitted value, 0 and context data on first iteration.
 
 ```js
@@ -1934,8 +1934,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="reduce-reducerfunction-seednumber"></a>
-## (@reducer:function, @seed:number)
+<a name="aeroflowreduce-aeroflowreducereducerfunction-seednumber"></a>
+## aeroflow().reduce(@reducer:function, @seed:number)
 When flow is not empty, calls @reducer with @seed, first emitted value, 0 and context data on first iteration.
 
 ```js
@@ -1950,8 +1950,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="reduce-reducerstring"></a>
-## (@reducer:string)
+<a name="aeroflowreduce-aeroflowreducereducerstring"></a>
+## aeroflow().reduce(@reducer:string)
 When flow emits several values, emits single "next" with @reducer, then emits single greedy "done".
 
 ```js
@@ -1968,8 +1968,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="reverse"></a>
-# #reverse
+<a name="aeroflowreverse"></a>
+# aeroflow().reverse
 Is instance method.
 
 ```js
@@ -1980,8 +1980,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="reverse-"></a>
-## ()
+<a name="aeroflowreverse-aeroflowreverse"></a>
+## aeroflow().reverse()
 Returns instance of Aeroflow.
 
 ```js
@@ -2022,8 +2022,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="skip"></a>
-# #skip
+<a name="aeroflowskip"></a>
+# aeroflow().skip
 Is instance method.
 
 ```js
@@ -2034,8 +2034,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="skip-"></a>
-## ()
+<a name="aeroflowskip-aeroflowskip"></a>
+## aeroflow().skip()
 Returns instance of Aeroflow.
 
 ```js
@@ -2070,8 +2070,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="skip-false"></a>
-## (false)
+<a name="aeroflowskip-aeroflowskipfalse"></a>
+## aeroflow().skip(false)
 When flow is not empty, emits "next" for each emitted value, then emits single greedy "done".
 
 ```js
@@ -2090,8 +2090,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="skip-true"></a>
-## (true)
+<a name="aeroflowskip-aeroflowskiptrue"></a>
+## aeroflow().skip(true)
 When flow is not empty, emits only single greedy "done".
 
 ```js
@@ -2104,8 +2104,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="skip-conditionfunction"></a>
-## (@condition:function)
+<a name="aeroflowskip-aeroflowskipconditionfunction"></a>
+## aeroflow().skip(@condition:function)
 When flow is empty, does not call @condition.
 
 ```js
@@ -2147,11 +2147,11 @@ return execute(function (context) {
 }, function (context) {
   return aeroflow(context.values).skip(context.condition).run(context.next, context.done);
 }, function (context) {
-  var index = context.values.findIndex(function (value) {
+  var position = context.values.findIndex(function (value) {
     return !context.condition(value);
   });
-  expect(context.next).to.have.callCount(context.values.length - index);
-  context.values.slice(index).forEach(function (value, index) {
+  expect(context.next).to.have.callCount(context.values.length - position);
+  context.values.slice(position).forEach(function (value, index) {
     return expect(context.next.getCall(index)).to.have.been.calledWith(value);
   });
   expect(context.done).to.have.been.calledAfter(context.next);
@@ -2160,8 +2160,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="skip-conditionnumber"></a>
-## (@condition:number)
+<a name="aeroflowskip-aeroflowskipconditionnumber"></a>
+## aeroflow().skip(@condition:number)
 When flow emits several values and @condition is positive, skips first @condition of values, then emits "next" for each remaining value, then emits single greedy "done".
 
 ```js
@@ -2200,8 +2200,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="some"></a>
-# #some
+<a name="aeroflowsome"></a>
+# aeroflow().some
 Is instance method.
 
 ```js
@@ -2212,8 +2212,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="some-"></a>
-## ()
+<a name="aeroflowsome-aeroflowsome"></a>
+## aeroflow().some()
 Returns instance of Aeroflow.
 
 ```js
@@ -2270,8 +2270,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="some-conditionfunction"></a>
-## (@condition:function)
+<a name="aeroflowsome-aeroflowsomeconditionfunction"></a>
+## aeroflow().some(@condition:function)
 When flow is empty, does not call @condition.
 
 ```js
@@ -2340,8 +2340,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="some-conditionregex"></a>
-## (@condition:regex)
+<a name="aeroflowsome-aeroflowsomeconditionregex"></a>
+## aeroflow().some(@condition:regex)
 When flow emits several values and at least one value passes the @condition test, emits single "next" with true, then single lazy "done".
 
 ```js
@@ -2376,8 +2376,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="some-conditionstring"></a>
-## (@condition:string)
+<a name="aeroflowsome-aeroflowsomeconditionstring"></a>
+## aeroflow().some(@condition:string)
 When flow emits at least one value equal to @condition, emits single "next" with true, then single lazy "done".
 
 ```js
@@ -2412,8 +2412,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="sum"></a>
-# #sum
+<a name="aeroflowsum"></a>
+# aeroflow().sum
 Is instance method.
 
 ```js
@@ -2424,8 +2424,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="sum-"></a>
-## ()
+<a name="aeroflowsum-aeroflowsum"></a>
+## aeroflow().sum()
 Returns instance of Aeroflow.
 
 ```js
@@ -2482,8 +2482,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="take"></a>
-# #take
+<a name="aeroflowtake"></a>
+# aeroflow().take
 Is instance method.
 
 ```js
@@ -2494,8 +2494,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="take-"></a>
-## ()
+<a name="aeroflowtake-aeroflowtake"></a>
+## aeroflow().take()
 Returns instance of Aeroflow.
 
 ```js
@@ -2536,8 +2536,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="take-false"></a>
-## (false)
+<a name="aeroflowtake-aeroflowtakefalse"></a>
+## aeroflow().take(false)
 When flow is not empty, emits only single lazy "done".
 
 ```js
@@ -2550,8 +2550,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="take-true"></a>
-## (true)
+<a name="aeroflowtake-aeroflowtaketrue"></a>
+## aeroflow().take(true)
 When flow is not empty, emits "next" for each emitted value, then emits single greedy "done".
 
 ```js
@@ -2570,8 +2570,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="take-conditionfunction"></a>
-## (@condition:function)
+<a name="aeroflowtake-aeroflowtakeconditionfunction"></a>
+## aeroflow().take(@condition:function)
 When flow is empty, does not call @condition.
 
 ```js
@@ -2613,11 +2613,11 @@ return execute(function (context) {
 }, function (context) {
   return aeroflow(context.values).take(context.condition).run(context.next, context.done);
 }, function (context) {
-  var index = context.values.findIndex(function (value) {
+  var position = context.values.findIndex(function (value) {
     return !context.condition(value);
   });
-  expect(context.next).to.have.callCount(context.values.length - index);
-  context.values.slice(0, index).forEach(function (value, index) {
+  expect(context.next).to.have.callCount(context.values.length - position);
+  context.values.slice(0, position).forEach(function (value, index) {
     return expect(context.next.getCall(index)).to.have.been.calledWith(value);
   });
   expect(context.done).to.have.been.calledAfter(context.next);
@@ -2626,8 +2626,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="take-conditionnumber"></a>
-## (@condition:number)
+<a name="aeroflowtake-aeroflowtakeconditionnumber"></a>
+## aeroflow().take(@condition:number)
 When flow emits several values and @condition is positive, emits "next" for each @condition of first values, then emits single lazy "done".
 
 ```js
@@ -2666,8 +2666,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="toarray"></a>
-# #toArray
+<a name="aeroflowtoarray"></a>
+# aeroflow().toArray
 Is instance method.
 
 ```js
@@ -2678,8 +2678,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="toarray-"></a>
-## ()
+<a name="aeroflowtoarray-aeroflowtoarray"></a>
+## aeroflow().toArray()
 Returns instance of Aeroflow.
 
 ```js
@@ -2720,8 +2720,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="toset"></a>
-# #toSet
+<a name="aeroflowtoset"></a>
+# aeroflow().toSet
 Is instance method.
 
 ```js
@@ -2732,8 +2732,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="toset-"></a>
-## ()
+<a name="aeroflowtoset-aeroflowtoset"></a>
+## aeroflow().toSet()
 Returns instance of Aeroflow.
 
 ```js
@@ -2774,8 +2774,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="tostring"></a>
-# #toString
+<a name="aeroflowtostring"></a>
+# aeroflow().toString
 Is instance method.
 
 ```js
@@ -2786,8 +2786,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="tostring-"></a>
-## ()
+<a name="aeroflowtostring-aeroflowtostring"></a>
+## aeroflow().toString()
 Returns instance of Aeroflow.
 
 ```js
@@ -2876,8 +2876,8 @@ return execute(function (context) {
 });
 ```
 
-<a name="tostring-seperatorstring"></a>
-## (@seperator:string)
+<a name="aeroflowtostring-aeroflowtostringseperatorstring"></a>
+## aeroflow().toString(@seperator:string)
 When flow emits several strings, emits single "next" with emitted strings concatenated via @separator, then single greedy "done".
 
 ```js

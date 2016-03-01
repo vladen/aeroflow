@@ -1,10 +1,10 @@
-export default (aeroflow, execute, expect) => describe('#reverse', () => {
+export default (aeroflow, execute, expect) => describe('aeroflow().reverse', () => {
   it('Is instance method', () => 
     execute(
       context => aeroflow.empty.reverse,
       context => expect(context.result).to.be.a('function')));
 
-  describe('()', () => {
+  describe('aeroflow().reverse()', () => {
     it('Returns instance of Aeroflow', () =>
       execute(
         context => aeroflow.empty.reverse(),

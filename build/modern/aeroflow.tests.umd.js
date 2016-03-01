@@ -11,7 +11,7 @@
         context => aeroflow, /* act */
         context => expect(context.result).to.be.a('function') /* assert */ ));
 
-    describe('()', () => {
+    describe('aeroflow()', () => {
       it('Returns instance of Aeroflow', () =>
         execute(
           context => aeroflow(),
@@ -27,7 +27,7 @@
           }));
     });
 
-    describe('(@source:aeroflow)', () => {
+    describe('aeroflow(@source:aeroflow)', () => {
       it('When @source is empty, emits only single greedy "done"', () =>
         execute(
           context => aeroflow(aeroflow.empty).run(context.next, context.done),
@@ -51,7 +51,7 @@
           }));
     });
 
-    describe('(@source:array)', () => {
+    describe('aeroflow(@source:array)', () => {
       it('When @source is empty, emits only single greedy "done"', () =>
         execute(
           context => aeroflow([]).run(context.next, context.done),
@@ -75,7 +75,7 @@
           }));
     });
 
-    describe('(@source:date)', () => {
+    describe('aeroflow(@source:date)', () => {
       it('Emits single "next" with @source, then single greedy "done"', () =>
         execute(
           context => context.source = new Date,
@@ -89,7 +89,7 @@
           }));
     });
 
-    describe('(@source:error)', () => {
+    describe('aeroflow(@source:error)', () => {
       it('Emits only single faulty "done" with @source', () =>
         execute(
           context => aeroflow(context.error).run(context.next, context.done),
@@ -100,7 +100,7 @@
           }));
     });
 
-    describe('(@source:function)', () => {
+    describe('aeroflow(@source:function)', () => {
       it('Calls @source once with context data', () =>
         execute(
           context => context.source = context.spy(),
@@ -131,7 +131,7 @@
           }));
     });
 
-    describe('(@source:iterable)', () => {
+    describe('aeroflow(@source:iterable)', () => {
       it('When @source is empty, emits only single greedy "done"', () =>
         execute(
           context => aeroflow(new Set).run(context.next, context.done),
@@ -155,7 +155,7 @@
           }));
     });
 
-    describe('(@source:null)', () => {
+    describe('aeroflow(@source:null)', () => {
       it('Emits single "next" with @source, then single greedy "done"', () =>
         execute(
           context => context.source = null,
@@ -169,7 +169,7 @@
           }));
     });
 
-    describe('(@source:promise)', () => {
+    describe('aeroflow(@source:promise)', () => {
       it('When @source rejects, emits single faulty "done" with rejected error', () =>
         execute(
           context => aeroflow(Promise.reject(context.error)).run(context.next, context.done),
@@ -192,7 +192,7 @@
           }));
     });
 
-    describe('(@source:string)', () => {
+    describe('aeroflow(@source:string)', () => {
       it('Emits single "next" with @source, then single greedy "done"', () =>
         execute(
           context => context.source = 'test',
@@ -206,7 +206,7 @@
           }));
     });
 
-    describe('(@source:undefined)', () => {
+    describe('aeroflow(@source:undefined)', () => {
       it('Emits single "next" with @source, then single greedy "done"', () =>
         execute(
           context => context.source = undefined,
@@ -220,7 +220,7 @@
           }));
     });
 
-    describe('(...@sources)', () => {
+    describe('aeroflow(...@sources)', () => {
       it('Emits "next" with each serial value from @sources, then single greedy "done"', () =>
         execute(
           context => {
@@ -246,7 +246,7 @@
     });
   });
 
-  var emptyGeneratorTests = (aeroflow, execute, expect) => describe('.empty', () => {
+  var emptyGeneratorTests = (aeroflow, execute, expect) => describe('aeroflow.empty', () => {
     it('Gets instance of Aeroflow', () =>
       execute(
         context => aeroflow.empty,
@@ -262,20 +262,20 @@
         }));
   });
 
-  var expandGeneratorTests = (aeroflow, execute, expect) => describe('.expand', () => {
+  var expandGeneratorTests = (aeroflow, execute, expect) => describe('aeroflow.expand', () => {
     it('Is static method', () =>
       execute(
         context => aeroflow.expand,
         context => expect(context.result).to.be.a('function')));
 
-    describe('()', () => {
+    describe('aeroflow.expand()', () => {
       it('Returns instance of Aeroflow', () =>
         execute(
           context => aeroflow.expand(),
           context => expect(context.result).to.be.an('Aeroflow')));
     });
 
-    describe('(@expander:function)', () => {
+    describe('aeroflow.expand(@expander:function)', () => {
       it('Calls @expander with undefined, 0  and context data on first iteration', () =>
         execute(
           context => context.expander = context.spy(),
@@ -319,7 +319,7 @@
           }));
     });
 
-    describe('(@expander:function, @seed)', () => {
+    describe('aeroflow.expand(@expander:function, @seed)', () => {
       it('Calls @expander with @seed on first iteration', () =>
         execute(
           context => {
@@ -330,7 +330,7 @@
           context => expect(context.expander).to.have.been.calledWith(context.seed)));
     });
 
-    describe('(@expander:!function)', () => {
+    describe('aeroflow.expand(@expander:string)', () => {
       it('Emits "next" with @expander', () =>
         execute(
           context => context.expander = 'test',
@@ -339,20 +339,20 @@
     });
   });
 
-  var justGeneratorTests = (aeroflow, execute, expect) => describe('.just', () => {
+  var justGeneratorTests = (aeroflow, execute, expect) => describe('aeroflow.just', () => {
     it('Is static method', () =>
       execute(
         context => aeroflow.just,
         context => expect(context.result).to.be.a('function')));
 
-    describe('()', () => {
+    describe('aeroflow.just()', () => {
       it('Returns instance of Aeroflow', () =>
         execute(
           context => aeroflow.just(),
           context => expect(context.result).to.be.an('Aeroflow')));
     });
 
-    describe('(@value:aeroflow)', () => {
+    describe('aeroflow.just(@value:aeroflow)', () => {
       it('Emits single "next" with @value, then single greedy "done"', () =>
         execute(
           context => context.value = aeroflow.empty,
@@ -366,7 +366,7 @@
           }));
     });
 
-    describe('(@value:array)', () => {
+    describe('aeroflow.just(@value:array)', () => {
       it('Emits single "next" with @value, then single greedy "done"', () =>
         execute(
           context => context.value = [42],
@@ -380,7 +380,7 @@
           }));
     });
 
-    describe('(@value:function)', () => {
+    describe('aeroflow.just(@value:function)', () => {
       it('Emits single "next" with @value, then single greedy "done"', () =>
         execute(
           context => context.value = Function(),
@@ -393,7 +393,7 @@
           }));
     });
 
-    describe('(@value:iterable)', () => {
+    describe('aeroflow.just(@value:iterable)', () => {
       it('Emits single "next" with @value, then single greedy "done"', () =>
         execute(
           context => context.value = new Set,
@@ -406,7 +406,7 @@
           }));
     });
 
-    describe('(@value:promise)', () => {
+    describe('aeroflow.just(@value:promise)', () => {
       it('Emits single "next" with @value, then single greedy "done"', () =>
         execute(
           context => context.value = Promise.resolve(),
@@ -420,13 +420,13 @@
     });
   });
 
-  var averageOperatorTests = (aeroflow, execute, expect) => describe('#average', () => {
+  var averageOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().average', () => {
     it('Is instance method', () =>
       execute(
         context => aeroflow.empty.average,
         context => expect(context.result).to.be.a('function')));
 
-    describe('()', () => {
+    describe('aeroflow().average()', () => {
       it('Returns instance of Aeroflow', () =>
         execute(
           context => aeroflow.empty.average(),
@@ -468,13 +468,13 @@
     });
   });
 
-  var catchOperatorTests = (aeroflow, execute, expect) => describe('#catch', () => {
+  var catchOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().catch', () => {
     it('Is instance method', () =>
       execute(
         context => aeroflow.empty.catch,
         context => expect(context.result).to.be.a('function')));
 
-    describe('()', () => {
+    describe('aeroflow().catch()', () => {
       it('Returns instance of Aeroflow', () =>
         execute(
           context => aeroflow.empty.catch(),
@@ -512,7 +512,7 @@
           }));
     });
 
-    describe('(@alternative:array)', () => {
+    describe('aeroflow().catch(@alternative:array)', () => {
       it('When flow emits error, emits "next" for each serial value from @alternative, then single lazy "done"', () =>
         execute(
           context => context.alternative = [1, 2],
@@ -527,7 +527,7 @@
           }));
     });
 
-    describe('(@alternative:function)', () => {
+    describe('aeroflow().catch(@alternative:function)', () => {
       it('When flow is empty, does not call @alternative', () =>
         execute(
           context => context.alternative = context.spy(),
@@ -561,7 +561,7 @@
           }));
     });
 
-    describe('(@alternative:string)', () => {
+    describe('aeroflow().catch(@alternative:string)', () => {
       it('When flow emits error, emits "next" with @alternative, then single lazy "done"', () =>
         execute(
           context => context.alternative = 'test',
@@ -576,13 +576,13 @@
     });
   });
 
-  var coalesceOperatorTests = (aeroflow, execute, expect) => describe('#coalesce', () => {
+  var coalesceOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().coalesce', () => {
     it('Is instance method', () =>
       execute(
         context => aeroflow.empty.coalesce,
         context => expect(context.result).to.be.a('function')));
 
-    describe('()', () => {
+    describe('aeroflow().coalesce()', () => {
       it('Returns instance of Aeroflow', () =>
         execute(
           context => aeroflow.empty.coalesce(),
@@ -598,7 +598,7 @@
           }));
     });
 
-    describe('(@alternative:array)', () => {
+    describe('aeroflow().coalesce(@alternative:array)', () => {
       it('When flow is empty, emits "next" for each serial value from @alternative, then emits single greedy "done"', () =>
         execute(
           context => context.alternative = [1, 2],
@@ -613,7 +613,7 @@
           }));
     });
 
-    describe('(@alternative:function)', () => {
+    describe('aeroflow().coalesce(@alternative:function)', () => {
       it('When flow is empty, calls @alternative once with context data, emits single "next" with value returned by @alternative, then emits single greedy "done"', () =>
         execute(
           context => {
@@ -645,7 +645,7 @@
           context => expect(context.alternative).to.have.not.been.called));
     });
 
-      describe('(@alternative:promise)', () => {
+      describe('aeroflow().coalesce(@alternative:promise)', () => {
       it('When flow is empty, emits single "next" with value resolved by @alternative, then emits single greedy "done"', () =>
         execute(
           context => {
@@ -662,7 +662,7 @@
           }));
     });
 
-    describe('(@alternative:string)', () => {
+    describe('aeroflow().coalesce(@alternative:string)', () => {
       it('When flow is empty, emits single "next" with @alternative, then emits single greedy "done"', () =>
         execute(
           context => context.alternative = 'test',
@@ -677,13 +677,13 @@
     });
   });
 
-  var countOperatorTests = (aeroflow, execute, expect) => describe('#count', () => {
+  var countOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().count', () => {
     it('Is instance method', () =>
       execute(
         context => aeroflow.empty.count,
         context => expect(context.result).to.be.a('function')));
 
-    describe('()', () => {
+    describe('aeroflow().count()', () => {
       it('Returns instance of Aeroflow', () =>
         execute(
           context => aeroflow.empty.count(),
@@ -723,13 +723,13 @@
     });
   });
 
-  var everyOperatorTests = (aeroflow, execute, expect) => describe('#every', () => {
+  var everyOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().every', () => {
     it('Is instance method', () =>
       execute(
         context => aeroflow.empty.every,
         context => expect(context.result).to.be.a('function')));
 
-    describe('()', () => {
+    describe('aeroflow().every()', () => {
       it('Returns instance of Aeroflow', () =>
         execute(
           context => aeroflow.empty.every(),
@@ -771,7 +771,7 @@
           }));
     });
 
-    describe('(@condition:function)', () => {
+    describe('aeroflow().every(@condition:function)', () => {
       it('When flow is empty, does not call @condition', () => 
         execute(
           context => context.condition = context.spy(),
@@ -822,7 +822,7 @@
           }));
     });
 
-    describe('(@condition:regex)', () => {
+    describe('aeroflow().every(@condition:regex)', () => {
       it('When flow emits several values and all values pass the @condition test, emits single "next" with true, then single greedy "done"', () =>
         execute(
           context => {
@@ -854,7 +854,7 @@
           }));
     });
 
-    describe('(@condition:string)', () => {
+    describe('aeroflow().every(@condition:string)', () => {
       it('When flow emits several values equal to @condition, emits single "next" with true, then single greedy "done"', () =>
         execute(
           context => {
@@ -887,13 +887,13 @@
     });
   });
 
-  var filterOperatorTests = (aeroflow, execute, expect) => describe('#filter', () => {
+  var filterOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().filter', () => {
     it('Is instance method', () =>
       execute(
         context => aeroflow.empty.filter,
         context => expect(context.result).to.be.a('function')));
 
-    describe('()', () => {
+    describe('aeroflow().filter()', () => {
       it('Returns instance of Aeroflow', () =>
         execute(
           context => aeroflow.empty.filter(),
@@ -923,7 +923,7 @@
           }));
     });
 
-    describe('(@condition:function)', () => {
+    describe('aeroflow().filter(@condition:function)', () => {
       it('When flow is empty, does not call @condition', () => 
         execute(
           context => context.condition = context.spy(),
@@ -961,7 +961,7 @@
           }));
     });
 
-    describe('(@condition:regex)', () => {
+    describe('aeroflow().filter(@condition:regex)', () => {
       it('When flow is not empty, emits "next" for each value passing the @condition test, then single greedy "done"', () =>
         execute(
           context => {
@@ -980,7 +980,7 @@
           }));
     });
 
-    describe('(@condition:number)', () => {
+    describe('aeroflow().filter(@condition:number)', () => {
       it('When flow is not empty, emits "next" for each value equal to @condition, then single greedy "done"', () =>
         execute(
           context => {
@@ -1000,13 +1000,13 @@
     });
   });
 
-  var mapOperatorTests = (aeroflow, execute, expect) => describe('#map', () => {
+  var mapOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().map', () => {
     it('Is instance method', () =>
       execute(
         context => aeroflow.empty.map,
         context => expect(context.result).to.be.a('function')));
 
-    describe('()', () => {
+    describe('aeroflow().map()', () => {
       it('Returns instance of Aeroflow', () =>
         execute(
           context => aeroflow.empty.map(),
@@ -1035,7 +1035,7 @@
           }));
     });
 
-    describe('(@mapper:function)', () => {
+    describe('aeroflow().map(@mapper:function)', () => {
       it('When flow is empty, does not call @mapper', () => 
         execute(
           context => context.mapper = context.spy(),
@@ -1072,7 +1072,7 @@
           }));
     });
 
-    describe('(@mapper:number)', () => {
+    describe('aeroflow().map(@mapper:number)', () => {
       it('When flow is not empty, emits "next" for each emitted value with @mapper instead of value, then single greedy "done"', () =>
         execute(
           context => {
@@ -1091,13 +1091,13 @@
     });
   });
 
-  var maxOperatorTests = (aeroflow, execute, expect) => describe('#max', () => {
+  var maxOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().max', () => {
     it('Is instance method', () => 
       execute(
         context => aeroflow.empty.max,
         context => expect(context.result).to.be.a('function')));
 
-    describe('()', () => {
+    describe('aeroflow().max()', () => {
       it('Returns instance of Aeroflow', () =>
         execute(
           context => aeroflow.empty.max(),
@@ -1139,13 +1139,13 @@
     });
   });
 
-  var meanOperatorTests = (aeroflow, execute, expect) => describe('#mean', () => {
+  var meanOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().mean', () => {
     it('Is instance method', () => 
       execute(
         context => aeroflow.empty.mean,
         context => expect(context.result).to.be.a('function')));
 
-    describe('()', () => {
+    describe('aeroflow().mean()', () => {
       it('Returns instance of Aeroflow', () =>
         execute(
           context => aeroflow.empty.mean(),
@@ -1175,13 +1175,13 @@
     });
   });
 
-  var minOperatorTests = (aeroflow, execute, expect) => describe('#min', () => {
+  var minOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().min', () => {
     it('Is instance method', () => 
       execute(
         context => aeroflow.empty.min,
         context => expect(context.result).to.be.a('function')));
 
-    describe('()', () => {
+    describe('aeroflow().min()', () => {
       it('Returns instance of Aeroflow', () =>
         execute(
           context => aeroflow.empty.min(),
@@ -1223,13 +1223,13 @@
     });
   });
 
-  var reduceOperatorTests = (aeroflow, execute, expect) => describe('#reduce', () => {
+  var reduceOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().reduce', () => {
     it('Is instance method', () =>
       execute(
         context => aeroflow.empty.reduce,
         context => expect(context.result).to.be.a('function')));
 
-    describe('()', () => {
+    describe('aeroflow().reduce()', () => {
       it('Returns instance of Aeroflow', () =>
         execute(
           context => aeroflow.empty.reduce(),
@@ -1257,7 +1257,7 @@
           }));
     });
 
-    describe('(@reducer:function)', () => {
+    describe('aeroflow().reduce(@reducer:function)', () => {
       it('When flow is empty, does not call @reducer', () =>
         execute(
           context => context.reducer = context.spy(),
@@ -1308,7 +1308,7 @@
           }));
     });
 
-    describe('(@reducer:function, @seed:function)', () => {
+    describe('aeroflow().reduce(@reducer:function, @seed:function)', () => {
       it('When flow is not empty, calls @seed with context data, calls @reducer with result returned by @seed, first emitted value, 0 and context data on first iteration', () =>
         execute(
           context => {
@@ -1323,7 +1323,7 @@
           }));
     });
 
-    describe('(@reducer:function, @seed:number)', () => {
+    describe('aeroflow().reduce(@reducer:function, @seed:number)', () => {
       it('When flow is not empty, calls @reducer with @seed, first emitted value, 0 and context data on first iteration', () =>
         execute(
           context => {
@@ -1335,7 +1335,7 @@
           context => expect(context.reducer).to.have.been.calledWithExactly(context.seed, context.value, 0, context.data)));
     });
 
-    describe('(@reducer:string)', () => {
+    describe('aeroflow().reduce(@reducer:string)', () => {
       it('When flow emits several values, emits single "next" with @reducer, then emits single greedy "done"', () =>
         execute(
           context => context.reducer = 42,
@@ -1350,13 +1350,13 @@
     });
   });
 
-  var reverseOperatorTests = (aeroflow, execute, expect) => describe('#reverse', () => {
+  var reverseOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().reverse', () => {
     it('Is instance method', () => 
       execute(
         context => aeroflow.empty.reverse,
         context => expect(context.result).to.be.a('function')));
 
-    describe('()', () => {
+    describe('aeroflow().reverse()', () => {
       it('Returns instance of Aeroflow', () =>
         execute(
           context => aeroflow.empty.reverse(),
@@ -1386,13 +1386,13 @@
     });
   });
 
-  var skipOperatorTests = (aeroflow, execute, expect) => describe('#skip', () => {
+  var skipOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().skip', () => {
     it('Is instance method', () =>
       execute(
         context => aeroflow.empty.skip,
         context => expect(context.result).to.be.a('function')));
 
-    describe('()', () => {
+    describe('aeroflow().skip()', () => {
       it('Returns instance of Aeroflow', () =>
         execute(
           context => aeroflow.empty.skip(),
@@ -1417,7 +1417,7 @@
           }));
     });
 
-    describe('(false)', () => {
+    describe('aeroflow().skip(false)', () => {
       it('When flow is not empty, emits "next" for each emitted value, then emits single greedy "done"', () =>
         execute(
           context => context.values = [1, 2],
@@ -1432,7 +1432,7 @@
           }));
     });
 
-    describe('(true)', () => {
+    describe('aeroflow().skip(true)', () => {
       it('When flow is not empty, emits only single greedy "done"', () =>
         execute(
           context => aeroflow(42).skip(true).run(context.next, context.done),
@@ -1443,7 +1443,7 @@
           }));
     });
 
-    describe('(@condition:function)', () => {
+    describe('aeroflow().skip(@condition:function)', () => {
       it('When flow is empty, does not call @condition', () => 
         execute(
           context => context.condition = context.spy(),
@@ -1471,9 +1471,9 @@
           },
           context => aeroflow(context.values).skip(context.condition).run(context.next, context.done),
           context => {
-            const index = context.values.findIndex(value => !context.condition(value));
-            expect(context.next).to.have.callCount(context.values.length - index);
-            context.values.slice(index).forEach((value, index) =>
+            const position = context.values.findIndex(value => !context.condition(value));
+            expect(context.next).to.have.callCount(context.values.length - position);
+            context.values.slice(position).forEach((value, index) =>
               expect(context.next.getCall(index)).to.have.been.calledWith(value));
             expect(context.done).to.have.been.calledAfter(context.next);
             expect(context.done).to.have.been.calledOnce;
@@ -1481,7 +1481,7 @@
           }));
     });
 
-    describe('(@condition:number)', () => {
+    describe('aeroflow().skip(@condition:number)', () => {
       it('When flow emits several values and @condition is positive, skips first @condition of values, then emits "next" for each remaining value, then emits single greedy "done"', () =>
         execute(
           context => {
@@ -1516,13 +1516,13 @@
     });
   });
 
-  var someOperatorTests = (aeroflow, execute, expect) => describe('#some', () => {
+  var someOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().some', () => {
     it('Is instance method', () =>
       execute(
         context => aeroflow.empty.some,
         context => expect(context.result).to.be.a('function')));
 
-    describe('()', () => {
+    describe('aeroflow().some()', () => {
       it('Returns instance of Aeroflow', () =>
         execute(
           context => aeroflow.empty.some(),
@@ -1564,7 +1564,7 @@
           }));
     });
 
-    describe('(@condition:function)', () => {
+    describe('aeroflow().some(@condition:function)', () => {
       it('When flow is empty, does not call @condition', () => 
         execute(
           context => context.condition = context.spy(),
@@ -1615,7 +1615,7 @@
           }));
     });
 
-    describe('(@condition:regex)', () => {
+    describe('aeroflow().some(@condition:regex)', () => {
       it('When flow emits several values and at least one value passes the @condition test, emits single "next" with true, then single lazy "done"', () =>
         execute(
           context => {
@@ -1647,7 +1647,7 @@
           }));
     });
 
-    describe('(@condition:string)', () => {
+    describe('aeroflow().some(@condition:string)', () => {
       it('When flow emits at least one value equal to @condition, emits single "next" with true, then single lazy "done"', () =>
         execute(
           context => {
@@ -1680,13 +1680,13 @@
     });
   });
 
-  var sumOperatorTests = (aeroflow, execute, expect) => describe('#sum', () => {
+  var sumOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().sum', () => {
     it('Is instance method', () => 
       execute(
         context => aeroflow.empty.sum,
         context => expect(context.result).to.be.a('function')));
 
-    describe('()', () => {
+    describe('aeroflow().sum()', () => {
       it('Returns instance of Aeroflow', () =>
         execute(
           context => aeroflow.empty.sum(),
@@ -1728,13 +1728,13 @@
     });
   });
 
-  var takeOperatorTests = (aeroflow, execute, expect) => describe('#take', () => {
+  var takeOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().take', () => {
     it('Is instance method', () =>
       execute(
         context => aeroflow.empty.take,
         context => expect(context.result).to.be.a('function')));
 
-    describe('()', () => {
+    describe('aeroflow().take()', () => {
       it('Returns instance of Aeroflow', () =>
         execute(
           context => aeroflow.empty.take(),
@@ -1763,7 +1763,7 @@
           }));
     });
 
-    describe('(false)', () => {
+    describe('aeroflow().take(false)', () => {
       it('When flow is not empty, emits only single lazy "done"', () =>
         execute(
           context => aeroflow('test').take(false).run(context.next, context.done),
@@ -1774,7 +1774,7 @@
           }));
     });
 
-    describe('(true)', () => {
+    describe('aeroflow().take(true)', () => {
       it('When flow is not empty, emits "next" for each emitted value, then emits single greedy "done"', () =>
         execute(
           context => context.values = [1, 2],
@@ -1789,7 +1789,7 @@
           }));
     });
 
-    describe('(@condition:function)', () => {
+    describe('aeroflow().take(@condition:function)', () => {
       it('When flow is empty, does not call @condition', () => 
         execute(
           context => context.condition = context.spy(),
@@ -1817,9 +1817,9 @@
           },
           context => aeroflow(context.values).take(context.condition).run(context.next, context.done),
           context => {
-            const index = context.values.findIndex(value => !context.condition(value));
-            expect(context.next).to.have.callCount(context.values.length - index);
-            context.values.slice(0, index).forEach((value, index) =>
+            const position = context.values.findIndex(value => !context.condition(value));
+            expect(context.next).to.have.callCount(context.values.length - position);
+            context.values.slice(0, position).forEach((value, index) =>
               expect(context.next.getCall(index)).to.have.been.calledWith(value));
             expect(context.done).to.have.been.calledAfter(context.next);
             expect(context.done).to.have.been.calledOnce;
@@ -1827,7 +1827,7 @@
           }));
     });
 
-    describe('(@condition:number)', () => {
+    describe('aeroflow().take(@condition:number)', () => {
       it('When flow emits several values and @condition is positive, emits "next" for each @condition of first values, then emits single lazy "done"', () =>
         execute(
           context => {
@@ -1862,13 +1862,13 @@
     });
   });
 
-  var toArrayOperatorTests = (aeroflow, execute, expect) => describe('#toArray', () => {
+  var toArrayOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().toArray', () => {
     it('Is instance method', () =>
       execute(
         context => aeroflow.empty.toArray,
         context => expect(context.result).to.be.a('function')));
 
-    describe('()', () => {
+    describe('aeroflow().toArray()', () => {
       it('Returns instance of Aeroflow', () =>
         execute(
           context => aeroflow.empty.toArray(),
@@ -1899,13 +1899,13 @@
     });
   });
 
-  var toSetOperatorTests = (aeroflow, execute, expect, sinon) => describe('#toSet', () => {
+  var toSetOperatorTests = (aeroflow, execute, expect, sinon) => describe('aeroflow().toSet', () => {
     it('Is instance method', () =>
       execute(
         context => aeroflow.empty.toSet,
         context => expect(context.result).to.be.a('function')));
 
-    describe('()', () => {
+    describe('aeroflow().toSet()', () => {
       it('Returns instance of Aeroflow', () =>
         execute(
           context => aeroflow.empty.toSet(),
@@ -1936,13 +1936,13 @@
     });
   });
 
-  var toStringOperatorTests = (aeroflow, execute, expect, sinon) => describe('#toString', () => {
+  var toStringOperatorTests = (aeroflow, execute, expect, sinon) => describe('aeroflow().toString', () => {
     it('Is instance method', () =>
       execute(
         context => aeroflow.empty.toString,
         context => expect(context.result).to.be.a('function')));
 
-    describe('()', () => {
+    describe('aeroflow().toString()', () => {
       it('Returns instance of Aeroflow', () =>
         execute(
           context => aeroflow.empty.toString(),
@@ -2008,7 +2008,7 @@
           }));
     });
 
-    describe('(@seperator:string)', () => {
+    describe('aeroflow().toString(@seperator:string)', () => {
       it('When flow emits several strings, emits single "next" with emitted strings concatenated via @separator, then single greedy "done"', () =>
         execute(
           context => {

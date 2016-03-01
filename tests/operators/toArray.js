@@ -1,10 +1,10 @@
-export default (aeroflow, execute, expect) => describe('#toArray', () => {
+export default (aeroflow, execute, expect) => describe('aeroflow().toArray', () => {
   it('Is instance method', () =>
     execute(
       context => aeroflow.empty.toArray,
       context => expect(context.result).to.be.a('function')));
 
-  describe('()', () => {
+  describe('aeroflow().toArray()', () => {
     it('Returns instance of Aeroflow', () =>
       execute(
         context => aeroflow.empty.toArray(),

@@ -5,7 +5,7 @@ export default (aeroflow, execute, expect) => describe('aeroflow', () => {
       context => aeroflow, /* act */
       context => expect(context.result).to.be.a('function') /* assert */ ));
 
-  describe('()', () => {
+  describe('aeroflow()', () => {
     it('Returns instance of Aeroflow', () =>
       execute(
         context => aeroflow(),
@@ -21,7 +21,7 @@ export default (aeroflow, execute, expect) => describe('aeroflow', () => {
         }));
   });
 
-  describe('(@source:aeroflow)', () => {
+  describe('aeroflow(@source:aeroflow)', () => {
     it('When @source is empty, emits only single greedy "done"', () =>
       execute(
         context => aeroflow(aeroflow.empty).run(context.next, context.done),
@@ -45,7 +45,7 @@ export default (aeroflow, execute, expect) => describe('aeroflow', () => {
         }));
   });
 
-  describe('(@source:array)', () => {
+  describe('aeroflow(@source:array)', () => {
     it('When @source is empty, emits only single greedy "done"', () =>
       execute(
         context => aeroflow([]).run(context.next, context.done),
@@ -69,7 +69,7 @@ export default (aeroflow, execute, expect) => describe('aeroflow', () => {
         }));
   });
 
-  describe('(@source:date)', () => {
+  describe('aeroflow(@source:date)', () => {
     it('Emits single "next" with @source, then single greedy "done"', () =>
       execute(
         context => context.source = new Date,
@@ -83,7 +83,7 @@ export default (aeroflow, execute, expect) => describe('aeroflow', () => {
         }));
   });
 
-  describe('(@source:error)', () => {
+  describe('aeroflow(@source:error)', () => {
     it('Emits only single faulty "done" with @source', () =>
       execute(
         context => aeroflow(context.error).run(context.next, context.done),
@@ -94,7 +94,7 @@ export default (aeroflow, execute, expect) => describe('aeroflow', () => {
         }));
   });
 
-  describe('(@source:function)', () => {
+  describe('aeroflow(@source:function)', () => {
     it('Calls @source once with context data', () =>
       execute(
         context => context.source = context.spy(),
@@ -125,7 +125,7 @@ export default (aeroflow, execute, expect) => describe('aeroflow', () => {
         }));
   });
 
-  describe('(@source:iterable)', () => {
+  describe('aeroflow(@source:iterable)', () => {
     it('When @source is empty, emits only single greedy "done"', () =>
       execute(
         context => aeroflow(new Set).run(context.next, context.done),
@@ -149,7 +149,7 @@ export default (aeroflow, execute, expect) => describe('aeroflow', () => {
         }));
   });
 
-  describe('(@source:null)', () => {
+  describe('aeroflow(@source:null)', () => {
     it('Emits single "next" with @source, then single greedy "done"', () =>
       execute(
         context => context.source = null,
@@ -163,7 +163,7 @@ export default (aeroflow, execute, expect) => describe('aeroflow', () => {
         }));
   });
 
-  describe('(@source:promise)', () => {
+  describe('aeroflow(@source:promise)', () => {
     it('When @source rejects, emits single faulty "done" with rejected error', () =>
       execute(
         context => aeroflow(Promise.reject(context.error)).run(context.next, context.done),
@@ -186,7 +186,7 @@ export default (aeroflow, execute, expect) => describe('aeroflow', () => {
         }));
   });
 
-  describe('(@source:string)', () => {
+  describe('aeroflow(@source:string)', () => {
     it('Emits single "next" with @source, then single greedy "done"', () =>
       execute(
         context => context.source = 'test',
@@ -200,7 +200,7 @@ export default (aeroflow, execute, expect) => describe('aeroflow', () => {
         }));
   });
 
-  describe('(@source:undefined)', () => {
+  describe('aeroflow(@source:undefined)', () => {
     it('Emits single "next" with @source, then single greedy "done"', () =>
       execute(
         context => context.source = undefined,
@@ -214,7 +214,7 @@ export default (aeroflow, execute, expect) => describe('aeroflow', () => {
         }));
   });
 
-  describe('(...@sources)', () => {
+  describe('aeroflow(...@sources)', () => {
     it('Emits "next" with each serial value from @sources, then single greedy "done"', () =>
       execute(
         context => {

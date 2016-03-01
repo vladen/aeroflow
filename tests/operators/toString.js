@@ -1,10 +1,10 @@
-export default (aeroflow, execute, expect, sinon) => describe('#toString', () => {
+export default (aeroflow, execute, expect, sinon) => describe('aeroflow().toString', () => {
   it('Is instance method', () =>
     execute(
       context => aeroflow.empty.toString,
       context => expect(context.result).to.be.a('function')));
 
-  describe('()', () => {
+  describe('aeroflow().toString()', () => {
     it('Returns instance of Aeroflow', () =>
       execute(
         context => aeroflow.empty.toString(),
@@ -70,7 +70,7 @@ export default (aeroflow, execute, expect, sinon) => describe('#toString', () =>
         }));
   });
 
-  describe('(@seperator:string)', () => {
+  describe('aeroflow().toString(@seperator:string)', () => {
     it('When flow emits several strings, emits single "next" with emitted strings concatenated via @separator, then single greedy "done"', () =>
       execute(
         context => {

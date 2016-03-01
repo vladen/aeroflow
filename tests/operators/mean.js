@@ -1,10 +1,10 @@
-export default (aeroflow, execute, expect) => describe('#mean', () => {
+export default (aeroflow, execute, expect) => describe('aeroflow().mean', () => {
   it('Is instance method', () => 
     execute(
       context => aeroflow.empty.mean,
       context => expect(context.result).to.be.a('function')));
 
-  describe('()', () => {
+  describe('aeroflow().mean()', () => {
     it('Returns instance of Aeroflow', () =>
       execute(
         context => aeroflow.empty.mean(),

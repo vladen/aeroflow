@@ -1,10 +1,10 @@
-export default (aeroflow, execute, expect) => describe('#map', () => {
+export default (aeroflow, execute, expect) => describe('aeroflow().map', () => {
   it('Is instance method', () =>
     execute(
       context => aeroflow.empty.map,
       context => expect(context.result).to.be.a('function')));
 
-  describe('()', () => {
+  describe('aeroflow().map()', () => {
     it('Returns instance of Aeroflow', () =>
       execute(
         context => aeroflow.empty.map(),
@@ -33,7 +33,7 @@ export default (aeroflow, execute, expect) => describe('#map', () => {
         }));
   });
 
-  describe('(@mapper:function)', () => {
+  describe('aeroflow().map(@mapper:function)', () => {
     it('When flow is empty, does not call @mapper', () => 
       execute(
         context => context.mapper = context.spy(),
@@ -70,7 +70,7 @@ export default (aeroflow, execute, expect) => describe('#map', () => {
         }));
   });
 
-  describe('(@mapper:number)', () => {
+  describe('aeroflow().map(@mapper:number)', () => {
     it('When flow is not empty, emits "next" for each emitted value with @mapper instead of value, then single greedy "done"', () =>
       execute(
         context => {

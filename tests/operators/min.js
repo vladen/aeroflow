@@ -1,10 +1,10 @@
-export default (aeroflow, execute, expect) => describe('#min', () => {
+export default (aeroflow, execute, expect) => describe('aeroflow().min', () => {
   it('Is instance method', () => 
     execute(
       context => aeroflow.empty.min,
       context => expect(context.result).to.be.a('function')));
 
-  describe('()', () => {
+  describe('aeroflow().min()', () => {
     it('Returns instance of Aeroflow', () =>
       execute(
         context => aeroflow.empty.min(),

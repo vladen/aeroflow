@@ -1,17 +1,17 @@
-export default (aeroflow, execute, expect) => describe('.just', () => {
+export default (aeroflow, execute, expect) => describe('aeroflow.just', () => {
   it('Is static method', () =>
     execute(
       context => aeroflow.just,
       context => expect(context.result).to.be.a('function')));
 
-  describe('()', () => {
+  describe('aeroflow.just()', () => {
     it('Returns instance of Aeroflow', () =>
       execute(
         context => aeroflow.just(),
         context => expect(context.result).to.be.an('Aeroflow')));
   });
 
-  describe('(@value:aeroflow)', () => {
+  describe('aeroflow.just(@value:aeroflow)', () => {
     it('Emits single "next" with @value, then single greedy "done"', () =>
       execute(
         context => context.value = aeroflow.empty,
@@ -25,7 +25,7 @@ export default (aeroflow, execute, expect) => describe('.just', () => {
         }));
   });
 
-  describe('(@value:array)', () => {
+  describe('aeroflow.just(@value:array)', () => {
     it('Emits single "next" with @value, then single greedy "done"', () =>
       execute(
         context => context.value = [42],
@@ -39,7 +39,7 @@ export default (aeroflow, execute, expect) => describe('.just', () => {
         }));
   });
 
-  describe('(@value:function)', () => {
+  describe('aeroflow.just(@value:function)', () => {
     it('Emits single "next" with @value, then single greedy "done"', () =>
       execute(
         context => context.value = Function(),
@@ -52,7 +52,7 @@ export default (aeroflow, execute, expect) => describe('.just', () => {
         }));
   });
 
-  describe('(@value:iterable)', () => {
+  describe('aeroflow.just(@value:iterable)', () => {
     it('Emits single "next" with @value, then single greedy "done"', () =>
       execute(
         context => context.value = new Set,
@@ -65,7 +65,7 @@ export default (aeroflow, execute, expect) => describe('.just', () => {
         }));
   });
 
-  describe('(@value:promise)', () => {
+  describe('aeroflow.just(@value:promise)', () => {
     it('Emits single "next" with @value, then single greedy "done"', () =>
       execute(
         context => context.value = Promise.resolve(),

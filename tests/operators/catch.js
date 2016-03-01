@@ -1,10 +1,10 @@
-export default (aeroflow, execute, expect) => describe('#catch', () => {
+export default (aeroflow, execute, expect) => describe('aeroflow().catch', () => {
   it('Is instance method', () =>
     execute(
       context => aeroflow.empty.catch,
       context => expect(context.result).to.be.a('function')));
 
-  describe('()', () => {
+  describe('aeroflow().catch()', () => {
     it('Returns instance of Aeroflow', () =>
       execute(
         context => aeroflow.empty.catch(),
@@ -42,7 +42,7 @@ export default (aeroflow, execute, expect) => describe('#catch', () => {
         }));
   });
 
-  describe('(@alternative:array)', () => {
+  describe('aeroflow().catch(@alternative:array)', () => {
     it('When flow emits error, emits "next" for each serial value from @alternative, then single lazy "done"', () =>
       execute(
         context => context.alternative = [1, 2],
@@ -57,7 +57,7 @@ export default (aeroflow, execute, expect) => describe('#catch', () => {
         }));
   });
 
-  describe('(@alternative:function)', () => {
+  describe('aeroflow().catch(@alternative:function)', () => {
     it('When flow is empty, does not call @alternative', () =>
       execute(
         context => context.alternative = context.spy(),
@@ -91,7 +91,7 @@ export default (aeroflow, execute, expect) => describe('#catch', () => {
         }));
   });
 
-  describe('(@alternative:string)', () => {
+  describe('aeroflow().catch(@alternative:string)', () => {
     it('When flow emits error, emits "next" with @alternative, then single lazy "done"', () =>
       execute(
         context => context.alternative = 'test',

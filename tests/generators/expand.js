@@ -1,17 +1,17 @@
-export default (aeroflow, execute, expect) => describe('.expand', () => {
+export default (aeroflow, execute, expect) => describe('aeroflow.expand', () => {
   it('Is static method', () =>
     execute(
       context => aeroflow.expand,
       context => expect(context.result).to.be.a('function')));
 
-  describe('()', () => {
+  describe('aeroflow.expand()', () => {
     it('Returns instance of Aeroflow', () =>
       execute(
         context => aeroflow.expand(),
         context => expect(context.result).to.be.an('Aeroflow')));
   });
 
-  describe('(@expander:function)', () => {
+  describe('aeroflow.expand(@expander:function)', () => {
     it('Calls @expander with undefined, 0  and context data on first iteration', () =>
       execute(
         context => context.expander = context.spy(),
@@ -55,7 +55,7 @@ export default (aeroflow, execute, expect) => describe('.expand', () => {
         }));
   });
 
-  describe('(@expander:function, @seed)', () => {
+  describe('aeroflow.expand(@expander:function, @seed)', () => {
     it('Calls @expander with @seed on first iteration', () =>
       execute(
         context => {
@@ -66,7 +66,7 @@ export default (aeroflow, execute, expect) => describe('.expand', () => {
         context => expect(context.expander).to.have.been.calledWith(context.seed)));
   });
 
-  describe('(@expander:string)', () => {
+  describe('aeroflow.expand(@expander:string)', () => {
     it('Emits "next" with @expander', () =>
       execute(
         context => context.expander = 'test',

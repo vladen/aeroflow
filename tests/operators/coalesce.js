@@ -1,10 +1,10 @@
-export default (aeroflow, execute, expect) => describe('#coalesce', () => {
+export default (aeroflow, execute, expect) => describe('aeroflow().coalesce', () => {
   it('Is instance method', () =>
     execute(
       context => aeroflow.empty.coalesce,
       context => expect(context.result).to.be.a('function')));
 
-  describe('()', () => {
+  describe('aeroflow().coalesce()', () => {
     it('Returns instance of Aeroflow', () =>
       execute(
         context => aeroflow.empty.coalesce(),
@@ -20,7 +20,7 @@ export default (aeroflow, execute, expect) => describe('#coalesce', () => {
         }));
   });
 
-  describe('(@alternative:array)', () => {
+  describe('aeroflow().coalesce(@alternative:array)', () => {
     it('When flow is empty, emits "next" for each serial value from @alternative, then emits single greedy "done"', () =>
       execute(
         context => context.alternative = [1, 2],
@@ -35,7 +35,7 @@ export default (aeroflow, execute, expect) => describe('#coalesce', () => {
         }));
   });
 
-  describe('(@alternative:function)', () => {
+  describe('aeroflow().coalesce(@alternative:function)', () => {
     it('When flow is empty, calls @alternative once with context data, emits single "next" with value returned by @alternative, then emits single greedy "done"', () =>
       execute(
         context => {
@@ -67,7 +67,7 @@ export default (aeroflow, execute, expect) => describe('#coalesce', () => {
         context => expect(context.alternative).to.have.not.been.called));
   });
 
-    describe('(@alternative:promise)', () => {
+    describe('aeroflow().coalesce(@alternative:promise)', () => {
     it('When flow is empty, emits single "next" with value resolved by @alternative, then emits single greedy "done"', () =>
       execute(
         context => {
@@ -84,7 +84,7 @@ export default (aeroflow, execute, expect) => describe('#coalesce', () => {
         }));
   });
 
-  describe('(@alternative:string)', () => {
+  describe('aeroflow().coalesce(@alternative:string)', () => {
     it('When flow is empty, emits single "next" with @alternative, then emits single greedy "done"', () =>
       execute(
         context => context.alternative = 'test',

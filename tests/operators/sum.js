@@ -1,10 +1,10 @@
-export default (aeroflow, execute, expect) => describe('#sum', () => {
+export default (aeroflow, execute, expect) => describe('aeroflow().sum', () => {
   it('Is instance method', () => 
     execute(
       context => aeroflow.empty.sum,
       context => expect(context.result).to.be.a('function')));
 
-  describe('()', () => {
+  describe('aeroflow().sum()', () => {
     it('Returns instance of Aeroflow', () =>
       execute(
         context => aeroflow.empty.sum(),

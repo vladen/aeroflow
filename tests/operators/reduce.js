@@ -1,10 +1,10 @@
-export default (aeroflow, execute, expect) => describe('#reduce', () => {
+export default (aeroflow, execute, expect) => describe('aeroflow().reduce', () => {
   it('Is instance method', () =>
     execute(
       context => aeroflow.empty.reduce,
       context => expect(context.result).to.be.a('function')));
 
-  describe('()', () => {
+  describe('aeroflow().reduce()', () => {
     it('Returns instance of Aeroflow', () =>
       execute(
         context => aeroflow.empty.reduce(),
@@ -32,7 +32,7 @@ export default (aeroflow, execute, expect) => describe('#reduce', () => {
         }));
   });
 
-  describe('(@reducer:function)', () => {
+  describe('aeroflow().reduce(@reducer:function)', () => {
     it('When flow is empty, does not call @reducer', () =>
       execute(
         context => context.reducer = context.spy(),
@@ -83,7 +83,7 @@ export default (aeroflow, execute, expect) => describe('#reduce', () => {
         }));
   });
 
-  describe('(@reducer:function, @seed:function)', () => {
+  describe('aeroflow().reduce(@reducer:function, @seed:function)', () => {
     it('When flow is not empty, calls @seed with context data, calls @reducer with result returned by @seed, first emitted value, 0 and context data on first iteration', () =>
       execute(
         context => {
@@ -98,7 +98,7 @@ export default (aeroflow, execute, expect) => describe('#reduce', () => {
         }));
   });
 
-  describe('(@reducer:function, @seed:number)', () => {
+  describe('aeroflow().reduce(@reducer:function, @seed:number)', () => {
     it('When flow is not empty, calls @reducer with @seed, first emitted value, 0 and context data on first iteration', () =>
       execute(
         context => {
@@ -110,7 +110,7 @@ export default (aeroflow, execute, expect) => describe('#reduce', () => {
         context => expect(context.reducer).to.have.been.calledWithExactly(context.seed, context.value, 0, context.data)));
   });
 
-  describe('(@reducer:string)', () => {
+  describe('aeroflow().reduce(@reducer:string)', () => {
     it('When flow emits several values, emits single "next" with @reducer, then emits single greedy "done"', () =>
       execute(
         context => context.reducer = 42,

@@ -1,4 +1,4 @@
-export default (aeroflow, execute, expect) => describe('.empty', () => {
+export default (aeroflow, execute, expect) => describe('aeroflow.empty', () => {
   it('Gets instance of Aeroflow', () =>
     execute(
       context => aeroflow.empty,
