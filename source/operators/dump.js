@@ -13,6 +13,7 @@ export function dumpToConsoleOperator(prefix) {
     context);
 }
 
+// TODO: turn into console notifier
 export function dumpToLoggerOperator(prefix, logger) {
   return emitter => (next, done, context) => emitter(
     result => {
