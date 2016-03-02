@@ -3,11 +3,11 @@ import unsync from '../unsync';
 
 export function repeatDeferredGenerator(repeater, delayer) {
   return (next, done, context) => {
-    let index = -1;
+    let index = 0;
     !function proceed(result) {
       setTimeout(() => {
-        if (!unsync(next(repeater(index)), proceed, done)) proceed();
-      }, toDelay(delayer(++index, context), 1000));
+        if (!unsync(next(repeater(index++)), proceed, done)) proceed();
+      }, toDelay(delayer(index), 1000));
     }();
   };
 }
@@ -21,9 +21,9 @@ export function repeatImmediateGenerator(repeater) {
   };
 }
 
-export default function repeatGenerator(value, interval) {
-  const repeater = toFunction(value);
-  return isDefined(interval)
-    ? repeatDeferredGenerator(repeater, toFunction(interval))
+export default function repeatGenerator(repeater, delayer) {
+  repeater = toFunction(repeater);
+  return isDefined(delayer)
+    ? repeatDeferredGenerator(repeater, toFunction(delayer))
     : repeatImmediateGenerator(repeater);
 }

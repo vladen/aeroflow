@@ -9,6 +9,17 @@ export default (aeroflow, execute, expect) => describe('aeroflow.just', () => {
       execute(
         context => aeroflow.just(),
         context => expect(context.result).to.be.an('Aeroflow')));
+
+    it('Emits single "next" with undefined, then single greedy "done"', () =>
+      execute(
+        context => aeroflow.just().run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.been.calledOnce;
+          expect(context.next).to.have.been.calledWith(undefined);
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
   });
 
   describe('aeroflow.just(@value:aeroflow)', () => {
@@ -19,9 +30,9 @@ export default (aeroflow, execute, expect) => describe('aeroflow.just', () => {
         context => {
           expect(context.next).to.have.been.calledOnce;
           expect(context.next).to.have.been.calledWith(context.value);
+          expect(context.done).to.have.been.calledAfter(context.next);
           expect(context.done).to.have.been.calledOnce;
           expect(context.done).to.have.been.calledWith(true);
-          expect(context.done).to.have.been.calledAfter(context.next);
         }));
   });
 
@@ -33,9 +44,9 @@ export default (aeroflow, execute, expect) => describe('aeroflow.just', () => {
         context => {
           expect(context.next).to.have.been.calledOnce;
           expect(context.next).to.have.been.calledWith(context.value);
+          expect(context.done).to.have.been.calledAfter(context.next);
           expect(context.done).to.have.been.calledOnce;
           expect(context.done).to.have.been.calledWith(true);
-          expect(context.done).to.have.been.calledAfter(context.next);
         }));
   });
 

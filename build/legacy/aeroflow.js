@@ -417,11 +417,11 @@
 
   function repeatDeferredGenerator(repeater, delayer) {
     return function (next, done, context) {
-      var index = -1;
+      var index = 0;
       !function proceed(result) {
         setTimeout(function () {
-          if (!unsync(next(repeater(index)), proceed, done)) proceed();
-        }, toDelay(delayer(++index, context), 1000));
+          if (!unsync(next(repeater(index++)), proceed, done)) proceed();
+        }, toDelay(delayer(index), 1000));
       }();
     };
   }
@@ -435,9 +435,9 @@
     };
   }
 
-  function repeatGenerator(value, interval) {
-    var repeater = toFunction(value);
-    return isDefined(interval) ? repeatDeferredGenerator(repeater, toFunction(interval)) : repeatImmediateGenerator(repeater);
+  function repeatGenerator(repeater, delayer) {
+    repeater = toFunction(repeater);
+    return isDefined(delayer) ? repeatDeferredGenerator(repeater, toFunction(delayer)) : repeatImmediateGenerator(repeater);
   }
 
   function eventEmitterNotifier(target) {
@@ -1468,8 +1468,8 @@
     return instance(rangeGenerator(start, end, step));
   }
 
-  function repeat(value, interval) {
-    return instance(repeatGenerator(value, interval));
+  function repeat(repeater, delayer) {
+    return instance(repeatGenerator(repeater, delayer));
   }
 
   function defineGenerator(defintion, generator) {

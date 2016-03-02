@@ -1,66 +1,116 @@
-export default (aeroflow, assert) => describe('.repeat', () => {
+export default (aeroflow, execute, expect) => describe('aeroflow.repeat', () => {
   it('Is static method', () =>
-    assert.isFunction(aeroflow.repeat));
+    execute(
+      context => aeroflow.repeat,
+      context => expect(context.result).to.be.a('function')));
 
-  describe('()', () => {
+  describe('aeroflow.repeat()', () => {
     it('Returns instance of Aeroflow', () =>
-      assert.typeOf(aeroflow.repeat(), 'Aeroflow'));
+      execute(
+        context => aeroflow.repeat(),
+        context => expect(context.result).to.be.an('Aeroflow')));
 
-    it('Emits undefined @values if no params passed', () =>
-      assert.eventually.isUndefined(new Promise((done, fail) => 
-        aeroflow.repeat().take(1).run(done, fail))));
+    it('Emits "next" with undefined, then single lazy "done"', () =>
+      execute(
+        context => aeroflow.repeat().take(1).run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.been.calledOnce;
+          expect(context.next).to.have.been.calledWith(undefined);
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(false);
+        }));
   });
 
-  describe('(@repeater:function)', () => {
-    it('Calls @repeater', () =>
-      assert.isFulfilled(new Promise((done, fail) =>
-        aeroflow.repeat(done).take(1).run(fail, fail))));
+  describe('aeroflow.repeat(@repeater:function)', () => {
+    it('Calls @repeater with index of current iteration', () =>
+      execute(
+        context => {
+          context.limit = 3;
+          context.repeater = context.spy();
+        },
+        context => aeroflow.repeat(context.repeater).take(context.limit).run(),
+        context => {
+          expect(context.repeater).to.have.callCount(context.limit);
+          Array(context.limit).fill(undefined).forEach((_, index) =>
+            expect(context.repeater.getCall(index)).to.have.been.calledWith(index));
+        }));
 
-    it('Emits @value returned by @repeater', () => {
-      const value = 'a';
-      return assert.eventually.isTrue(new Promise((done, fail) => 
-        aeroflow.repeat(value).take(5).every(value).run(done, fail)));
-    });
-
-    it('Emits geometric progression recalculating @repeater each time', () => {
-      const expectation = [0, 2, 4, 6];
-      return assert.eventually.sameMembers(new Promise((done, fail) =>
-        aeroflow.repeat(index => index * 2).take(expectation.length).toArray().run(done, fail)),
-        expectation);
-    });
-
-    it('Passes zero-based @index of iteration to @repeater as first argument', () => {
-      const values = [0, 1, 2, 3, 4];
-      return assert.eventually.sameMembers(new Promise((done, fail) =>
-        aeroflow.repeat(index => index).take(values.length).toArray().run(done, fail)),
-        values);
-    });
+    it('Emits "next" with each value returned by @repeater, then single lazy "done"', () =>
+      execute(
+        context => {
+          context.limit = 3;
+          context.repeater = index => index;
+        },
+        context => aeroflow.repeat(context.repeater).take(context.limit).run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.callCount(context.limit);
+          Array(context.limit).fill().forEach((_, index) =>
+            expect(context.next.getCall(index)).to.have.been.calledWith(index));
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(false);
+        }));
   });
 
-  describe('(@repeater:!function)', () => {
-    it('Emits @repeater value if @repeater is not function', () => {
-      const value = 'a';
-      return assert.eventually.isTrue(new Promise((done, fail) => 
-        aeroflow.repeat(value).take(5).every(value).run(done, fail)));
-    });
+  describe('aeroflow.repeat(@repeater:function, @delayer:function)', () => {
+    it('Calls @repeater and @delayer with index of iteration', () =>
+      execute(
+        context => {
+          context.limit = 3;
+          context.delayer = context.spy(() => 0);
+          context.repeater = context.spy();
+        },
+        context => aeroflow.repeat(context.repeater, context.delayer).take(context.limit).run(),
+        context => {
+          expect(context.delayer).to.have.callCount(context.limit);
+          expect(context.repeater).to.have.callCount(context.limit);
+          Array(context.limit).fill(undefined).forEach((_, index) => {
+            expect(context.delayer.getCall(index)).to.have.been.calledWith(index);
+            expect(context.repeater.getCall(index)).to.have.been.calledWith(index);
+          });
+        }));
+
+    it('Emits "next" with each value returned by @repeater and delayed to the number of milliseconds returned by @delayer, then single lazy "done"', () =>
+      execute(
+        context => {
+          context.delay = 25;
+          context.limit = 3;
+          context.delayer = index => index * context.delay;
+          context.repeater = index => ({ date: new Date, index });
+        },
+        context => aeroflow.repeat(context.repeater, context.delayer).take(context.limit).run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.callCount(context.limit);
+          const results = Array(context.limit).fill().map((_, index) =>
+            context.next.getCall(index).args[0]);
+          results.forEach((result, index) =>
+            expect(result.index).to.equal(index));
+          results.reduce((prev, next) => {
+            expect(next.date - prev.date).to.be.not.below(context.delay);
+            return next;
+          });
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(false);
+        }));
   });
 
-  //TODO: rethink this tests
-  describe('(@repeater, @interval:number)', () => {
-    it('Emits value of @repeater each @interval ms', () => {
-      const interval = 10, take = 3, actual = [];
-
-      return assert.eventually.strictEqual(new Promise((done, fail) =>
-        aeroflow.repeat(() => actual.push('test'), interval).take(take).count().run(done, fail)),
-        take);
-    });
-  });
-
-  describe('(@repeater, @interval:!number)', () => {
-    it('Emits value of @repeater each 1000 ms', () => {
-      const take = 1, actualTime = new Date().getSeconds();
-      return assert.eventually.isTrue(new Promise((done, fail) =>
-        aeroflow.repeat(() => new Date().getSeconds(), 'tests').take(take).every(val => val - actualTime >= 1).run(done, fail)));
-    });
+  describe('(@repeater:string)', () => {
+    it('Emits "next" with @repeater value, then single lazy "done"', () =>
+      execute(
+        context => {
+          context.limit = 3;
+          context.repeater = 42;
+        },
+        context => aeroflow.repeat(context.repeater).take(context.limit).run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.callCount(context.limit);
+          Array(context.limit).fill().forEach((_, index) =>
+            expect(context.next.getCall(index)).to.have.been.calledWith(context.repeater));
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(false);
+        }));
   });
 });

@@ -258,7 +258,7 @@
   }
 
   function randomGenerator(minimum, maximum) {
-    maximum = toNumber(maximum, 1 - mathPow(10,-15));
+    maximum = toNumber(maximum, 1 - mathPow(10, -15));
     minimum = toNumber(minimum, 0);
     maximum -= minimum;
     const rounder = isInteger(minimum) && isInteger(maximum)
@@ -300,11 +300,11 @@
 
   function repeatDeferredGenerator(repeater, delayer) {
     return (next, done, context) => {
-      let index = -1;
+      let index = 0;
       !function proceed(result) {
         setTimeout(() => {
-          if (!unsync(next(repeater(index)), proceed, done)) proceed();
-        }, toDelay(delayer(++index, context), 1000));
+          if (!unsync(next(repeater(index++)), proceed, done)) proceed();
+        }, toDelay(delayer(index), 1000));
       }();
     };
   }
@@ -318,10 +318,10 @@
     };
   }
 
-  function repeatGenerator(value, interval) {
-    const repeater = toFunction(value);
-    return isDefined(interval)
-      ? repeatDeferredGenerator(repeater, toFunction(interval))
+  function repeatGenerator(repeater, delayer) {
+    repeater = toFunction(repeater);
+    return isDefined(delayer)
+      ? repeatDeferredGenerator(repeater, toFunction(delayer))
       : repeatImmediateGenerator(repeater);
   }
 
@@ -494,6 +494,7 @@
       context);
   }
 
+  // TODO: turn into console notifier
   function dumpToLoggerOperator(prefix, logger) {
     return emitter => (next, done, context) => emitter(
       result => {
@@ -2353,19 +2354,21 @@
   }
 
   /**
-  Creates instance repeating provided value.
+  Creates infinite flow, repeating static/dynamic value immediately or with static/dynamic delay.
 
   @alias aeroflow.repeat
 
-  @param {function|any} [value]
-  Arbitrary static value to repeat;
-  or function providing dynamic values and invoked with two arguments:
-    index - index of the value being emitted,
-    data - contextual data.
-  @param {number|function} [interval]
+  @param {function|any} [repeater]
+  Optional static value to repeat;
+  or function providing dynamic value and called with one argument:
+  1) index of current iteration.
+  @param {function|number} [delayer]
+  Optional static delay between iterations in milliseconds;
+  or function providing dynamic delay and called with one argument:
+  1) index of current iteration.
 
   @return {Flow}
-  The new instance emitting repeated values.
+  New flow emitting repeated values.
 
   @example
   aeroflow.repeat(Math.random()).take(2).dump().run();
@@ -2387,13 +2390,13 @@
   // next ping // after 500ms
   // done false
   aeroflow.repeat(index => index, index => 500 + 500 * index).take(3).dump().run();
-  // next ping // after 500ms
-  // next ping // after 1000ms
-  // next ping // after 1500ms
+  // next 0 // after 500ms
+  // next 1 // after 1000ms
+  // next 2 // after 1500ms
   // done false
   */
-  function repeat(value, interval) {
-    return instance(repeatGenerator(value, interval));
+  function repeat(repeater, delayer) {
+    return instance(repeatGenerator(repeater, delayer));
   }
 
   function defineGenerator(defintion, generator) {

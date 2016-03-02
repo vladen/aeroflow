@@ -1,57 +1,69 @@
-export default (aeroflow, assert) => describe('.random', () => {
+export default (aeroflow, execute, expect) => describe('aeroflow.random', () => {
   it('Is static method', () =>
-    assert.isFunction(aeroflow.random));
+    execute(
+      context => aeroflow.random,
+      context => expect(context.result).to.be.a('function')));
 
-  describe('()', () => {
+  describe('aeroflow.random()', () => {
     it('Returns instance of Aeroflow', () =>
-      assert.typeOf(aeroflow.random(), 'Aeroflow'));
+      execute(
+        context => aeroflow.random(),
+        context => expect(context.result).to.be.an('Aeroflow')));
 
-    it('Emits random values decimals within 0 and 1', () => {
-      const count = 10, expectation = (value) => !Number.isInteger(value) && value >= 0 && value <= 1;
-      return assert.eventually.isTrue(new Promise((done, fail) => 
-        aeroflow.random().take(count).every(expectation).run(done, fail)));
-    });
+    it('Emits "next" with each random value in the range [0, 1), then single lazy "done"', () =>
+      execute(
+        context => context.limit = 5,
+        context => aeroflow.random().take(context.limit).run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.callCount(context.limit);
+          const results = new Set(Array(context.limit).fill().map((_, index) =>
+            context.next.getCall(index).args[0]));
+          expect(results).to.have.property('size', context.limit);
+          results.forEach(value => expect(value).to.be.within(0, 1));
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(false);
+        }));
   });
 
-  describe('(@start:number)', () => {
-    it('Emits random demical values less than @start if @start', () => {
-      const start = 2, count = 10, expectation = (value) => !Number.isInteger(value) && value <= start;
-      return assert.eventually.isTrue(new Promise((done, fail) => 
-        aeroflow.random(start).take(count).every(expectation).run(done, fail)));
-    });
+  describe('aeroflow.random(@maximum:number)', () => {
+    it('Emits "next" with each random value in the range [0, @maximum), then single lazy "done"', () =>
+      execute(
+        context => {
+          context.limit = 5;
+          context.maximum = 9;
+        },
+        context => aeroflow.random(context.maximum).take(context.limit).run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.callCount(context.limit);
+          const results = new Set(Array(context.limit).fill().map((_, index) =>
+            context.next.getCall(index).args[0]));
+          expect(results.size).to.be.above(1);
+          results.forEach(value => expect(value).to.be.within(0, context.maximum));
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(false);
+        }));
   });
 
-  describe('(@start:string)', () => {
-    it('Emits random decimals values within 0 and 1', () => {
-      const start = 'test', count = 10, 
-        expectation = (value) => !Number.isInteger(value) && value >= 0 && value <= 1;
-      return assert.eventually.isTrue(new Promise((done, fail) => 
-        aeroflow.random(start).take(count).every(expectation).run(done, fail)));
-    });
-  });
-
-  describe('(@start, @end:number)', () => {
-    it('Emits random integer values within @start and @end if @start and @end is integer', () => {
-      const start = 10, end = 20, count = 10, 
-        expectation = (value) => Number.isInteger(value) && value >= start && value <= end;
-      return assert.eventually.isTrue(new Promise((done, fail) => 
-        aeroflow.random(start, end).take(count).every(expectation).run(done, fail)));
-    });
-
-    it('Emits random demical values within @start and @end if @start or @end is demical', () => {
-      const start = 1, end = 2.3, count = 10, 
-        expectation = (value) => !Number.isInteger(value) && value >= start && value <= end;
-      return assert.eventually.isTrue(new Promise((done, fail) => 
-        aeroflow.random(start, end).take(count).every(expectation).run(done, fail)));
-    });
-  });
-
-  describe('(@start, @end:string)', () => {
-    it('Emits random demical values less than @start if @start', () => {
-      const start = 2, end = 'test', count = 10,
-        expectation = (value) => !Number.isInteger(value) && value <= start;
-      return assert.eventually.isTrue(new Promise((done, fail) => 
-        aeroflow.random(start, end).take(count).every(expectation).run(done, fail)));
-    });
+  describe('aeroflow.random(@minimum:number, @maximum:number)', () => {
+    it('Emits "next" with each random value in the range [@minimum, @maximum), then single lazy "done"', () =>
+      execute(
+        context => {
+          context.limit = 5;
+          context.minimum = 1;
+          context.maximum = 9;
+        },
+        context => aeroflow.random(context.minimum, context.maximum).take(context.limit).run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.callCount(context.limit);
+          const results = new Set(Array(context.limit).fill().map((_, index) =>
+            context.next.getCall(index).args[0]));
+          expect(results.size).to.be.above(1);
+          results.forEach(value => expect(value).to.be.within(context.minimum, context.maximum));
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(false);
+        }));
   });
 });

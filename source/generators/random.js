@@ -2,7 +2,7 @@ import { identity, isInteger, mathFloor, mathPow, mathRandom, toNumber } from '.
 import unsync from '../unsync';
 
 export default function randomGenerator(minimum, maximum) {
-  maximum = toNumber(maximum, 1 - mathPow(10,-15));
+  maximum = toNumber(maximum, 1 - mathPow(10, -15));
   minimum = toNumber(minimum, 0);
   maximum -= minimum;
   const rounder = isInteger(minimum) && isInteger(maximum)

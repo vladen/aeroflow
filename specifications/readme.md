@@ -25,6 +25,15 @@
      - [aeroflow.just(@value:function)](#aeroflowjust-aeroflowjustvaluefunction)
      - [aeroflow.just(@value:iterable)](#aeroflowjust-aeroflowjustvalueiterable)
      - [aeroflow.just(@value:promise)](#aeroflowjust-aeroflowjustvaluepromise)
+   - [aeroflow.random](#aeroflowrandom)
+     - [aeroflow.random()](#aeroflowrandom-aeroflowrandom)
+     - [aeroflow.random(@maximum:number)](#aeroflowrandom-aeroflowrandommaximumnumber)
+     - [aeroflow.random(@minimum:number, @maximum:number)](#aeroflowrandom-aeroflowrandomminimumnumber-maximumnumber)
+   - [aeroflow.repeat](#aeroflowrepeat)
+     - [aeroflow.repeat()](#aeroflowrepeat-aeroflowrepeat)
+     - [aeroflow.repeat(@repeater:function)](#aeroflowrepeat-aeroflowrepeatrepeaterfunction)
+     - [aeroflow.repeat(@repeater:function, @delayer:function)](#aeroflowrepeat-aeroflowrepeatrepeaterfunction-delayerfunction)
+     - [(@repeater:string)](#aeroflowrepeat-repeaterstring)
    - [aeroflow().average](#aeroflowaverage)
      - [aeroflow().average()](#aeroflowaverage-aeroflowaverage)
    - [aeroflow().catch](#aeroflowcatch)
@@ -40,6 +49,9 @@
      - [aeroflow().coalesce(@alternative:string)](#aeroflowcoalesce-aeroflowcoalescealternativestring)
    - [aeroflow().count](#aeroflowcount)
      - [aeroflow().count()](#aeroflowcount-aeroflowcount)
+   - [aeroflow().distinct](#aeroflowdistinct)
+     - [aeroflow().distinct()](#aeroflowdistinct-aeroflowdistinct)
+     - [aeroflow().distinct(true)](#aeroflowdistinct-aeroflowdistincttrue)
    - [aeroflow().every](#aeroflowevery)
      - [aeroflow().every()](#aeroflowevery-aeroflowevery)
      - [aeroflow().every(@condition:function)](#aeroflowevery-aerofloweveryconditionfunction)
@@ -593,6 +605,20 @@ return execute(function (context) {
 });
 ```
 
+Emits single "next" with undefined, then single greedy "done".
+
+```js
+return execute(function (context) {
+  return aeroflow.just().run(context.next, context.done);
+}, function (context) {
+  expect(context.next).to.have.been.calledOnce;
+  expect(context.next).to.have.been.calledWith(undefined);
+  expect(context.done).to.have.been.calledAfter(context.next);
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(true);
+});
+```
+
 <a name="aeroflowjust-aeroflowjustvalueaeroflow"></a>
 ## aeroflow.just(@value:aeroflow)
 Emits single "next" with @value, then single greedy "done".
@@ -605,9 +631,9 @@ return execute(function (context) {
 }, function (context) {
   expect(context.next).to.have.been.calledOnce;
   expect(context.next).to.have.been.calledWith(context.value);
+  expect(context.done).to.have.been.calledAfter(context.next);
   expect(context.done).to.have.been.calledOnce;
   expect(context.done).to.have.been.calledWith(true);
-  expect(context.done).to.have.been.calledAfter(context.next);
 });
 ```
 
@@ -623,9 +649,9 @@ return execute(function (context) {
 }, function (context) {
   expect(context.next).to.have.been.calledOnce;
   expect(context.next).to.have.been.calledWith(context.value);
+  expect(context.done).to.have.been.calledAfter(context.next);
   expect(context.done).to.have.been.calledOnce;
   expect(context.done).to.have.been.calledWith(true);
-  expect(context.done).to.have.been.calledAfter(context.next);
 });
 ```
 
@@ -677,6 +703,256 @@ return execute(function (context) {
   expect(context.next).to.have.been.calledWith(context.value);
   expect(context.done).to.have.been.calledWith(true);
   expect(context.done).to.have.been.calledAfter(context.next);
+});
+```
+
+<a name="aeroflowrandom"></a>
+# aeroflow.random
+Is static method.
+
+```js
+return execute(function (context) {
+  return aeroflow.random;
+}, function (context) {
+  return expect(context.result).to.be.a('function');
+});
+```
+
+<a name="aeroflowrandom-aeroflowrandom"></a>
+## aeroflow.random()
+Returns instance of Aeroflow.
+
+```js
+return execute(function (context) {
+  return aeroflow.random();
+}, function (context) {
+  return expect(context.result).to.be.an('Aeroflow');
+});
+```
+
+Emits "next" with each random value in the range [0, 1), then single lazy "done".
+
+```js
+return execute(function (context) {
+  return context.limit = 5;
+}, function (context) {
+  return aeroflow.random().take(context.limit).run(context.next, context.done);
+}, function (context) {
+  expect(context.next).to.have.callCount(context.limit);
+  var results = new Set(Array(context.limit).fill().map(function (_, index) {
+    return context.next.getCall(index).args[0];
+  }));
+  expect(results).to.have.property('size', context.limit);
+  results.forEach(function (value) {
+    return expect(value).to.be.within(0, 1);
+  });
+  expect(context.done).to.have.been.calledAfter(context.next);
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(false);
+});
+```
+
+<a name="aeroflowrandom-aeroflowrandommaximumnumber"></a>
+## aeroflow.random(@maximum:number)
+Emits "next" with each random value in the range [0, @maximum), then single lazy "done".
+
+```js
+return execute(function (context) {
+  context.limit = 5;
+  context.maximum = 9;
+}, function (context) {
+  return aeroflow.random(context.maximum).take(context.limit).run(context.next, context.done);
+}, function (context) {
+  expect(context.next).to.have.callCount(context.limit);
+  var results = new Set(Array(context.limit).fill().map(function (_, index) {
+    return context.next.getCall(index).args[0];
+  }));
+  expect(results.size).to.be.above(1);
+  results.forEach(function (value) {
+    return expect(value).to.be.within(0, context.maximum);
+  });
+  expect(context.done).to.have.been.calledAfter(context.next);
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(false);
+});
+```
+
+<a name="aeroflowrandom-aeroflowrandomminimumnumber-maximumnumber"></a>
+## aeroflow.random(@minimum:number, @maximum:number)
+Emits "next" with each random value in the range [@minimum, @maximum), then single lazy "done".
+
+```js
+return execute(function (context) {
+  context.limit = 5;
+  context.minimum = 1;
+  context.maximum = 9;
+}, function (context) {
+  return aeroflow.random(context.minimum, context.maximum).take(context.limit).run(context.next, context.done);
+}, function (context) {
+  expect(context.next).to.have.callCount(context.limit);
+  var results = new Set(Array(context.limit).fill().map(function (_, index) {
+    return context.next.getCall(index).args[0];
+  }));
+  expect(results.size).to.be.above(1);
+  results.forEach(function (value) {
+    return expect(value).to.be.within(context.minimum, context.maximum);
+  });
+  expect(context.done).to.have.been.calledAfter(context.next);
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(false);
+});
+```
+
+<a name="aeroflowrepeat"></a>
+# aeroflow.repeat
+Is static method.
+
+```js
+return execute(function (context) {
+  return aeroflow.repeat;
+}, function (context) {
+  return expect(context.result).to.be.a('function');
+});
+```
+
+<a name="aeroflowrepeat-aeroflowrepeat"></a>
+## aeroflow.repeat()
+Returns instance of Aeroflow.
+
+```js
+return execute(function (context) {
+  return aeroflow.repeat();
+}, function (context) {
+  return expect(context.result).to.be.an('Aeroflow');
+});
+```
+
+Emits "next" with undefined, then single lazy "done".
+
+```js
+return execute(function (context) {
+  return aeroflow.repeat().take(1).run(context.next, context.done);
+}, function (context) {
+  expect(context.next).to.have.been.calledOnce;
+  expect(context.next).to.have.been.calledWith(undefined);
+  expect(context.done).to.have.been.calledAfter(context.next);
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(false);
+});
+```
+
+<a name="aeroflowrepeat-aeroflowrepeatrepeaterfunction"></a>
+## aeroflow.repeat(@repeater:function)
+Calls @repeater with index of current iteration.
+
+```js
+return execute(function (context) {
+  context.limit = 3;
+  context.repeater = context.spy();
+}, function (context) {
+  return aeroflow.repeat(context.repeater).take(context.limit).run();
+}, function (context) {
+  expect(context.repeater).to.have.callCount(context.limit);
+  Array(context.limit).fill(undefined).forEach(function (_, index) {
+    return expect(context.repeater.getCall(index)).to.have.been.calledWith(index);
+  });
+});
+```
+
+Emits "next" with each value returned by @repeater, then single lazy "done".
+
+```js
+return execute(function (context) {
+  context.limit = 3;
+  context.repeater = function (index) {
+    return index;
+  };
+}, function (context) {
+  return aeroflow.repeat(context.repeater).take(context.limit).run(context.next, context.done);
+}, function (context) {
+  expect(context.next).to.have.callCount(context.limit);
+  Array(context.limit).fill().forEach(function (_, index) {
+    return expect(context.next.getCall(index)).to.have.been.calledWith(index);
+  });
+  expect(context.done).to.have.been.calledAfter(context.next);
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(false);
+});
+```
+
+<a name="aeroflowrepeat-aeroflowrepeatrepeaterfunction-delayerfunction"></a>
+## aeroflow.repeat(@repeater:function, @delayer:function)
+Calls @repeater and @delayer with index of iteration.
+
+```js
+return execute(function (context) {
+  context.limit = 3;
+  context.delayer = context.spy(function () {
+    return 0;
+  });
+  context.repeater = context.spy();
+}, function (context) {
+  return aeroflow.repeat(context.repeater, context.delayer).take(context.limit).run();
+}, function (context) {
+  expect(context.delayer).to.have.callCount(context.limit);
+  expect(context.repeater).to.have.callCount(context.limit);
+  Array(context.limit).fill(undefined).forEach(function (_, index) {
+    expect(context.delayer.getCall(index)).to.have.been.calledWith(index);
+    expect(context.repeater.getCall(index)).to.have.been.calledWith(index);
+  });
+});
+```
+
+Emits "next" with each value returned by @repeater and delayed to the number of milliseconds returned by @delayer, then single lazy "done".
+
+```js
+return execute(function (context) {
+  context.delay = 25;
+  context.limit = 3;
+  context.delayer = function (index) {
+    return index * context.delay;
+  };
+  context.repeater = function (index) {
+    return { date: new Date(), index: index };
+  };
+}, function (context) {
+  return aeroflow.repeat(context.repeater, context.delayer).take(context.limit).run(context.next, context.done);
+}, function (context) {
+  expect(context.next).to.have.callCount(context.limit);
+  var results = Array(context.limit).fill().map(function (_, index) {
+    return context.next.getCall(index).args[0];
+  });
+  results.forEach(function (result, index) {
+    return expect(result.index).to.equal(index);
+  });
+  results.reduce(function (prev, next) {
+    expect(next.date - prev.date).to.be.not.below(context.delay);
+    return next;
+  });
+  expect(context.done).to.have.been.calledAfter(context.next);
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(false);
+});
+```
+
+<a name="aeroflowrepeat-repeaterstring"></a>
+## (@repeater:string)
+Emits "next" with @repeater value, then single lazy "done".
+
+```js
+return execute(function (context) {
+  context.limit = 3;
+  context.repeater = 42;
+}, function (context) {
+  return aeroflow.repeat(context.repeater).take(context.limit).run(context.next, context.done);
+}, function (context) {
+  expect(context.next).to.have.callCount(context.limit);
+  Array(context.limit).fill().forEach(function (_, index) {
+    return expect(context.next.getCall(index)).to.have.been.calledWith(context.repeater);
+  });
+  expect(context.done).to.have.been.calledAfter(context.next);
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(false);
 });
 ```
 
@@ -1104,6 +1380,89 @@ return execute(function (context) {
   expect(context.next).to.have.not.been.called;
   expect(context.done).to.have.been.calledOnce;
   expect(context.done).to.have.been.calledWith(context.error);
+});
+```
+
+<a name="aeroflowdistinct"></a>
+# aeroflow().distinct
+Is instance method.
+
+```js
+return execute(function (context) {
+  return aeroflow.empty.distinct;
+}, function (context) {
+  return expect(context.result).to.be.a('function');
+});
+```
+
+<a name="aeroflowdistinct-aeroflowdistinct"></a>
+## aeroflow().distinct()
+Returns instance of Aeroflow.
+
+```js
+return execute(function (context) {
+  return aeroflow.empty.distinct();
+}, function (context) {
+  return expect(context.result).to.be.an('Aeroflow');
+});
+```
+
+When flow is empty, emits only single greedy "done".
+
+```js
+return execute(function (context) {
+  return aeroflow.empty.distinct().run(context.next, context.done);
+}, function (context) {
+  expect(context.next).to.have.not.been.called;
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(true);
+});
+```
+
+When flow emits several values, emits "next" for each unique value, then emits single greedy "done".
+
+```js
+return execute(function (context) {
+  return context.values = [1, 2, 1];
+}, function (context) {
+  return aeroflow(context.values).distinct().run(context.next, context.done);
+}, function (context) {
+  var unique = context.values.reduce(function (array, value) {
+    if (! ~array.indexOf(value)) array.push(value);
+    return array;
+  }, []);
+  expect(context.next).to.have.callCount(unique.length);
+  unique.forEach(function (value, index) {
+    return expect(context.next.getCall(index)).to.have.been.calledWith(value);
+  });
+  expect(context.done).to.have.been.calledAfter(context.next);
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(true);
+});
+```
+
+<a name="aeroflowdistinct-aeroflowdistincttrue"></a>
+## aeroflow().distinct(true)
+When flow emits several values, emits "next" for each unique and first-non repeating value, then emits single greedy "done".
+
+```js
+return execute(function (context) {
+  return context.values = [1, 1, 2, 2];
+}, function (context) {
+  return aeroflow(context.values).distinct().run(context.next, context.done);
+}, function (context) {
+  var last = undefined;
+  var unique = context.values.reduce(function (array, value) {
+    if (value !== last) array.push(last = value);
+    return array;
+  }, []);
+  expect(context.next).to.have.callCount(unique.length);
+  unique.forEach(function (value, index) {
+    return expect(context.next.getCall(index)).to.have.been.calledWith(value);
+  });
+  expect(context.done).to.have.been.calledAfter(context.next);
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(true);
 });
 ```
 

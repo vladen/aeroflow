@@ -235,19 +235,21 @@ function range(start, end, step) {
 }
 
 /**
-Creates instance repeating provided value.
+Creates infinite flow, repeating static/dynamic value immediately or with static/dynamic delay.
 
 @alias aeroflow.repeat
 
-@param {function|any} [value]
-Arbitrary static value to repeat;
-or function providing dynamic values and invoked with two arguments:
-  index - index of the value being emitted,
-  data - contextual data.
-@param {number|function} [interval]
+@param {function|any} [repeater]
+Optional static value to repeat;
+or function providing dynamic value and called with one argument:
+1) index of current iteration.
+@param {function|number} [delayer]
+Optional static delay between iterations in milliseconds;
+or function providing dynamic delay and called with one argument:
+1) index of current iteration.
 
 @return {Flow}
-The new instance emitting repeated values.
+New flow emitting repeated values.
 
 @example
 aeroflow.repeat(Math.random()).take(2).dump().run();
@@ -269,13 +271,13 @@ aeroflow.repeat('ping', 500).take(3).dump().run();
 // next ping // after 500ms
 // done false
 aeroflow.repeat(index => index, index => 500 + 500 * index).take(3).dump().run();
-// next ping // after 500ms
-// next ping // after 1000ms
-// next ping // after 1500ms
+// next 0 // after 500ms
+// next 1 // after 1000ms
+// next 2 // after 1500ms
 // done false
 */
-function repeat(value, interval) {
-  return instance(repeatGenerator(value, interval));
+function repeat(repeater, delayer) {
+  return instance(repeatGenerator(repeater, delayer));
 }
 
 function defineGenerator(defintion, generator) {

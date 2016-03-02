@@ -3,6 +3,8 @@ import factoryTests from './factory';
 import emptyGeneratorTests from './generators/empty';
 import expandGeneratorTests from './generators/expand';
 import justGeneratorTests from './generators/just';
+import randomGeneratorTests from './generators/random';
+import repeatGeneratorTests from './generators/repeat';
 
 import averageOperatorTests from './operators/average';
 import catchOperatorTests from './operators/catch';
@@ -35,12 +37,14 @@ const tests = [
   emptyGeneratorTests,
   expandGeneratorTests,
   justGeneratorTests,
+  randomGeneratorTests,
+  repeatGeneratorTests,
 
   averageOperatorTests,
   catchOperatorTests,
   coalesceOperatorTests,
   countOperatorTests,
-  // distinctOperatorTests,
+  distinctOperatorTests,
   everyOperatorTests,
   filterOperatorTests,
   // groupOperatorTests,

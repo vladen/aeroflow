@@ -20,24 +20,24 @@
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">50% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>12/24</span>
+        <span class='fraction'>24/24</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">50% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Branches</span>
-        <span class='fraction'>4/8</span>
+        <span class='fraction'>8/8</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">11.11% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Functions</span>
-        <span class='fraction'>1/9</span>
+        <span class='fraction'>9/9</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">26.67% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>4/15</span>
+        <span class='fraction'>15/15</span>
       </div>
       <div class='fl pad1y'>
         <span class="strong">1 branch</span>
@@ -45,7 +45,7 @@
       </div>
     </div>
   </div>
-  <div class='status-line medium'></div>
+  <div class='status-line high'></div>
 <pre><table class="coverage">
 <tr><td class="line-count quiet">1
 2
@@ -80,58 +80,58 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-yes">6×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-yes">4×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">7×</span>
+<span class="cline-any cline-yes">7×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { isDefined, toDelay, toFunction } from '../utilites';
 import unsync from '../unsync';
 &nbsp;
-export <span class="fstat-no" title="function not covered" >function repeatDeferredGenerator(repeater, delayer) {</span>
-<span class="cstat-no" title="statement not covered" >  return <span class="fstat-no" title="function not covered" >(next, done, context) =&gt; {</span></span>
-<span class="cstat-no" title="statement not covered" >    let index = -1;</span>
-<span class="cstat-no" title="statement not covered" >    !<span class="fstat-no" title="function not covered" >function proceed(result) {</span></span>
-<span class="cstat-no" title="statement not covered" >      setTimeout(<span class="fstat-no" title="function not covered" >() =&gt; {</span></span>
-<span class="cstat-no" title="statement not covered" >        i</span></span>f (!unsync(next(repeater(index)), proceed, done)) <span class="cstat-no" title="statement not covered" >proceed();
-      }, toDelay(delayer(++index, context), 1000));
+export function repeatDeferredGenerator(repeater, delayer) {
+  return (next, done, context) =&gt; {
+    let index = 0;
+    !function proceed(result) {
+      setTimeout(() =&gt; {
+        if (!unsync(next(repeater(index++)), proceed, done)) proceed();
+      }, toDelay(delayer(index), 1000));
     }();
   };
 }
 &nbsp;
-export <span class="fstat-no" title="function not covered" >function repeatImmediateGenerator(repeater) {</span>
-<span class="cstat-no" title="statement not covered" >  return <span class="fstat-no" title="function not covered" >(next, done, context) =&gt; {</span></span>
-<span class="cstat-no" title="statement not covered" >    let index = 0;</span>
-<span class="cstat-no" title="statement not covered" >    !<span class="fstat-no" title="function not covered" >function proceed() {</span></span>
-<span class="cstat-no" title="statement not covered" >      w</span>hile (!unsync(next(repeater(index++)), proceed, done));
+export function repeatImmediateGenerator(repeater) {
+  return (next, done, context) =&gt; {
+    let index = 0;
+    !function proceed() {
+      while (!unsync(next(repeater(index++)), proceed, done));
     }();
   };
 }
 &nbsp;
-export default <span class="fstat-no" title="function not covered" >function repeatGenerator(value, interval) {</span>
-<span class="cstat-no" title="statement not covered" >  const repeater = toFunction(value);</span>
-<span class="cstat-no" title="statement not covered" >  return isDefined(interval)</span>
-    ? repeatDeferredGenerator(repeater, toFunction(interval))
+export default function repeatGenerator(repeater, delayer) {
+  repeater = toFunction(repeater);
+  return isDefined(delayer)
+    ? repeatDeferredGenerator(repeater, toFunction(delayer))
     : repeatImmediateGenerator(repeater);
 }
 &nbsp;</pre></td></tr>
@@ -140,7 +140,7 @@ export default <span class="fstat-no" title="function not covered" >function rep
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Wed Mar 02 2016 19:37:15 GMT+0300 (Belarus Standard Time)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Wed Mar 02 2016 21:24:31 GMT+0300 (Belarus Standard Time)
 </div>
 </div>
 <script src="../../../prettify.js"></script>

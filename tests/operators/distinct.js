@@ -1,36 +1,59 @@
-export default (aeroflow, assert) => describe('#distinct', () => {
+export default (aeroflow, execute, expect) => describe('aeroflow().distinct', () => {
   it('Is instance method', () =>
-    assert.isFunction(aeroflow.empty.distinct));
+    execute(
+      context => aeroflow.empty.distinct,
+      context => expect(context.result).to.be.a('function')));
 
-  describe('()', () => {
+  describe('aeroflow().distinct()', () => {
     it('Returns instance of Aeroflow', () =>
-      assert.typeOf(aeroflow.empty.distinct(), 'Aeroflow'));
+      execute(
+        context => aeroflow.empty.distinct(),
+        context => expect(context.result).to.be.an('Aeroflow')));
 
-    it('Emits nothing ("done" event only) when flow is empty', () =>
-      assert.isFulfilled(new Promise((done, fail) =>
-        aeroflow.empty.distinct().run(fail, done))));
+    it('When flow is empty, emits only single greedy "done"', () =>
+      execute(
+        context => aeroflow.empty.distinct().run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.not.been.called;
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
 
-    it('Emits unique of @values when flow emits several numeric @values', () => {
-      const values = [1, 1, 2, 2, 3], expectation = Array.from(new Set(values));
-      return assert.eventually.sameMembers(new Promise((done, fail) =>
-        aeroflow(values).distinct().toArray().run(done, fail)),
-        expectation);
-    });
-
-    it('Emits unique of @values when flow emits several string @values', () => {
-      const values = ['a', 'a', 'b', 'b', 'c'], expectation = Array.from(new Set(values));
-      return assert.eventually.sameMembers(new Promise((done, fail) =>
-        aeroflow(values).distinct().toArray().run(done, fail)),
-        expectation);
-    });
+    it('When flow emits several values, emits "next" for each unique value, then emits single greedy "done"', () =>
+      execute(
+        context => context.values = [1, 2, 1],
+        context => aeroflow(context.values).distinct().run(context.next, context.done),
+        context => {
+          const unique = context.values.reduce((array, value) => {
+            if (!~array.indexOf(value)) array.push(value);
+            return array;
+          }, []);
+          expect(context.next).to.have.callCount(unique.length);
+          unique.forEach((value, index) =>
+            expect(context.next.getCall(index)).to.have.been.calledWith(value));
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
   });
 
-  describe('(true)', () => {
-    it('Emits first @value of each sub-sequence of identical @values (distinct until changed)', () => {
-      const values = [1, 1, 2, 2, 1, 1], expectation = [1, 2, 1];
-      return assert.eventually.sameMembers(new Promise((done, fail) =>
-        aeroflow(values).distinct(true).toArray().run(done, fail)),
-        expectation);
-    });
+  describe('aeroflow().distinct(true)', () => {
+    it('When flow emits several values, emits "next" for each unique and first-non repeating value, then emits single greedy "done"', () =>
+      execute(
+        context => context.values = [1, 1, 2, 2],
+        context => aeroflow(context.values).distinct().run(context.next, context.done),
+        context => {
+          let last;
+          const unique = context.values.reduce((array, value) => {
+            if (value !== last) array.push(last = value);
+            return array;
+          }, []);
+          expect(context.next).to.have.callCount(unique.length);
+          unique.forEach((value, index) =>
+            expect(context.next.getCall(index)).to.have.been.calledWith(value));
+          expect(context.done).to.have.been.calledAfter(context.next);
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWith(true);
+        }));
   });
 });

@@ -917,7 +917,7 @@ aeroflow(42).test().dump().run();
     * [.just(source)](#aeroflow.just) ⇒ <code>[Flow](#Flow)</code>
     * [.random([minimum], [maximum])](#aeroflow.random) ⇒ <code>[Flow](#Flow)</code>
     * [.range([start], [end], [step])](#aeroflow.range) ⇒ <code>[Flow](#Flow)</code>
-    * [.repeat([value], [interval])](#aeroflow.repeat) ⇒ <code>[Flow](#Flow)</code>
+    * [.repeat([repeater], [delayer])](#aeroflow.repeat) ⇒ <code>[Flow](#Flow)</code>
 
 <a name="aeroflow.create"></a>
 ### aeroflow.create(emitter) ⇒ <code>[Flow](#Flow)</code>
@@ -1042,18 +1042,19 @@ aeroflow.range(5, 0, -2).dump().run();
 // done true
 ```
 <a name="aeroflow.repeat"></a>
-### aeroflow.repeat([value], [interval]) ⇒ <code>[Flow](#Flow)</code>
-Creates instance repeating provided value.
+### aeroflow.repeat([repeater], [delayer]) ⇒ <code>[Flow](#Flow)</code>
+Creates infinite flow, repeating static/dynamic value immediately or with static/dynamic delay.
 
 **Kind**: static method of <code>[aeroflow](#aeroflow)</code>  
-**Returns**: <code>[Flow](#Flow)</code> - The new instance emitting repeated values.  
+**Returns**: <code>[Flow](#Flow)</code> - New flow emitting repeated values.  
 **Params**
 
-- [value] <code>function</code> | <code>any</code> - Arbitrary static value to repeat;
-or function providing dynamic values and invoked with two arguments:
-  index - index of the value being emitted,
-  data - contextual data.
-- [interval] <code>number</code> | <code>function</code>
+- [repeater] <code>function</code> | <code>any</code> - Optional static value to repeat;
+or function providing dynamic value and called with one argument:
+1) index of current iteration.
+- [delayer] <code>function</code> | <code>number</code> - Optional static delay between iterations in milliseconds;
+or function providing dynamic delay and called with one argument:
+1) index of current iteration.
 
 **Example**  
 ```js
@@ -1076,8 +1077,8 @@ aeroflow.repeat('ping', 500).take(3).dump().run();
 // next ping // after 500ms
 // done false
 aeroflow.repeat(index => index, index => 500 + 500 * index).take(3).dump().run();
-// next ping // after 500ms
-// next ping // after 1000ms
-// next ping // after 1500ms
+// next 0 // after 500ms
+// next 1 // after 1000ms
+// next 2 // after 1500ms
 // done false
 ```
