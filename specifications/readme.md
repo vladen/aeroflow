@@ -12,6 +12,13 @@
      - [aeroflow(@source:string)](#aeroflow-aeroflowsourcestring)
      - [aeroflow(@source:undefined)](#aeroflow-aeroflowsourceundefined)
      - [aeroflow(...@sources)](#aeroflow-aeroflowsources)
+   - [aeroflow.adapters](#aeroflowadapters)
+     - [aeroflow.adapters.get](#aeroflowadapters-aeroflowadaptersget)
+     - [aeroflow.adapters.use](#aeroflowadapters-aeroflowadaptersuse)
+   - [aeroflow.notifiers](#aeroflownotifiers)
+     - [aeroflow.adapters.get](#aeroflownotifiers-aeroflowadaptersget)
+     - [aeroflow.adapters.use](#aeroflownotifiers-aeroflowadaptersuse)
+   - [aeroflow.operators](#aeroflowoperators)
    - [aeroflow.empty](#aeroflowempty)
    - [aeroflow.expand](#aeroflowexpand)
      - [aeroflow.expand()](#aeroflowexpand-aeroflowexpand)
@@ -435,6 +442,103 @@ return execute(function (context) {
   expect(context.done).to.have.been.calledAfter(context.next);
   expect(context.done).to.have.been.calledOnce;
   expect(context.done).to.have.been.calledWith(true);
+});
+```
+
+<a name="aeroflowadapters"></a>
+# aeroflow.adapters
+Is static property.
+
+```js
+return execute(function (context) {
+  return aeroflow.adapters;
+}, function (context) {
+  return expect(context.result).to.exist;
+});
+```
+
+<a name="aeroflowadapters-aeroflowadaptersget"></a>
+## aeroflow.adapters.get
+Is function.
+
+```js
+return execute(function (context) {
+  return aeroflow.adapters.get;
+}, function (context) {
+  return expect(context.result).to.be.a('function');
+});
+```
+
+<a name="aeroflowadapters-aeroflowadaptersuse"></a>
+## aeroflow.adapters.use
+Is function.
+
+```js
+return execute(function (context) {
+  return aeroflow.adapters.get;
+}, function (context) {
+  return expect(context.result).to.be.a('function');
+});
+```
+
+<a name="aeroflownotifiers"></a>
+# aeroflow.notifiers
+Is static property.
+
+```js
+return execute(function (context) {
+  return aeroflow.notifiers;
+}, function (context) {
+  return expect(context.result).to.exist;
+});
+```
+
+<a name="aeroflownotifiers-aeroflowadaptersget"></a>
+## aeroflow.adapters.get
+Is function.
+
+```js
+return execute(function (context) {
+  return aeroflow.adapters.get;
+}, function (context) {
+  return expect(context.result).to.be.a('function');
+});
+```
+
+<a name="aeroflownotifiers-aeroflowadaptersuse"></a>
+## aeroflow.adapters.use
+Is function.
+
+```js
+return execute(function (context) {
+  return aeroflow.adapters.get;
+}, function (context) {
+  return expect(context.result).to.be.a('function');
+});
+```
+
+<a name="aeroflowoperators"></a>
+# aeroflow.operators
+Is static property.
+
+```js
+return execute(function (context) {
+  return aeroflow.operators;
+}, function (context) {
+  return expect(context.result).to.exist;
+});
+```
+
+Registers new operator.
+
+```js
+return execute(function (context) {
+  return context.operator = Function();
+}, function (context) {
+  aeroflow.operators.test = context.operator;
+  return aeroflow.empty.test;
+}, function (context) {
+  return expect(context.result).to.equal(context.operator);
 });
 ```
 

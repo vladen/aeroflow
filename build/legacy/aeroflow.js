@@ -1486,7 +1486,9 @@
     },
     empty: {
       enumerable: true,
-      value: instance(emptyGenerator(true))
+      get: function get() {
+        return instance(emptyGenerator(true));
+      }
     },
     notifiers: {
       value: notifiers

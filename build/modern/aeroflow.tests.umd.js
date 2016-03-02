@@ -250,6 +250,64 @@
     });
   });
 
+  var adaptersTests = (aeroflow, execute, expect) => describe('aeroflow.adapters', () => {
+    it('Is static property', () =>
+      execute(
+        context => aeroflow.adapters,
+        context => expect(context.result).to.exist));
+
+    describe('aeroflow.adapters.get', () => {
+      it('Is function', () =>
+        execute(
+          context => aeroflow.adapters.get,
+          context => expect(context.result).to.be.a('function')));
+    });
+
+    describe('aeroflow.adapters.use', () => {
+      it('Is function', () =>
+        execute(
+          context => aeroflow.adapters.get,
+          context => expect(context.result).to.be.a('function')));
+    });
+  });
+
+  var notifiersTests = (aeroflow, execute, expect) => describe('aeroflow.notifiers', () => {
+    it('Is static property', () =>
+      execute(
+        context => aeroflow.notifiers,
+        context => expect(context.result).to.exist));
+
+    describe('aeroflow.adapters.get', () => {
+      it('Is function', () =>
+        execute(
+          context => aeroflow.adapters.get,
+          context => expect(context.result).to.be.a('function')));
+    });
+
+    describe('aeroflow.adapters.use', () => {
+      it('Is function', () =>
+        execute(
+          context => aeroflow.adapters.get,
+          context => expect(context.result).to.be.a('function')));
+    });
+  });
+
+  var operatorsTests = (aeroflow, execute, expect) => describe('aeroflow.operators', () => {
+    it('Is static property', () =>
+      execute(
+        context => aeroflow.operators,
+        context => expect(context.result).to.exist));
+
+    it('Registers new operator', () =>
+      execute(
+        context => context.operator = Function(),
+        context => {
+          aeroflow.operators.test = context.operator;
+          return aeroflow.empty.test;
+        },
+        context => expect(context.result).to.equal(context.operator)));
+  });
+
   var emptyGeneratorTests = (aeroflow, execute, expect) => describe('aeroflow.empty', () => {
     it('Gets instance of Aeroflow', () =>
       execute(
@@ -2435,6 +2493,9 @@
 
   const tests = [
     factoryTests,
+    adaptersTests,
+    notifiersTests,
+    operatorsTests,
 
     emptyGeneratorTests,
     expandGeneratorTests,

@@ -2412,7 +2412,7 @@
 
   objectDefineProperties(aeroflow, {
     adapters: { value: adapters },
-    empty: { enumerable: true, value: instance(emptyGenerator(true)) },
+    empty: { enumerable: true, get: () => instance(emptyGenerator(true)) },
     notifiers: { value: notifiers },
     operators: { value: operators }
   });
