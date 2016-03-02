@@ -1,8 +1,8 @@
 import { maxInteger, toNumber } from '../utilites';
-import { unsync } from '../unsync';
-import { valueAdapter } from '../adapters/value';
+import unsync from '../unsync';
+import valueAdapter from '../adapters/value';
 
-export function rangeGenerator(start, end, step) {
+export default function rangeGenerator(start, end, step) {
   end = toNumber(end, maxInteger);
   start = toNumber(start, 0);
   if (start === end) return valueAdapter(start);

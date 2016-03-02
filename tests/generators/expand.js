@@ -12,21 +12,21 @@ export default (aeroflow, execute, expect) => describe('aeroflow.expand', () => 
   });
 
   describe('aeroflow.expand(@expander:function)', () => {
-    it('Calls @expander with undefined, 0  and context data on first iteration', () =>
+    it('Calls @expander with undefined and 0 on first iteration', () =>
       execute(
         context => context.expander = context.spy(),
-        context => aeroflow.expand(context.expander).take(1).run(context.data),
-        context => expect(context.expander).to.have.been.calledWithExactly(undefined, 0, context.data)));
+        context => aeroflow.expand(context.expander).take(1).run(),
+        context => expect(context.expander).to.have.been.calledWith(undefined)));
 
-    it('Calls @expander with value previously returned by @expander, iteration index and context data on subsequent iterations', () =>
+    it('Calls @expander with value previously returned by @expander, iteration index on subsequent iterations', () =>
       execute(
         context => {
           context.values = [1, 2];
           context.expander = context.spy((_, index) => context.values[index]);
         },
-        context => aeroflow.expand(context.expander).take(context.values.length + 1).run(context.data),
+        context => aeroflow.expand(context.expander).take(context.values.length + 1).run(),
         context => [undefined].concat(context.values).forEach((value, index) =>
-          expect(context.expander.getCall(index)).to.have.been.calledWithExactly(value, index, context.data))));
+          expect(context.expander.getCall(index)).to.have.been.calledWith(value))));
 
     it('If @expander throws, emits only single faulty "done" with thrown error', () =>
       execute(
@@ -38,7 +38,7 @@ export default (aeroflow, execute, expect) => describe('aeroflow.expand', () => 
           expect(context.done).to.have.been.calledWith(context.error);
         }));
 
-    it('Emits "next" for each serial value returned by @expander, then not being infinite, lazy "done"', () =>
+    it('Emits "next" for each value returned by @expander, then, being limited, lazy "done"', () =>
       execute(
         context => {
           context.values = [1, 2, 3];

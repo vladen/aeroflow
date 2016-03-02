@@ -1,4 +1,4 @@
-export function errorAdapter(error) {
+export default function errorAdapter(error) {
   return (next, done) => {
     done(error);
   };

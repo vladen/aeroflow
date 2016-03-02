@@ -1,7 +1,7 @@
 import { FUNCTION, REGEXP, UNDEFINED } from '../symbols';
 import { classOf } from '../utilites';
 
-export function filterOperator(condition) {
+export default function filterOperator(condition) {
   let predicate;
   switch (classOf(condition)) {
     case FUNCTION:
@@ -20,7 +20,7 @@ export function filterOperator(condition) {
   return emitter => (next, done, context) => {
     let index = 0;
     emitter(
-      result => !predicate(result, index++, context.data) || next(result),
+      result => !predicate(result, index++) || next(result),
       done,
       context);
   };

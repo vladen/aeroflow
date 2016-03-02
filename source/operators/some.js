@@ -1,8 +1,8 @@
 import { FUNCTION, REGEXP, UNDEFINED } from '../symbols';
 import { classOf, isError } from '../utilites';
-import { unsync } from '../unsync';
+import unsync from '../unsync';
 
-export function someOperator(condition) {
+export default function someOperator(condition) {
   let predicate;
   switch (classOf(condition)) {
     case FUNCTION:
@@ -22,7 +22,7 @@ export function someOperator(condition) {
     let some = false, index = 0;
     emitter(
       result => {
-        if (!predicate(result, index++, context.data)) return true;
+        if (!predicate(result, index++)) return true;
         some = true;
         return false;
       },

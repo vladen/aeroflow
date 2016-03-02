@@ -1,8 +1,8 @@
 import { FUNCTION, REGEXP, UNDEFINED } from '../symbols';
 import { classOf, isError } from '../utilites';
-import { unsync } from '../unsync';
+import unsync from '../unsync';
 
-export function everyOperator(condition) {
+export default function everyOperator(condition) {
   let predicate;
   switch (classOf(condition)) {
     case FUNCTION:
@@ -23,7 +23,7 @@ export function everyOperator(condition) {
     emitter(
       result => {
         empty = false;
-        if (predicate(result, index++, context.data)) return true;
+        if (predicate(result, index++)) return true;
         return every = false;
       },
       result => {

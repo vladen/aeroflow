@@ -20,32 +20,32 @@
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">41.67% </span>
+        <span class="strong">93.55% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>10/24</span>
+        <span class='fraction'>29/31</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">0% </span>
+        <span class="strong">89.47% </span>
         <span class="quiet">Branches</span>
-        <span class='fraction'>0/19</span>
+        <span class='fraction'>17/19</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">0% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Functions</span>
-        <span class='fraction'>0/9</span>
+        <span class='fraction'>11/11</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">14.29% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>2/14</span>
+        <span class='fraction'>16/16</span>
       </div>
       <div class='fl pad1y'>
-        <span class="strong">4 statements</span>
+        <span class="strong">1 branch</span>
         <span class="quiet">Ignored</span>  &nbsp;&nbsp;&nbsp;&nbsp;
       </div>
     </div>
   </div>
-  <div class='status-line low'></div>
+  <div class='status-line high'></div>
 <pre><table class="coverage">
 <tr><td class="line-count quiet">1
 2
@@ -78,64 +78,79 @@
 29
 30
 31
-32</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+32
+33
+34
+35
+36
+37</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16×</span>
+<span class="cline-any cline-yes">16×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-yes">8×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { mathMin, maxInteger, toNumber } from '../utilites';
-import { unsync } from '../unsync';
-import { toArrayOperator } from './toArray';
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { isError, mathMax, mathMin, maxInteger, tie, toNumber } from '../utilites';
+import unsync from '../unsync';
 &nbsp;
-export <span class="fstat-no" title="function not covered" >function sliceOperator(begin, end) {</span>
-<span class="cstat-no" title="statement not covered" >  begin = toNumber(begin, 0);</span>
-<span class="cstat-no" title="statement not covered" >  end = toNumber(end, maxInteger);</span>
-<span class="cstat-no" title="statement not covered" >  return begin &lt; 0 || end &lt; 0</span>
-    ? <span class="fstat-no" title="function not covered" >e</span>mitter =&gt; <span class="fstat-no" title="function not covered" >(</span>next, done, context) =&gt;
-        toArrayOperator()(emitter)(<span class="fstat-no" title="function not covered" >result =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >          let index = begin &lt; 0 ? result.length + begin : begin,</span>
-            limit = end &lt; 0 ? result.length + end : mathMin(result.length, end);
-<span class="cstat-no" title="statement not covered" >          i</span></span>f (index &lt; 0) <span class="cstat-no" title="statement not covered" >index = 0;
-<span class="cstat-no" title="statement not covered" >          i</span></span>f (limit &lt; 0) <span class="cstat-no" title="statement not covered" >limit = 0;
-<span class="cstat-no" title="statement not covered" >          return index &gt;= limit || new Promise(<span class="fstat-no" title="function not covered" >resolve =&gt; {</span></span>
-<span class="cstat-no" title="statement not covered" >            !<span class="fstat-no" title="function not covered" >function proceed() {</span></span>
-<span class="cstat-no" title="statement not covered" >              w</span>hile (!unsync(next(result[index++]), proceed, resolve) &amp;&amp; index &lt; limit);
-<span class="cstat-no" title="statement not covered" >              resolve(true);</span>
-            }();
-          });
-        },
-        done,
-        context)
-    : <span class="fstat-no" title="function not covered" >e</span>mitter =&gt; <span class="fstat-no" title="function not covered" >(next, done, context) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >        let index = -1;</span>
-<span class="cstat-no" title="statement not covered" >        emitter(</span>
-<span class="fstat-no" title="function not covered" >          v</span>alue =&gt; ++index &lt; begin || (index &lt; end &amp;&amp; next(value)),
+export default function sliceOperator(begin, end) {
+  begin = toNumber(begin, 0);
+  end = toNumber(end, maxInteger);
+  return begin &lt; 0 || end &lt; 0
+    ? emitter =&gt; (next, done, context) =&gt; {
+        const buffer = [];
+        emitter(
+          result =&gt; {
+            buffer.push(result);
+            return true;
+          },
+          result =&gt; {
+            <span class="missing-if-branch" title="if path not taken" >I</span>i</span>f (isError(result)) <span class="cstat-no" title="statement not covered" >done(result);
+            else {
+              let index = mathMax(0, begin &gt; 0 ? begin : buffer.length + begin),
+                  limit = mathMax(end &gt; 0 ? mathMin(buffer.length, end) : buffer.length + end);
+              done = tie(done, result);
+              !function proceed() {
+                while (index &lt; limit) <span class="missing-if-branch" title="if path not taken" >I</span>i</span>f (unsync(next(buffer[index++]), proceed, done)) <span class="cstat-no" title="statement not covered" >return;
+                done();
+              }();
+            }
+          },
+          context);
+      }
+    : emitter =&gt; (next, done, context) =&gt; {
+        let index = -1;
+        emitter(
+          value =&gt; ++index &lt; begin || (index &lt; end &amp;&amp; next(value)),
           done,
           context);
       };
@@ -146,7 +161,7 @@ export <span class="fstat-no" title="function not covered" >function sliceOperat
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Tue Mar 01 2016 19:32:56 GMT+0300 (Belarus Standard Time)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Wed Mar 02 2016 19:37:15 GMT+0300 (Belarus Standard Time)
 </div>
 </div>
 <script src="../../../prettify.js"></script>

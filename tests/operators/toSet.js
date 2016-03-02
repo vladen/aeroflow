@@ -21,7 +21,7 @@ export default (aeroflow, execute, expect, sinon) => describe('aeroflow().toSet'
           expect(context.done).to.have.been.calledWith(true);
         }));
 
-    it('When flow is not empty, emits single "next" with set containing all unique emitted values, then single greedy "done"', () =>
+    it('When flow emits several values, emits single "next" with set containing all unique values, then single greedy "done"', () =>
       execute(
         context => context.values = [1, 3, 5, 3, 1],
         context => aeroflow(context.values).toSet().run(context.next, context.done),

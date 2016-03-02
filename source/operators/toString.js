@@ -1,11 +1,11 @@
 import { toFunction } from '../utilites';
-import { reduceOperator } from './reduce';
+import reduceOperator from './reduce';
 
-export function toStringOperator(separator) {
+export default function toStringOperator(separator) {
   separator = toFunction(separator, separator || ',');
-  return reduceOperator((string, result, index, data) =>
+  return reduceOperator((string, result, index) =>
     string.length
-      ? string + separator(result, index, data) + result
+      ? string + separator(result, index) + result
       : '' + result,
     '',
     true);

@@ -45,26 +45,26 @@ export default (aeroflow, execute, expect) => describe('aeroflow().reduce', () =
         context => aeroflow(1).reduce(context.reducer).run(),
         context => expect(context.reducer).to.have.not.been.called));
 
-    it('When flow emits several values, calls @reducer with first emitted value, second emitted value, 0 and context data on first iteration', () =>
+    it('When flow emits several values, calls @reducer with first emitted value, second emitted value and 0 on first iteration', () =>
       execute(
         context => {
           context.values = [1, 2];
           context.reducer = context.spy();
         },
-        context => aeroflow(context.values).reduce(context.reducer).run(context.data),
-        context => expect(context.reducer).to.have.been.calledWithExactly(context.values[0], context.values[1], 0, context.data)));
+        context => aeroflow(context.values).reduce(context.reducer).run(),
+        context => expect(context.reducer).to.have.been.calledWithExactly(context.values[0], context.values[1], 0)));
 
-    it('When flow is not empty, calls @reducer with result returned by @reducer on previous iteration, emitted value, index of value and context data on next iterations', () =>
+    it('When flow is not empty, calls @reducer with result returned by @reducer on previous iteration, emitted value and iteration index on next iterations', () =>
       execute(
         context => {
           context.values = [1, 2, 3];
           context.reducer = context.spy((_, value) => value);
         },
-        context => aeroflow(context.values).reduce(context.reducer).run(context.data),
+        context => aeroflow(context.values).reduce(context.reducer).run(),
         context => {
           expect(context.reducer).to.have.callCount(context.values.length - 1);
           context.values.slice(0, -1).forEach((value, index) =>
-            expect(context.reducer.getCall(index)).to.have.been.calledWithExactly(value, context.values[index + 1], index, context.data));
+            expect(context.reducer.getCall(index)).to.have.been.calledWithExactly(value, context.values[index + 1], index));
         }));
 
     it('When flow emits several values, emits single "next" with last value returned by @reducer, then emits single greedy "done"', () =>
@@ -84,30 +84,30 @@ export default (aeroflow, execute, expect) => describe('aeroflow().reduce', () =
   });
 
   describe('aeroflow().reduce(@reducer:function, @seed:function)', () => {
-    it('When flow is not empty, calls @seed with context data, calls @reducer with result returned by @seed, first emitted value, 0 and context data on first iteration', () =>
+    it('When flow is not empty, calls @seed with context data, calls @reducer with result returned by @seed, first emitted value and 0 on first iteration', () =>
       execute(
         context => {
           context.value = 42;
           context.seed = context.spy(() => context.value);
           context.reducer = context.spy();
         },
-        context => aeroflow(context.value).reduce(context.reducer, context.seed).run(context.data),
+        context => aeroflow(context.value).reduce(context.reducer, context.seed).run(),
         context => {
-          expect(context.seed).to.have.been.calledWithExactly(context.data);
-          expect(context.reducer).to.have.been.calledWithExactly(context.value, context.value, 0, context.data);
+          expect(context.seed).to.have.been.called;
+          expect(context.reducer).to.have.been.calledWithExactly(context.value, context.value, 0);
         }));
   });
 
   describe('aeroflow().reduce(@reducer:function, @seed:number)', () => {
-    it('When flow is not empty, calls @reducer with @seed, first emitted value, 0 and context data on first iteration', () =>
+    it('When flow is not empty, calls @reducer with @seed, first emitted value and 0 on first iteration', () =>
       execute(
         context => {
           context.seed = 1;
           context.value = 2;
           context.reducer = context.spy();
         },
-        context => aeroflow(context.value).reduce(context.reducer, context.seed).run(context.data),
-        context => expect(context.reducer).to.have.been.calledWithExactly(context.seed, context.value, 0, context.data)));
+        context => aeroflow(context.value).reduce(context.reducer, context.seed).run(),
+        context => expect(context.reducer).to.have.been.calledWithExactly(context.seed, context.value, 0)));
   });
 
   describe('aeroflow().reduce(@reducer:string)', () => {

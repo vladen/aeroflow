@@ -36,16 +36,15 @@ export default (aeroflow, execute, expect) => describe('aeroflow().coalesce', ()
   });
 
   describe('aeroflow().coalesce(@alternative:function)', () => {
-    it('When flow is empty, calls @alternative once with context data, emits single "next" with value returned by @alternative, then emits single greedy "done"', () =>
+    it('When flow is empty, calls @alternative once, emits single "next" with value returned by @alternative, then emits single greedy "done"', () =>
       execute(
         context => {
           context.values = [1, 2];
           context.alternative = context.spy(context.values);
         },
-        context => aeroflow.empty.coalesce(context.alternative).run(context.next, context.done, context.data),
+        context => aeroflow.empty.coalesce(context.alternative).run(context.next, context.done),
         context => {
           expect(context.alternative).to.have.been.calledOnce;
-          expect(context.alternative).to.have.been.calledWith(context.data);
           expect(context.next).to.have.callCount(context.values.length);
           context.values.forEach((value, index) =>
             expect(context.next.getCall(index)).to.have.been.calledWith(value));

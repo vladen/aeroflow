@@ -1,7 +1,7 @@
 import { isError, tie } from '../utilites';
-import { unsync } from '../unsync';
+import unsync from '../unsync';
 
-export function toSetOperator() {
+export default function toSetOperator() {
   return emitter => (next, done, context) => {
     const set = new Set;
     emitter(

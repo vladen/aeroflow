@@ -19,7 +19,7 @@ export default (aeroflow, execute, expect) => describe('aeroflow().map', () => {
           expect(context.done).to.have.been.calledWith(true);
         }));
 
-    it('When flow is not empty, emits "next" for each emitted value, then single greedy "done"', () =>
+    it('When flow is not empty, emits "next" for each value, then single greedy "done"', () =>
       execute(
         context => context.values = [1, 2],
         context => aeroflow(context.values).map().run(context.next, context.done),
@@ -40,20 +40,20 @@ export default (aeroflow, execute, expect) => describe('aeroflow().map', () => {
         context => aeroflow.empty.map(context.mapper).run(),
         context => expect(context.mapper).to.have.not.been.called));
 
-    it('When flow is not empty, calls @mapper with each emitted value, index of value and context data', () => 
+    it('When flow emits several values, calls @mapper for each value with value and its index', () => 
       execute(
         context => {
           context.values = [1, 2];
           context.mapper = context.spy();
         },
-        context => aeroflow(context.values).map(context.mapper).run(context.data),
+        context => aeroflow(context.values).map(context.mapper).run(),
         context => {
           expect(context.mapper).to.have.callCount(context.values.length);
           context.values.forEach((value, index) =>
-            expect(context.mapper.getCall(index)).to.have.been.calledWithExactly(value, index, context.data));
+            expect(context.mapper.getCall(index)).to.have.been.calledWithExactly(value, index));
         }));
 
-    it('When flow is not empty, emits "next" for each emitted value with result returned by @mapper, then single greedy "done"', () =>
+    it('When flow is not empty, emits "next" for each value with result returned by @mapper, then single greedy "done"', () =>
       execute(
         context => {
           context.mapper = value => -value;
@@ -71,7 +71,7 @@ export default (aeroflow, execute, expect) => describe('aeroflow().map', () => {
   });
 
   describe('aeroflow().map(@mapper:number)', () => {
-    it('When flow is not empty, emits "next" for each emitted value with @mapper instead of value, then single greedy "done"', () =>
+    it('When flow is not empty, emits "next" for each value with @mapper, then single greedy "done"', () =>
       execute(
         context => {
           context.mapper = 42;

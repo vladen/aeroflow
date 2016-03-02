@@ -28,7 +28,7 @@ export default (aeroflow, execute, expect) => describe('aeroflow().catch', () =>
           expect(context.done).to.have.been.calledWith(false);
         }));
 
-    it('When flow emits some values and then error, emits "next" for each serial value before error, then supresses error and emits single lazy "done" ignoring values emitted after error', () =>
+    it('When flow emits some values and then error, emits "next" for each value before error, then supresses error and emits single lazy "done" ignoring values emitted after error', () =>
       execute(
         context => context.values = [1, 2],
         context => aeroflow(context.values, context.error, context.values).catch().run(context.next, context.done),
@@ -43,7 +43,7 @@ export default (aeroflow, execute, expect) => describe('aeroflow().catch', () =>
   });
 
   describe('aeroflow().catch(@alternative:array)', () => {
-    it('When flow emits error, emits "next" for each serial value from @alternative, then single lazy "done"', () =>
+    it('When flow emits error, emits "next" for each value from @alternative, then single lazy "done"', () =>
       execute(
         context => context.alternative = [1, 2],
         context => aeroflow(context.error).catch(context.alternative).run(context.next, context.done),
@@ -70,16 +70,16 @@ export default (aeroflow, execute, expect) => describe('aeroflow().catch', () =>
         context => aeroflow('test').catch(context.alternative).run(),
         context => expect(context.alternative).not.to.have.been.called));
 
-    it('When flow emits several values and then error, calls @alternative once with emitted error and context data, then emits "next" for each serial value from result returned by @alternative, then emits single lazy "done"', () =>
+    it('When flow emits several values and then error, calls @alternative once with emitted error, then emits "next" for each value from result returned by @alternative, then emits single lazy "done"', () =>
       execute(
         context => {
           context.values = [1, 2];
           context.alternative = context.spy(context.values);
         },
-        context => aeroflow(context.values, context.error).catch(context.alternative).run(context.next, context.done, context.data),
+        context => aeroflow(context.values, context.error).catch(context.alternative).run(context.next, context.done),
         context => {
           expect(context.alternative).to.have.been.calledOnce;
-          expect(context.alternative).to.have.been.calledWith(context.error, context.data);
+          expect(context.alternative).to.have.been.calledWithExactly(context.error);
           expect(context.next).to.have.callCount(context.values.length * 2);
           context.values.forEach((value, index) => {
             expect(context.next.getCall(index)).to.have.been.calledWith(value);

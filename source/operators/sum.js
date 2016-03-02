@@ -1,5 +1,5 @@
-import { reduceOperator } from './reduce';
+import reduceOperator from './reduce';
 
-export function sumOperator() {
+export default function sumOperator() {
   return reduceOperator((sum, result) => +result + sum, 0);
 }

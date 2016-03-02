@@ -1,4 +1,4 @@
-export function distinctOperator(untilChanged) {
+export default function distinctOperator(untilChanged) {
   return emitter => untilChanged
     ? (next, done, context) => {
         let idle = true, last;

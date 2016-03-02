@@ -1,9 +1,15 @@
-import { registry } from '../registry';
+import registry from '../registry';
 import { eventEmitterNotifier } from './eventEmitter';
 import { eventTargetNotifier } from './eventTarget';
 import { observerNotifier } from './observer';
 
-export const notifiers = registry()
+const notifiers = registry()
   .use(observerNotifier)
   .use(eventTargetNotifier)
   .use(eventEmitterNotifier);
+
+export {
+  eventEmitterNotifier, eventTargetNotifier, observerNotifier
+};
+
+export default notifiers;

@@ -1,7 +1,7 @@
 import { constant, isError, tie, toFunction } from '../utilites';
-import { iterableAdapter } from '../adapters/iterable';
+import iterableAdapter from '../adapters/iterable';
 
-export function groupOperator(selectors) {
+export default function groupOperator(selectors) {
   selectors = selectors.length
     ? selectors.map(toFunction)
     : [constant];
@@ -12,7 +12,7 @@ export function groupOperator(selectors) {
       value => {
         let ancestor = groups, descendant;
         for (let i = -1; ++i <= limit;) {
-          let key = selectors[i](value, index++, context.data);
+          let key = selectors[i](value, index++);
           descendant = ancestor.get(key);
           if (!descendant) {
             descendant = i === limit ? [] : new Map;

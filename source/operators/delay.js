@@ -1,7 +1,7 @@
 import { toDelay, toFunction } from '../utilites';
-import { unsync } from '../unsync';
+import unsync from '../unsync';
 
-export function delayOperator(interval) {
+export default function delayOperator(interval) {
   const delayer = toFunction(interval);
   return emitter => (next, done, context) => {
     let index = 0;
@@ -14,7 +14,7 @@ export function delayOperator(interval) {
           catch (error) {
             reject(error);
           }
-        }, toDelay(delayer(result, index++, context.data), 1000));
+        }, toDelay(delayer(result, index++), 1000));
       }),
       done,
       context);

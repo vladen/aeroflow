@@ -21,7 +21,7 @@ export default (aeroflow, execute, expect) => describe('aeroflow().count', () =>
           expect(context.done).to.have.been.calledWith(true);
         }));
 
-    it('When flow is not empty, emits single "next" with number of values emitted by flow, then single greedy "done"', () =>
+    it('When flow is not empty, emits single "next" with count of values, then single greedy "done"', () =>
       execute(
         context => context.values = [1, 2, 3],
         context => aeroflow(context.values).count().run(context.next, context.done),

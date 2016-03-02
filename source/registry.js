@@ -1,7 +1,7 @@
-import { FUNCTION, NUMBER, STRING } from './symbols';
+import { FUNCTION, NUMBER, STRING, SYMBOL } from './symbols';
 import { classOf, isFunction, objectDefineProperties } from './utilites';
 
-export function registry() {
+export default function registry() {
   const list = [];
   return objectDefineProperties(list, {
     get: { value: get },
@@ -25,6 +25,7 @@ export function registry() {
         else list.splice(key, 1);
         break;
       case STRING:
+      case SYMBOL:
         if (isFunction(functor)) list[key] = functor;
         else delete list[key];
         break;

@@ -1,7 +1,7 @@
 import { mathFloor } from '../utilites';
-import { toArrayOperator } from './toArray';
+import toArrayOperator from './toArray';
 
-export function meanOperator() {
+export default function meanOperator() {
   return emitter => (next, done, context) => toArrayOperator()(emitter)(
     result => {
       if (!result.length) return true;

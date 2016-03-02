@@ -21,7 +21,7 @@ export default (aeroflow, execute, expect) => describe('aeroflow().toArray', () 
           expect(context.done).to.have.been.calledWith(true);
         }));
 
-    it('When flow is not empty, emits single "next" with array containing all emitted values, then emits single greedy "done"', () =>
+    it('When flow emits several values, emits single "next" with array containing all values, then emits single greedy "done"', () =>
       execute(
         context => context.values = [1, 2],
         context => aeroflow(context.values).toArray().run(context.next, context.done),

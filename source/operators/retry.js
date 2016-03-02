@@ -1,6 +1,6 @@
 import { isError, identity, toNumber } from '../utilites';
 
-export function retryOperator(attempts) {
+export default function retryOperator(attempts) {
   attempts = toNumber(attempts, 1);
   if (!attempts) return identity;
   return emitter => (next, done, context) => {

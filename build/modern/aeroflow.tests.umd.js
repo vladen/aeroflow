@@ -7,9 +7,12 @@
   var factoryTests = (aeroflow, execute, expect) => describe('aeroflow', () => {
     it('Is function', () =>
       execute(
-        context => {}, /* arrange (optional) */
-        context => aeroflow, /* act */
-        context => expect(context.result).to.be.a('function') /* assert */ ));
+        /* arrange (optional) */
+        context => {},
+        /* act */
+        context => aeroflow,
+        /* assert */
+        context => expect(context.result).to.be.a('function')));
 
     describe('aeroflow()', () => {
       it('Returns instance of Aeroflow', () =>
@@ -37,7 +40,7 @@
             expect(context.done).to.have.been.calledWith(true);
           }));
 
-      it('When @source is not empty, emits "next" for each serial value from @source, then single greedy "done"', () =>
+      it('When @source is not empty, emits "next" for each value from @source, then single greedy "done"', () =>
         execute(
           context => context.values = [1, 2],
           context => aeroflow(aeroflow(context.values)).run(context.next, context.done),
@@ -61,7 +64,7 @@
             expect(context.done).to.have.been.calledWith(true);
           }));
 
-      it('When @source is not empty, emits "next" for each serial value from @source, then single greedy "done"', () =>
+      it('When @source is not empty, emits "next" for each value from @source, then single greedy "done"', () =>
         execute(
           context => context.values = [1, 2],
           context => aeroflow(context.values).run(context.next, context.done),
@@ -101,27 +104,28 @@
     });
 
     describe('aeroflow(@source:function)', () => {
-      it('Calls @source once with context data', () =>
+      it('Calls @source once', () =>
         execute(
           context => context.source = context.spy(),
-          context => aeroflow(context.source).run(context.data),
-          context => {
-            expect(context.source).to.have.been.calledOnce;
-            expect(context.source).to.have.been.calledWith(context.data);
-          }));
+          context => aeroflow(context.source).run(),
+          context => expect(context.source).to.have.been.calledOnce));
 
-      it('When @source returns value, emits single "next" with value, then single greedy "done"', () =>
+      it('If @source returns value, emits single "next" with returned value, then single greedy "done"', () =>
         execute(
-          context => aeroflow(() => context.data).run(context.next, context.done),
+          context => {
+            context.value = 42;
+            context.source = () => context.value;
+          },
+          context => aeroflow(context.source).run(context.next, context.done),
           context => {
             expect(context.next).to.have.been.calledOnce;
-            expect(context.next).to.have.been.calledWith(context.data);
+            expect(context.next).to.have.been.calledWith(context.value);
+            expect(context.done).to.have.been.calledAfter(context.next);
             expect(context.done).to.have.been.calledOnce;
             expect(context.done).to.have.been.calledWith(true);
-            expect(context.done).to.have.been.calledAfter(context.next);
           }));
 
-      it('When @source throws, emits only single faulty "done" with thrown error', () =>
+      it('If @source throws, emits only single faulty "done" with thrown error', () =>
         execute(
           context => aeroflow(context.fail).run(context.next, context.done),
           context => {
@@ -141,7 +145,7 @@
             expect(context.done).to.have.been.calledWith(true);
           }));
 
-      it('When @source is not empty, emits "next" for each serial value from @source, then single greedy "done"', () =>
+      it('When @source is not empty, emits "next" for each value from @source, then single greedy "done"', () =>
         execute(
           context => context.values = [1, 2],
           context => aeroflow(new Set(context.values)).run(context.next, context.done),
@@ -149,9 +153,9 @@
             expect(context.next).to.have.callCount(context.values.length);
             context.values.forEach(
               (value, index) => expect(context.next.getCall(index)).to.have.been.calledWith(value));
+            expect(context.done).to.have.been.calledAfter(context.next);
             expect(context.done).to.have.been.calledOnce;
             expect(context.done).to.have.been.calledWith(true);
-            expect(context.done).to.have.been.calledAfter(context.next);
           }));
     });
 
@@ -186,9 +190,9 @@
           context => {
             expect(context.next).to.have.been.calledOnce;
             expect(context.next).to.have.been.calledWith(context.value);
+            expect(context.done).to.have.been.calledAfter(context.next);
             expect(context.done).to.have.been.calledOnce;
             expect(context.done).to.have.been.calledWith(true);
-            expect(context.done).to.have.been.calledAfter(context.next);
           }));
     });
 
@@ -200,9 +204,9 @@
           context => {
             expect(context.next).to.have.been.calledOnce;
             expect(context.next).to.have.been.calledWith(context.source);
+            expect(context.done).to.have.been.calledAfter(context.next);
             expect(context.done).to.have.been.calledOnce;
             expect(context.done).to.have.been.calledWith(true);
-            expect(context.done).to.have.been.calledAfter(context.next);
           }));
     });
 
@@ -214,14 +218,14 @@
           context => {
             expect(context.next).to.have.been.calledOnce;
             expect(context.next).to.have.been.calledWith(context.source);
+            expect(context.done).to.have.been.calledAfter(context.next);
             expect(context.done).to.have.been.calledOnce;
             expect(context.done).to.have.been.calledWith(true);
-            expect(context.done).to.have.been.calledAfter(context.next);
           }));
     });
 
     describe('aeroflow(...@sources)', () => {
-      it('Emits "next" with each serial value from @sources, then single greedy "done"', () =>
+      it('Emits "next" with each value from @sources, then single greedy "done"', () =>
         execute(
           context => {
             const values = context.values = [true, new Date, null, 42, 'test', Symbol('test'), undefined];
@@ -239,9 +243,9 @@
             expect(context.next).to.have.callCount(context.values.length);
             context.values.forEach((value, index) =>
               expect(context.next.getCall(index)).to.have.been.calledWith(value));
+            expect(context.done).to.have.been.calledAfter(context.next);
             expect(context.done).to.have.been.calledOnce;
             expect(context.done).to.have.been.calledWith(true);
-            expect(context.done).to.have.been.calledAfter(context.next);
           }));
     });
   });
@@ -258,7 +262,7 @@
         context => {
           expect(context.next).to.have.not.been.called;
           expect(context.done).to.have.been.calledOnce;
-          expect(context.done).to.have.been.calledWith(true);
+          expect(context.done).to.have.been.calledWithExactly(true);
         }));
   });
 
@@ -276,21 +280,21 @@
     });
 
     describe('aeroflow.expand(@expander:function)', () => {
-      it('Calls @expander with undefined, 0  and context data on first iteration', () =>
+      it('Calls @expander with undefined and 0 on first iteration', () =>
         execute(
           context => context.expander = context.spy(),
-          context => aeroflow.expand(context.expander).take(1).run(context.data),
-          context => expect(context.expander).to.have.been.calledWithExactly(undefined, 0, context.data)));
+          context => aeroflow.expand(context.expander).take(1).run(),
+          context => expect(context.expander).to.have.been.calledWith(undefined)));
 
-      it('Calls @expander with value previously returned by @expander, iteration index and context data on subsequent iterations', () =>
+      it('Calls @expander with value previously returned by @expander, iteration index on subsequent iterations', () =>
         execute(
           context => {
             context.values = [1, 2];
             context.expander = context.spy((_, index) => context.values[index]);
           },
-          context => aeroflow.expand(context.expander).take(context.values.length + 1).run(context.data),
+          context => aeroflow.expand(context.expander).take(context.values.length + 1).run(),
           context => [undefined].concat(context.values).forEach((value, index) =>
-            expect(context.expander.getCall(index)).to.have.been.calledWithExactly(value, index, context.data))));
+            expect(context.expander.getCall(index)).to.have.been.calledWith(value))));
 
       it('If @expander throws, emits only single faulty "done" with thrown error', () =>
         execute(
@@ -302,7 +306,7 @@
             expect(context.done).to.have.been.calledWith(context.error);
           }));
 
-      it('Emits "next" for each serial value returned by @expander, then not being infinite, lazy "done"', () =>
+      it('Emits "next" for each value returned by @expander, then, being limited, lazy "done"', () =>
         execute(
           context => {
             context.values = [1, 2, 3];
@@ -498,7 +502,7 @@
             expect(context.done).to.have.been.calledWith(false);
           }));
 
-      it('When flow emits some values and then error, emits "next" for each serial value before error, then supresses error and emits single lazy "done" ignoring values emitted after error', () =>
+      it('When flow emits some values and then error, emits "next" for each value before error, then supresses error and emits single lazy "done" ignoring values emitted after error', () =>
         execute(
           context => context.values = [1, 2],
           context => aeroflow(context.values, context.error, context.values).catch().run(context.next, context.done),
@@ -513,7 +517,7 @@
     });
 
     describe('aeroflow().catch(@alternative:array)', () => {
-      it('When flow emits error, emits "next" for each serial value from @alternative, then single lazy "done"', () =>
+      it('When flow emits error, emits "next" for each value from @alternative, then single lazy "done"', () =>
         execute(
           context => context.alternative = [1, 2],
           context => aeroflow(context.error).catch(context.alternative).run(context.next, context.done),
@@ -540,16 +544,16 @@
           context => aeroflow('test').catch(context.alternative).run(),
           context => expect(context.alternative).not.to.have.been.called));
 
-      it('When flow emits several values and then error, calls @alternative once with emitted error and context data, then emits "next" for each serial value from result returned by @alternative, then emits single lazy "done"', () =>
+      it('When flow emits several values and then error, calls @alternative once with emitted error, then emits "next" for each value from result returned by @alternative, then emits single lazy "done"', () =>
         execute(
           context => {
             context.values = [1, 2];
             context.alternative = context.spy(context.values);
           },
-          context => aeroflow(context.values, context.error).catch(context.alternative).run(context.next, context.done, context.data),
+          context => aeroflow(context.values, context.error).catch(context.alternative).run(context.next, context.done),
           context => {
             expect(context.alternative).to.have.been.calledOnce;
-            expect(context.alternative).to.have.been.calledWith(context.error, context.data);
+            expect(context.alternative).to.have.been.calledWithExactly(context.error);
             expect(context.next).to.have.callCount(context.values.length * 2);
             context.values.forEach((value, index) => {
               expect(context.next.getCall(index)).to.have.been.calledWith(value);
@@ -614,16 +618,15 @@
     });
 
     describe('aeroflow().coalesce(@alternative:function)', () => {
-      it('When flow is empty, calls @alternative once with context data, emits single "next" with value returned by @alternative, then emits single greedy "done"', () =>
+      it('When flow is empty, calls @alternative once, emits single "next" with value returned by @alternative, then emits single greedy "done"', () =>
         execute(
           context => {
             context.values = [1, 2];
             context.alternative = context.spy(context.values);
           },
-          context => aeroflow.empty.coalesce(context.alternative).run(context.next, context.done, context.data),
+          context => aeroflow.empty.coalesce(context.alternative).run(context.next, context.done),
           context => {
             expect(context.alternative).to.have.been.calledOnce;
-            expect(context.alternative).to.have.been.calledWith(context.data);
             expect(context.next).to.have.callCount(context.values.length);
             context.values.forEach((value, index) =>
               expect(context.next.getCall(index)).to.have.been.calledWith(value));
@@ -700,7 +703,7 @@
             expect(context.done).to.have.been.calledWith(true);
           }));
 
-      it('When flow is not empty, emits single "next" with number of values emitted by flow, then single greedy "done"', () =>
+      it('When flow is not empty, emits single "next" with count of values, then single greedy "done"', () =>
         execute(
           context => context.values = [1, 2, 3],
           context => aeroflow(context.values).count().run(context.next, context.done),
@@ -778,17 +781,17 @@
           context => aeroflow.empty.every(context.condition).run(),
           context => expect(context.condition).to.have.not.been.called));
 
-      it('When flow is not empty, calls @condition with each emitted value, index of value and context data until @condition returns falsey result', () => 
+      it('When flow is not empty, calls @condition with each emitted value and its index until @condition returns falsey result', () => 
         execute(
           context => {
             context.values = [1, 2];
             context.condition = context.spy((_, index) => index !== context.values.length - 1);
           },
-          context => aeroflow(context.values, 3).every(context.condition).run(context.data),
+          context => aeroflow(context.values, 3).every(context.condition).run(),
           context => {
             expect(context.condition).to.have.callCount(context.values.length);
             context.values.forEach((value, index) =>
-              expect(context.condition.getCall(index)).to.have.been.calledWithExactly(value, index, context.data));
+              expect(context.condition.getCall(index)).to.have.been.calledWith(value, index));
           }));
 
       it('When flow emits several values and all values pass the @condition test, emits single "next" with true, then single greedy "done"', () =>
@@ -908,7 +911,7 @@
             expect(context.done).to.have.been.calledWith(true);
           }));
 
-      it('When flow is not empty, emits "next" for each truthy value, then single greedy "done"', () =>
+      it('When flow emits several values, emits "next" for each truthy value, then single greedy "done"', () =>
         execute(
           context => context.values = [0, 1, false, true, '', 'test'],
           context => aeroflow(context.values).filter().run(context.next, context.done),
@@ -930,20 +933,20 @@
           context => aeroflow.empty.filter(context.condition).run(),
           context => expect(context.condition).to.have.not.been.called));
 
-      it('When flow is not empty, calls @condition with each emitted value, index of value and context data', () => 
+      it('When flow is not empty, calls @condition with each emitted value and its index', () => 
         execute(
           context => {
             context.values = [1, 2];
             context.condition = context.spy();
           },
-          context => aeroflow(context.values).filter(context.condition).run(context.data),
+          context => aeroflow(context.values).filter(context.condition).run(),
           context => {
             expect(context.condition).to.have.callCount(context.values.length);
             context.values.forEach((value, index) =>
-              expect(context.condition.getCall(index)).to.have.been.calledWithExactly(value, index, context.data));
+              expect(context.condition.getCall(index)).to.have.been.calledWithExactly(value, index));
           }));
 
-      it('When flow is not empty, emits "next" for each value passing the @condition test, then single greedy "done"', () =>
+      it('When flow emits several values, emits "next" for each value passed the @condition test, then single greedy "done"', () =>
         execute(
           context => {
             context.condition = value => 0 === value % 2;
@@ -962,7 +965,7 @@
     });
 
     describe('aeroflow().filter(@condition:regex)', () => {
-      it('When flow is not empty, emits "next" for each value passing the @condition test, then single greedy "done"', () =>
+      it('When flow emits several values, emits "next" for each value passed the @condition test, then single greedy "done"', () =>
         execute(
           context => {
             context.condition = /b/;
@@ -981,7 +984,7 @@
     });
 
     describe('aeroflow().filter(@condition:number)', () => {
-      it('When flow is not empty, emits "next" for each value equal to @condition, then single greedy "done"', () =>
+      it('When flow emits several values, emits "next" for each value equal to @condition, then single greedy "done"', () =>
         execute(
           context => {
             context.condition = 2;
@@ -1021,7 +1024,7 @@
             expect(context.done).to.have.been.calledWith(true);
           }));
 
-      it('When flow is not empty, emits "next" for each emitted value, then single greedy "done"', () =>
+      it('When flow is not empty, emits "next" for each value, then single greedy "done"', () =>
         execute(
           context => context.values = [1, 2],
           context => aeroflow(context.values).map().run(context.next, context.done),
@@ -1042,20 +1045,20 @@
           context => aeroflow.empty.map(context.mapper).run(),
           context => expect(context.mapper).to.have.not.been.called));
 
-      it('When flow is not empty, calls @mapper with each emitted value, index of value and context data', () => 
+      it('When flow emits several values, calls @mapper for each value with value and its index', () => 
         execute(
           context => {
             context.values = [1, 2];
             context.mapper = context.spy();
           },
-          context => aeroflow(context.values).map(context.mapper).run(context.data),
+          context => aeroflow(context.values).map(context.mapper).run(),
           context => {
             expect(context.mapper).to.have.callCount(context.values.length);
             context.values.forEach((value, index) =>
-              expect(context.mapper.getCall(index)).to.have.been.calledWithExactly(value, index, context.data));
+              expect(context.mapper.getCall(index)).to.have.been.calledWithExactly(value, index));
           }));
 
-      it('When flow is not empty, emits "next" for each emitted value with result returned by @mapper, then single greedy "done"', () =>
+      it('When flow is not empty, emits "next" for each value with result returned by @mapper, then single greedy "done"', () =>
         execute(
           context => {
             context.mapper = value => -value;
@@ -1073,7 +1076,7 @@
     });
 
     describe('aeroflow().map(@mapper:number)', () => {
-      it('When flow is not empty, emits "next" for each emitted value with @mapper instead of value, then single greedy "done"', () =>
+      it('When flow is not empty, emits "next" for each value with @mapper, then single greedy "done"', () =>
         execute(
           context => {
             context.mapper = 42;
@@ -1270,26 +1273,26 @@
           context => aeroflow(1).reduce(context.reducer).run(),
           context => expect(context.reducer).to.have.not.been.called));
 
-      it('When flow emits several values, calls @reducer with first emitted value, second emitted value, 0 and context data on first iteration', () =>
+      it('When flow emits several values, calls @reducer with first emitted value, second emitted value and 0 on first iteration', () =>
         execute(
           context => {
             context.values = [1, 2];
             context.reducer = context.spy();
           },
-          context => aeroflow(context.values).reduce(context.reducer).run(context.data),
-          context => expect(context.reducer).to.have.been.calledWithExactly(context.values[0], context.values[1], 0, context.data)));
+          context => aeroflow(context.values).reduce(context.reducer).run(),
+          context => expect(context.reducer).to.have.been.calledWithExactly(context.values[0], context.values[1], 0)));
 
-      it('When flow is not empty, calls @reducer with result returned by @reducer on previous iteration, emitted value, index of value and context data on next iterations', () =>
+      it('When flow is not empty, calls @reducer with result returned by @reducer on previous iteration, emitted value and iteration index on next iterations', () =>
         execute(
           context => {
             context.values = [1, 2, 3];
             context.reducer = context.spy((_, value) => value);
           },
-          context => aeroflow(context.values).reduce(context.reducer).run(context.data),
+          context => aeroflow(context.values).reduce(context.reducer).run(),
           context => {
             expect(context.reducer).to.have.callCount(context.values.length - 1);
             context.values.slice(0, -1).forEach((value, index) =>
-              expect(context.reducer.getCall(index)).to.have.been.calledWithExactly(value, context.values[index + 1], index, context.data));
+              expect(context.reducer.getCall(index)).to.have.been.calledWithExactly(value, context.values[index + 1], index));
           }));
 
       it('When flow emits several values, emits single "next" with last value returned by @reducer, then emits single greedy "done"', () =>
@@ -1309,30 +1312,30 @@
     });
 
     describe('aeroflow().reduce(@reducer:function, @seed:function)', () => {
-      it('When flow is not empty, calls @seed with context data, calls @reducer with result returned by @seed, first emitted value, 0 and context data on first iteration', () =>
+      it('When flow is not empty, calls @seed with context data, calls @reducer with result returned by @seed, first emitted value and 0 on first iteration', () =>
         execute(
           context => {
             context.value = 42;
             context.seed = context.spy(() => context.value);
             context.reducer = context.spy();
           },
-          context => aeroflow(context.value).reduce(context.reducer, context.seed).run(context.data),
+          context => aeroflow(context.value).reduce(context.reducer, context.seed).run(),
           context => {
-            expect(context.seed).to.have.been.calledWithExactly(context.data);
-            expect(context.reducer).to.have.been.calledWithExactly(context.value, context.value, 0, context.data);
+            expect(context.seed).to.have.been.called;
+            expect(context.reducer).to.have.been.calledWithExactly(context.value, context.value, 0);
           }));
     });
 
     describe('aeroflow().reduce(@reducer:function, @seed:number)', () => {
-      it('When flow is not empty, calls @reducer with @seed, first emitted value, 0 and context data on first iteration', () =>
+      it('When flow is not empty, calls @reducer with @seed, first emitted value and 0 on first iteration', () =>
         execute(
           context => {
             context.seed = 1;
             context.value = 2;
             context.reducer = context.spy();
           },
-          context => aeroflow(context.value).reduce(context.reducer, context.seed).run(context.data),
-          context => expect(context.reducer).to.have.been.calledWithExactly(context.seed, context.value, 0, context.data)));
+          context => aeroflow(context.value).reduce(context.reducer, context.seed).run(),
+          context => expect(context.reducer).to.have.been.calledWithExactly(context.seed, context.value, 0)));
     });
 
     describe('aeroflow().reduce(@reducer:string)', () => {
@@ -1418,7 +1421,7 @@
     });
 
     describe('aeroflow().skip(false)', () => {
-      it('When flow is not empty, emits "next" for each emitted value, then emits single greedy "done"', () =>
+      it('When flow emits several values, emits "next" for each value, then emits single greedy "done"', () =>
         execute(
           context => context.values = [1, 2],
           context => aeroflow(context.values).skip(false).run(context.next, context.done),
@@ -1450,20 +1453,20 @@
           context => aeroflow.empty.skip(context.condition).run(),
           context => expect(context.condition).to.have.not.been.called));
 
-      it('When flow is not empty, calls @condition with each emitted value, index of value and context data while it returns truthy', () => 
+      it('When flow emits several values, calls @condition for each value and its index until it returns falsey', () => 
         execute(
           context => {
             context.values = [1, 2];
             context.condition = context.spy((_, index) => index < context.values.length - 1);
           },
-          context => aeroflow(context.values, 3).skip(context.condition).run(context.data),
+          context => aeroflow(context.values, 3).skip(context.condition).run(),
           context => {
             expect(context.condition).to.have.callCount(context.values.length);
             context.values.forEach((value, index) =>
-              expect(context.condition.getCall(index)).to.have.been.calledWithExactly(value, index, context.data));
+              expect(context.condition.getCall(index)).to.have.been.calledWithExactly(value, index));
           }));
 
-      it('When flow emits several values, skips values while @condition returns truthy, then emits "next" for all remaining values, then emits single greedy "done"', () =>
+      it('When flow emits several values, skips values until @condition returns falsey, then emits "next" for all remaining values, then emits single greedy "done"', () =>
         execute(
           context => {
             context.condition = value => value < 2;
@@ -1508,6 +1511,152 @@
           context => {
             expect(context.next).to.have.callCount(context.values.length + context.condition);
             context.values.slice(0, -context.condition).forEach((value, index) =>
+              expect(context.next.getCall(index)).to.have.been.calledWith(value));
+            expect(context.done).to.have.been.calledAfter(context.next);
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+          }));
+    });
+  });
+
+  var sliceOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().slice', () => {
+    it('Is instance method', () =>
+      execute(
+        context => aeroflow.empty.slice,
+        context => expect(context.result).to.be.a('function')));
+
+    describe('aeroflow().slice()', () => {
+      it('Returns instance of Aeroflow', () =>
+        execute(
+          context => aeroflow.empty.slice(),
+          context => expect(context.result).to.be.an('Aeroflow')));
+
+      it('When flow is empty, emits only single greedy "done"', () =>
+        execute(
+          context => aeroflow.empty.slice().run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.not.been.called;
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+          }));
+
+      it('When flow emits several values, emits "next" for each value, then single greedy "done"', () =>
+        execute(
+          context => context.values = [1, 2],
+          context => aeroflow(context.values).slice().run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.callCount(context.values.length);
+            context.values.forEach((value, index) => 
+              expect(context.next.getCall(index)).to.have.been.calledWith(value));
+            expect(context.done).to.have.been.calledAfter(context.next);
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+          }));
+    });
+
+    describe('aeroflow().slice(@begin:number)', () => {
+      it('When flow emits several values and @begin is positive, emits "next" for each of values starting from @begin, then emits single greedy "done"', () =>
+        execute(
+          context => {
+            context.begin = 1;
+            context.values = [1, 2, 3, 4];
+          },
+          context => aeroflow(context.values).slice(context.begin).run(context.next, context.done),
+          context => {
+            const sliced = context.values.slice(context.begin);
+            expect(context.next).to.have.callCount(sliced.length);
+            sliced.forEach((value, index) =>
+              expect(context.next.getCall(index)).to.have.been.calledWith(value));
+            expect(context.done).to.have.been.calledAfter(context.next);
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+          }));
+
+      it('When flow emits several values and @begin is negative, emits "next" for each of values starting from reversed @begin, then emits single greedy "done"', () =>
+        execute(
+          context => {
+            context.begin = -2;
+            context.values = [1, 2, 3, 4];
+          },
+          context => aeroflow(context.values).slice(context.begin).run(context.next, context.done),
+          context => {
+            const sliced = context.values.slice(context.begin);
+            expect(context.next).to.have.callCount(sliced.length);
+            sliced.forEach((value, index) =>
+              expect(context.next.getCall(index)).to.have.been.calledWith(value));
+            expect(context.done).to.have.been.calledAfter(context.next);
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+          }));
+    });
+
+    describe('aeroflow().slice(@begin:number, @end:number)', () => {
+      it('When flow emits several values and both @start and @end are positive, emits "next" for each of values between @begin and @end, then emits single lazy "done"', () =>
+        execute(
+          context => {
+            context.begin = 1;
+            context.end = 3;
+            context.values = [1, 2, 3, 4];
+          },
+          context => aeroflow(context.values).slice(context.begin, context.end).run(context.next, context.done),
+          context => {
+            const sliced = context.values.slice(context.begin, context.end);
+            expect(context.next).to.have.callCount(sliced.length);
+            sliced.forEach((value, index) =>
+              expect(context.next.getCall(index)).to.have.been.calledWith(value));
+            expect(context.done).to.have.been.calledAfter(context.next);
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(false);
+          }));
+
+      it('When flow emits several values and @begin is positive but @end is negative, emits "next" for each of values between @begin and reversed @end, then emits single greedy "done"', () =>
+        execute(
+          context => {
+            context.begin = 1;
+            context.end = -1;
+            context.values = [1, 2, 3, 4];
+          },
+          context => aeroflow(context.values).slice(context.begin, context.end).run(context.next, context.done),
+          context => {
+            const sliced = context.values.slice(context.begin, context.end);
+            expect(context.next).to.have.callCount(sliced.length);
+            sliced.forEach((value, index) =>
+              expect(context.next.getCall(index)).to.have.been.calledWith(value));
+            expect(context.done).to.have.been.calledAfter(context.next);
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+          }));
+
+      it('When flow emits several values and @begin is negative but @end is positive, emits "next" for each of values between reversed @begin and @end, then emits single greedy "done"', () =>
+        execute(
+          context => {
+            context.begin = -3;
+            context.end = 3;
+            context.values = [1, 2, 3, 4];
+          },
+          context => aeroflow(context.values).slice(context.begin, context.end).run(context.next, context.done),
+          context => {
+            const sliced = context.values.slice(context.begin, context.end);
+            expect(context.next).to.have.callCount(sliced.length);
+            sliced.forEach((value, index) =>
+              expect(context.next.getCall(index)).to.have.been.calledWith(value));
+            expect(context.done).to.have.been.calledAfter(context.next);
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+          }));
+
+      it('When flow emits several values and both @start and @end are negative, emits "next" for each of values between reversed @begin and reversed @end, then emits single greedy "done"', () =>
+        execute(
+          context => {
+            context.begin = -3;
+            context.end = -1;
+            context.values = [1, 2, 3, 4];
+          },
+          context => aeroflow(context.values).slice(context.begin, context.end).run(context.next, context.done),
+          context => {
+            const sliced = context.values.slice(context.begin, context.end);
+            expect(context.next).to.have.callCount(sliced.length);
+            sliced.forEach((value, index) =>
               expect(context.next.getCall(index)).to.have.been.calledWith(value));
             expect(context.done).to.have.been.calledAfter(context.next);
             expect(context.done).to.have.been.calledOnce;
@@ -1571,17 +1720,17 @@
           context => aeroflow.empty.some(context.condition).run(),
           context => expect(context.condition).to.have.not.been.called));
 
-      it('When flow is not empty, calls @condition with each emitted value, index of value and context data until @condition returns truthy result', () => 
+      it('When flow is not empty, calls @condition with each emitted value and its index until @condition returns truthy result', () => 
         execute(
           context => {
             context.values = [1, 2];
             context.condition = context.spy((_, index) => index === context.values.length - 1);
           },
-          context => aeroflow(context.values, 3).some(context.condition).run(context.data),
+          context => aeroflow(context.values, 3).some(context.condition).run(),
           context => {
             expect(context.condition).to.have.callCount(context.values.length);
             context.values.forEach((value, index) =>
-              expect(context.condition.getCall(index)).to.have.been.calledWithExactly(value, index, context.data));
+              expect(context.condition.getCall(index)).to.have.been.calledWithExactly(value, index));
           }));
 
       it('When flow emits several values and at least one value passes the @condition test, emits single "next" with true, then single lazy "done"', () =>
@@ -1749,7 +1898,7 @@
             expect(context.done).to.have.been.calledWith(true);
           }));
 
-      it('When flow is not empty, emits "next" for each emitted value, then emits single greedy "done"', () =>
+      it('When flow emits several values, emits "next" for each value, then emits single greedy "done"', () =>
         execute(
           context => context.values = [1, 2],
           context => aeroflow(context.values).take().run(context.next, context.done),
@@ -1775,7 +1924,7 @@
     });
 
     describe('aeroflow().take(true)', () => {
-      it('When flow is not empty, emits "next" for each emitted value, then emits single greedy "done"', () =>
+      it('When flow emits several values, emits "next" for each value, then emits single greedy "done"', () =>
         execute(
           context => context.values = [1, 2],
           context => aeroflow(context.values).take(true).run(context.next, context.done),
@@ -1796,20 +1945,20 @@
           context => aeroflow.empty.take(context.condition).run(),
           context => expect(context.condition).to.have.not.been.called));
 
-      it('When flow is not empty, calls @condition with each emitted value, index of value and context data while it returns truthy', () => 
+      it('When flow emits several values, calls @condition for each value with value and its index until it returns falsey', () => 
         execute(
           context => {
             context.values = [1, 2];
             context.condition = context.spy((_, index) => index < context.values.length - 1);
           },
-          context => aeroflow(context.values, 3).take(context.condition).run(context.data),
+          context => aeroflow(context.values, 3).take(context.condition).run(),
           context => {
             expect(context.condition).to.have.callCount(context.values.length);
             context.values.forEach((value, index) =>
-              expect(context.condition.getCall(index)).to.have.been.calledWithExactly(value, index, context.data));
+              expect(context.condition.getCall(index)).to.have.been.calledWithExactly(value, index));
           }));
 
-      it('When flow emits several values, then emits "next" for each emitted value while @condition returns truthy and skips remaining values, then emits single lazy "done"', () =>
+      it('When flow emits several values, then emits "next" for each value until @condition returns falsey and skips remaining values, then emits single lazy "done"', () =>
         execute(
           context => {
             context.condition = value => value < 3;
@@ -1885,7 +2034,7 @@
             expect(context.done).to.have.been.calledWith(true);
           }));
 
-      it('When flow is not empty, emits single "next" with array containing all emitted values, then emits single greedy "done"', () =>
+      it('When flow emits several values, emits single "next" with array containing all values, then emits single greedy "done"', () =>
         execute(
           context => context.values = [1, 2],
           context => aeroflow(context.values).toArray().run(context.next, context.done),
@@ -1922,7 +2071,7 @@
             expect(context.done).to.have.been.calledWith(true);
           }));
 
-      it('When flow is not empty, emits single "next" with set containing all unique emitted values, then single greedy "done"', () =>
+      it('When flow emits several values, emits single "next" with set containing all unique values, then single greedy "done"', () =>
         execute(
           context => context.values = [1, 3, 5, 3, 1],
           context => aeroflow(context.values).toSet().run(context.next, context.done),
@@ -1959,7 +2108,7 @@
             expect(context.done).to.have.been.calledWith(true);
           }));
 
-      it('When flow emits single number, emits single "next" with emitted number converted to string, then single greedy "done"', () =>
+      it('When flow emits single number, emits single "next" with number converted to string, then single greedy "done"', () =>
         execute(
           context => context.number = 42,
           context => aeroflow(context.number).toString().run(context.next, context.done),
@@ -1971,7 +2120,7 @@
             expect(context.done).to.have.been.calledWith(true);
           }));
 
-      it('When flow emits single string, emits single "next" with emitted string, then single greedy "done"', () =>
+      it('When flow emits single string, emits single "next" with string, then single greedy "done"', () =>
         execute(
           context => context.string = 'test',
           context => aeroflow(context.string).toString().run(context.next, context.done),
@@ -1983,7 +2132,7 @@
             expect(context.done).to.have.been.calledWith(true);
           }));
 
-      it('When flow emits several numbers, emits single "next" with emitted numbers converted to strings and concatenated via ",", then single greedy "done"', () =>
+      it('When flow emits several numbers, emits single "next" with numbers converted to strings and concatenated via ",", then single greedy "done"', () =>
         execute(
           context => context.numbers = [1, 2],
           context => aeroflow(context.numbers).toString().run(context.next, context.done),
@@ -1995,7 +2144,7 @@
             expect(context.done).to.have.been.calledWith(true);
           }));
 
-      it('When flow emits several strings, emits single "next" with emitted strings concatenated via ",", then single greedy "done"', () =>
+      it('When flow emits several strings, emits single "next" with strings concatenated via ",", then single greedy "done"', () =>
         execute(
           context => context.strings = ['a', 'b'],
           context => aeroflow(context.strings).toString().run(context.next, context.done),
@@ -2009,7 +2158,7 @@
     });
 
     describe('aeroflow().toString(@seperator:string)', () => {
-      it('When flow emits several strings, emits single "next" with emitted strings concatenated via @separator, then single greedy "done"', () =>
+      it('When flow emits several strings, emits single "next" with strings concatenated via @separator, then single greedy "done"', () =>
         execute(
           context => {
             context.separator = ':';
@@ -2048,7 +2197,7 @@
     reduceOperatorTests,
     reverseOperatorTests,
     skipOperatorTests,
-    // sliceOperatorTests,
+    sliceOperatorTests,
     someOperatorTests,
     // sortOperatorTests,
     sumOperatorTests,
@@ -2060,18 +2209,14 @@
   ];
 
   var index = (aeroflow, expect, sinon) => {
-    const data = { data: true }, error = new Error('test');
-
+    const error = new Error('test');
     function fail() {
       throw error;
     }
-
     function noop() {}
-
     function spy(result) {
       return sinon.spy(typeof result === 'function' ? result : () => result);
     }
-
     class Context {
       get done() {
         return this._done || (this._done = spy());
@@ -2086,15 +2231,12 @@
         this._next = spy(result);
       }
     }
-
     Object.defineProperties(Context.prototype, {
-      data: { value: data },
       error: { value: error },
       fail: { value: fail },
       noop: { value: noop },
       spy: { value: spy }
     });
-
     function execute(arrange, act, assert) {
       if (arguments.length < 3) {
         assert = act;
@@ -2111,7 +2253,6 @@
           assert(context);
         });
     }
-
     tests.forEach(test => test(aeroflow, execute, expect));
   }
 

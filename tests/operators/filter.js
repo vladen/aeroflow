@@ -19,7 +19,7 @@ export default (aeroflow, execute, expect) => describe('aeroflow().filter', () =
           expect(context.done).to.have.been.calledWith(true);
         }));
 
-    it('When flow is not empty, emits "next" for each truthy value, then single greedy "done"', () =>
+    it('When flow emits several values, emits "next" for each truthy value, then single greedy "done"', () =>
       execute(
         context => context.values = [0, 1, false, true, '', 'test'],
         context => aeroflow(context.values).filter().run(context.next, context.done),
@@ -41,20 +41,20 @@ export default (aeroflow, execute, expect) => describe('aeroflow().filter', () =
         context => aeroflow.empty.filter(context.condition).run(),
         context => expect(context.condition).to.have.not.been.called));
 
-    it('When flow is not empty, calls @condition with each emitted value, index of value and context data', () => 
+    it('When flow is not empty, calls @condition with each emitted value and its index', () => 
       execute(
         context => {
           context.values = [1, 2];
           context.condition = context.spy();
         },
-        context => aeroflow(context.values).filter(context.condition).run(context.data),
+        context => aeroflow(context.values).filter(context.condition).run(),
         context => {
           expect(context.condition).to.have.callCount(context.values.length);
           context.values.forEach((value, index) =>
-            expect(context.condition.getCall(index)).to.have.been.calledWithExactly(value, index, context.data));
+            expect(context.condition.getCall(index)).to.have.been.calledWithExactly(value, index));
         }));
 
-    it('When flow is not empty, emits "next" for each value passing the @condition test, then single greedy "done"', () =>
+    it('When flow emits several values, emits "next" for each value passed the @condition test, then single greedy "done"', () =>
       execute(
         context => {
           context.condition = value => 0 === value % 2;
@@ -73,7 +73,7 @@ export default (aeroflow, execute, expect) => describe('aeroflow().filter', () =
   });
 
   describe('aeroflow().filter(@condition:regex)', () => {
-    it('When flow is not empty, emits "next" for each value passing the @condition test, then single greedy "done"', () =>
+    it('When flow emits several values, emits "next" for each value passed the @condition test, then single greedy "done"', () =>
       execute(
         context => {
           context.condition = /b/;
@@ -92,7 +92,7 @@ export default (aeroflow, execute, expect) => describe('aeroflow().filter', () =
   });
 
   describe('aeroflow().filter(@condition:number)', () => {
-    it('When flow is not empty, emits "next" for each value equal to @condition, then single greedy "done"', () =>
+    it('When flow emits several values, emits "next" for each value equal to @condition, then single greedy "done"', () =>
       execute(
         context => {
           context.condition = 2;

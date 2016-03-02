@@ -1,7 +1,7 @@
 import { ERROR, PROMISE } from './symbols';
 import { classOf, toError } from './utilites';
 
-export function unsync(result, next, done) {
+export default function unsync(result, next, done) {
   switch (result) {
     case true:
       return false;

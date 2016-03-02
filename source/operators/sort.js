@@ -1,9 +1,9 @@
 import { FUNCTION, NUMBER, STRING } from '../symbols';
 import { classOf, compare } from '../utilites';
-import { arrayAdapter } from '../adapters/array';
-import { toArrayOperator } from './toArray';
+import arrayAdapter from '../adapters/array';
+import toArrayOperator from './toArray';
 
-export function sortOperator(parameters) {
+export default function sortOperator(parameters) {
   const directions = [], selectors = [];
   let direction = 1;
   for (let i = -1, l = parameters.length; ++i < l;) {

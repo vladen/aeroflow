@@ -1,5 +1,5 @@
-import { reduceOperator } from './reduce';
+import reduceOperator from './reduce';
 
-export function minOperator() {
+export default function minOperator() {
   return reduceOperator((minimum, result) => minimum > result ? result : minimum);
 }

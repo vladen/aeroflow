@@ -1,7 +1,7 @@
 import { dateNow, isError, toFunction, toNumber, tie } from '../utilites';
-import { unsync } from '../unsync';
+import unsync from '../unsync';
 
-export function replayOperator(interval, timing) {
+export default function replayOperator(interval, timing) {
   const delayer = toFunction(interval);
   return emitter => (next, done, context) => {
     let past = dateNow();
@@ -27,7 +27,7 @@ export function replayOperator(interval, timing) {
             const chronicle = chronicles[index];
             interval = index
               ? chronicle.delay
-              : chronicle.delay + toNumber(delayer(context.data), 0);
+              : chronicle.delay + toNumber(delayer(), 0);
             (interval ? setTimeout : setImmediate)(() => {
               if (!unsync(next(chronicle.result), proceed, proceed)) proceed(true);
             }, interval);

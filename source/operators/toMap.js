@@ -1,7 +1,7 @@
 import { identity, isError, isUndefined, tie, toFunction } from '../utilites';
-import { unsync } from '../unsync';
+import unsync from '../unsync';
 
-export function toMapOperator(keySelector, valueSelector) {
+export default function toMapOperator(keySelector, valueSelector) {
   keySelector = isUndefined(keySelector)
     ? identity
     : toFunction(keySelector);
@@ -14,8 +14,8 @@ export function toMapOperator(keySelector, valueSelector) {
     emitter(
       result => {
         map.set(
-          keySelector(result, index++, context.data),
-          valueSelector(result, index++, context.data));
+          keySelector(result, index++),
+          valueSelector(result, index++));
         return true;
       },
       result => {

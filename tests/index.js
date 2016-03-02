@@ -51,7 +51,7 @@ const tests = [
   reduceOperatorTests,
   reverseOperatorTests,
   skipOperatorTests,
-  // sliceOperatorTests,
+  sliceOperatorTests,
   someOperatorTests,
   // sortOperatorTests,
   sumOperatorTests,
@@ -63,18 +63,14 @@ const tests = [
 ];
 
 export default (aeroflow, expect, sinon) => {
-  const data = { data: true }, error = new Error('test');
-
+  const error = new Error('test');
   function fail() {
     throw error;
   }
-
   function noop() {}
-
   function spy(result) {
     return sinon.spy(typeof result === 'function' ? result : () => result);
   }
-
   class Context {
     get done() {
       return this._done || (this._done = spy());
@@ -89,15 +85,12 @@ export default (aeroflow, expect, sinon) => {
       this._next = spy(result);
     }
   }
-
   Object.defineProperties(Context.prototype, {
-    data: { value: data },
     error: { value: error },
     fail: { value: fail },
     noop: { value: noop },
     spy: { value: spy }
   });
-
   function execute(arrange, act, assert) {
     if (arguments.length < 3) {
       assert = act;
@@ -114,6 +107,5 @@ export default (aeroflow, expect, sinon) => {
         assert(context);
       });
   }
-
   tests.forEach(test => test(aeroflow, execute, expect));
 }

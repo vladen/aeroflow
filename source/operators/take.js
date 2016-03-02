@@ -1,7 +1,7 @@
 import { FUNCTION, NUMBER, UNDEFINED } from '../symbols';
 import { classOf, falsey, identity, isBoolean, isError, isPromise, tie } from '../utilites';
-import { arrayAdapter } from '../adapters/array';
-import { emptyGenerator } from '../generators/empty';
+import arrayAdapter from '../adapters/array';
+import emptyGenerator from '../generators/empty';
 
 export function takeFirstOperator(count) {
   return emitter => (next, done, context) => {
@@ -40,13 +40,13 @@ export function takeWhileOperator(predicate) {
   return emitter => (next, done, context) => {
     let index = 0;
     emitter(
-      value => predicate(value, index++, context.data) && next(value),
+      value => predicate(value, index++) && next(value),
       done,
       context);
   };
 }
 
-export function takeOperator(condition) {
+export default function takeOperator(condition) {
   switch (classOf(condition)) {
     case NUMBER:
       return condition > 0

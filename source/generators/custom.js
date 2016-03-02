@@ -1,9 +1,9 @@
 import { isFunction, isUndefined } from '../utilites';
-import { unsync } from '../unsync';
-import { valueAdapter } from '../adapters/value';
-import { emptyGenerator } from './empty';
+import valueAdapter from '../adapters/value';
+import emptyGenerator from './empty';
+import unsync from '../unsync';
 
-export function customGenerator(generator) {
+export default function customGenerator(generator) {
   if (isUndefined(generator)) return emptyGenerator(true);
   if (!isFunction(generator)) return valueAdapter(generator);
   return (next, done, context) => {
@@ -21,8 +21,7 @@ export function customGenerator(generator) {
         buffer.result = isUndefined(result) || result;
         if (!conveying) convey(true);
         return true;
-      },
-      context.data);
+      });
     function convey(result) {
       conveying = false;
       if (result) while (buffer.length)

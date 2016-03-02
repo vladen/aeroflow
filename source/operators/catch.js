@@ -1,18 +1,15 @@
 import { isDefined, isError, tie, toFunction } from '../utilites';
-import { adapters } from '../adapters/index';
-import { valueAdapter } from '../adapters/value';
+import adapters, { valueAdapter } from '../adapters/index';
 
-export function catchOperator(alternative) {
+export default function catchOperator(alternative) {
   if (isDefined(alternative)) {
     alternative = toFunction(alternative);
     return emitter => (next, done, context) => emitter(
       next,
       result => {
         if (isError(result)) {
-          const source = alternative(result, context.data);
-          let adapter = adapters.get(source);
-          if (!adapter) adapter = valueAdapter(source);
-          adapter(next, tie(done, false), context);
+          const source = alternative(result);
+          (adapters.get(source) || valueAdapter(source))(next, tie(done, false), context);
         }
         else done(result);
       },

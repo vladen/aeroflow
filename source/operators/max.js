@@ -1,5 +1,5 @@
-import { reduceOperator } from './reduce';
+import reduceOperator from './reduce';
 
-export function maxOperator () {
+export default function maxOperator () {
   return reduceOperator((maximum, result) => maximum < result ? result : maximum);
 }

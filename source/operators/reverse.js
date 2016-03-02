@@ -1,7 +1,7 @@
-import { unsync } from '../unsync';
-import { toArrayOperator } from './toArray';
+import unsync from '../unsync';
+import toArrayOperator from './toArray';
 
-export function reverseOperator() {
+export default function reverseOperator() {
   return emitter => (next, done, context) => toArrayOperator()(emitter)(
     result => new Promise(resolve => {
       let index = result.length;

@@ -1,7 +1,7 @@
-import { unsync } from '../unsync';
+import unsync from '../unsync';
 
-export function functionAdapter(source) {
+export default function functionAdapter(source) {
   return (next, done, context) => {
-    if (!unsync(next(source(context.data)), done, done)) done(true);
+    if (!unsync(next(source()), done, done)) done(true);
   };
 }

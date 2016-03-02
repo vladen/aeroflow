@@ -10,6 +10,6 @@ export default (aeroflow, execute, expect) => describe('aeroflow.empty', () => {
       context => {
         expect(context.next).to.have.not.been.called;
         expect(context.done).to.have.been.calledOnce;
-        expect(context.done).to.have.been.calledWith(true);
+        expect(context.done).to.have.been.calledWithExactly(true);
       }));
 });

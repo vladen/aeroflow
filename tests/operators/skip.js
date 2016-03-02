@@ -30,7 +30,7 @@ export default (aeroflow, execute, expect) => describe('aeroflow().skip', () => 
   });
 
   describe('aeroflow().skip(false)', () => {
-    it('When flow is not empty, emits "next" for each emitted value, then emits single greedy "done"', () =>
+    it('When flow emits several values, emits "next" for each value, then emits single greedy "done"', () =>
       execute(
         context => context.values = [1, 2],
         context => aeroflow(context.values).skip(false).run(context.next, context.done),
@@ -62,20 +62,20 @@ export default (aeroflow, execute, expect) => describe('aeroflow().skip', () => 
         context => aeroflow.empty.skip(context.condition).run(),
         context => expect(context.condition).to.have.not.been.called));
 
-    it('When flow is not empty, calls @condition with each emitted value, index of value and context data while it returns truthy', () => 
+    it('When flow emits several values, calls @condition for each value and its index until it returns falsey', () => 
       execute(
         context => {
           context.values = [1, 2];
           context.condition = context.spy((_, index) => index < context.values.length - 1);
         },
-        context => aeroflow(context.values, 3).skip(context.condition).run(context.data),
+        context => aeroflow(context.values, 3).skip(context.condition).run(),
         context => {
           expect(context.condition).to.have.callCount(context.values.length);
           context.values.forEach((value, index) =>
-            expect(context.condition.getCall(index)).to.have.been.calledWithExactly(value, index, context.data));
+            expect(context.condition.getCall(index)).to.have.been.calledWithExactly(value, index));
         }));
 
-    it('When flow emits several values, skips values while @condition returns truthy, then emits "next" for all remaining values, then emits single greedy "done"', () =>
+    it('When flow emits several values, skips values until @condition returns falsey, then emits "next" for all remaining values, then emits single greedy "done"', () =>
       execute(
         context => {
           context.condition = value => value < 2;

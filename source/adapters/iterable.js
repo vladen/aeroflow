@@ -1,8 +1,8 @@
 import { ITERATOR } from '../symbols';
 import { isObject } from '../utilites';
-import { unsync } from '../unsync';
+import unsync from '../unsync';
 
-export function iterableAdapter(source) {
+export default function iterableAdapter(source) {
   if (isObject(source) && ITERATOR in source) return (next, done, context) => {
     let iterator = source[ITERATOR]();
     !function proceed() {

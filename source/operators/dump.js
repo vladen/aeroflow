@@ -26,7 +26,7 @@ export function dumpToLoggerOperator(prefix, logger) {
     context);
 }
 
-export function dumpOperator(prefix, logger) {
+export default function dumpOperator(prefix, logger) {
   return isFunction(prefix)
     ? dumpToLoggerOperator('', prefix)
     : isFunction(logger)

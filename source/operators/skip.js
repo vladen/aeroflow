@@ -1,6 +1,6 @@
 import { FUNCTION, NUMBER, UNDEFINED } from '../symbols';
 import { classOf, identity, isError, truthy } from '../utilites';
-import { arrayAdapter } from '../adapters/array';
+import arrayAdapter from '../adapters/array';
 
 function skipAllOperator() {
   return emitter => (next, done, context) => emitter(truthy, done, context);
@@ -38,7 +38,7 @@ export function skipWhileOperator(predicate) {
     let index = 0, skipping = true;
     emitter(
       value => {
-        if (skipping && !predicate(value, index++, context.data)) skipping = false;
+        if (skipping && !predicate(value, index++)) skipping = false;
         return skipping || next(value);
       },
       done,
@@ -46,7 +46,7 @@ export function skipWhileOperator(predicate) {
   };
 }
 
-export function skipOperator(condition) {
+export default function skipOperator(condition) {
   switch (classOf(condition)) {
     case NUMBER:
       return condition > 0

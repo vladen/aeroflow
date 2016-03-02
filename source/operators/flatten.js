@@ -1,7 +1,7 @@
 import { identity, maxInteger, toNumber } from '../utilites';
-import { adapters } from '../adapters/index';
+import adapters from '../adapters/index';
 
-export function flattenOperator(depth) {
+export default function flattenOperator(depth) {
   depth = toNumber(depth, maxInteger);
   if (depth < 1) return identity;
   return emitter => (next, done, context) => {

@@ -1,8 +1,7 @@
 import { identity, isDefined, isError, toFunction } from '../utilites';
-import { adapters } from '../adapters/index';
-import { valueAdapter } from '../adapters/value';
+import adapters, { valueAdapter } from '../adapters/index';
 
-export function coalesceOperator(alternative) {
+export default function coalesceOperator(alternative) {
   if (!isDefined(alternative)) return identity;
   alternative = toFunction(alternative);
   return emitter => (next, done, context) => {
@@ -14,10 +13,8 @@ export function coalesceOperator(alternative) {
       },
       result => {
         if (!isError(result) && empty) {
-          const source = alternative(context.data);
-          let adapter = adapters.get(source);
-          if (!adapter) adapter = valueAdapter(source);
-          adapter(next, done, context);
+          const source = alternative();
+          (adapters.get(source) || valueAdapter(source))(next, done, context);
         }
         else done(result);
       },

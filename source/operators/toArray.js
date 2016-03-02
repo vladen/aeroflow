@@ -1,7 +1,7 @@
 import { isError, tie } from '../utilites';
-import { unsync } from '../unsync';
+import unsync from '../unsync';
 
-export function toArrayOperator() {
+export default function toArrayOperator() {
   return emitter => (next, done, context) => {
     const array = [];
     emitter(

@@ -53,17 +53,17 @@ export default (aeroflow, execute, expect) => describe('aeroflow().some', () => 
         context => aeroflow.empty.some(context.condition).run(),
         context => expect(context.condition).to.have.not.been.called));
 
-    it('When flow is not empty, calls @condition with each emitted value, index of value and context data until @condition returns truthy result', () => 
+    it('When flow is not empty, calls @condition with each emitted value and its index until @condition returns truthy result', () => 
       execute(
         context => {
           context.values = [1, 2];
           context.condition = context.spy((_, index) => index === context.values.length - 1);
         },
-        context => aeroflow(context.values, 3).some(context.condition).run(context.data),
+        context => aeroflow(context.values, 3).some(context.condition).run(),
         context => {
           expect(context.condition).to.have.callCount(context.values.length);
           context.values.forEach((value, index) =>
-            expect(context.condition.getCall(index)).to.have.been.calledWithExactly(value, index, context.data));
+            expect(context.condition.getCall(index)).to.have.been.calledWithExactly(value, index));
         }));
 
     it('When flow emits several values and at least one value passes the @condition test, emits single "next" with true, then single lazy "done"', () =>

@@ -1,6 +1,6 @@
-import { unsync } from '../unsync';
+import unsync from '../unsync';
 
-export function arrayAdapter(source) {
+export default function arrayAdapter(source) {
   return (next, done, context) => {
     let index = -1;
     !function proceed() {
