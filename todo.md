@@ -1,6 +1,5 @@
 # todo:
 Thoughts:
-  * context creates an ambiguity in shared execution (cache, share) and prone to side-effects
   * bind should be re-thinked as only-once operation (special type of flow)
   * dump is nothing more than special type of notifier
   * next and done notifications may accept additional argument with flags of operators already applied to the flow (e.g. cache operator), it could help eliminate exceptional work and plan the execution better (subqueries)

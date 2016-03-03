@@ -16,10 +16,9 @@ export default function unsync(result, next, done) {
           if (!unsync(promiseResult, next, done)) next(true);
         },
         promiseError => done(toError(promiseError)));
-      break;
-    case ERROR:
+      return result;
+    default:
       done(result);
-      break;
+      return true;
   }
-  return true;
 }
