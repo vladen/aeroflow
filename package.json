@@ -36,6 +36,7 @@
     "make:library": "babel build/modern/aeroflow.js --out-file build/legacy/aeroflow.js --plugins babel-plugin-add-module-exports,transform-es2015-modules-umd",
     "make:tests": "babel build/modern/aeroflow.tests.js --out-file build/legacy/aeroflow.tests.js --plugins babel-plugin-add-module-exports,transform-es2015-modules-umd",
     "minify": "uglifyjs build/legacy/aeroflow.js --compress --mangle --output build/legacy/aeroflow.min.js",
+    "report": "codeclimate-test-reporter < coverage/lcov.info",
     "test": "mocha test.js --check-leaks --colors --prof --compilers babel:babel-core/register --require core-js"
   },
   "pre-commit": {
@@ -54,6 +55,7 @@
     "babel-preset-es2015": "^6.3.13",
     "babel-register": "^6.5.2",
     "chai": "^3.4.1",
+    "codeclimate-test-reporter": "^0.3.1",
     "eslint": "^1.10.3",
     "isparta": "^4.0.0",
     "jsdoc-to-markdown": "^1.3.3",
