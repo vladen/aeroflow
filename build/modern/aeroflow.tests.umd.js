@@ -250,6 +250,22 @@
     });
   });
 
+  var emptyTests = (aeroflow, execute, expect) => describe('aeroflow.empty', () => {
+    it('Gets instance of Aeroflow', () =>
+      execute(
+        context => aeroflow.empty,
+        context => expect(context.result).to.be.an('Aeroflow')));
+
+    it('Emits only single greedy "done"', () =>
+      execute(
+        context => aeroflow.empty.run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.not.been.called;
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWithExactly(true);
+        }));
+  });
+
   var adaptersTests = (aeroflow, execute, expect) => describe('aeroflow.adapters', () => {
     it('Is static property', () =>
       execute(
@@ -261,6 +277,66 @@
         execute(
           context => aeroflow.adapters.get,
           context => expect(context.result).to.be.a('function')));
+
+      it('Contains indexed iterable adapter', () =>
+        execute(
+          context => aeroflow.adapters[0],
+          context => expect(context.result).to.be.a('function')));
+
+      it('Contains mapped array adapter', () =>
+        execute(
+          context => aeroflow.adapters['Array'],
+          context => expect(context.result).to.be.a('function')));
+
+      it('Contains mapped error adapter', () =>
+        execute(
+          context => aeroflow.adapters['Error'],
+          context => expect(context.result).to.be.a('function')));
+
+      it('Contains mapped function adapter', () =>
+        execute(
+          context => aeroflow.adapters['Function'],
+          context => expect(context.result).to.be.a('function')));
+
+      it('Contains mapped promise adapter', () =>
+        execute(
+          context => aeroflow.adapters['Promise'],
+          context => expect(context.result).to.be.a('function')));
+
+      describe('aeroflow.adapters.get(@source:array)', () => {
+        it('Does not resolve adapter function', () =>
+          execute(
+            context => aeroflow.adapters.get(),
+            context => expect(context.result).to.not.exist));
+      });
+
+      describe('aeroflow.adapters.get(@source:array)', () => {
+        it('Resolves adapter function for @source', () =>
+          execute(
+            context => aeroflow.adapters.get([]),
+            context => expect(context.result).to.be.a('function')));
+      });
+
+      describe('aeroflow.adapters.get(@source:iterable)', () => {
+        it('Resolves adapter function for @source', () =>
+          execute(
+            context => aeroflow.adapters.get(new Set),
+            context => expect(context.result).to.be.a('function')));
+      });
+
+      describe('aeroflow.adapters.get(@source:function)', () => {
+        it('Resolves adapter function for @source', () =>
+          execute(
+            context => aeroflow.adapters.get(Function()),
+            context => expect(context.result).to.be.a('function')));
+      });
+
+      describe('aeroflow.adapters.get(@source:promise)', () => {
+        it('Resolves adapter function for @source', () =>
+          execute(
+            context => aeroflow.adapters.get(Promise.resolve()),
+            context => expect(context.result).to.be.a('function')));
+      });
     });
 
     describe('aeroflow.adapters.use', () => {
@@ -268,6 +344,43 @@
         execute(
           context => aeroflow.adapters.get,
           context => expect(context.result).to.be.a('function')));
+
+      describe('aeroflow.adapters.use(@adapter:function)', () => {
+        it('Registers indexed @adapter and calls it with source when resolves adapter for not mapped class', () =>
+          execute(
+            context => {
+              context.adapter = context.spy();
+              context.source = {};
+            },
+            context => {
+              aeroflow.adapters.use(context.adapter);
+              aeroflow.adapters.get(context.source);
+            },
+            context => {
+              expect(context.adapter).to.have.been.called;
+              expect(context.adapter).to.have.been.calledWith(context.source);
+            }));
+      });
+
+      describe('aeroflow.adapters.use(@class:string, @adapter:function)', () => {
+        it('Registers mapped @adapter and calls it with @source when resolves adapter for instance of @class', () =>
+          execute(
+            context => {
+              context.adapter = context.spy();
+              context.class = 'test';
+              context.source = {
+                [Symbol.toStringTag]: context.class
+              };
+            },
+            context => {
+              aeroflow.adapters.use(context.class, context.adapter);
+              aeroflow.adapters.get(context.source);
+            },
+            context => {
+              expect(context.adapter).to.have.been.called;
+              expect(context.adapter).to.have.been.calledWith(context.source);
+            }));
+      });
     });
   });
 
@@ -287,7 +400,7 @@
     describe('aeroflow.adapters.use', () => {
       it('Is function', () =>
         execute(
-          context => aeroflow.adapters.get,
+          context => aeroflow.adapters.use,
           context => expect(context.result).to.be.a('function')));
     });
   });
@@ -298,7 +411,7 @@
         context => aeroflow.operators,
         context => expect(context.result).to.exist));
 
-    it('Registers new operator', () =>
+    it('Registers new operator and exposes it as method of aeroflow instance', () =>
       execute(
         context => context.operator = Function(),
         context => {
@@ -306,21 +419,22 @@
           return aeroflow.empty.test;
         },
         context => expect(context.result).to.equal(context.operator)));
-  });
 
-  var emptyGeneratorTests = (aeroflow, execute, expect) => describe('aeroflow.empty', () => {
-    it('Gets instance of Aeroflow', () =>
+    it('When new operator is chained, calls builder function returned by it once with emitter function', () =>
       execute(
-        context => aeroflow.empty,
-        context => expect(context.result).to.be.an('Aeroflow')));
-
-    it('Emits only single greedy "done"', () =>
-      execute(
-        context => aeroflow.empty.run(context.next, context.done),
         context => {
-          expect(context.next).to.have.not.been.called;
-          expect(context.done).to.have.been.calledOnce;
-          expect(context.done).to.have.been.calledWithExactly(true);
+          context.builder = context.spy();
+          context.operator = function() {
+            return this.chain(context.builder);
+          }
+        },
+        context => {
+          aeroflow.operators.test = context.operator;
+          return aeroflow.empty.test();
+        },
+        context => {
+          expect(context.builder).to.have.been.called;
+          expect(context.builder.getCall(0).args[0]).to.be.a('function');
         }));
   });
 
@@ -2493,11 +2607,12 @@
 
   const tests = [
     factoryTests,
+
+    emptyTests,
     adaptersTests,
     notifiersTests,
     operatorsTests,
 
-    emptyGeneratorTests,
     expandGeneratorTests,
     justGeneratorTests,
     randomGeneratorTests,

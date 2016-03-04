@@ -20,7 +20,7 @@
     "build": "npm run build:library && npm run build:tests",
     "build:library": "npm run concatenate:library && npm run transpile:library && npm run minify:library",
     "build:tests": "npm run concatenate:tests && npm run transpile:tests",
-    "clean": "rimraf coverage/**",
+    "clean": "rimraf coverage",
     "concatenate": "npm run concatenate:library && npm run concatenate:tests",
     "concatenate:library": "rollup --input source/index.js --output build/modern/aeroflow.js && rollup --format umd --input build/modern/aeroflow.js --name aeroflow --output build/modern/aeroflow.umd.js",
     "concatenate:tests": "rollup --format umd --input tests/index.js --name aeroflowTests --output build/modern/aeroflow.tests.js && rollup --input build/modern/aeroflow.tests.js --output build/modern/aeroflow.tests.umd.js",

@@ -1,12 +1,11 @@
-'use strict';
-
+import { DONE, NEXT } from '../symbols';
 import { isFunction, isObject } from '../utilites';
 
-export function eventEmitterNotifier(target, nextEventName = 'next', doneEventName = 'done') {
+export default function eventEmitterNotifier(target, nextEventType = 'next', doneEventType = 'done') {
   if (!isObject(target) || !isFunction(target.emit)) return;
   const emit = eventName => result => target.emit(eventName, result);
   return {
-    done: emit(doneEventName),
-    next: emit(nextEventName)
+    [DONE]: emit(doneEventType),
+    [NEXT]: emit(nextEventType)
   };
 }

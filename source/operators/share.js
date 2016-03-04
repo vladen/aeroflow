@@ -1,25 +1,29 @@
-import { NEXT, DONE } from './symbols';
-import poise from '../poise';
+import { NEXT, DONE } from '../symbols';
+import retard from '../retard';
 
-function shareOperator() {
+export default function shareOperator() {
   return emitter => {
     const shares = new WeakMap;
     return (next, done, context) => {
       let share = shares.get(context);
-      if (share) {
-        if (result in share) done(share.result);
-        else share.poises.push(poise(next, done));
-      }
+      if (share)
+        if (share.result) done(share.result);
+        else share.retarded.push(retard(next, done));
       else {
-        shares.set(context, share = { poises: [poise(next, done)] });
+        shares.set(context, share = { retarded: [retard(next, done)] });
         emitter(
-          result => pass(share.poises, result, DONE),
-          result => pass(share.poises, result, NEXT),
+          result => {
+            const retarded = share.retarded;
+            for (let i = -1, l = retarded.length; ++i < l;)
+              retarded[i][NEXT](result);
+          },
+          result => {
+            share.result = result;
+            const retarded = share.retarded;
+            for (let i = -1, l = retarded.length; ++i < l;)
+              retarded[i][DONE](result);
+          },
           context);
-        function pass(poises, result, symbol) {
-          for (let i = -1, l = poises.length; ++i < 0;)
-            poises[i][symbol](result);
-        }
       }
     };
   };

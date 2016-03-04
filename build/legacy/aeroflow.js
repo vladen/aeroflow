@@ -19,6 +19,18 @@
 
   var _objectCreate;
 
+  function _toConsumableArray(arr) {
+    if (Array.isArray(arr)) {
+      for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) {
+        arr2[i] = arr[i];
+      }
+
+      return arr2;
+    } else {
+      return Array.from(arr);
+    }
+  }
+
   function _defineProperty(obj, key, value) {
     if (key in obj) {
       Object.defineProperty(obj, key, {
@@ -34,18 +46,6 @@
     return obj;
   }
 
-  function _toConsumableArray(arr) {
-    if (Array.isArray(arr)) {
-      for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) {
-        arr2[i] = arr[i];
-      }
-
-      return arr2;
-    } else {
-      return Array.from(arr);
-    }
-  }
-
   var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
     return typeof obj;
   } : function (obj) {
@@ -57,10 +57,12 @@
   var CLASS = Symbol.toStringTag;
   var CONTEXT = Symbol('Context');
   var DATE = 'Date';
+  var DONE = Symbol('Done');
   var EMITTER = Symbol('Emitter');
   var ERROR = 'Error';
   var FUNCTION = 'Function';
   var ITERATOR = Symbol.iterator;
+  var NEXT = Symbol('Next');
   var NUMBER = 'Number';
   var PROMISE = 'Promise';
   var PROTOTYPE = 'prototype';
@@ -75,6 +77,7 @@
   var mathMax = Math.max;
   var mathMin = Math.min;
   var maxInteger = Number.MAX_SAFE_INTEGER;
+  var nothing = undefined;
   var objectCreate = Object.create;
   var objectDefineProperties = Object.defineProperties;
   var objectDefineProperty = Object.defineProperty;
@@ -111,7 +114,7 @@
   };
 
   var isDefined = function isDefined(value) {
-    return value !== undefined;
+    return value !== nothing;
   };
 
   var isError = classIs(ERROR);
@@ -129,7 +132,7 @@
   var isPromise = classIs(PROMISE);
 
   var isUndefined = function isUndefined(value) {
-    return value === undefined;
+    return value === nothing;
   };
 
   var tie = function tie(func) {
@@ -192,33 +195,34 @@
     });
 
     function get(target) {
-      var functor = list[classOf(target)];
+      var builder = list[classOf(target)];
 
       for (var _len2 = arguments.length, parameters = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
         parameters[_key2 - 1] = arguments[_key2];
       }
 
-      if (isFunction(functor)) return functor.apply(undefined, [target].concat(parameters));
+      if (isFunction(builder)) return builder.apply(undefined, [target].concat(parameters));
 
       for (var i = list.length; i--;) {
-        functor = list[i].apply(list, [target].concat(parameters));
-        if (isFunction(functor)) return functor;
+        var _instance = list[i].apply(list, [target].concat(parameters));
+
+        if (_instance) return _instance;
       }
     }
 
-    function use(key, functor) {
+    function use(key, builder) {
       switch (classOf(key)) {
         case FUNCTION:
           list.push(key);
           break;
 
         case NUMBER:
-          if (isFunction(functor)) list.splice(key, 0, functor);else list.splice(key, 1);
+          if (isFunction(builder)) list.splice(key, 0, builder);else list.splice(key, 1);
           break;
 
         case STRING:
         case SYMBOL:
-          if (isFunction(functor)) list[key] = functor;else delete list[key];
+          if (isFunction(builder)) list[key] = builder;else delete list[key];
           break;
       }
 
@@ -236,20 +240,12 @@
         return true;
     }
 
-    switch (classOf(result)) {
-      case PROMISE:
-        result.then(function (promiseResult) {
-          if (!unsync(promiseResult, next, done)) next(true);
-        }, function (promiseError) {
-          return done(toError(promiseError));
-        });
-        break;
-
-      case ERROR:
-        done(result);
-        break;
-    }
-
+    if (isPromise(result)) return result.then(function (promiseResult) {
+      if (!unsync(promiseResult, next, done)) next(true);
+    }, function (promiseError) {
+      return done(toError(promiseError));
+    });
+    done(result);
     return true;
   }
 
@@ -321,43 +317,64 @@
     };
   }
 
+  function impede(next, done) {
+    var _ref;
+
+    var busy = false,
+        idle = false,
+        queue = [],
+        signal = undefined;
+
+    function convey() {
+      busy = false;
+
+      while (queue.length) {
+        signal = unsync(queue.pop()(), convey, finish);
+
+        switch (signal) {
+          case false:
+            signal = true;
+            continue;
+
+          case true:
+            return signal = false;
+
+          default:
+            return;
+        }
+      }
+
+      if (idle) queue = nothing;
+    }
+
+    function finish(result) {
+      idle = true;
+      signal = false;
+      queue = nothing;
+      done(result);
+    }
+
+    return _ref = {}, _defineProperty(_ref, DONE, function (result) {
+      if (idle) return false;
+      idle = true;
+      queue.push(tie(done, result));
+      if (!busy) convey();
+    }), _defineProperty(_ref, NEXT, function (result) {
+      if (idle) return false;
+      queue.push(tie(next, result));
+      if (!busy) convey();
+      return signal;
+    }), _ref;
+  }
+
   function customGenerator(generator) {
     if (isUndefined(generator)) return emptyGenerator(true);
     if (!isFunction(generator)) return valueAdapter(generator);
     return function (next, done, context) {
-      var buffer = [],
-          conveying = false,
-          finalizer = undefined,
-          finished = false;
-      finalizer = generator(function (result) {
-        if (finished) return false;
-        buffer.push(result);
-        if (!conveying) convey(true);
-        return true;
-      }, function (result) {
-        if (finished) return false;
-        finished = true;
-        buffer.result = isUndefined(result) || result;
-        if (!conveying) convey(true);
-        return true;
-      });
-
-      function convey(result) {
-        conveying = false;
-        if (result) while (buffer.length) {
-          if (unsync(next(buffer.shift()), convey, finish)) {
-            conveying = true;
-            return;
-          }
-        }
-        if (finished) finish(result);
-      }
-
-      function finish(result) {
-        finished = true;
+      var finalizer = generator(impede(next, function (result) {
         if (isFunction(finalizer)) setImmediate(finalizer);
-        done(result && buffer.result);
-      }
+        done(result);
+      }, context));
     };
   }
 
@@ -440,9 +457,69 @@
     return isDefined(delayer) ? repeatDeferredGenerator(repeater, toFunction(delayer)) : repeatImmediateGenerator(repeater);
   }
 
+  function eventEmitterListener(target) {
+    var eventName = arguments.length <= 1 || arguments[1] === undefined ? 'next' : arguments[1];
+    if (isObject(target) && isFunction(target.addListener) && isFunction(target.removeListener)) return function (next) {
+      target.addListener(eventName, next);
+      return function () {
+        return target.removeListener(eventName, next);
+      };
+    };
+  }
+
+  function eventTargetListener(target) {
+    var eventName = arguments.length <= 1 || arguments[1] === undefined ? 'next' : arguments[1];
+    var useCapture = arguments.length <= 2 || arguments[2] === undefined ? false : arguments[2];
+    if (isObject(target) && isFunction(target.addEventListener) && isFunction(target.removeEventListener)) return function (next) {
+      target.addEventListener(eventName, next, useCapture);
+      return function () {
+        return target.removeEventListener(eventName, next, useCapture);
+      };
+    };
+  }
+
+  var listeners = registry().use(eventEmitterListener).use(eventTargetListener);
+
+  function listener(source, parameters) {
+    var instance = listeners.get.apply(listeners, [source].concat(_toConsumableArray(parameters)));
+    return isFunction(instance) ? function (next, done, context) {
+      var _impede = impede(next, done);
+
+      var retardedDone = _impede[DONE];
+      var retardedNext = _impede[NEXT];
+      var finalizer = toFunction(instance(onNext, onDone));
+
+      function onDone(result) {
+        setImmediate(finalizer);
+        retardedDone(false);
+      }
+
+      function onNext(result) {
+        if (false === retardedNext(result)) onDone(false);
+      }
+    } : emptyGenerator(true);
+  }
+
+  function consoleNotifier(target) {
+    var _ref2;
+
+    var prefix = arguments.length <= 1 || arguments[1] === undefined ? '' : arguments[1];
+    if (!isObject(target)) return;
+    var log = target.log;
+    var error = target.error;
+    if (!isFunction(log)) return;
+    return _ref2 = {}, _defineProperty(_ref2, DONE, function (result) {
+      return (isError(result) && isFunction(error) ? error : log).call(target, prefix + 'done', result);
+    }), _defineProperty(_ref2, NEXT, function (result) {
+      return log.call(target, prefix + 'next', result);
+    }), _ref2;
+  }
+
   function eventEmitterNotifier(target) {
-    var nextEventName = arguments.length <= 1 || arguments[1] === undefined ? 'next' : arguments[1];
-    var doneEventName = arguments.length <= 2 || arguments[2] === undefined ? 'done' : arguments[2];
+    var _ref3;
+
+    var nextEventType = arguments.length <= 1 || arguments[1] === undefined ? 'next' : arguments[1];
+    var doneEventType = arguments.length <= 2 || arguments[2] === undefined ? 'done' : arguments[2];
     if (!isObject(target) || !isFunction(target.emit)) return;
 
     var emit = function emit(eventName) {
@@ -451,15 +528,14 @@
       };
     };
 
-    return {
-      done: emit(doneEventName),
-      next: emit(nextEventName)
-    };
+    return _ref3 = {}, _defineProperty(_ref3, DONE, emit(doneEventType)), _defineProperty(_ref3, NEXT, emit(nextEventType)), _ref3;
   }
 
   function eventTargetNotifier(target) {
-    var nextEventName = arguments.length <= 1 || arguments[1] === undefined ? 'next' : arguments[1];
-    var doneEventName = arguments.length <= 2 || arguments[2] === undefined ? 'done' : arguments[2];
+    var _ref4;
+
+    var nextEventType = arguments.length <= 1 || arguments[1] === undefined ? 'next' : arguments[1];
+    var doneEventType = arguments.length <= 2 || arguments[2] === undefined ? 'done' : arguments[2];
     if (!isObject(target) || !isFunction(target.dispatchEvent)) return;
 
     var dispatch = function dispatch(eventName) {
@@ -470,25 +546,38 @@
       };
     };
 
-    return {
-      done: dispatch(doneEventName),
-      next: dispatch(nextEventName)
-    };
+    return _ref4 = {}, _defineProperty(_ref4, DONE, dispatch(doneEventType)), _defineProperty(_ref4, NEXT, dispatch(nextEventType)), _ref4;
   }
 
-  function observerNotifier(target) {
-    if (!isObject(target) || !isFunction(target.onNext) || !isFunction(target.onError) || !isFunction(target.onCompleted)) return;
-    return {
-      done: function done(result) {
-        return (isError(result) ? target.onError : target.onCompleted)(result);
-      },
-      next: function next(result) {
-        return target.onNext(result);
-      }
+  var notifiers = registry().use(consoleNotifier).use(eventTargetNotifier).use(eventEmitterNotifier);
+
+  function notifier(target, parameters) {
+    return function (emitter) {
+      return function (next, done, context) {
+        var instance = notifiers.get.apply(notifiers, [target].concat(_toConsumableArray(parameters)));
+
+        if (isObject(instance)) {
+          var _ret = function () {
+            var notifyDone = instance[DONE];
+            var notifyNext = instance[NEXT];
+            if (isFunction(notifyNext)) return {
+              v: emitter(function (result) {
+                notifyNext(result);
+                return next(result);
+              }, function (result) {
+                if (isFunction(notifyDone)) notifyDone(result);
+                return done(result);
+              }, context)
+            };
+          }();
+
+          if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
+        }
+
+        emitter(next, done, context);
+      };
     };
   }
-
-  var notifiers = registry().use(observerNotifier).use(eventTargetNotifier).use(eventEmitterNotifier);
 
   function reduceOperator(reducer, seed, forced) {
     if (isUndefined(reducer)) {
@@ -615,38 +704,6 @@
         }, done, context);
       };
     };
-  }
-
-  function dumpToConsoleOperator(prefix) {
-    return function (emitter) {
-      return function (next, done, context) {
-        return emitter(function (result) {
-          console.log(prefix + 'next', result);
-          return next(result);
-        }, function (result) {
-          console[isError(result) ? 'error' : 'log'](prefix + 'done', result);
-          done(result);
-        }, context);
-      };
-    };
-  }
-
-  function dumpToLoggerOperator(prefix, logger) {
-    return function (emitter) {
-      return function (next, done, context) {
-        return emitter(function (result) {
-          logger(prefix + 'next', result);
-          return next(result);
-        }, function (result) {
-          logger(prefix + 'done', result);
-          done(result);
-        }, context);
-      };
-    };
-  }
-
-  function dumpOperator(prefix, logger) {
-    return isFunction(prefix) ? dumpToLoggerOperator('', prefix) : isFunction(logger) ? dumpToLoggerOperator(prefix, logger) : isUndefined(prefix) ? dumpToConsoleOperator('') : dumpToConsoleOperator(prefix);
   }
 
   function everyOperator(condition) {
@@ -845,27 +902,6 @@
     });
   }
 
-  function notifyOperator(target, parameters) {
-    return function (emitter) {
-      return function (next, done, context) {
-        var notifier = notifiers.get.apply(notifiers, [target].concat(_toConsumableArray(parameters)));
-
-        if (isObject(notifier) && isFunction(notifier.next)) {
-          (function () {
-            var index = 0;
-            emitter(function (result) {
-              notifier.next(result, index++);
-              return next(result);
-            }, function (result) {
-              if (isFunction(notifier.done)) notifier.done(result);
-              return done(result);
-            }, context);
-          })();
-        } else emitter(next, done, context);
-      };
-    };
-  }
-
   function replayOperator(interval, timing) {
     var delayer = toFunction(interval);
     return function (emitter) {
@@ -941,6 +977,36 @@
             }();
           });
         }, done, context);
+      };
+    };
+  }
+
+  function shareOperator() {
+    return function (emitter) {
+      var shares = new WeakMap();
+      return function (next, done, context) {
+        var share = shares.get(context);
+        if (share) {
+          if (share.result) done(share.result);else share.retarded.push(impede(next, done));
+        } else {
+          shares.set(context, share = {
+            retarded: [impede(next, done)]
+          });
+          emitter(function (result) {
+            var retarded = share.retarded;
+
+            for (var i = -1, l = retarded.length; ++i < l;) {
+              retarded[i][NEXT](result);
+            }
+          }, function (result) {
+            share.result = result;
+            var retarded = share.retarded;
+
+            for (var i = -1, l = retarded.length; ++i < l;) {
+              retarded[i][DONE](result);
+            }
+          }, context);
+        }
       };
     };
   }
@@ -1254,7 +1320,7 @@
     return defintion;
   }
 
-  var operators = objectCreate(Object[PROTOTYPE], [average, _catch, coalesce, count, delay, distinct, dump, every, filter, flatten, group, map, max, mean, min, notify, reduce, replay, retry, reverse, skip, slice, some, sort, sum, take, toArray, toMap, toSet, toString].reduce(defineOperator, {}));
+  var operators = objectCreate(Object[PROTOTYPE], [average, _catch, coalesce, count, delay, distinct, every, filter, flatten, group, map, max, mean, min, notify, reduce, replay, retry, reverse, share, skip, slice, some, sort, sum, take, toArray, toMap, toSet, toString].reduce(defineOperator, {}));
   Flow[PROTOTYPE] = objectCreate(operators, (_objectCreate = {}, _defineProperty(_objectCreate, CLASS, {
     value: AEROFLOW
   }), _defineProperty(_objectCreate, 'chain', {
@@ -1295,10 +1361,6 @@
 
   function distinct(untilChanged) {
     return this.chain(distinctOperator(untilChanged));
-  }
-
-  function dump(prefix, logger) {
-    return this.chain(dumpOperator(prefix, logger));
   }
 
   function every(condition) {
@@ -1342,7 +1404,7 @@
       parameters[_key4 - 1] = arguments[_key4];
     }
 
-    return this.chain(notifyOperator(target, parameters));
+    return this.chain(notifier(target, parameters));
   }
 
   function reduce(reducer, accumulator) {
@@ -1380,6 +1442,10 @@
         isError(result) ? reject(result) : resolve(last);
       }, _this.context);
     });
+  }
+
+  function share() {
+    return this.chain(shareOperator());
   }
 
   function skip(condition) {
@@ -1460,6 +1526,14 @@
     return instance(valueAdapter(source));
   }
 
+  function listen(source) {
+    for (var _len7 = arguments.length, parameters = Array(_len7 > 1 ? _len7 - 1 : 0), _key7 = 1; _key7 < _len7; _key7++) {
+      parameters[_key7 - 1] = arguments[_key7];
+    }
+
+    return instance(listener(source, parameters));
+  }
+
   function random(minimum, maximum) {
     return instance(randomGenerator(minimum, maximum));
   }
@@ -1479,7 +1553,7 @@
     return defintion;
   }
 
-  objectDefineProperties(aeroflow, [create, expand, just, random, range, repeat].reduce(defineGenerator, {}));
+  objectDefineProperties(aeroflow, [create, expand, just, listen, random, range, repeat].reduce(defineGenerator, {}));
   objectDefineProperties(aeroflow, {
     adapters: {
       value: adapters
@@ -1489,6 +1563,9 @@
       get: function get() {
         return instance(emptyGenerator(true));
       }
+    },
+    listeners: {
+      value: listeners
     },
     notifiers: {
       value: notifiers

@@ -14,7 +14,7 @@ export default (aeroflow, execute, expect) => describe('aeroflow.notifiers', () 
   describe('aeroflow.adapters.use', () => {
     it('Is function', () =>
       execute(
-        context => aeroflow.adapters.get,
+        context => aeroflow.adapters.use,
         context => expect(context.result).to.be.a('function')));
   });
 });

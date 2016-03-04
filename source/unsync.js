@@ -1,5 +1,4 @@
-import { ERROR, PROMISE } from './symbols';
-import { classOf, toError } from './utilites';
+import { isPromise, toError } from './utilites';
 
 export default function unsync(result, next, done) {
   switch (result) {
@@ -9,16 +8,11 @@ export default function unsync(result, next, done) {
       done(false);
       return true;
   }
-  switch (classOf(result)) {
-    case PROMISE:
-      result.then(
-        promiseResult => {
-          if (!unsync(promiseResult, next, done)) next(true);
-        },
-        promiseError => done(toError(promiseError)));
-      return result;
-    default:
-      done(result);
-      return true;
-  }
+  if (isPromise(result)) return result.then(
+    promiseResult => {
+      if (!unsync(promiseResult, next, done)) next(true);
+    },
+    promiseError => done(toError(promiseError)));
+  done(result);
+  return true;
 }

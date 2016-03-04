@@ -8,25 +8,25 @@ export default function registry() {
     use: { value: use }
   });
   function get(target, ...parameters) {
-    let functor = list[classOf(target)];
-    if (isFunction(functor)) return functor(target, ...parameters);
+    const builder = list[classOf(target)];
+    if (isFunction(builder)) return builder(target, ...parameters);
     for (let i = list.length; i--;) {
-      functor = list[i](target, ...parameters);
-      if (isFunction(functor)) return functor;
+      const instance = list[i](target, ...parameters);
+      if (instance) return instance;
     }
   }
-  function use(key, functor) {
+  function use(key, builder) {
     switch (classOf(key)) {
       case FUNCTION:
         list.push(key);
         break;
       case NUMBER:
-        if (isFunction(functor)) list.splice(key, 0, functor);
+        if (isFunction(builder)) list.splice(key, 0, builder);
         else list.splice(key, 1);
         break;
       case STRING:
       case SYMBOL:
-        if (isFunction(functor)) list[key] = functor;
+        if (isFunction(builder)) list[key] = builder;
         else delete list[key];
         break;
     }

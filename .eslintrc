@@ -21,7 +21,7 @@
   },
   "rules": {
     "curly": [1, "multi"],
-    "dot-notation": 1,
+    "dot-notation": 0,
     "eqeqeq": [1, "smart"],
     "new-cap": 1,
     "no-cond-assign": 1,

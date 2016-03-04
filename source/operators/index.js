@@ -4,7 +4,6 @@ import coalesceOperator from './coalesce';
 import countOperator from './count';
 import delayOperator from './delay';
 import distinctOperator from './distinct';
-import dumpOperator from './dump';
 import everyOperator from './every';
 import filterOperator from './filter';
 import flattenOperator from './flatten';
@@ -14,11 +13,11 @@ import mapOperator from './map';
 import maxOperator from './max';
 import meanOperator from './mean';
 import minOperator from './min';
-import notifyOperator from './notify';
 import reduceOperator from './reduce';
 import replayOperator from './replay';
 import retryOperator from './retry';
 import reverseOperator from './reverse';
+import shareOperator from './share';
 import skipOperator from './skip';
 import sliceOperator from './slice';
 import someOperator from './some';
@@ -37,7 +36,6 @@ export {
   countOperator,
   delayOperator,
   distinctOperator,
-  dumpOperator,
   everyOperator,
   filterOperator,
   flattenOperator,
@@ -47,11 +45,11 @@ export {
   maxOperator,
   meanOperator,
   minOperator,
-  notifyOperator,
   reduceOperator,
   replayOperator,
   retryOperator,
   reverseOperator,
+  shareOperator,
   skipOperator,
   sliceOperator,
   someOperator,

@@ -20,32 +20,32 @@
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">100% </span>
+        <span class="strong">74.42% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>14/14</span>
+        <span class='fraction'>32/43</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">100% </span>
+        <span class="strong">76% </span>
         <span class="quiet">Branches</span>
-        <span class='fraction'>4/4</span>
+        <span class='fraction'>19/25</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">100% </span>
+        <span class="strong">50% </span>
         <span class="quiet">Functions</span>
-        <span class='fraction'>1/1</span>
+        <span class='fraction'>5/10</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">100% </span>
+        <span class="strong">25% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>2/2</span>
+        <span class='fraction'>3/12</span>
       </div>
       <div class='fl pad1y'>
-        <span class="strong">1 branch</span>
+        <span class="strong">13 statements, 4 functions, 13 branches</span>
         <span class="quiet">Ignored</span>  &nbsp;&nbsp;&nbsp;&nbsp;
       </div>
     </div>
   </div>
-  <div class='status-line high'></div>
+  <div class='status-line medium'></div>
 <pre><table class="coverage">
 <tr><td class="line-count quiet">1
 2
@@ -62,7 +62,27 @@
 13
 14
 15
-16</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -72,24 +92,58 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import registry from '../registry';
-import { eventEmitterNotifier } from './eventEmitter';
-import { eventTargetNotifier } from './eventTarget';
-import { observerNotifier } from './observer';
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { DONE, NEXT } from '../symbols';
+import { isFunction, isObject } from '../utilites';
+import registry from '../registry';
+import consoleNotifier from './console';
+import eventEmitterNotifier from './eventEmitter';
+import eventTargetNotifier from './eventTarget';
 &nbsp;
 const notifiers = registry()
-  .use(observerNotifier)
+  .use(consoleNotifier)
   .use(eventTargetNotifier)
   .use(eventEmitterNotifier);
 &nbsp;
-export {
-  eventEmitterNotifier, eventTargetNotifier, observerNotifier
-};
+export <span class="fstat-no" title="function not covered" >function notifier(target, parameters) {</span>
+<span class="cstat-no" title="statement not covered" >  return <span class="fstat-no" title="function not covered" >e</span>mitter =&gt; <span class="fstat-no" title="function not covered" >(next, done, context) =&gt; {</span></span>
+<span class="cstat-no" title="statement not covered" >    const instance = notifiers.get(target, ...parameters);</span>
+<span class="cstat-no" title="statement not covered" >    i</span>f (isObject(instance)) {
+      const { [DONE]: notifyDone, [NEXT]: notifyNext } = instance;
+<span class="cstat-no" title="statement not covered" >      i</span></span>f (isFunction(notifyNext)) <span class="cstat-no" title="statement not covered" >return emitter(
+<span class="fstat-no" title="function not covered" >        result =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >          notifyNext(result);</span>
+<span class="cstat-no" title="statement not covered" >          return next(result);</span>
+        },
+<span class="fstat-no" title="function not covered" >        result =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >          i</span></span>f (isFunction(notifyDone)) <span class="cstat-no" title="statement not covered" >notifyDone(result);
+<span class="cstat-no" title="statement not covered" >          return done(result);</span>
+        },
+        context);
+    }
+<span class="cstat-no" title="statement not covered" >    emitter(next, done, context);</span>
+  }
+}
 &nbsp;
 export default notifiers;
 &nbsp;</pre></td></tr>
@@ -98,7 +152,7 @@ export default notifiers;
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Wed Mar 02 2016 21:42:03 GMT+0300 (Belarus Standard Time)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Fri Mar 04 2016 20:36:59 GMT+0300 (Belarus Standard Time)
 </div>
 </div>
 <script src="../../../prettify.js"></script>

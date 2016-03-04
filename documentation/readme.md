@@ -31,7 +31,6 @@ If no data sources provided, creates empty instance emitting &quot;done&quot; ev
     * [.count()](#Flow+count) ⇒ <code>[Flow](#Flow)</code>
     * [.delay([interval])](#Flow+delay) ⇒ <code>[Flow](#Flow)</code>
     * [.distinct(untilChanged)](#Flow+distinct) ⇒ <code>[Flow](#Flow)</code>
-    * [.dump([prefix], [logger])](#Flow+dump) ⇒ <code>[Flow](#Flow)</code>
     * [.every([predicate])](#Flow+every) ⇒ <code>[Flow](#Flow)</code>
     * [.filter([predicate])](#Flow+filter) ⇒ <code>[Flow](#Flow)</code>
     * [.flatten([depth])](#Flow+flatten) ⇒ <code>[Flow](#Flow)</code>
@@ -61,12 +60,12 @@ If no data sources provided, creates empty instance emitting &quot;done&quot; ev
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Example**  
 ```js
-aeroflow().average().dump().run();
+aeroflow().average().notify(console).run();
 // done true
-aeroflow('test').average().dump().run();
+aeroflow('test').average().notify(console).run();
 // next NaN
 // done true
-aeroflow(1, 2, 6).average().dump().run();
+aeroflow(1, 2, 6).average().notify(console).run();
 // next 3
 // done true
 ```
@@ -87,21 +86,21 @@ is adapted with suitable adapter from [aeroflow.adapters](aeroflow.adapters) reg
 
 **Example**  
 ```js
-aeroflow(new Error('test')).catch().dump().run();
+aeroflow(new Error('test')).catch().notify(console).run();
 // done false
 aeroflow(new Error('test')).dump('before ').catch('success').dump('after ').run();
 // before done Error: test(…)
 // after next success
 // after done false
-aeroflow(new Error('test')).catch([1, 2]).dump().run();
+aeroflow(new Error('test')).catch([1, 2]).notify(console).run();
 // next 1
 // next 2
 // done false
-aeroflow(new Error('test')).catch(() => [1, 2]).dump().run();
+aeroflow(new Error('test')).catch(() => [1, 2]).notify(console).run();
 // next 1
 // next 2
 // done false
-aeroflow(new Error('test')).catch(() => [[1], [2]]).dump().run();
+aeroflow(new Error('test')).catch(() => [[1], [2]]).notify(console).run();
 // next [1]
 // next [2]
 // done false
@@ -129,17 +128,17 @@ is adapted with suitable adapter from [aeroflow.adapters](aeroflow.adapters) reg
 
 **Example**  
 ```js
-aeroflow.empty.coalesce().dump().run();
+aeroflow.empty.coalesce().notify(console).run();
 // done true
-aeroflow.empty.coalesce([1, 2]).dump().run();
+aeroflow.empty.coalesce([1, 2]).notify(console).run();
 // next 1
 // next 2
 // done true
-aeroflow.empty.coalesce(() => [1, 2]).dump().run();
+aeroflow.empty.coalesce(() => [1, 2]).notify(console).run();
 // next 1
 // next 2
 // done true
-aeroflow.empty.coalesce(() => [[1], [2]]).dump().run();
+aeroflow.empty.coalesce(() => [[1], [2]]).notify(console).run();
 // next [1]
 // next [2]
 // done true
@@ -151,10 +150,10 @@ Counts the number of values emitted by this flow, returns new flow emitting only
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Example**  
 ```js
-aeroflow().count().dump().run();
+aeroflow().count().notify(console).run();
 // next 0
 // done
-aeroflow('a', 'b', 'c').count().dump().run();
+aeroflow('a', 'b', 'c').count().notify(console).run();
 // next 3
 // done
 ```
@@ -163,19 +162,19 @@ aeroflow('a', 'b', 'c').count().dump().run();
 Returns new flow delaying emission of each value accordingly provided condition.
 
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
-**Example:**: aeroflow(1, 2).delay(500).dump().run();
+**Example:**: aeroflow(1, 2).delay(500).notify(console).run();
 // next 1 // after 500ms
 // next 2 // after 500ms
 // done true // after 500ms
-aeroflow(1, 2).delay(new Date(Date.now() + 500)).dump().run();
+aeroflow(1, 2).delay(new Date(Date.now() + 500)).notify(console).run();
 // next 1 // after 500ms
 // next 2
 // done true
-aeroflow(1, 2).delay((value, index) => 500 + 500 * index).dump().run();
+aeroflow(1, 2).delay((value, index) => 500 + 500 * index).notify(console).run();
 // next 1 // after 500ms
 // next 2 // after 1000ms
 // done true
-aeroflow(1, 2).delay(value => { throw new Error }).dump().run();
+aeroflow(1, 2).delay(value => { throw new Error }).notify(console).run();
 // done Error(…)
 // Uncaught (in promise) Error: test(…)  
 **Params**
@@ -198,41 +197,15 @@ The result of condition function will be converted to number and used as millise
 
 **Example**  
 ```js
-aeroflow(1, 1, 2, 2, 1, 1).distinct().dump().run();
+aeroflow(1, 1, 2, 2, 1, 1).distinct().notify(console).run();
 // next 1
 // next 2
 // done true
-aeroflow(1, 1, 2, 2, 1, 1).distinct(true).dump().run();
+aeroflow(1, 1, 2, 2, 1, 1).distinct(true).notify(console).run();
 // next 1
 // next 2
 // next 1
 // done true
-```
-<a name="Flow+dump"></a>
-### flow.dump([prefix], [logger]) ⇒ <code>[Flow](#Flow)</code>
-Dumps all events (next, done) emitted by this flow to the logger with optional prefix.
-
-**Kind**: instance method of <code>[Flow](#Flow)</code>  
-**Params**
-
-- [prefix] <code>string</code> <code> = &quot;&#x27;&#x27;&quot;</code> - A string prefix to prepend to each event name.
-- [logger] <code>function</code> <code> = console.log</code> - Function to execute for each event emitted, taking two arguments:
-name - The name of event emitted by this flow prepended with prefix.
-value - The value of event emitted by this flow.
-
-**Example**  
-```js
-aeroflow(1, 2).dump(console.info.bind(console)).run();
-// next 1
-// next 2
-// done true
-aeroflow(1, 2).dump('test ', console.info.bind(console)).run();
-// test next 1
-// test next 2
-// test done true
-aeroflow(1, 2).dump(event => { if (event === 'next') throw new Error }).dump().run();
-// done Error(…)
-// Uncaught (in promise) Error: test(…)
 ```
 <a name="Flow+every"></a>
 ### flow.every([predicate]) ⇒ <code>[Flow](#Flow)</code>
@@ -248,16 +221,16 @@ If omitted, default (truthy) predicate is used.
 
 **Example**  
 ```js
-aeroflow().every().dump().run();
+aeroflow().every().notify(console).run();
 // next true
 // done true
-aeroflow('a', 'b').every('a').dump().run();
+aeroflow('a', 'b').every('a').notify(console).run();
 // next false
 // done false
-aeroflow(1, 2).every(value => value > 0).dump().run();
+aeroflow(1, 2).every(value => value > 0).notify(console).run();
 // next true
 // done true
-aeroflow(1, 2).every(value => { throw new Error }).dump().run();
+aeroflow(1, 2).every(value => { throw new Error }).notify(console).run();
 // done Error(…)
 // Uncaught (in promise) Error: test(…)
 ```
@@ -275,24 +248,24 @@ If omitted, default (truthy) predicate is used.
 
 **Example**  
 ```js
-aeroflow().filter().dump().run();
+aeroflow().filter().notify(console).run();
 // done true
-aeroflow(0, 1).filter().dump().run();
+aeroflow(0, 1).filter().notify(console).run();
 // next 1
 // done true
-aeroflow('a', 'b', 'a').filter('a').dump().run();
+aeroflow('a', 'b', 'a').filter('a').notify(console).run();
 // next "a"
 // next "a"
 // done true
-aeroflow('a', 'b', 'a').filter(/a/).dump().run();
+aeroflow('a', 'b', 'a').filter(/a/).notify(console).run();
 // next "b"
 // next "b"
 // done true
-aeroflow(1, 2, 3, 4, 5).filter(value => (value % 2) === 0).dump().run();
+aeroflow(1, 2, 3, 4, 5).filter(value => (value % 2) === 0).notify(console).run();
 // next 2
 // next 4
 // done true
-aeroflow(1, 2).filter(value => { throw new Error }).dump().run();
+aeroflow(1, 2).filter(value => { throw new Error }).notify(console).run();
 // done Error: (…)
 // Uncaught (in promise) Error: test(…)
 ```
@@ -305,21 +278,21 @@ aeroflow(1, 2).filter(value => { throw new Error }).dump().run();
 
 **Example**  
 ```js
-aeroflow([[1, 2]]).flatten().dump().run();
+aeroflow([[1, 2]]).flatten().notify(console).run();
 // next 1
 // next 2
 // done true
-aeroflow(() => [[1], [2]]).flatten(1).dump().run();
+aeroflow(() => [[1], [2]]).flatten(1).notify(console).run();
 // next [1]
 // next [2]
 // done true
 aeroflow(new Promise(resolve => setTimeout(() => resolve(() => [1, 2]), 500)))
-  .flatten().dump().run();
+  .flatten().notify(console).run();
 // next 1 // after 500ms
 // next 2
 // done true
 aeroflow(new Promise(resolve => setTimeout(() => resolve(() => [1, 2]), 500)))
-  .flatten(1).dump().run();
+  .flatten(1).notify(console).run();
 // next [1, 2] // after 500ms
 // done true
 ```
@@ -332,7 +305,7 @@ aeroflow(new Promise(resolve => setTimeout(() => resolve(() => [1, 2]), 500)))
 
 **Example**  
 ```js
-aeroflow.range(1, 10).group(value => (value % 2) ? 'odd' : 'even').dump().run();
+aeroflow.range(1, 10).group(value => (value % 2) ? 'odd' : 'even').notify(console).run();
 // next ["odd", Array[5]]
 // next ["even", Array[5]]
 // done true
@@ -342,7 +315,7 @@ aeroflow(
   { country: 'Belarus', city: 'Minsk' },
   { country: 'Belarus', city: 'Grodno' },
   { country: 'Poland', city: 'Lodz' }
-).group(value => value.country, value => value.city).dump().run();
+).group(value => value.country, value => value.city).notify(console).run();
 // next ["Belarus", {{"Brest" => Array[1]}, {"Minsk" => Array[1]}, {"Grodno" => Array[1]}}]
 // next ["Poland", {{"Krakow" => Array[1]}, {"Lodz" => Array[1]}}]
 // done
@@ -356,17 +329,17 @@ aeroflow(
 
 **Example**  
 ```js
-aeroflow().map().dump().run();
+aeroflow().map().notify(console).run();
 // done true
-aeroflow(1, 2).map().dump().run();
+aeroflow(1, 2).map().notify(console).run();
 // next 1
 // next 2
 // done true
-aeroflow(1, 2).map('test').dump().run();
+aeroflow(1, 2).map('test').notify(console).run();
 // next test
 // next test
 // done true
-aeroflow(1, 2).map(value => value * 10).dump().run();
+aeroflow(1, 2).map(value => value * 10).notify(console).run();
 // next 10
 // next 20
 // done true
@@ -379,12 +352,12 @@ Determines the maximum value emitted by this flow.
 **Returns**: <code>[Flow](#Flow)</code> - New flow emitting the maximum value only.  
 **Example**  
 ```js
-aeroflow().max().dump().run();
+aeroflow().max().notify(console).run();
 // done true
-aeroflow(1, 3, 2).max().dump().run();
+aeroflow(1, 3, 2).max().notify(console).run();
 // next 3
 // done true
-aeroflow('b', 'a', 'c').max().dump().run();
+aeroflow('b', 'a', 'c').max().notify(console).run();
 // next c
 // done true
 ```
@@ -396,12 +369,12 @@ Determines the mean value emitted by this flow.
 **Returns**: <code>[Flow](#Flow)</code> - New flow emitting the mean value only.  
 **Example**  
 ```js
-aeroflow().mean().dump().run();
+aeroflow().mean().notify(console).run();
 // done true
-aeroflow(3, 1, 2).mean().dump().run();
+aeroflow(3, 1, 2).mean().notify(console).run();
 // next 2
 // done true
-aeroflow('a', 'd', 'f', 'm').mean().dump().run();
+aeroflow('a', 'd', 'f', 'm').mean().notify(console).run();
 // next f
 // done true
 ```
@@ -413,12 +386,12 @@ Determines the minimum value emitted by this flow.
 **Returns**: <code>[Flow](#Flow)</code> - New flow emitting the minimum value only.  
 **Example**  
 ```js
-aeroflow().min().dump().run();
+aeroflow().min().notify(console).run();
 // done true
-aeroflow(3, 1, 2).min().dump().run();
+aeroflow(3, 1, 2).min().notify(console).run();
 // next 1
 // done true
-aeroflow('b', 'a', 'c').min().dump().run();
+aeroflow('b', 'a', 'c').min().notify(console).run();
 // next a
 // done true
 ```
@@ -446,28 +419,28 @@ False to emit only 'done' event for empty flow.
 
 **Example**  
 ```js
-aeroflow().reduce().dump().run();
+aeroflow().reduce().notify(console).run();
 // done false
-aeroflow(1, 2).reduce().dump().run();
+aeroflow(1, 2).reduce().notify(console).run();
 // done false
-aeroflow().reduce('test').dump().run();
+aeroflow().reduce('test').notify(console).run();
 // next test
 // done true
-aeroflow().reduce((product, value) => product * value).dump().run();
+aeroflow().reduce((product, value) => product * value).notify(console).run();
 // next undefined
 // done true
-aeroflow().reduce((product, value) => product * value, 1, true).dump().run();
+aeroflow().reduce((product, value) => product * value, 1, true).notify(console).run();
 // next 1
 // done true
-aeroflow(2, 4, 8).reduce((product, value) => product * value).dump().run();
+aeroflow(2, 4, 8).reduce((product, value) => product * value).notify(console).run();
 // next 64
 // done
-aeroflow(2, 4, 8).reduce((product, value) => product * value, 2).dump().run();
+aeroflow(2, 4, 8).reduce((product, value) => product * value, 2).notify(console).run();
 // next 128
 // done
 aeroflow(['a', 'b', 'c'])
   .reduce((product, value, index) => product + value + index, '')
-  .dump().run();
+  .notify(console).run();
 // next a0b1c2
 // done
 ```
@@ -481,19 +454,19 @@ aeroflow(['a', 'b', 'c'])
 
 **Example**  
 ```js
-aeroflow(1, 2).replay(1000).take(4).dump().run();
+aeroflow(1, 2).replay(1000).take(4).notify(console).run();
 // next 1
 // next 2
 // next 1 // after 1000ms
 // next 2
 // done false
-aeroflow(1, 2).delay(500).replay(1000).take(4).dump().run();
+aeroflow(1, 2).delay(500).replay(1000).take(4).notify(console).run();
 // next 1
 // next 2 // after 500ms
 // next 1 // after 1000ms
 // next 2
 // done false
-aeroflow(1, 2).delay(500).replay(1000, true).take(4).dump().run();
+aeroflow(1, 2).delay(500).replay(1000, true).take(4).notify(console).run();
 // next 1
 // next 2 // after 500ms
 // next 1 // after 1000ms
@@ -524,9 +497,9 @@ var attempt = 0; aeroflow(() => {
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Example**  
 ```js
-aeroflow().reverse().dump().run();
+aeroflow().reverse().notify(console).run();
 // done true
-aeroflow(1, 2, 3).reverse().dump().run();
+aeroflow(1, 2, 3).reverse().notify(console).run();
 // next 3
 // next 2
 // next 1
@@ -556,11 +529,11 @@ When passed something other than function, it considered as context data.
 
 **Example**  
 ```js
-aeroflow('test').dump().run();
+aeroflow('test').notify(console).run();
 // next test
 // done true
 (async function() {
-  var result = await aeroflow('test').dump().run();
+  var result = await aeroflow('test').notify(console).run();
   console.log(result);
 })();
 // test
@@ -599,17 +572,17 @@ returns flow emitting remaining values.
 
 **Example**  
 ```js
-aeroflow(1, 2, 3).skip().dump().run();
+aeroflow(1, 2, 3).skip().notify(console).run();
 // done true
-aeroflow(1, 2, 3).skip(1).dump().run();
+aeroflow(1, 2, 3).skip(1).notify(console).run();
 // next 2
 // next 3
 // done true
-aeroflow(1, 2, 3).skip(-1).dump().run();
+aeroflow(1, 2, 3).skip(-1).notify(console).run();
 // next 1
 // next 2
 // done true
-aeroflow(1, 2, 3).skip(value => value < 3).dump().run();
+aeroflow(1, 2, 3).skip(value => value < 3).notify(console).run();
 // next 3
 // done true
 ```
@@ -623,23 +596,23 @@ aeroflow(1, 2, 3).skip(value => value < 3).dump().run();
 
 **Example**  
 ```js
-aeroflow(1, 2, 3).slice().dump().run();
+aeroflow(1, 2, 3).slice().notify(console).run();
 // next 1
 // next 2
 // next 3
 // done true
-aeroflow(1, 2, 3).slice(1).dump().run();
+aeroflow(1, 2, 3).slice(1).notify(console).run();
 // next 2
 // next 3
 // done true
-aeroflow(1, 2, 3).slice(1, 2).dump().run();
+aeroflow(1, 2, 3).slice(1, 2).notify(console).run();
 // next 2
 // done false
-aeroflow(1, 2, 3).slice(-2).dump().run();
+aeroflow(1, 2, 3).slice(-2).notify(console).run();
 // next 2
 // next 3
 // done true
-aeroflow(1, 2, 3).slice(-3, -1).dump().run();
+aeroflow(1, 2, 3).slice(-3, -1).notify(console).run();
 // next 1
 // next 2
 // done true
@@ -659,16 +632,16 @@ If omitted, truthy predicate is used.
 
 **Example**  
 ```js
-aeroflow().some().dump().run();
+aeroflow().some().notify(console).run();
 // next false
 // done true
-aeroflow(1, 2, 3).some(2).dump().run();
+aeroflow(1, 2, 3).some(2).notify(console).run();
 // next true
 // done false
-aeroflow(1, 2, 3).some(value => value % 2).dump().run();
+aeroflow(1, 2, 3).some(value => value % 2).notify(console).run();
 // next true
 // done false
-aeroflow(1, 2, 3).some(value => { throw new Error }).dump().run();
+aeroflow(1, 2, 3).some(value => { throw new Error }).notify(console).run();
 // done Error(…)
 // Uncaught (in promise) Error: test(…)
 ```
@@ -681,12 +654,12 @@ aeroflow(1, 2, 3).some(value => { throw new Error }).dump().run();
 
 **Example**  
 ```js
-aeroflow(3, 1, 2).sort().dump().run();
+aeroflow(3, 1, 2).sort().notify(console).run();
 // next 1
 // next 2
 // next 3
 // done true
-aeroflow(2, 1, 3).sort('desc').dump().run();
+aeroflow(2, 1, 3).sort('desc').notify(console).run();
 // next 3
 // next 2
 // next 1
@@ -697,7 +670,7 @@ aeroflow(
   { country: 'Belarus', city: 'Minsk' },
   { country: 'Belarus', city: 'Grodno' },
   { country: 'Poland', city: 'Lodz' }
-).sort(value => value.country, value => value.city, 'desc').dump().run();
+).sort(value => value.country, value => value.city, 'desc').notify(console).run();
 // next Object {country: "Belarus", city: "Minsk"}
 // next Object {country: "Belarus", city: "Grodno"}
 // next Object {country: "Belarus", city: "Brest"}
@@ -714,12 +687,12 @@ aeroflow(
 
 **Example**  
 ```js
-aeroflow().sum().dump().run();
+aeroflow().sum().notify(console).run();
 // done true
-aeroflow('test').sum().dump().run();
+aeroflow('test').sum().notify(console).run();
 // next NaN
 // done true
-aeroflow(1, 2, 3).sum().dump().run();
+aeroflow(1, 2, 3).sum().notify(console).run();
 // next 6
 // done true
 ```
@@ -732,12 +705,12 @@ aeroflow(1, 2, 3).sum().dump().run();
 
 **Example**  
 ```js
-aeroflow(1, 2, 3).take().dump().run();
+aeroflow(1, 2, 3).take().notify(console).run();
 // done false
-aeroflow(1, 2, 3).take(1).dump().run();
+aeroflow(1, 2, 3).take(1).notify(console).run();
 // next 1
 // done false
-aeroflow(1, 2, 3).take(-1).dump().run();
+aeroflow(1, 2, 3).take(-1).notify(console).run();
 // next 3
 // done true
 ```
@@ -749,13 +722,13 @@ Collects all values emitted by this flow to array, returns flow emitting this ar
 **Returns**: <code>[Flow](#Flow)</code> - New flow emitting array containing all results emitted by this flow.  
 **Example**  
 ```js
-aeroflow().toArray().dump().run();
+aeroflow().toArray().notify(console).run();
 // next []
 // done true
-aeroflow('test').toArray().dump().run();
+aeroflow('test').toArray().notify(console).run();
 // next ["test"]
 // done true
-aeroflow(1, 2, 3).toArray().dump().run();
+aeroflow(1, 2, 3).toArray().notify(console).run();
 // next [1, 2, 3]
 // done true
 ```
@@ -774,16 +747,16 @@ Or scalar value to use as map value.
 
 **Example**  
 ```js
-aeroflow().toMap().dump().run();
+aeroflow().toMap().notify(console).run();
 // next Map {}
 // done true
-aeroflow('test').toMap().dump().run();
+aeroflow('test').toMap().notify(console).run();
 // next Map {"test" => "test"}
 done true
-aeroflow(1, 2, 3).toMap(v => 'key' + v, true).dump().run();
+aeroflow(1, 2, 3).toMap(v => 'key' + v, true).notify(console).run();
 // next Map {"key1" => true, "key2" => true, "key3" => true}
 // done true
-aeroflow(1, 2, 3).toMap(v => 'key' + v, v => 10 * v).dump().run();
+aeroflow(1, 2, 3).toMap(v => 'key' + v, v => 10 * v).notify(console).run();
 // next Map {"key1" => 10, "key2" => 20, "key3" => 30}
 // done true
 ```
@@ -795,10 +768,10 @@ Collects all values emitted by this flow to ES6 set, returns flow emitting this 
 **Returns**: <code>[Flow](#Flow)</code> - New flow emitting set containing all results emitted by this flow.  
 **Example**  
 ```js
-aeroflow().toSet().dump().run();
+aeroflow().toSet().notify(console).run();
 // next Set {}
 // done true
-aeroflow(1, 2, 3).toSet().dump().run();
+aeroflow(1, 2, 3).toSet().notify(console).run();
 // next Set {1, 2, 3}
 // done true
 ```
@@ -819,19 +792,19 @@ If separator is a boolean value, it is used instead a second parameter of this m
 
 **Example**  
 ```js
-aeroflow().toString().dump().run();
+aeroflow().toString().notify(console).run();
 // next
 // done true
-aeroflow('test').toString().dump().run();
+aeroflow('test').toString().notify(console).run();
 // next test
 // done true
-aeroflow(1, 2, 3).toString().dump().run();
+aeroflow(1, 2, 3).toString().notify(console).run();
 // next 1,2,3
 // done true
-aeroflow(1, 2, 3).toString(';').dump().run();
+aeroflow(1, 2, 3).toString(';').notify(console).run();
 // next 1;2;3
 // done true
-aeroflow(1, 2, 3).toString((value, index) => '-'.repeat(index + 1)).dump().run();
+aeroflow(1, 2, 3).toString((value, index) => '-'.repeat(index + 1)).notify(console).run();
 // next 1--2---3
 // done true
 ```
@@ -865,7 +838,7 @@ See examples to find out how to create and register custom operators.
 
 **Example**  
 ```js
-aeroflow().dump().run();
+aeroflow().notify(console).run();
 // done true
 aeroflow(
   1,
@@ -874,7 +847,7 @@ aeroflow(
   () => 6,
   Promise.resolve(7),
   new Promise(resolve => setTimeout(() => resolve(8), 500))
-).dump().run();
+).notify(console).run();
 // next 1
 // next 2
 // next 3
@@ -884,17 +857,17 @@ aeroflow(
 // next 7
 // next 8 // after 500ms
 // done true
-aeroflow(new Error('test')).dump().run();
+aeroflow(new Error('test')).notify(console).run();
 // done Error: test(…)
 // Uncaught (in promise) Error: test(…)
-aeroflow(() => { throw new Error }).dump().run();
+aeroflow(() => { throw new Error }).notify(console).run();
 // done Error: test(…)
 // Uncaught (in promise) Error: test(…)
-aeroflow("test").dump().run();
+aeroflow("test").notify(console).run();
 // next test
 // done true
 aeroflow.adapters.use('String', aeroflow.adapters['Array']);
-aeroflow("test").dump().run();
+aeroflow("test").notify(console).run();
 // next t
 // next e
 // next s
@@ -906,7 +879,7 @@ aeroflow.operators.test = function() {
     done,
     context));
 }
-aeroflow(42).test().dump().run();
+aeroflow(42).test().notify(console).run();
 // next test:42
 // done true
 ```
@@ -915,6 +888,7 @@ aeroflow(42).test().dump().run();
     * [.create(emitter)](#aeroflow.create) ⇒ <code>[Flow](#Flow)</code>
     * [.expand(expander, [seed])](#aeroflow.expand) ⇒ <code>[Flow](#Flow)</code>
     * [.just(source)](#aeroflow.just) ⇒ <code>[Flow](#Flow)</code>
+    * [.listen()](#aeroflow.listen)
     * [.random([minimum], [maximum])](#aeroflow.random) ⇒ <code>[Flow](#Flow)</code>
     * [.range([start], [end], [step])](#aeroflow.range) ⇒ <code>[Flow](#Flow)</code>
     * [.repeat([repeater], [delayer])](#aeroflow.repeat) ⇒ <code>[Flow](#Flow)</code>
@@ -937,13 +911,13 @@ context - the execution context.
 aeroflow.create((next, done, context) => {
   next('test');
   done();
-}).dump().run();
+}).notify(console).run();
 // next test
 // done true
 aeroflow.create((next, done, context) => {
   window.addEventListener('click', next);
   return () => window.removeEventListener('click', next);
-}).take(2).dump().run();
+}).take(2).notify(console).run();
 // next MouseEvent {...}
 // next MouseEvent {...}
 // done false
@@ -958,7 +932,7 @@ aeroflow.create((next, done, context) => {
 
 **Example**  
 ```js
-aeroflow.expand(value => value * 2, 1).take(3).dump().run();
+aeroflow.expand(value => value * 2, 1).take(3).notify(console).run();
 // next 2
 // next 4
 // next 8
@@ -976,9 +950,25 @@ Returns new instance emitting the provided source as is.
 
 **Example**  
 ```js
-aeroflow.just([1, 2, 3]).dump().run();
+aeroflow.just([1, 2, 3]).notify(console).run();
 // next [1, 2, 3]
 // done
+```
+<a name="aeroflow.listen"></a>
+### aeroflow.listen()
+**Kind**: static method of <code>[aeroflow](#aeroflow)</code>  
+**Example**  
+```js
+aeroflow
+  .listen(document, 'mousemove')
+  .map(event => ({ x: event.x, y: event.y }))
+  .take(3)
+  .notify(console)
+  .run();
+// next Object {x: 241, y: 269}
+// next Object {x: 221, y: 272}
+// next Object {x: 200, y: 273}
+// done false
 ```
 <a name="aeroflow.random"></a>
 ### aeroflow.random([minimum], [maximum]) ⇒ <code>[Flow](#Flow)</code>
@@ -993,15 +983,15 @@ Creates new instance emitting infinite sequence of random numbers.
 
 **Example**  
 ```js
-aeroflow.random().take(2).dump().run();
+aeroflow.random().take(2).notify(console).run();
 // next 0.07417976693250232
 // next 0.5904422281309957
 // done false
-aeroflow.random(1, 9).take(2).dump().run();
+aeroflow.random(1, 9).take(2).notify(console).run();
 // next 7
 // next 2
 // done false
-aeroflow.random(1.1, 8.9).take(2).dump().run();
+aeroflow.random(1.1, 8.9).take(2).notify(console).run();
 // next 4.398837305698544
 // next 2.287970747705549
 // done false
@@ -1017,25 +1007,25 @@ aeroflow.random(1.1, 8.9).take(2).dump().run();
 
 **Example**  
 ```js
-aeroflow.range().take(3).dump().run();
+aeroflow.range().take(3).notify(console).run();
 // next 0
 // next 1
 // next 2
 // done false
-aeroflow.range(-3).take(3).dump().run();
+aeroflow.range(-3).take(3).notify(console).run();
 // next -3
 // next -2
 // next -1
 // done false
-aeroflow.range(1, 1).dump().run();
+aeroflow.range(1, 1).notify(console).run();
 // next 1
 // done true
-aeroflow.range(0, 5, 2).dump().run();
+aeroflow.range(0, 5, 2).notify(console).run();
 // next 0
 // next 2
 // next 4
 // done true
-aeroflow.range(5, 0, -2).dump().run();
+aeroflow.range(5, 0, -2).notify(console).run();
 // next 5
 // next 3
 // next 1
@@ -1058,25 +1048,25 @@ or function providing dynamic delay and called with one argument:
 
 **Example**  
 ```js
-aeroflow.repeat(Math.random()).take(2).dump().run();
+aeroflow.repeat(Math.random()).take(2).notify(console).run();
 // next 0.7492001398932189
 // next 0.7492001398932189
 // done false
-aeroflow.repeat(() => Math.random()).take(2).dump().run();
+aeroflow.repeat(() => Math.random()).take(2).notify(console).run();
 // next 0.46067174314521253
 // next 0.7977648684754968
 // done false
-aeroflow.repeat(index => Math.pow(2, index)).take(3).dump().run();
+aeroflow.repeat(index => Math.pow(2, index)).take(3).notify(console).run();
 // next 1
 // next 2
 // next 4
 // done false
-aeroflow.repeat('ping', 500).take(3).dump().run();
+aeroflow.repeat('ping', 500).take(3).notify(console).run();
 // next ping // after 500ms
 // next ping // after 500ms
 // next ping // after 500ms
 // done false
-aeroflow.repeat(index => index, index => 500 + 500 * index).take(3).dump().run();
+aeroflow.repeat(index => index, index => 500 + 500 * index).take(3).notify(console).run();
 // next 0 // after 500ms
 // next 1 // after 1000ms
 // next 2 // after 1500ms

@@ -17,7 +17,13 @@
     <script>
       mocha.setup({ ui: 'bdd' });
       aeroflowTests(aeroflow, chai.expect, sinon);
-      mocha.run();
+      if (console) {
+        console.profile();
+        mocha.run(function() {
+          console.profileEnd();
+        });
+      }
+      else mocha.run();
     </script>
   </body>
 </html>

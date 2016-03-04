@@ -20,9 +20,9 @@
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">94.29% </span>
+        <span class="strong">92.68% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>33/35</span>
+        <span class='fraction'>38/41</span>
       </div>
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
@@ -30,14 +30,18 @@
         <span class='fraction'>4/4</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">80% </span>
+        <span class="strong">72.73% </span>
         <span class="quiet">Functions</span>
-        <span class='fraction'>8/10</span>
+        <span class='fraction'>8/11</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">90% </span>
+        <span class="strong">86.36% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>18/20</span>
+        <span class='fraction'>19/22</span>
+      </div>
+      <div class='fl pad1y'>
+        <span class="strong">2 statements</span>
+        <span class="quiet">Ignored</span>  &nbsp;&nbsp;&nbsp;&nbsp;
       </div>
     </div>
   </div>
@@ -342,7 +346,33 @@
 297
 298
 299
-300</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -526,6 +556,25 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -625,8 +674,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-yes">6×</span>
-<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-yes">7×</span>
+<span class="cline-any cline-yes">7×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
@@ -635,7 +684,12 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -652,6 +706,7 @@ import {
   rangeGenerator,
   repeatGenerator
 } from './generators/index';
+import listeners, { listener } from './listeners/index';
 import notifiers from './notifiers/index';
 import instance, { operators } from './instance';
 import emit from './emit';
@@ -687,7 +742,7 @@ Map of operators available for use with every instance.
 See examples to find out how to create and register custom operators.
 &nbsp;
 @example
-aeroflow().dump().run();
+aeroflow().notify(console).run();
 // done true
 aeroflow(
   1,
@@ -696,7 +751,7 @@ aeroflow(
   () =&gt; 6,
   Promise.resolve(7),
   new Promise(resolve =&gt; setTimeout(() =&gt; resolve(8), 500))
-).dump().run();
+).notify(console).run();
 // next 1
 // next 2
 // next 3
@@ -706,17 +761,17 @@ aeroflow(
 // next 7
 // next 8 // after 500ms
 // done true
-aeroflow(new Error('test')).dump().run();
+aeroflow(new Error('test')).notify(console).run();
 // done Error: test(…)
 // Uncaught (in promise) Error: test(…)
-aeroflow(() =&gt; { throw new Error }).dump().run();
+aeroflow(() =&gt; { throw new Error }).notify(console).run();
 // done Error: test(…)
 // Uncaught (in promise) Error: test(…)
-aeroflow("test").dump().run();
+aeroflow("test").notify(console).run();
 // next test
 // done true
 aeroflow.adapters.use('String', aeroflow.adapters['Array']);
-aeroflow("test").dump().run();
+aeroflow("test").notify(console).run();
 // next t
 // next e
 // next s
@@ -728,7 +783,7 @@ aeroflow.operators.test = function() {
     done,
     context));
 }
-aeroflow(42).test().dump().run();
+aeroflow(42).test().notify(console).run();
 // next test:42
 // done true
 */
@@ -755,13 +810,13 @@ The new instance emitting values generated by emitter function.
 aeroflow.create((next, done, context) =&gt; {
   next('test');
   done();
-}).dump().run();
+}).notify(console).run();
 // next test
 // done true
 aeroflow.create((next, done, context) =&gt; {
   window.addEventListener('click', next);
   return () =&gt; window.removeEventListener('click', next);
-}).take(2).dump().run();
+}).take(2).notify(console).run();
 // next MouseEvent {...}
 // next MouseEvent {...}
 // done false
@@ -779,7 +834,7 @@ aeroflow.create((next, done, context) =&gt; {
 @return {Flow}
 &nbsp;
 @example
-aeroflow.expand(value =&gt; value * 2, 1).take(3).dump().run();
+aeroflow.expand(value =&gt; value * 2, 1).take(3).notify(console).run();
 // next 2
 // next 4
 // next 8
@@ -801,13 +856,32 @@ The source to emit as is.
 The new instance emitting provided value.
 &nbsp;
 @example
-aeroflow.just([1, 2, 3]).dump().run();
+aeroflow.just([1, 2, 3]).notify(console).run();
 // next [1, 2, 3]
 // done
 */
 // TODO: multiple arguments
 function just(source) {
   return instance(valueAdapter(source));
+}
+&nbsp;
+/**
+@alias aeroflow.listen
+&nbsp;
+@example
+aeroflow
+  .listen(document, 'mousemove')
+  .map(event =&gt; ({ x: event.x, y: event.y }))
+  .take(3)
+  .notify(console)
+  .run();
+// next Object {x: 241, y: 269}
+// next Object {x: 221, y: 272}
+// next Object {x: 200, y: 273}
+// done false
+*/
+<span class="fstat-no" title="function not covered" >function listen(source, ...parameters) {</span>
+<span class="cstat-no" title="statement not covered" >  return instance(listener(source, parameters));</span>
 }
 &nbsp;
 /**
@@ -822,15 +896,15 @@ Creates new instance emitting infinite sequence of random numbers.
 The new instance emitting random numbers.
 &nbsp;
 @example
-aeroflow.random().take(2).dump().run();
+aeroflow.random().take(2).notify(console).run();
 // next 0.07417976693250232
 // next 0.5904422281309957
 // done false
-aeroflow.random(1, 9).take(2).dump().run();
+aeroflow.random(1, 9).take(2).notify(console).run();
 // next 7
 // next 2
 // done false
-aeroflow.random(1.1, 8.9).take(2).dump().run();
+aeroflow.random(1.1, 8.9).take(2).notify(console).run();
 // next 4.398837305698544
 // next 2.287970747705549
 // done false
@@ -849,25 +923,25 @@ function random(minimum, maximum) {
 @return {Flow}
 &nbsp;
 @example
-aeroflow.range().take(3).dump().run();
+aeroflow.range().take(3).notify(console).run();
 // next 0
 // next 1
 // next 2
 // done false
-aeroflow.range(-3).take(3).dump().run();
+aeroflow.range(-3).take(3).notify(console).run();
 // next -3
 // next -2
 // next -1
 // done false
-aeroflow.range(1, 1).dump().run();
+aeroflow.range(1, 1).notify(console).run();
 // next 1
 // done true
-aeroflow.range(0, 5, 2).dump().run();
+aeroflow.range(0, 5, 2).notify(console).run();
 // next 0
 // next 2
 // next 4
 // done true
-aeroflow.range(5, 0, -2).dump().run();
+aeroflow.range(5, 0, -2).notify(console).run();
 // next 5
 // next 3
 // next 1
@@ -895,25 +969,25 @@ or function providing dynamic delay and called with one argument:
 New flow emitting repeated values.
 &nbsp;
 @example
-aeroflow.repeat(Math.random()).take(2).dump().run();
+aeroflow.repeat(Math.random()).take(2).notify(console).run();
 // next 0.7492001398932189
 // next 0.7492001398932189
 // done false
-aeroflow.repeat(() =&gt; Math.random()).take(2).dump().run();
+aeroflow.repeat(() =&gt; Math.random()).take(2).notify(console).run();
 // next 0.46067174314521253
 // next 0.7977648684754968
 // done false
-aeroflow.repeat(index =&gt; Math.pow(2, index)).take(3).dump().run();
+aeroflow.repeat(index =&gt; Math.pow(2, index)).take(3).notify(console).run();
 // next 1
 // next 2
 // next 4
 // done false
-aeroflow.repeat('ping', 500).take(3).dump().run();
+aeroflow.repeat('ping', 500).take(3).notify(console).run();
 // next ping // after 500ms
 // next ping // after 500ms
 // next ping // after 500ms
 // done false
-aeroflow.repeat(index =&gt; index, index =&gt; 500 + 500 * index).take(3).dump().run();
+aeroflow.repeat(index =&gt; index, index =&gt; 500 + 500 * index).take(3).notify(console).run();
 // next 0 // after 500ms
 // next 1 // after 1000ms
 // next 2 // after 1500ms
@@ -928,15 +1002,20 @@ function defineGenerator(defintion, generator) {
   return defintion;
 }
 &nbsp;
-objectDefineProperties(
-  aeroflow,
-  [
-    create, expand, just, random, range, repeat
-  ].reduce(defineGenerator, {}));
+objectDefineProperties(aeroflow, [
+  create,
+  expand,
+  just,
+  listen,
+  random,
+  range,
+  repeat
+].reduce(defineGenerator, {}));
 &nbsp;
 objectDefineProperties(aeroflow, {
   adapters: { value: adapters },
   empty: { enumerable: true, get: () =&gt; instance(emptyGenerator(true)) },
+  listeners: { value: listeners },
   notifiers: { value: notifiers },
   operators: { value: operators }
 });
@@ -946,7 +1025,7 @@ objectDefineProperties(aeroflow, {
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Wed Mar 02 2016 21:42:03 GMT+0300 (Belarus Standard Time)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Fri Mar 04 2016 20:36:59 GMT+0300 (Belarus Standard Time)
 </div>
 </div>
 <script src="../../prettify.js"></script>

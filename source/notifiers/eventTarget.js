@@ -1,12 +1,11 @@
-'use strict';
-
+import { DONE, NEXT } from '../symbols';
 import { isFunction, isObject } from '../utilites';
 
-export function eventTargetNotifier(target, nextEventName = 'next', doneEventName = 'done') {
+export default function eventTargetNotifier(target, nextEventType = 'next', doneEventType = 'done') {
   if (!isObject(target) || !isFunction(target.dispatchEvent)) return;
   const dispatch = eventName => detail => target.dispatchEvent(new CustomEvent(eventName, { detail }));
   return {
-    done: dispatch(doneEventName),
-    next: dispatch(nextEventName)
+    [DONE]: dispatch(doneEventType),
+    [NEXT]: dispatch(nextEventType)
   };
 }

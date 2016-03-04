@@ -7,7 +7,6 @@
   </head>
   <body>
     <div id="mocha"></div>
-    <script src="../../node_modules/core-js/client/core.js"></script>
     <script src="../../node_modules/mocha/mocha.js"></script>
     <script src="../../node_modules/chai/chai.js"></script>
     <script src="../sinon-1.17.3.js"></script>
@@ -17,7 +16,11 @@
     <script>
       mocha.setup({ ui: 'bdd' });
       aeroflowTests(aeroflow, chai.expect, sinon);
-      mocha.run();
+      if (console) {
+        console.profile();
+        mocha.run(() => console.profileEnd());
+      }
+      else mocha.run();
     </script>
   </body>
 </html>

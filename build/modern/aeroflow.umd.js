@@ -9,10 +9,12 @@
   const CLASS = Symbol.toStringTag;
   const CONTEXT = Symbol('Context');
   const DATE = 'Date';
+  const DONE = Symbol('Done');
   const EMITTER = Symbol('Emitter');
   const ERROR = 'Error';
   const FUNCTION = 'Function';
   const ITERATOR = Symbol.iterator;
+  const NEXT = Symbol('Next');
   const NUMBER = 'Number';
   const PROMISE = 'Promise';
   const PROTOTYPE = 'prototype';
@@ -28,6 +30,7 @@
   const mathMax = Math.max;
   const mathMin = Math.min;
   const maxInteger = Number.MAX_SAFE_INTEGER;
+  const nothing = undefined;
   const objectCreate = Object.create;
   const objectDefineProperties = Object.defineProperties;
   const objectDefineProperty = Object.defineProperty;
@@ -46,13 +49,13 @@
   const classIs = className => value => classOf(value) === className;
 
   const isBoolean = value => value === true || value === false;
-  const isDefined = value => value !== undefined;
+  const isDefined = value => value !== nothing;
   const isError = classIs(ERROR);
   const isFunction = value => typeof value == 'function';
   const isInteger = Number.isInteger;
   const isObject = value => value != null && typeof value === 'object';
   const isPromise = classIs(PROMISE);
-  const isUndefined = value => value === undefined;
+  const isUndefined = value => value === nothing;
 
   const tie = (func, ...args) => () => func(...args);
 
@@ -97,25 +100,25 @@
       use: { value: use }
     });
     function get(target, ...parameters) {
-      let functor = list[classOf(target)];
-      if (isFunction(functor)) return functor(target, ...parameters);
+      const builder = list[classOf(target)];
+      if (isFunction(builder)) return builder(target, ...parameters);
       for (let i = list.length; i--;) {
-        functor = list[i](target, ...parameters);
-        if (isFunction(functor)) return functor;
+        const instance = list[i](target, ...parameters);
+        if (instance) return instance;
       }
     }
-    function use(key, functor) {
+    function use(key, builder) {
       switch (classOf(key)) {
         case FUNCTION:
           list.push(key);
           break;
         case NUMBER:
-          if (isFunction(functor)) list.splice(key, 0, functor);
+          if (isFunction(builder)) list.splice(key, 0, builder);
           else list.splice(key, 1);
           break;
         case STRING:
         case SYMBOL:
-          if (isFunction(functor)) list[key] = functor;
+          if (isFunction(builder)) list[key] = builder;
           else delete list[key];
           break;
       }
@@ -131,18 +134,12 @@
         done(false);
         return true;
     }
-    switch (classOf(result)) {
-      case PROMISE:
-        result.then(
-          promiseResult => {
-            if (!unsync(promiseResult, next, done)) next(true);
-          },
-          promiseError => done(toError(promiseError)));
-        break;
-      case ERROR:
-        done(result);
-        break;
-    }
+    if (isPromise(result)) return result.then(
+      promiseResult => {
+        if (!unsync(promiseResult, next, done)) next(true);
+      },
+      promiseError => done(toError(promiseError)));
+    done(result);
     return true;
   }
 
@@ -211,39 +208,57 @@
     return (next, done) => done(result);
   }
 
+  function impede(next, done) {
+    let busy = false, idle = false, queue = [], signal;
+    function convey() {
+      busy = false;
+      while (queue.length) {
+        signal = unsync(queue.pop()(), convey, finish);
+        switch (signal) {
+          case false:
+            signal = true;
+            continue;
+          case true:
+            return signal = false;
+          default:
+            return;
+        }
+      }
+      if (idle) queue = nothing;
+    }
+    function finish(result) {
+      idle = true;
+      signal = false;
+      queue = nothing;
+      done(result);
+    }
+    return {
+      [DONE]: result => {
+        if (idle) return false;
+        idle = true;
+        queue.push(tie(done, result));
+        if (!busy) convey();
+      },
+      [NEXT]: result => {
+        if (idle) return false;
+        queue.push(tie(next, result));
+        if (!busy) convey();
+        return signal;
+      }
+    }
+  }
+
   function customGenerator(generator) {
     if (isUndefined(generator)) return emptyGenerator(true);
     if (!isFunction(generator)) return valueAdapter(generator);
     return (next, done, context) => {
-      let buffer = [], conveying = false, finalizer, finished = false;
-      finalizer = generator(
+      const finalizer = generator(impede(
+        next,
         result => {
-          if (finished) return false;
-          buffer.push(result);
-          if (!conveying) convey(true);
-          return true;
+          if (isFunction(finalizer)) setImmediate(finalizer);
+          done(result);
         },
-        result => {
-          if (finished) return false;
-          finished = true;
-          buffer.result = isUndefined(result) || result;
-          if (!conveying) convey(true);
-          return true;
-        });
-      function convey(result) {
-        conveying = false;
-        if (result) while (buffer.length)
-          if (unsync(next(buffer.shift()), convey, finish)) {
-            conveying = true;
-            return;
-          }
-        if (finished) finish(result);
-      }
-      function finish(result) {
-        finished = true;
-        if (isFunction(finalizer)) setImmediate(finalizer);
-        done(result && buffer.result);
-      }
+        context));
     };
   }
 
@@ -325,36 +340,93 @@
       : repeatImmediateGenerator(repeater);
   }
 
-  function eventEmitterNotifier(target, nextEventName = 'next', doneEventName = 'done') {
+  function eventEmitterListener(target, eventName = 'next') {
+    if (isObject(target) && isFunction(target.addListener) && isFunction(target.removeListener)) return next => {
+      target.addListener(eventName, next);
+      return () => target.removeListener(eventName, next);
+    };
+  }
+
+  function eventTargetListener(target, eventName = 'next', useCapture = false) {
+    if (isObject(target) && isFunction(target.addEventListener) && isFunction(target.removeEventListener)) return next => {
+      target.addEventListener(eventName, next, useCapture);
+      return () => target.removeEventListener(eventName, next, useCapture);
+    };
+  }
+
+  const listeners = registry()
+    .use(eventEmitterListener)
+    .use(eventTargetListener);
+
+  function listener(source, parameters) {
+    const instance = listeners.get(source, ...parameters);
+    return isFunction(instance)
+      ? (next, done, context) => {
+          const { [DONE]: retardedDone, [NEXT]: retardedNext } = impede(next, done),
+                finalizer = toFunction(instance(onNext, onDone));
+          function onDone(result) {
+            setImmediate(finalizer);
+            retardedDone(false);
+          }
+          function onNext(result) {
+            if (false === retardedNext(result)) onDone(false);
+          }
+        }
+      : emptyGenerator(true);
+  }
+
+  function consoleNotifier(target, prefix = '') {
+    if (!isObject(target)) return;
+    const { log, error } = target;
+    if (!isFunction(log)) return;
+    return {
+      [DONE]: result => (isError(result) && isFunction(error) ? error : log).call(target, prefix + 'done', result),
+      [NEXT]: result => log.call(target, prefix + 'next', result)
+    };
+  }
+
+  function eventEmitterNotifier(target, nextEventType = 'next', doneEventType = 'done') {
     if (!isObject(target) || !isFunction(target.emit)) return;
     const emit = eventName => result => target.emit(eventName, result);
     return {
-      done: emit(doneEventName),
-      next: emit(nextEventName)
+      [DONE]: emit(doneEventType),
+      [NEXT]: emit(nextEventType)
     };
   }
 
-  function eventTargetNotifier(target, nextEventName = 'next', doneEventName = 'done') {
+  function eventTargetNotifier(target, nextEventType = 'next', doneEventType = 'done') {
     if (!isObject(target) || !isFunction(target.dispatchEvent)) return;
     const dispatch = eventName => detail => target.dispatchEvent(new CustomEvent(eventName, { detail }));
     return {
-      done: dispatch(doneEventName),
-      next: dispatch(nextEventName)
-    };
-  }
-
-  function observerNotifier(target) {
-    if (!isObject(target) || !isFunction(target.onNext) || !isFunction(target.onError) || !isFunction(target.onCompleted)) return;
-    return {
-      done: result => (isError(result) ? target.onError : target.onCompleted)(result),
-      next: result => target.onNext(result)
+      [DONE]: dispatch(doneEventType),
+      [NEXT]: dispatch(nextEventType)
     };
   }
 
   const notifiers = registry()
-    .use(observerNotifier)
+    .use(consoleNotifier)
     .use(eventTargetNotifier)
     .use(eventEmitterNotifier);
+
+  function notifier(target, parameters) {
+    return emitter => (next, done, context) => {
+      const instance = notifiers.get(target, ...parameters);
+      if (isObject(instance)) {
+        const { [DONE]: notifyDone, [NEXT]: notifyNext } = instance;
+        if (isFunction(notifyNext)) return emitter(
+          result => {
+            notifyNext(result);
+            return next(result);
+          },
+          result => {
+            if (isFunction(notifyDone)) notifyDone(result);
+            return done(result);
+          },
+          context);
+      }
+      emitter(next, done, context);
+    }
+  }
 
   function reduceOperator(reducer, seed, forced) {
     if (isUndefined(reducer)) {
@@ -479,43 +551,6 @@
             done,
             context);
         };
-  }
-
-  function dumpToConsoleOperator(prefix) {
-    return emitter => (next, done, context) => emitter(
-      result => {
-        console.log(prefix + 'next', result);
-        return next(result);
-      },
-      result => {
-        console[isError(result) ? 'error' : 'log'](prefix + 'done', result);
-        done(result);
-      },
-      context);
-  }
-
-  // TODO: turn into console notifier
-  function dumpToLoggerOperator(prefix, logger) {
-    return emitter => (next, done, context) => emitter(
-      result => {
-        logger(prefix + 'next', result);
-        return next(result);
-      },
-      result => {
-        logger(prefix + 'done', result);
-        done(result);
-      },
-      context);
-  }
-
-  function dumpOperator(prefix, logger) {
-    return isFunction(prefix)
-      ? dumpToLoggerOperator('', prefix)
-      : isFunction(logger)
-        ? dumpToLoggerOperator(prefix, logger)
-        : isUndefined(prefix)
-          ? dumpToConsoleOperator('')
-          : dumpToConsoleOperator(prefix);
   }
 
   function everyOperator(condition) {
@@ -674,26 +709,6 @@
     return reduceOperator((minimum, result) => minimum > result ? result : minimum);
   }
 
-  function notifyOperator(target, parameters) {
-    return emitter => (next, done, context) => {
-      const notifier = notifiers.get(target, ...parameters);
-      if (isObject(notifier) && isFunction(notifier.next)) {
-        let index = 0;
-        emitter(
-          result => {
-            notifier.next(result, index++);
-            return next(result);
-          },
-          result => {
-            if (isFunction(notifier.done)) notifier.done(result);
-            return done(result);
-          },
-          context);
-      }
-      else emitter(next, done, context);
-    }
-  }
-
   function replayOperator(interval, timing) {
     const delayer = toFunction(interval);
     return emitter => (next, done, context) => {
@@ -758,6 +773,34 @@
       }),
       done,
       context);
+  }
+
+  function shareOperator() {
+    return emitter => {
+      const shares = new WeakMap;
+      return (next, done, context) => {
+        let share = shares.get(context);
+        if (share)
+          if (share.result) done(share.result);
+          else share.retarded.push(impede(next, done));
+        else {
+          shares.set(context, share = { retarded: [impede(next, done)] });
+          emitter(
+            result => {
+              const retarded = share.retarded;
+              for (let i = -1, l = retarded.length; ++i < l;)
+                retarded[i][NEXT](result);
+            },
+            result => {
+              share.result = result;
+              const retarded = share.retarded;
+              for (let i = -1, l = retarded.length; ++i < l;)
+                retarded[i][DONE](result);
+            },
+            context);
+        }
+      };
+    };
   }
 
   function skipAllOperator() {
@@ -1058,40 +1101,38 @@
     return defintion;
   }
 
-  const operators = objectCreate(
-    Object[PROTOTYPE], 
-    [
-      average,
-      _catch,
-      coalesce,
-      count,
-      delay,
-      distinct,
-      dump,
-      every,
-      filter,
-      flatten,
-      group,
-      map,
-      max,
-      mean,
-      min,
-      notify,
-      reduce,
-      replay,
-      retry,
-      reverse,
-      skip,
-      slice,
-      some,
-      sort,
-      sum,
-      take,
-      toArray,
-      toMap,
-      toSet,
-      toString
-    ].reduce(defineOperator, {}));
+  const operators = objectCreate(Object[PROTOTYPE], [
+    average,
+    _catch,
+    coalesce,
+    count,
+    delay,
+    distinct,
+    every,
+    filter,
+    flatten,
+    group,
+    map,
+    max,
+    mean,
+    min,
+    notify,
+    reduce,
+    replay,
+    retry,
+    reverse,
+    share,
+    skip,
+    slice,
+    some,
+    sort,
+    sum,
+    take,
+    toArray,
+    toMap,
+    toSet,
+    toString
+  ].reduce(defineOperator, {}));
 
   Flow[PROTOTYPE] = objectCreate(operators, {
     [CLASS]: { value: AEROFLOW },
@@ -1109,12 +1150,12 @@
   @return {Flow}
 
   @example
-  aeroflow().average().dump().run();
+  aeroflow().average().notify(console).run();
   // done true
-  aeroflow('test').average().dump().run();
+  aeroflow('test').average().notify(console).run();
   // next NaN
   // done true
-  aeroflow(1, 2, 6).average().dump().run();
+  aeroflow(1, 2, 6).average().notify(console).run();
   // next 3
   // done true
   */
@@ -1139,21 +1180,21 @@
   @return {Flow}
 
   @example
-  aeroflow(new Error('test')).catch().dump().run();
+  aeroflow(new Error('test')).catch().notify(console).run();
   // done false
   aeroflow(new Error('test')).dump('before ').catch('success').dump('after ').run();
   // before done Error: test(…)
   // after next success
   // after done false
-  aeroflow(new Error('test')).catch([1, 2]).dump().run();
+  aeroflow(new Error('test')).catch([1, 2]).notify(console).run();
   // next 1
   // next 2
   // done false
-  aeroflow(new Error('test')).catch(() => [1, 2]).dump().run();
+  aeroflow(new Error('test')).catch(() => [1, 2]).notify(console).run();
   // next 1
   // next 2
   // done false
-  aeroflow(new Error('test')).catch(() => [[1], [2]]).dump().run();
+  aeroflow(new Error('test')).catch(() => [[1], [2]]).notify(console).run();
   // next [1]
   // next [2]
   // done false
@@ -1189,17 +1230,17 @@
   @return {Flow}
 
   @example
-  aeroflow.empty.coalesce().dump().run();
+  aeroflow.empty.coalesce().notify(console).run();
   // done true
-  aeroflow.empty.coalesce([1, 2]).dump().run();
+  aeroflow.empty.coalesce([1, 2]).notify(console).run();
   // next 1
   // next 2
   // done true
-  aeroflow.empty.coalesce(() => [1, 2]).dump().run();
+  aeroflow.empty.coalesce(() => [1, 2]).notify(console).run();
   // next 1
   // next 2
   // done true
-  aeroflow.empty.coalesce(() => [[1], [2]]).dump().run();
+  aeroflow.empty.coalesce(() => [[1], [2]]).notify(console).run();
   // next [1]
   // next [2]
   // done true
@@ -1228,7 +1269,7 @@
     () => 5,
     Promise.resolve(6),
     new Promise(resolve => setTimeout(() => resolve(7), 500))
-  ).dump().run();
+  ).notify(console).run();
   // next 1
   // next 2
   // next 3
@@ -1251,10 +1292,10 @@
   @return {Flow}
 
   @example
-  aeroflow().count().dump().run();
+  aeroflow().count().notify(console).run();
   // next 0
   // done
-  aeroflow('a', 'b', 'c').count().dump().run();
+  aeroflow('a', 'b', 'c').count().notify(console).run();
   // next 3
   // done
   */
@@ -1280,19 +1321,19 @@
   @return {Flow}
 
   @example:
-  aeroflow(1, 2).delay(500).dump().run();
+  aeroflow(1, 2).delay(500).notify(console).run();
   // next 1 // after 500ms
   // next 2 // after 500ms
   // done true // after 500ms
-  aeroflow(1, 2).delay(new Date(Date.now() + 500)).dump().run();
+  aeroflow(1, 2).delay(new Date(Date.now() + 500)).notify(console).run();
   // next 1 // after 500ms
   // next 2
   // done true
-  aeroflow(1, 2).delay((value, index) => 500 + 500 * index).dump().run();
+  aeroflow(1, 2).delay((value, index) => 500 + 500 * index).notify(console).run();
   // next 1 // after 500ms
   // next 2 // after 1000ms
   // done true
-  aeroflow(1, 2).delay(value => { throw new Error }).dump().run();
+  aeroflow(1, 2).delay(value => { throw new Error }).notify(console).run();
   // done Error(…)
   // Uncaught (in promise) Error: test(…)
   */
@@ -1308,50 +1349,19 @@
   @return {Flow}
 
   @example
-  aeroflow(1, 1, 2, 2, 1, 1).distinct().dump().run();
+  aeroflow(1, 1, 2, 2, 1, 1).distinct().notify(console).run();
   // next 1
   // next 2
   // done true
-  aeroflow(1, 1, 2, 2, 1, 1).distinct(true).dump().run();
+  aeroflow(1, 1, 2, 2, 1, 1).distinct(true).notify(console).run();
   // next 1
   // next 2
   // next 1
   // done true
   */
+  // TODO: distinct by selector
   function distinct(untilChanged) {
     return this.chain(distinctOperator(untilChanged));
-  }
-
-  /**
-  Dumps all events (next, done) emitted by this flow to the logger with optional prefix.
-
-  @alias Flow#dump
-
-  @param {string} [prefix='']
-  A string prefix to prepend to each event name.
-
-  @param {function} [logger=console.log]
-  Function to execute for each event emitted, taking two arguments:
-  name - The name of event emitted by this flow prepended with prefix.
-  value - The value of event emitted by this flow.
-
-  @return {Flow}
-
-  @example
-  aeroflow(1, 2).dump(console.info.bind(console)).run();
-  // next 1
-  // next 2
-  // done true
-  aeroflow(1, 2).dump('test ', console.info.bind(console)).run();
-  // test next 1
-  // test next 2
-  // test done true
-  aeroflow(1, 2).dump(event => { if (event === 'next') throw new Error }).dump().run();
-  // done Error(…)
-  // Uncaught (in promise) Error: test(…)
-  */
-  function dump(prefix, logger) {
-    return this.chain(dumpOperator(prefix, logger));
   }
 
   /**
@@ -1368,16 +1378,16 @@
   New flow emitting true if all emitted values pass the test; otherwise, false.
 
   @example
-  aeroflow().every().dump().run();
+  aeroflow().every().notify(console).run();
   // next true
   // done true
-  aeroflow('a', 'b').every('a').dump().run();
+  aeroflow('a', 'b').every('a').notify(console).run();
   // next false
   // done false
-  aeroflow(1, 2).every(value => value > 0).dump().run();
+  aeroflow(1, 2).every(value => value > 0).notify(console).run();
   // next true
   // done true
-  aeroflow(1, 2).every(value => { throw new Error }).dump().run();
+  aeroflow(1, 2).every(value => { throw new Error }).notify(console).run();
   // done Error(…)
   // Uncaught (in promise) Error: test(…)
   */
@@ -1399,24 +1409,24 @@
   New flow emitting only values passing the provided test.
 
   @example
-  aeroflow().filter().dump().run();
+  aeroflow().filter().notify(console).run();
   // done true
-  aeroflow(0, 1).filter().dump().run();
+  aeroflow(0, 1).filter().notify(console).run();
   // next 1
   // done true
-  aeroflow('a', 'b', 'a').filter('a').dump().run();
+  aeroflow('a', 'b', 'a').filter('a').notify(console).run();
   // next "a"
   // next "a"
   // done true
-  aeroflow('a', 'b', 'a').filter(/a/).dump().run();
+  aeroflow('a', 'b', 'a').filter(/a/).notify(console).run();
   // next "b"
   // next "b"
   // done true
-  aeroflow(1, 2, 3, 4, 5).filter(value => (value % 2) === 0).dump().run();
+  aeroflow(1, 2, 3, 4, 5).filter(value => (value % 2) === 0).notify(console).run();
   // next 2
   // next 4
   // done true
-  aeroflow(1, 2).filter(value => { throw new Error }).dump().run();
+  aeroflow(1, 2).filter(value => { throw new Error }).notify(console).run();
   // done Error: (…)
   // Uncaught (in promise) Error: test(…)
   */
@@ -1432,21 +1442,21 @@
   @return {Flow}
 
   @example
-  aeroflow([[1, 2]]).flatten().dump().run();
+  aeroflow([[1, 2]]).flatten().notify(console).run();
   // next 1
   // next 2
   // done true
-  aeroflow(() => [[1], [2]]).flatten(1).dump().run();
+  aeroflow(() => [[1], [2]]).flatten(1).notify(console).run();
   // next [1]
   // next [2]
   // done true
   aeroflow(new Promise(resolve => setTimeout(() => resolve(() => [1, 2]), 500)))
-    .flatten().dump().run();
+    .flatten().notify(console).run();
   // next 1 // after 500ms
   // next 2
   // done true
   aeroflow(new Promise(resolve => setTimeout(() => resolve(() => [1, 2]), 500)))
-    .flatten(1).dump().run();
+    .flatten(1).notify(console).run();
   // next [1, 2] // after 500ms
   // done true
   */
@@ -1462,7 +1472,7 @@
   @return {Flow}
 
   @example
-  aeroflow.range(1, 10).group(value => (value % 2) ? 'odd' : 'even').dump().run();
+  aeroflow.range(1, 10).group(value => (value % 2) ? 'odd' : 'even').notify(console).run();
   // next ["odd", Array[5]]
   // next ["even", Array[5]]
   // done true
@@ -1472,7 +1482,7 @@
     { country: 'Belarus', city: 'Minsk' },
     { country: 'Belarus', city: 'Grodno' },
     { country: 'Poland', city: 'Lodz' }
-  ).group(value => value.country, value => value.city).dump().run();
+  ).group(value => value.country, value => value.city).notify(console).run();
   // next ["Belarus", {{"Brest" => Array[1]}, {"Minsk" => Array[1]}, {"Grodno" => Array[1]}}]
   // next ["Poland", {{"Krakow" => Array[1]}, {"Lodz" => Array[1]}}]
   // done
@@ -1490,16 +1500,16 @@
   @return {Flow}
 
   @example
-  aeroflow().join().dump().run();
+  aeroflow().join().notify(console).run();
   // done true
-  aeroflow(1, 2).join().dump().run();
+  aeroflow(1, 2).join().notify(console).run();
   // next [1, undefined]
   // next [2, undefined]
-  aeroflow(1, 2).join(0).dump().run();
+  aeroflow(1, 2).join(0).notify(console).run();
   // next [1, 0]
   // next [2, 0]
   // done true
-  aeroflow('a','b').join(1, 2).dump().run();
+  aeroflow('a','b').join(1, 2).notify(console).run();
   // next ["a", 1]
   // next ["a", 2]
   // next ["b", 1]
@@ -1514,7 +1524,7 @@
   .map(result => (
     { country: result[0].country, capital: result[0].capital, currency: result[1].currency }
   ))
-  .dump().run();
+  .notify(console).run();
   // next Object {country: "USA", capital: "Washington", currency: "US Dollar"}
   // next Object {country: "Russia", capital: "Moskow", currency: "Russian Ruble"}
   // done true
@@ -1532,17 +1542,17 @@
   @return {Flow}
 
   @example
-  aeroflow().map().dump().run();
+  aeroflow().map().notify(console).run();
   // done true
-  aeroflow(1, 2).map().dump().run();
+  aeroflow(1, 2).map().notify(console).run();
   // next 1
   // next 2
   // done true
-  aeroflow(1, 2).map('test').dump().run();
+  aeroflow(1, 2).map('test').notify(console).run();
   // next test
   // next test
   // done true
-  aeroflow(1, 2).map(value => value * 10).dump().run();
+  aeroflow(1, 2).map(value => value * 10).notify(console).run();
   // next 10
   // next 20
   // done true
@@ -1560,12 +1570,12 @@
   New flow emitting the maximum value only.
 
   @example
-  aeroflow().max().dump().run();
+  aeroflow().max().notify(console).run();
   // done true
-  aeroflow(1, 3, 2).max().dump().run();
+  aeroflow(1, 3, 2).max().notify(console).run();
   // next 3
   // done true
-  aeroflow('b', 'a', 'c').max().dump().run();
+  aeroflow('b', 'a', 'c').max().notify(console).run();
   // next c
   // done true
   */
@@ -1582,12 +1592,12 @@
   New flow emitting the mean value only.
 
   @example
-  aeroflow().mean().dump().run();
+  aeroflow().mean().notify(console).run();
   // done true
-  aeroflow(3, 1, 2).mean().dump().run();
+  aeroflow(3, 1, 2).mean().notify(console).run();
   // next 2
   // done true
-  aeroflow('a', 'd', 'f', 'm').mean().dump().run();
+  aeroflow('a', 'd', 'f', 'm').mean().notify(console).run();
   // next f
   // done true
   */
@@ -1604,12 +1614,12 @@
   New flow emitting the minimum value only.
 
   @example
-  aeroflow().min().dump().run();
+  aeroflow().min().notify(console).run();
   // done true
-  aeroflow(3, 1, 2).min().dump().run();
+  aeroflow(3, 1, 2).min().notify(console).run();
   // next 1
   // done true
-  aeroflow('b', 'a', 'c').min().dump().run();
+  aeroflow('b', 'a', 'c').min().notify(console).run();
   // next a
   // done true
   */
@@ -1618,7 +1628,7 @@
   }
 
   function notify(target, ...parameters) {
-    return this.chain(notifyOperator(target, parameters));
+    return this.chain(notifier(target, parameters));
   }
 
   /**
@@ -1647,28 +1657,28 @@
   and the 'required' argument is false.
 
   @example
-  aeroflow().reduce().dump().run();
+  aeroflow().reduce().notify(console).run();
   // done false
-  aeroflow(1, 2).reduce().dump().run();
+  aeroflow(1, 2).reduce().notify(console).run();
   // done false
-  aeroflow().reduce('test').dump().run();
+  aeroflow().reduce('test').notify(console).run();
   // next test
   // done true
-  aeroflow().reduce((product, value) => product * value).dump().run();
+  aeroflow().reduce((product, value) => product * value).notify(console).run();
   // next undefined
   // done true
-  aeroflow().reduce((product, value) => product * value, 1, true).dump().run();
+  aeroflow().reduce((product, value) => product * value, 1, true).notify(console).run();
   // next 1
   // done true
-  aeroflow(2, 4, 8).reduce((product, value) => product * value).dump().run();
+  aeroflow(2, 4, 8).reduce((product, value) => product * value).notify(console).run();
   // next 64
   // done
-  aeroflow(2, 4, 8).reduce((product, value) => product * value, 2).dump().run();
+  aeroflow(2, 4, 8).reduce((product, value) => product * value, 2).notify(console).run();
   // next 128
   // done
   aeroflow(['a', 'b', 'c'])
     .reduce((product, value, index) => product + value + index, '')
-    .dump().run();
+    .notify(console).run();
   // next a0b1c2
   // done
   */
@@ -1685,19 +1695,19 @@
   @return {Flow}
 
   @example
-  aeroflow(1, 2).replay(1000).take(4).dump().run();
+  aeroflow(1, 2).replay(1000).take(4).notify(console).run();
   // next 1
   // next 2
   // next 1 // after 1000ms
   // next 2
   // done false
-  aeroflow(1, 2).delay(500).replay(1000).take(4).dump().run();
+  aeroflow(1, 2).delay(500).replay(1000).take(4).notify(console).run();
   // next 1
   // next 2 // after 500ms
   // next 1 // after 1000ms
   // next 2
   // done false
-  aeroflow(1, 2).delay(500).replay(1000, true).take(4).dump().run();
+  aeroflow(1, 2).delay(500).replay(1000, true).take(4).notify(console).run();
   // next 1
   // next 2 // after 500ms
   // next 1 // after 1000ms
@@ -1736,9 +1746,9 @@
   @return {Flow}
 
   @example
-  aeroflow().reverse().dump().run();
+  aeroflow().reverse().notify(console).run();
   // done true
-  aeroflow(1, 2, 3).reverse().dump().run();
+  aeroflow(1, 2, 3).reverse().notify(console).run();
   // next 3
   // next 2
   // next 1
@@ -1774,11 +1784,11 @@
   or rejecting to the error thrown within this flow.
 
   @example
-  aeroflow('test').dump().run();
+  aeroflow('test').notify(console).run();
   // next test
   // done true
   (async function() {
-    var result = await aeroflow('test').dump().run();
+    var result = await aeroflow('test').notify(console).run();
     console.log(result);
   })();
   // test
@@ -1820,6 +1830,10 @@
     });
   }
 
+  function share() {
+    return this.chain(shareOperator());
+  }
+
   /**
   Skips some of the values emitted by this flow,
   returns flow emitting remaining values.
@@ -1838,17 +1852,17 @@
   New flow emitting remaining values.
 
   @example
-  aeroflow(1, 2, 3).skip().dump().run();
+  aeroflow(1, 2, 3).skip().notify(console).run();
   // done true
-  aeroflow(1, 2, 3).skip(1).dump().run();
+  aeroflow(1, 2, 3).skip(1).notify(console).run();
   // next 2
   // next 3
   // done true
-  aeroflow(1, 2, 3).skip(-1).dump().run();
+  aeroflow(1, 2, 3).skip(-1).notify(console).run();
   // next 1
   // next 2
   // done true
-  aeroflow(1, 2, 3).skip(value => value < 3).dump().run();
+  aeroflow(1, 2, 3).skip(value => value < 3).notify(console).run();
   // next 3
   // done true
     */
@@ -1865,23 +1879,23 @@
   @return {Flow}
 
   @example
-  aeroflow(1, 2, 3).slice().dump().run();
+  aeroflow(1, 2, 3).slice().notify(console).run();
   // next 1
   // next 2
   // next 3
   // done true
-  aeroflow(1, 2, 3).slice(1).dump().run();
+  aeroflow(1, 2, 3).slice(1).notify(console).run();
   // next 2
   // next 3
   // done true
-  aeroflow(1, 2, 3).slice(1, 2).dump().run();
+  aeroflow(1, 2, 3).slice(1, 2).notify(console).run();
   // next 2
   // done false
-  aeroflow(1, 2, 3).slice(-2).dump().run();
+  aeroflow(1, 2, 3).slice(-2).notify(console).run();
   // next 2
   // next 3
   // done true
-  aeroflow(1, 2, 3).slice(-3, -1).dump().run();
+  aeroflow(1, 2, 3).slice(-3, -1).notify(console).run();
   // next 1
   // next 2
   // done true
@@ -1905,16 +1919,16 @@
   New flow that emits true or false.
 
   @example
-  aeroflow().some().dump().run();
+  aeroflow().some().notify(console).run();
   // next false
   // done true
-  aeroflow(1, 2, 3).some(2).dump().run();
+  aeroflow(1, 2, 3).some(2).notify(console).run();
   // next true
   // done false
-  aeroflow(1, 2, 3).some(value => value % 2).dump().run();
+  aeroflow(1, 2, 3).some(value => value % 2).notify(console).run();
   // next true
   // done false
-  aeroflow(1, 2, 3).some(value => { throw new Error }).dump().run();
+  aeroflow(1, 2, 3).some(value => { throw new Error }).notify(console).run();
   // done Error(…)
   // Uncaught (in promise) Error: test(…)
   */
@@ -1932,12 +1946,12 @@
   @return {Flow}
 
   @example
-  aeroflow(3, 1, 2).sort().dump().run();
+  aeroflow(3, 1, 2).sort().notify(console).run();
   // next 1
   // next 2
   // next 3
   // done true
-  aeroflow(2, 1, 3).sort('desc').dump().run();
+  aeroflow(2, 1, 3).sort('desc').notify(console).run();
   // next 3
   // next 2
   // next 1
@@ -1948,7 +1962,7 @@
     { country: 'Belarus', city: 'Minsk' },
     { country: 'Belarus', city: 'Grodno' },
     { country: 'Poland', city: 'Lodz' }
-  ).sort(value => value.country, value => value.city, 'desc').dump().run();
+  ).sort(value => value.country, value => value.city, 'desc').notify(console).run();
   // next Object {country: "Belarus", city: "Minsk"}
   // next Object {country: "Belarus", city: "Grodno"}
   // next Object {country: "Belarus", city: "Brest"}
@@ -1968,12 +1982,12 @@
   @return {Flow}
 
   @example
-  aeroflow().sum().dump().run();
+  aeroflow().sum().notify(console).run();
   // done true
-  aeroflow('test').sum().dump().run();
+  aeroflow('test').sum().notify(console).run();
   // next NaN
   // done true
-  aeroflow(1, 2, 3).sum().dump().run();
+  aeroflow(1, 2, 3).sum().notify(console).run();
   // next 6
   // done true
   */
@@ -1989,12 +2003,12 @@
   @return {Flow}
 
   @example
-  aeroflow(1, 2, 3).take().dump().run();
+  aeroflow(1, 2, 3).take().notify(console).run();
   // done false
-  aeroflow(1, 2, 3).take(1).dump().run();
+  aeroflow(1, 2, 3).take(1).notify(console).run();
   // next 1
   // done false
-  aeroflow(1, 2, 3).take(-1).dump().run();
+  aeroflow(1, 2, 3).take(-1).notify(console).run();
   // next 3
   // done true
   */
@@ -2011,13 +2025,13 @@
   New flow emitting array containing all results emitted by this flow.
 
   @example
-  aeroflow().toArray().dump().run();
+  aeroflow().toArray().notify(console).run();
   // next []
   // done true
-  aeroflow('test').toArray().dump().run();
+  aeroflow('test').toArray().notify(console).run();
   // next ["test"]
   // done true
-  aeroflow(1, 2, 3).toArray().dump().run();
+  aeroflow(1, 2, 3).toArray().notify(console).run();
   // next [1, 2, 3]
   // done true
   */
@@ -2041,16 +2055,16 @@
   New flow emitting map containing all results emitted by this flow.
 
   @example
-  aeroflow().toMap().dump().run();
+  aeroflow().toMap().notify(console).run();
   // next Map {}
   // done true
-  aeroflow('test').toMap().dump().run();
+  aeroflow('test').toMap().notify(console).run();
   // next Map {"test" => "test"}
   done true
-  aeroflow(1, 2, 3).toMap(v => 'key' + v, true).dump().run();
+  aeroflow(1, 2, 3).toMap(v => 'key' + v, true).notify(console).run();
   // next Map {"key1" => true, "key2" => true, "key3" => true}
   // done true
-  aeroflow(1, 2, 3).toMap(v => 'key' + v, v => 10 * v).dump().run();
+  aeroflow(1, 2, 3).toMap(v => 'key' + v, v => 10 * v).notify(console).run();
   // next Map {"key1" => 10, "key2" => 20, "key3" => 30}
   // done true
   */
@@ -2067,10 +2081,10 @@
   New flow emitting set containing all results emitted by this flow.
 
   @example
-  aeroflow().toSet().dump().run();
+  aeroflow().toSet().notify(console).run();
   // next Set {}
   // done true
-  aeroflow(1, 2, 3).toSet().dump().run();
+  aeroflow(1, 2, 3).toSet().notify(console).run();
   // next Set {1, 2, 3}
   // done true
   */
@@ -2095,19 +2109,19 @@
   New flow emitting string representation of this flow.
 
   @example
-  aeroflow().toString().dump().run();
+  aeroflow().toString().notify(console).run();
   // next
   // done true
-  aeroflow('test').toString().dump().run();
+  aeroflow('test').toString().notify(console).run();
   // next test
   // done true
-  aeroflow(1, 2, 3).toString().dump().run();
+  aeroflow(1, 2, 3).toString().notify(console).run();
   // next 1,2,3
   // done true
-  aeroflow(1, 2, 3).toString(';').dump().run();
+  aeroflow(1, 2, 3).toString(';').notify(console).run();
   // next 1;2;3
   // done true
-  aeroflow(1, 2, 3).toString((value, index) => '-'.repeat(index + 1)).dump().run();
+  aeroflow(1, 2, 3).toString((value, index) => '-'.repeat(index + 1)).notify(console).run();
   // next 1--2---3
   // done true
   */
@@ -2163,7 +2177,7 @@
   See examples to find out how to create and register custom operators.
 
   @example
-  aeroflow().dump().run();
+  aeroflow().notify(console).run();
   // done true
   aeroflow(
     1,
@@ -2172,7 +2186,7 @@
     () => 6,
     Promise.resolve(7),
     new Promise(resolve => setTimeout(() => resolve(8), 500))
-  ).dump().run();
+  ).notify(console).run();
   // next 1
   // next 2
   // next 3
@@ -2182,17 +2196,17 @@
   // next 7
   // next 8 // after 500ms
   // done true
-  aeroflow(new Error('test')).dump().run();
+  aeroflow(new Error('test')).notify(console).run();
   // done Error: test(…)
   // Uncaught (in promise) Error: test(…)
-  aeroflow(() => { throw new Error }).dump().run();
+  aeroflow(() => { throw new Error }).notify(console).run();
   // done Error: test(…)
   // Uncaught (in promise) Error: test(…)
-  aeroflow("test").dump().run();
+  aeroflow("test").notify(console).run();
   // next test
   // done true
   aeroflow.adapters.use('String', aeroflow.adapters['Array']);
-  aeroflow("test").dump().run();
+  aeroflow("test").notify(console).run();
   // next t
   // next e
   // next s
@@ -2204,7 +2218,7 @@
       done,
       context));
   }
-  aeroflow(42).test().dump().run();
+  aeroflow(42).test().notify(console).run();
   // next test:42
   // done true
   */
@@ -2231,13 +2245,13 @@
   aeroflow.create((next, done, context) => {
     next('test');
     done();
-  }).dump().run();
+  }).notify(console).run();
   // next test
   // done true
   aeroflow.create((next, done, context) => {
     window.addEventListener('click', next);
     return () => window.removeEventListener('click', next);
-  }).take(2).dump().run();
+  }).take(2).notify(console).run();
   // next MouseEvent {...}
   // next MouseEvent {...}
   // done false
@@ -2255,7 +2269,7 @@
   @return {Flow}
 
   @example
-  aeroflow.expand(value => value * 2, 1).take(3).dump().run();
+  aeroflow.expand(value => value * 2, 1).take(3).notify(console).run();
   // next 2
   // next 4
   // next 8
@@ -2277,13 +2291,32 @@
   The new instance emitting provided value.
 
   @example
-  aeroflow.just([1, 2, 3]).dump().run();
+  aeroflow.just([1, 2, 3]).notify(console).run();
   // next [1, 2, 3]
   // done
   */
   // TODO: multiple arguments
   function just(source) {
     return instance(valueAdapter(source));
+  }
+
+  /**
+  @alias aeroflow.listen
+
+  @example
+  aeroflow
+    .listen(document, 'mousemove')
+    .map(event => ({ x: event.x, y: event.y }))
+    .take(3)
+    .notify(console)
+    .run();
+  // next Object {x: 241, y: 269}
+  // next Object {x: 221, y: 272}
+  // next Object {x: 200, y: 273}
+  // done false
+  */
+  function listen(source, ...parameters) {
+    return instance(listener(source, parameters));
   }
 
   /**
@@ -2298,15 +2331,15 @@
   The new instance emitting random numbers.
 
   @example
-  aeroflow.random().take(2).dump().run();
+  aeroflow.random().take(2).notify(console).run();
   // next 0.07417976693250232
   // next 0.5904422281309957
   // done false
-  aeroflow.random(1, 9).take(2).dump().run();
+  aeroflow.random(1, 9).take(2).notify(console).run();
   // next 7
   // next 2
   // done false
-  aeroflow.random(1.1, 8.9).take(2).dump().run();
+  aeroflow.random(1.1, 8.9).take(2).notify(console).run();
   // next 4.398837305698544
   // next 2.287970747705549
   // done false
@@ -2325,25 +2358,25 @@
   @return {Flow}
 
   @example
-  aeroflow.range().take(3).dump().run();
+  aeroflow.range().take(3).notify(console).run();
   // next 0
   // next 1
   // next 2
   // done false
-  aeroflow.range(-3).take(3).dump().run();
+  aeroflow.range(-3).take(3).notify(console).run();
   // next -3
   // next -2
   // next -1
   // done false
-  aeroflow.range(1, 1).dump().run();
+  aeroflow.range(1, 1).notify(console).run();
   // next 1
   // done true
-  aeroflow.range(0, 5, 2).dump().run();
+  aeroflow.range(0, 5, 2).notify(console).run();
   // next 0
   // next 2
   // next 4
   // done true
-  aeroflow.range(5, 0, -2).dump().run();
+  aeroflow.range(5, 0, -2).notify(console).run();
   // next 5
   // next 3
   // next 1
@@ -2371,25 +2404,25 @@
   New flow emitting repeated values.
 
   @example
-  aeroflow.repeat(Math.random()).take(2).dump().run();
+  aeroflow.repeat(Math.random()).take(2).notify(console).run();
   // next 0.7492001398932189
   // next 0.7492001398932189
   // done false
-  aeroflow.repeat(() => Math.random()).take(2).dump().run();
+  aeroflow.repeat(() => Math.random()).take(2).notify(console).run();
   // next 0.46067174314521253
   // next 0.7977648684754968
   // done false
-  aeroflow.repeat(index => Math.pow(2, index)).take(3).dump().run();
+  aeroflow.repeat(index => Math.pow(2, index)).take(3).notify(console).run();
   // next 1
   // next 2
   // next 4
   // done false
-  aeroflow.repeat('ping', 500).take(3).dump().run();
+  aeroflow.repeat('ping', 500).take(3).notify(console).run();
   // next ping // after 500ms
   // next ping // after 500ms
   // next ping // after 500ms
   // done false
-  aeroflow.repeat(index => index, index => 500 + 500 * index).take(3).dump().run();
+  aeroflow.repeat(index => index, index => 500 + 500 * index).take(3).notify(console).run();
   // next 0 // after 500ms
   // next 1 // after 1000ms
   // next 2 // after 1500ms
@@ -2404,15 +2437,20 @@
     return defintion;
   }
 
-  objectDefineProperties(
-    aeroflow,
-    [
-      create, expand, just, random, range, repeat
-    ].reduce(defineGenerator, {}));
+  objectDefineProperties(aeroflow, [
+    create,
+    expand,
+    just,
+    listen,
+    random,
+    range,
+    repeat
+  ].reduce(defineGenerator, {}));
 
   objectDefineProperties(aeroflow, {
     adapters: { value: adapters },
     empty: { enumerable: true, get: () => instance(emptyGenerator(true)) },
+    listeners: { value: listeners },
     notifiers: { value: notifiers },
     operators: { value: operators }
   });

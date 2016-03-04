@@ -1,9 +1,10 @@
 import factoryTests from './factory';
+
+import emptyTests from './empty';
 import adaptersTests from './adapters';
 import notifiersTests from './notifiers';
 import operatorsTests from './operators';
 
-import emptyGeneratorTests from './generators/empty';
 import expandGeneratorTests from './generators/expand';
 import justGeneratorTests from './generators/just';
 import randomGeneratorTests from './generators/random';
@@ -36,11 +37,12 @@ import toStringOperatorTests from './operators/toString';
 
 const tests = [
   factoryTests,
+
+  emptyTests,
   adaptersTests,
   notifiersTests,
   operatorsTests,
 
-  emptyGeneratorTests,
   expandGeneratorTests,
   justGeneratorTests,
   randomGeneratorTests,
