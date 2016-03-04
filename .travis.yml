@@ -5,4 +5,4 @@ language: node_js
 node_js:
   - "node"
   - "iojs"
-script: test report
+script: "test cover report"
