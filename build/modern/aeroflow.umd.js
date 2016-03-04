@@ -204,6 +204,22 @@
     .use(FUNCTION, functionAdapter)
     .use(PROMISE, promiseAdapter);
 
+  function adapter(sources) {
+    return (next, done, context) => {
+      let index = -1;
+      !function proceed(result) {
+        if (result !== true || ++index >= sources.length) done(result);
+        else try {
+          const source = sources[index];
+          (adapters.get(source) || valueAdapter(source))(next, proceed, context);
+        }
+        catch (error) {
+          done(error);
+        }
+      }(true);
+    }
+  }
+
   function emptyGenerator(result) {
     return (next, done) => done(result);
   }
@@ -500,6 +516,19 @@
         },
         context);
     }
+  }
+
+  function concatOperator(sources) {
+    return sources.length
+      ? emitter => (next, done, context) => {
+        emitter(
+          next,
+          result => {
+            if (result === true) adapter(sources)(next, done, context);
+          },
+          context);
+      }
+      : identity;
   }
 
   function countOperator() {
@@ -1105,6 +1134,7 @@
     average,
     _catch,
     coalesce,
+    concat,
     count,
     delay,
     distinct,
@@ -1278,11 +1308,11 @@
   // next 6
   // next 7 // after 500ms
   // done
-
-  function concat(...sources) {
-    return instance(this.emitter, this.sources.concat(sources));
-  }
   */
+  function concat(...sources) {
+    return this.chain(concatOperator(sources));
+  }
+
 
   /**
   Counts the number of values emitted by this flow, returns new flow emitting only this value.
@@ -2130,21 +2160,7 @@
     return this.chain(toStringOperator(separator));
   }
 
-  function emit(...sources) {
-    return (next, done, context) => {
-      let index = -1;
-      !function proceed(result) {
-        if (result !== true || ++index >= sources.length) done(result);
-        else try {
-          const source = sources[index];
-          (adapters.get(source) || valueAdapter(source))(next, proceed, context);
-        }
-        catch (error) {
-          done(error);
-        }
-      }(true);
-    }
-  }
+  const empty = instance(emptyGenerator(true));
 
   /**
   Creates new instance emitting values extracted from every provided data source in series.
@@ -2223,7 +2239,9 @@
   // done true
   */
   function aeroflow(...sources) {
-    return instance(emit(...sources));
+    return sources.length
+      ? instance(adapter(sources))
+      : empty;
   }
 
   /**
@@ -2449,7 +2467,7 @@
 
   objectDefineProperties(aeroflow, {
     adapters: { value: adapters },
-    empty: { enumerable: true, get: () => instance(emptyGenerator(true)) },
+    empty: { enumerable: true, get: () => empty },
     listeners: { value: listeners },
     notifiers: { value: notifiers },
     operators: { value: operators }

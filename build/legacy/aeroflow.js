@@ -311,6 +311,20 @@
 
   var adapters = registry().use(iterableAdapter).use(AEROFLOW, flowAdapter).use(ARRAY, arrayAdapter).use(ERROR, errorAdapter).use(FUNCTION, functionAdapter).use(PROMISE, promiseAdapter);
 
+  function adapter(sources) {
+    return function (next, done, context) {
+      var index = -1;
+      !function proceed(result) {
+        if (result !== true || ++index >= sources.length) done(result);else try {
+          var source = sources[index];
+          (adapters.get(source) || valueAdapter(source))(next, proceed, context);
+        } catch (error) {
+          done(error);
+        }
+      }(true);
+    };
+  }
+
   function emptyGenerator(result) {
     return function (next, done) {
       return done(result);
@@ -656,6 +670,16 @@
         }, context);
       };
     };
+  }
+
+  function concatOperator(sources) {
+    return sources.length ? function (emitter) {
+      return function (next, done, context) {
+        emitter(next, function (result) {
+          if (result === true) adapter(sources)(next, done, context);
+        }, context);
+      };
+    } : identity;
   }
 
   function countOperator() {
@@ -1320,7 +1344,7 @@
     return defintion;
   }
 
-  var operators = objectCreate(Object[PROTOTYPE], [average, _catch, coalesce, count, delay, distinct, every, filter, flatten, group, map, max, mean, min, notify, reduce, replay, retry, reverse, share, skip, slice, some, sort, sum, take, toArray, toMap, toSet, toString].reduce(defineOperator, {}));
+  var operators = objectCreate(Object[PROTOTYPE], [average, _catch, coalesce, concat, count, delay, distinct, every, filter, flatten, group, map, max, mean, min, notify, reduce, replay, retry, reverse, share, skip, slice, some, sort, sum, take, toArray, toMap, toSet, toString].reduce(defineOperator, {}));
   Flow[PROTOTYPE] = objectCreate(operators, (_objectCreate = {}, _defineProperty(_objectCreate, CLASS, {
     value: AEROFLOW
   }), _defineProperty(_objectCreate, 'chain', {
@@ -1351,6 +1375,14 @@
     return this.chain(coalesceOperator(alternative));
   }
 
+  function concat() {
+    for (var _len3 = arguments.length, sources = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+      sources[_key3] = arguments[_key3];
+    }
+
+    return this.chain(concatOperator(sources));
+  }
+
   function count() {
     return this.chain(countOperator());
   }
@@ -1376,8 +1408,8 @@
   }
 
   function group() {
-    for (var _len3 = arguments.length, selectors = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-      selectors[_key3] = arguments[_key3];
+    for (var _len4 = arguments.length, selectors = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+      selectors[_key4] = arguments[_key4];
     }
 
     return this.chain(groupOperator(selectors));
@@ -1400,8 +1432,8 @@
   }
 
   function notify(target) {
-    for (var _len4 = arguments.length, parameters = Array(_len4 > 1 ? _len4 - 1 : 0), _key4 = 1; _key4 < _len4; _key4++) {
-      parameters[_key4 - 1] = arguments[_key4];
+    for (var _len5 = arguments.length, parameters = Array(_len5 > 1 ? _len5 - 1 : 0), _key5 = 1; _key5 < _len5; _key5++) {
+      parameters[_key5 - 1] = arguments[_key5];
     }
 
     return this.chain(notifier(target, parameters));
@@ -1461,8 +1493,8 @@
   }
 
   function sort() {
-    for (var _len5 = arguments.length, parameters = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-      parameters[_key5] = arguments[_key5];
+    for (var _len6 = arguments.length, parameters = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+      parameters[_key6] = arguments[_key6];
     }
 
     return this.chain(sortOperator(parameters));
@@ -1492,26 +1524,14 @@
     return this.chain(toStringOperator(separator));
   }
 
-  function emit() {
-    for (var _len6 = arguments.length, sources = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
-      sources[_key6] = arguments[_key6];
-    }
-
-    return function (next, done, context) {
-      var index = -1;
-      !function proceed(result) {
-        if (result !== true || ++index >= sources.length) done(result);else try {
-          var source = sources[index];
-          (adapters.get(source) || valueAdapter(source))(next, proceed, context);
-        } catch (error) {
-          done(error);
-        }
-      }(true);
-    };
-  }
+  var empty = instance(emptyGenerator(true));
 
   function aeroflow() {
-    return instance(emit.apply(undefined, arguments));
+    for (var _len7 = arguments.length, sources = Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
+      sources[_key7] = arguments[_key7];
+    }
+
+    return sources.length ? instance(adapter(sources)) : empty;
   }
 
   function create(emitter) {
@@ -1527,8 +1547,8 @@
   }
 
   function listen(source) {
-    for (var _len7 = arguments.length, parameters = Array(_len7 > 1 ? _len7 - 1 : 0), _key7 = 1; _key7 < _len7; _key7++) {
-      parameters[_key7 - 1] = arguments[_key7];
+    for (var _len8 = arguments.length, parameters = Array(_len8 > 1 ? _len8 - 1 : 0), _key8 = 1; _key8 < _len8; _key8++) {
+      parameters[_key8 - 1] = arguments[_key8];
     }
 
     return instance(listener(source, parameters));
@@ -1561,7 +1581,7 @@
     empty: {
       enumerable: true,
       get: function get() {
-        return instance(emptyGenerator(true));
+        return empty;
       }
     },
     listeners: {

@@ -1,6 +1,6 @@
 import { objectDefineProperties } from './utilites';
 
-import adapters, { valueAdapter } from './adapters/index';
+import adapters, { adapter, valueAdapter } from './adapters/index';
 import {
   customGenerator,
   emptyGenerator,
@@ -12,7 +12,8 @@ import {
 import listeners, { listener } from './listeners/index';
 import notifiers from './notifiers/index';
 import instance, { operators } from './instance';
-import emit from './emit';
+
+const empty = instance(emptyGenerator(true));
 
 /**
 Creates new instance emitting values extracted from every provided data source in series.
@@ -91,7 +92,9 @@ aeroflow(42).test().notify(console).run();
 // done true
 */
 export default function aeroflow(...sources) {
-  return instance(emit(...sources));
+  return sources.length
+    ? instance(adapter(sources))
+    : empty;
 }
 
 /**
@@ -317,7 +320,7 @@ objectDefineProperties(aeroflow, [
 
 objectDefineProperties(aeroflow, {
   adapters: { value: adapters },
-  empty: { enumerable: true, get: () => instance(emptyGenerator(true)) },
+  empty: { enumerable: true, get: () => empty },
   listeners: { value: listeners },
   notifiers: { value: notifiers },
   operators: { value: operators }

@@ -20,27 +20,27 @@
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">92.68% </span>
+        <span class="strong">95.24% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>38/41</span>
+        <span class='fraction'>40/42</span>
       </div>
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
         <span class="quiet">Branches</span>
-        <span class='fraction'>4/4</span>
+        <span class='fraction'>6/6</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">72.73% </span>
+        <span class="strong">81.82% </span>
         <span class="quiet">Functions</span>
-        <span class='fraction'>8/11</span>
+        <span class='fraction'>9/11</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">86.36% </span>
+        <span class="strong">91.3% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>19/22</span>
+        <span class='fraction'>21/23</span>
       </div>
       <div class='fl pad1y'>
-        <span class="strong">2 statements</span>
+        <span class="strong">2 statements, 1 branch</span>
         <span class="quiet">Ignored</span>  &nbsp;&nbsp;&nbsp;&nbsp;
       </div>
     </div>
@@ -371,7 +371,10 @@
 322
 323
 324
-325</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+325
+326
+327
+328</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -386,6 +389,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -465,6 +469,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-yes">106×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -624,7 +630,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">6×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -697,7 +703,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { objectDefineProperties } from './utilites';
 &nbsp;
-import adapters, { valueAdapter } from './adapters/index';
+import adapters, { adapter, valueAdapter } from './adapters/index';
 import {
   customGenerator,
   emptyGenerator,
@@ -709,7 +715,8 @@ import {
 import listeners, { listener } from './listeners/index';
 import notifiers from './notifiers/index';
 import instance, { operators } from './instance';
-import emit from './emit';
+&nbsp;
+const empty = instance(emptyGenerator(true));
 &nbsp;
 /**
 Creates new instance emitting values extracted from every provided data source in series.
@@ -788,7 +795,9 @@ aeroflow(42).test().notify(console).run();
 // done true
 */
 export default function aeroflow(...sources) {
-  return instance(emit(...sources));
+  return sources.length
+    ? instance(adapter(sources))
+    : empty;
 }
 &nbsp;
 /**
@@ -947,8 +956,8 @@ aeroflow.range(5, 0, -2).notify(console).run();
 // next 1
 // done true
 */
-<span class="fstat-no" title="function not covered" >function range(start, end, step) {</span>
-<span class="cstat-no" title="statement not covered" >  return instance(rangeGenerator(start, end, step));</span>
+function range(start, end, step) {
+  return instance(rangeGenerator(start, end, step));
 }
 &nbsp;
 /**
@@ -1014,7 +1023,7 @@ objectDefineProperties(aeroflow, [
 &nbsp;
 objectDefineProperties(aeroflow, {
   adapters: { value: adapters },
-  empty: { enumerable: true, get: () =&gt; instance(emptyGenerator(true)) },
+  empty: { enumerable: true, get: () =&gt; empty },
   listeners: { value: listeners },
   notifiers: { value: notifiers },
   operators: { value: operators }
@@ -1025,7 +1034,7 @@ objectDefineProperties(aeroflow, {
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Fri Mar 04 2016 20:36:59 GMT+0300 (Belarus Standard Time)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Sat Mar 05 2016 01:05:06 GMT+0200 (E. Europe Standard Time)
 </div>
 </div>
 <script src="../../prettify.js"></script>

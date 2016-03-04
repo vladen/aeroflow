@@ -6,6 +6,7 @@ import {
   averageOperator,
   catchOperator,
   coalesceOperator,
+  concatOperator,
   countOperator,
   delayOperator,
   distinctOperator,
@@ -52,6 +53,7 @@ export const operators = objectCreate(Object[PROTOTYPE], [
   average,
   _catch,
   coalesce,
+  concat,
   count,
   delay,
   distinct,
@@ -225,11 +227,11 @@ aeroflow(1).concat(
 // next 6
 // next 7 // after 500ms
 // done
-
-function concat(...sources) {
-  return instance(this.emitter, this.sources.concat(sources));
-}
 */
+function concat(...sources) {
+  return this.chain(concatOperator(sources));
+}
+
 
 /**
 Counts the number of values emitted by this flow, returns new flow emitting only this value.
