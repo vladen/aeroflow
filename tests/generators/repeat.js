@@ -10,12 +10,14 @@ export default (aeroflow, execute, expect) => describe('aeroflow.repeat', () => 
         context => aeroflow.repeat(),
         context => expect(context.result).to.be.an('Aeroflow')));
 
-    it('Emits "next" with undefined, then single lazy "done"', () =>
+    it('Infinitely emits "next" with undefined, then single lazy "done"', () =>
       execute(
-        context => aeroflow.repeat().take(1).run(context.next, context.done),
+        context => context.limit = 3,
+        context => aeroflow.repeat().take(context.limit).run(context.next, context.done),
         context => {
-          expect(context.next).to.have.been.calledOnce;
-          expect(context.next).to.have.been.calledWith(undefined);
+          expect(context.next).to.have.callCount(context.limit);
+          Array(context.limit).fill().forEach((_, index) =>
+            expect(context.next.getCall(index)).to.have.been.calledWith(undefined));
           expect(context.done).to.have.been.calledAfter(context.next);
           expect(context.done).to.have.been.calledOnce;
           expect(context.done).to.have.been.calledWith(false);
@@ -36,7 +38,7 @@ export default (aeroflow, execute, expect) => describe('aeroflow.repeat', () => 
             expect(context.repeater.getCall(index)).to.have.been.calledWith(index));
         }));
 
-    it('Emits "next" with each value returned by @repeater, then single lazy "done"', () =>
+    it('Infinitely emits "next" with each value returned by @repeater, then single lazy "done"', () =>
       execute(
         context => {
           context.limit = 3;
@@ -71,7 +73,7 @@ export default (aeroflow, execute, expect) => describe('aeroflow.repeat', () => 
           });
         }));
 
-    it('Emits "next" with each value returned by @repeater and delayed to the number of milliseconds returned by @delayer, then single lazy "done"', () =>
+    it('Infinitely emits "next" with each value returned by @repeater delayed to the number of milliseconds returned by @delayer, then single lazy "done"', () =>
       execute(
         context => {
           context.delay = 25;
@@ -97,7 +99,7 @@ export default (aeroflow, execute, expect) => describe('aeroflow.repeat', () => 
   });
 
   describe('(@repeater:string)', () => {
-    it('Emits "next" with @repeater value, then single lazy "done"', () =>
+    it('Infinitely eits "next" with @repeater value, then single lazy "done"', () =>
       execute(
         context => {
           context.limit = 3;

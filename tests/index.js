@@ -8,6 +8,7 @@ import operatorsTests from './operators';
 import expandGeneratorTests from './generators/expand';
 import justGeneratorTests from './generators/just';
 import randomGeneratorTests from './generators/random';
+import rangeGeneratorTests from './generators/range';
 import repeatGeneratorTests from './generators/repeat';
 
 import averageOperatorTests from './operators/average';
@@ -46,6 +47,7 @@ const tests = [
   expandGeneratorTests,
   justGeneratorTests,
   randomGeneratorTests,
+  rangeGeneratorTests,
   repeatGeneratorTests,
 
   averageOperatorTests,
@@ -119,5 +121,5 @@ export default (aeroflow, expect, sinon) => {
         assert(context);
       });
   }
-  tests.forEach(test => test(aeroflow, execute, expect));
+  tests.forEach(test => test(aeroflow, execute, expect, sinon));
 }

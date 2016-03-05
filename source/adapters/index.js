@@ -26,3 +26,19 @@ export {
   promiseAdapter,
   valueAdapter
 };
+
+export function adapter(sources) {
+  return (next, done, context) => {
+    let index = -1;
+    !function proceed(result) {
+      if (result !== true || ++index >= sources.length) done(result);
+      else try {
+        const source = sources[index];
+        (adapters.get(source) || valueAdapter(source))(next, proceed, context);
+      }
+      catch (error) {
+        done(error);
+      }
+    }(true);
+  }
+}

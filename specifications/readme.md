@@ -42,6 +42,10 @@
      - [aeroflow.random()](#aeroflowrandom-aeroflowrandom)
      - [aeroflow.random(@maximum:number)](#aeroflowrandom-aeroflowrandommaximumnumber)
      - [aeroflow.random(@minimum:number, @maximum:number)](#aeroflowrandom-aeroflowrandomminimumnumber-maximumnumber)
+   - [aeroflow.range](#aeroflowrange)
+     - [aeroflow.range()](#aeroflowrange-aeroflowrange)
+     - [aeroflow.range(@start)](#aeroflowrange-aeroflowrangestart)
+     - [aeroflow.range(@start, @end)](#aeroflowrange-aeroflowrangestart-end)
    - [aeroflow.repeat](#aeroflowrepeat)
      - [aeroflow.repeat()](#aeroflowrepeat-aeroflowrepeat)
      - [aeroflow.repeat(@repeater:function)](#aeroflowrepeat-aeroflowrepeatrepeaterfunction)
@@ -1075,6 +1079,128 @@ return execute(function (context) {
 });
 ```
 
+<a name="aeroflowrange"></a>
+# aeroflow.range
+Is static method.
+
+```js
+return execute(function (context) {
+  return aeroflow.range;
+}, function (context) {
+  return expect(context.result).to.be.a('function');
+});
+```
+
+<a name="aeroflowrange-aeroflowrange"></a>
+## aeroflow.range()
+Returns instance of Aeroflow.
+
+```js
+return execute(function (context) {
+  return aeroflow.range();
+}, function (context) {
+  return expect(context.result).to.be.an('Aeroflow');
+});
+```
+
+Infinitely emits "next" for each integer from 0, then single lazy "done".
+
+```js
+return execute(function (context) {
+  return context.limit = 3;
+}, function (context) {
+  return aeroflow.range().take(context.limit).run(context.next, context.done);
+}, function (context) {
+  expect(context.next).to.have.callCount(context.limit);
+  Array(context.limit).fill().forEach(function (_, index) {
+    return expect(context.next.getCall(index)).to.have.been.calledWith(index);
+  });
+  expect(context.done).to.have.been.calledAfter(context.next);
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(false);
+});
+```
+
+<a name="aeroflowrange-aeroflowrangestart"></a>
+## aeroflow.range(@start)
+Infinitely emits "next" for each integer from @start, then single lazy "done".
+
+```js
+return execute(function (context) {
+  context.limit = 3;
+  context.start = -3;
+}, function (context) {
+  return aeroflow.range(context.start).take(context.limit).run(context.next, context.done);
+}, function (context) {
+  expect(context.next).to.have.callCount(context.limit);
+  Array(context.limit).fill().forEach(function (_, index) {
+    return expect(context.next.getCall(index)).to.have.been.calledWith(context.start + index);
+  });
+  expect(context.done).to.have.been.calledAfter(context.next);
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(false);
+});
+```
+
+<a name="aeroflowrange-aeroflowrangestart-end"></a>
+## aeroflow.range(@start, @end)
+When @start equal @end, emits single "next" with @start, then single greedy "done".
+
+```js
+return execute(function (context) {
+  context.end = 42;
+  context.start = context.end;
+}, function (context) {
+  return aeroflow.range(context.start, context.end).run(context.next, context.done);
+}, function (context) {
+  expect(context.next).to.have.callCount(1);
+  expect(context.next).to.have.been.calledWith(context.start);
+  expect(context.done).to.have.been.calledAfter(context.next);
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(true);
+});
+```
+
+When @start less than @end, emits "next" for each integer up from @start to @end inclusively, then single greedy "done".
+
+```js
+return execute(function (context) {
+  context.end = 3;
+  context.start = -3;
+}, function (context) {
+  return aeroflow.range(context.start, context.end).run(context.next, context.done);
+}, function (context) {
+  var count = context.end - context.start + 1;
+  expect(context.next).to.have.callCount(count);
+  Array(count).fill().forEach(function (_, index) {
+    return expect(context.next.getCall(index)).to.have.been.calledWith(context.start + index);
+  });
+  expect(context.done).to.have.been.calledAfter(context.next);
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(true);
+});
+```
+
+When @end less than @start, emits "next" for each integer down from @start to @end inclusively, then single greedy "done".
+
+```js
+return execute(function (context) {
+  context.end = -3;
+  context.start = 3;
+}, function (context) {
+  return aeroflow.range(context.start, context.end).run(context.next, context.done);
+}, function (context) {
+  var count = context.start - context.end + 1;
+  expect(context.next).to.have.callCount(count);
+  Array(count).fill().forEach(function (_, index) {
+    return expect(context.next.getCall(index)).to.have.been.calledWith(context.start - index);
+  });
+  expect(context.done).to.have.been.calledAfter(context.next);
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(true);
+});
+```
+
 <a name="aeroflowrepeat"></a>
 # aeroflow.repeat
 Is static method.
@@ -1099,14 +1225,18 @@ return execute(function (context) {
 });
 ```
 
-Emits "next" with undefined, then single lazy "done".
+Infinitely emits "next" with undefined, then single lazy "done".
 
 ```js
 return execute(function (context) {
-  return aeroflow.repeat().take(1).run(context.next, context.done);
+  return context.limit = 3;
 }, function (context) {
-  expect(context.next).to.have.been.calledOnce;
-  expect(context.next).to.have.been.calledWith(undefined);
+  return aeroflow.repeat().take(context.limit).run(context.next, context.done);
+}, function (context) {
+  expect(context.next).to.have.callCount(context.limit);
+  Array(context.limit).fill().forEach(function (_, index) {
+    return expect(context.next.getCall(index)).to.have.been.calledWith(undefined);
+  });
   expect(context.done).to.have.been.calledAfter(context.next);
   expect(context.done).to.have.been.calledOnce;
   expect(context.done).to.have.been.calledWith(false);
@@ -1131,7 +1261,7 @@ return execute(function (context) {
 });
 ```
 
-Emits "next" with each value returned by @repeater, then single lazy "done".
+Infinitely emits "next" with each value returned by @repeater, then single lazy "done".
 
 ```js
 return execute(function (context) {
@@ -1175,7 +1305,7 @@ return execute(function (context) {
 });
 ```
 
-Emits "next" with each value returned by @repeater and delayed to the number of milliseconds returned by @delayer, then single lazy "done".
+Infinitely emits "next" with each value returned by @repeater delayed to the number of milliseconds returned by @delayer, then single lazy "done".
 
 ```js
 return execute(function (context) {
@@ -1209,7 +1339,7 @@ return execute(function (context) {
 
 <a name="aeroflowrepeat-repeaterstring"></a>
 ## (@repeater:string)
-Emits "next" with @repeater value, then single lazy "done".
+Infinitely eits "next" with @repeater value, then single lazy "done".
 
 ```js
 return execute(function (context) {

@@ -1,6 +1,7 @@
 import averageOperator from './average';
 import catchOperator from './catch';
 import coalesceOperator from './coalesce';
+import concatOperator from './concat';
 import countOperator from './count';
 import delayOperator from './delay';
 import distinctOperator from './distinct';
@@ -33,6 +34,7 @@ export {
   averageOperator,
   catchOperator,
   coalesceOperator,
+  concatOperator,
   countOperator,
   delayOperator,
   distinctOperator,
