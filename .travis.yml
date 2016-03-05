@@ -8,7 +8,6 @@ script:
   - npm run clean
   - npm run test
   - npm run cover
-  - npm run report
 after_script:
   - codeclimate-test-reporter < coverage/lcov.info
 branches:
