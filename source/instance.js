@@ -722,8 +722,6 @@ Optional callback called after this flow has finished emission of data with 2 ar
 or boolean value indicating lazy (false) or eager (true) enumeration of data sources,
 2) context data.
 When passed something other than function, it considered as context data.
-@param {any} [data]
-Arbitrary value passed as context data to each callback invoked by this flow as the last argument.
 
 @return {Promise}
 New promise,
@@ -739,20 +737,6 @@ aeroflow('test').notify(console).run();
   console.log(result);
 })();
 // test
-aeroflow('test').run(
-  (result, data) => console.log('next', result, data),
-  (result, data) => console.log('done', result, data),
-  'data');
-// next test data
-// done true data
-aeroflow(data => console.log('source:', data))
-  .map((result, index, data) => console.log('map:', data))
-  .filter((result, index, data) => console.log('filter:', data))
-  .run('data');
-// source: data
-// map: data
-// filter: data
-// done true
 aeroflow(Promise.reject('test')).run();
 // Uncaught (in promise) Error: test(…)
 */
