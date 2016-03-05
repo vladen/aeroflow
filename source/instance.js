@@ -22,6 +22,7 @@ import {
   replayOperator,
   retryOperator,
   reverseOperator,
+  scanOperator,
   shareOperator,
   skipOperator,
   sliceOperator,
@@ -70,6 +71,7 @@ export const operators = objectCreate(Object[PROTOTYPE], [
   replay,
   retry,
   reverse,
+  scan,
   share,
   skip,
   slice,
@@ -199,8 +201,7 @@ function coalesce(alternative) {
 }
 
 /*
-Returns new flow emitting values from this flow first 
-and then from all provided sources in series.
+Concatenates all provided data source to the end of this flow.
 
 @alias Flow#concat
 
@@ -234,7 +235,7 @@ function concat(...sources) {
 
 
 /**
-Counts the number of values emitted by this flow, returns new flow emitting only this value.
+Counts the number of values emitted by this flow and emits only count value.
 
 @alias Flow#count
 
@@ -253,19 +254,17 @@ function count() {
 }
 
 /**
-Returns new flow delaying emission of each value accordingly provided condition.
+Delays emission of each value by specified amount of time.
 
 @alias Flow#delay
 
-@param {number|date|function} [interval]
-The condition used to determine delay for each subsequent emission.
-Number is threated as milliseconds interval (negative number is considered as 0).
-Date is threated as is (date in past is considered as now).
-Function is execute for each emitted value, with three arguments:
-  value - The current value emitted by this flow
-  index - The index of the current value
-  context - The context object
-The result of condition function will be converted to number and used as milliseconds interval.
+@param {function|number|date} [delayer]
+Function, defining dynamic delay, called for each emitted value with three arguments:
+  1) Value being emitted;
+  2) Index of iteration.
+The result returned by delayer function is converted to number and used as delay in milliseconds.
+Or static numeric delay in milliseconds.
+Or date to delay until.
 
 @return {Flow}
 
@@ -286,8 +285,8 @@ aeroflow(1, 2).delay(value => { throw new Error }).notify(console).run();
 // done Error(…)
 // Uncaught (in promise) Error: test(…)
 */
-function delay(interval) {
-  return this.chain(delayOperator(interval));
+function delay(delayer) {
+  return this.chain(delayOperator(delayer));
 }
 
 /**
@@ -761,6 +760,26 @@ function run(next, done) {
       },
       this.context);
   });
+}
+
+/**
+Emits first value emitted by this flow,
+and then values returned by scanner applied to each successive emitted value.
+
+@alias Flow#scan
+
+@param {function|any} [scanner]
+Function to apply to each emitted value, called with three arguments:
+1) First value emitted by this flow or value returned by previous call to scanner;
+2) Current value emitted by this flow;
+3) Index of iteration.
+
+@example
+aeroflow.range(1, 3).scan((prev, next) => prev + next).notify(console).run();
+
+*/
+function scan(scanner) {
+  return this.chain(scanOperator(scanner));
 }
 
 function share() {

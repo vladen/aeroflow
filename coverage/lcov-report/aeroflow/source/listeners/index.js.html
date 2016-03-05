@@ -20,9 +20,9 @@
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">78.38% </span>
+        <span class="strong">72.97% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>29/37</span>
+        <span class='fraction'>27/37</span>
       </div>
       <div class='fl pad1y space-right2'>
         <span class="strong">60% </span>
@@ -35,9 +35,9 @@
         <span class='fraction'>2/6</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">41.67% </span>
+        <span class="strong">25% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>5/12</span>
+        <span class='fraction'>3/12</span>
       </div>
       <div class='fl pad1y'>
         <span class="strong">7 statements, 1 function, 3 branches</span>
@@ -77,7 +77,8 @@
 28
 29
 30
-31</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+31
+32</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -92,14 +93,15 @@
 <span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -109,8 +111,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { DONE, NEXT } from '../symbols';
 import { isFunction, toFunction } from '../utilites';
-import retard from '../retard';
 import registry from '../registry';
+import resync from '../resync';
 import emptyGenerator from '../generators/empty';
 import eventEmitterListener from './eventEmitter';
 import eventTargetListener from './eventTarget';
@@ -122,16 +124,17 @@ const listeners = registry()
 export <span class="fstat-no" title="function not covered" >function listener(source, parameters) {</span>
 <span class="cstat-no" title="statement not covered" >  const instance = listeners.get(source, ...parameters);</span>
 <span class="cstat-no" title="statement not covered" >  return isFunction(instance)</span>
-    ? <span class="fstat-no" title="function not covered" >(next, done, context) =&gt; {</span>
-        const <span class="cstat-no" title="statement not covered" >{ [DONE]: retardedDone, [NEXT]: retardedNext } = retard(next, done),</span>
-<span class="cstat-no" title="statement not covered" >              finalizer = toFunction(instance(onNext, onDone));</span>
-<span class="fstat-no" title="function not covered" >        function onDone(result) {</span>
-<span class="cstat-no" title="statement not covered" >          setImmediate(finalizer);</span>
-<span class="cstat-no" title="statement not covered" >          retardedDone(false);</span>
-        }
-<span class="fstat-no" title="function not covered" >        function onNext(result) {</span>
-<span class="cstat-no" title="statement not covered" >          i</span></span>f (false === retardedNext(result)) <span class="cstat-no" title="statement not covered" >onDone(false);
-        }
+    ? <span class="fstat-no" title="function not covered" >(next, done, context) =&gt; <span class="cstat-no" title="statement not covered" >{</span></span>
+        const <span class="cstat-no" title="statement not covered" >{ [DONE]: redone, [NEXT]: renext } = resync(next, done), end = toFunction(instance(</span>
+<span class="fstat-no" title="function not covered" >          result =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >            i</span></span>f (false !== renext(result)) <span class="cstat-no" title="statement not covered" >return;
+<span class="cstat-no" title="statement not covered" >            redone(false);</span>
+<span class="cstat-no" title="statement not covered" >            end();</span>
+          },
+<span class="fstat-no" title="function not covered" >          result =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >            redone(false);</span>
+<span class="cstat-no" title="statement not covered" >            end();</span>
+          }));
       }
     : emptyGenerator(true);
 }
@@ -143,7 +146,7 @@ export default listeners;
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Sat Mar 05 2016 01:05:06 GMT+0200 (E. Europe Standard Time)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Sat Mar 05 2016 15:25:56 GMT+0300 (Belarus Standard Time)
 </div>
 </div>
 <script src="../../../prettify.js"></script>

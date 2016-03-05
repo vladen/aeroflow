@@ -14,7 +14,7 @@ export default function delayOperator(interval) {
           catch (error) {
             reject(error);
           }
-        }, toDelay(delayer(result, index++), 1000));
+        }, toDelay(delayer(result, index++), 0));
       }),
       done,
       context);

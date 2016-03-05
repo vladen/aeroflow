@@ -20,32 +20,32 @@
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">39.53% </span>
+        <span class="strong">51.16% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>17/43</span>
+        <span class='fraction'>22/43</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">20% </span>
+        <span class="strong">25% </span>
         <span class="quiet">Branches</span>
-        <span class='fraction'>4/20</span>
+        <span class='fraction'>5/20</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">12.5% </span>
+        <span class="strong">75% </span>
         <span class="quiet">Functions</span>
-        <span class='fraction'>1/8</span>
+        <span class='fraction'>6/8</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">7.69% </span>
+        <span class="strong">26.92% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>2/26</span>
+        <span class='fraction'>7/26</span>
       </div>
       <div class='fl pad1y'>
-        <span class="strong">5 statements, 1 branch</span>
+        <span class="strong">1 statement, 1 branch</span>
         <span class="quiet">Ignored</span>  &nbsp;&nbsp;&nbsp;&nbsp;
       </div>
     </div>
   </div>
-  <div class='status-line low'></div>
+  <div class='status-line medium'></div>
 <pre><table class="coverage">
 <tr><td class="line-count quiet">1
 2
@@ -98,19 +98,13 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-yes">2×</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -121,6 +115,12 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -131,7 +131,7 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -142,10 +142,10 @@ import { classOf, compare } from '../utilites';
 import arrayAdapter from '../adapters/array';
 import toArrayOperator from './toArray';
 &nbsp;
-export default <span class="fstat-no" title="function not covered" >function sortOperator(parameters) {</span>
-<span class="cstat-no" title="statement not covered" >  const directions = [], selectors = [];</span>
-<span class="cstat-no" title="statement not covered" >  let direction = 1;</span>
-<span class="cstat-no" title="statement not covered" >  f</span>or (let i = -1, l = parameters.length; ++i &lt; l;) {
+export default function sortOperator(parameters) {
+  const directions = [], selectors = [];
+  let direction = 1;
+  for (let i = -1, l = parameters.length; ++i &lt; l;) {
 <span class="cstat-no" title="statement not covered" >    let parameter = parameters[i];</span>
 <span class="cstat-no" title="statement not covered" >    switch (classOf(parameter)) {</span>
       case FUNCTION:
@@ -165,8 +165,8 @@ export default <span class="fstat-no" title="function not covered" >function sor
 <span class="cstat-no" title="statement not covered" >    i</span></span>f (directions.length) <span class="cstat-no" title="statement not covered" >directions[directions.length - 1] = parameter;
     else <span class="cstat-no" title="statement not covered" >direction = parameter;</span>
   }
-<span class="cstat-no" title="statement not covered" >  const comparer = selectors.length</span>
-    ? <span class="fstat-no" title="function not covered" >(left, right) =&gt; {</span>
+  const comparer = selectors.length
+    ? <span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" >(</span>left, right) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >      let result;</span>
 <span class="cstat-no" title="statement not covered" >      f</span>or (let i = -1, l = selectors.length; ++i &lt; l;) {
 <span class="cstat-no" title="statement not covered" >        let selector = selectors[i];</span>
@@ -176,8 +176,8 @@ export default <span class="fstat-no" title="function not covered" >function sor
 <span class="cstat-no" title="statement not covered" >      return result;</span>
     }
     : <span class="fstat-no" title="function not covered" >(</span>left, right) =&gt; compare(left, right, direction);
-<span class="cstat-no" title="statement not covered" >  return <span class="fstat-no" title="function not covered" >e</span>mitter =&gt; <span class="fstat-no" title="function not covered" >(</span>next, done, context) =&gt; toArrayOperator()(emitter)(</span>
-<span class="fstat-no" title="function not covered" >    r</span>esult =&gt; new Promise(<span class="fstat-no" title="function not covered" >r</span>esolve =&gt;
+  return emitter =&gt; (next, done, context) =&gt; toArrayOperator()(emitter)(
+    result =&gt; new Promise(resolve =&gt;
       arrayAdapter(result.sort(comparer))(next, resolve, context)),
     done,
     context);
@@ -188,7 +188,7 @@ export default <span class="fstat-no" title="function not covered" >function sor
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Sat Mar 05 2016 01:05:06 GMT+0200 (E. Europe Standard Time)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Sat Mar 05 2016 15:25:56 GMT+0300 (Belarus Standard Time)
 </div>
 </div>
 <script src="../../../prettify.js"></script>

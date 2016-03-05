@@ -4,895 +4,7 @@
   (global.aeroflowTests = factory());
 }(this, function () { 'use strict';
 
-  var factoryTests = (aeroflow, execute, expect) => describe('aeroflow', () => {
-    it('Is function', () =>
-      execute(
-        /* arrange (optional) */
-        context => {},
-        /* act */
-        context => aeroflow,
-        /* assert */
-        context => expect(context.result).to.be.a('function')));
-
-    describe('aeroflow()', () => {
-      it('Returns instance of Aeroflow', () =>
-        execute(
-          context => aeroflow(),
-          context => expect(context.result).to.be.an('Aeroflow')));
-
-      it('Emits only single greedy "done"', () =>
-        execute(
-          context => aeroflow().run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.not.been.called;
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(true);
-          }));
-    });
-
-    describe('aeroflow(@source:aeroflow)', () => {
-      it('When @source is empty, emits only single greedy "done"', () =>
-        execute(
-          context => aeroflow(aeroflow.empty).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.not.been.called;
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(true);
-          }));
-
-      it('When @source is not empty, emits "next" for each value from @source, then single greedy "done"', () =>
-        execute(
-          context => context.values = [1, 2],
-          context => aeroflow(aeroflow(context.values)).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.callCount(context.values.length);
-            context.values.forEach(
-              (value, index) => expect(context.next.getCall(index)).to.have.been.calledWith(value));
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(true);
-            expect(context.done).to.have.been.calledAfter(context.next);
-          }));
-    });
-
-    describe('aeroflow(@source:array)', () => {
-      it('When @source is empty, emits only single greedy "done"', () =>
-        execute(
-          context => aeroflow([]).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.not.been.called;
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(true);
-          }));
-
-      it('When @source is not empty, emits "next" for each value from @source, then single greedy "done"', () =>
-        execute(
-          context => context.values = [1, 2],
-          context => aeroflow(context.values).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.callCount(context.values.length);
-            context.values.forEach(
-              (value, index) => expect(context.next.getCall(index)).to.have.been.calledWith(value));
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(true);
-            expect(context.done).to.have.been.calledAfter(context.next);
-          }));
-    });
-
-    describe('aeroflow(@source:date)', () => {
-      it('Emits single "next" with @source, then single greedy "done"', () =>
-        execute(
-          context => context.source = new Date,
-          context => aeroflow(context.source).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.been.calledOnce;
-            expect(context.next).to.have.been.calledWith(context.source);
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(true);
-            expect(context.done).to.have.been.calledAfter(context.next);
-          }));
-    });
-
-    describe('aeroflow(@source:error)', () => {
-      it('Emits only single faulty "done" with @source', () =>
-        execute(
-          context => aeroflow(context.error).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.not.been.called;
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(context.error);
-          }));
-    });
-
-    describe('aeroflow(@source:function)', () => {
-      it('Calls @source once', () =>
-        execute(
-          context => context.source = context.spy(),
-          context => aeroflow(context.source).run(),
-          context => expect(context.source).to.have.been.calledOnce));
-
-      it('If @source returns value, emits single "next" with returned value, then single greedy "done"', () =>
-        execute(
-          context => {
-            context.value = 42;
-            context.source = () => context.value;
-          },
-          context => aeroflow(context.source).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.been.calledOnce;
-            expect(context.next).to.have.been.calledWith(context.value);
-            expect(context.done).to.have.been.calledAfter(context.next);
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(true);
-          }));
-
-      it('If @source throws, emits only single faulty "done" with thrown error', () =>
-        execute(
-          context => aeroflow(context.fail).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.not.been.called;
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(context.error);
-          }));
-    });
-
-    describe('aeroflow(@source:iterable)', () => {
-      it('When @source is empty, emits only single greedy "done"', () =>
-        execute(
-          context => aeroflow(new Set).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.not.been.called;
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(true);
-          }));
-
-      it('When @source is not empty, emits "next" for each value from @source, then single greedy "done"', () =>
-        execute(
-          context => context.values = [1, 2],
-          context => aeroflow(new Set(context.values)).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.callCount(context.values.length);
-            context.values.forEach(
-              (value, index) => expect(context.next.getCall(index)).to.have.been.calledWith(value));
-            expect(context.done).to.have.been.calledAfter(context.next);
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(true);
-          }));
-    });
-
-    describe('aeroflow(@source:null)', () => {
-      it('Emits single "next" with @source, then single greedy "done"', () =>
-        execute(
-          context => context.source = null,
-          context => aeroflow(context.source).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.been.calledOnce;
-            expect(context.next).to.have.been.calledWith(context.source);
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(true);
-            expect(context.done).to.have.been.calledAfter(context.next);
-          }));
-    });
-
-    describe('aeroflow(@source:promise)', () => {
-      it('When @source rejects, emits single faulty "done" with rejected error', () =>
-        execute(
-          context => aeroflow(Promise.reject(context.error)).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.not.been.called;
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(context.error);
-          }));
-
-      it('When @source resolves, emits single "next" with resolved value, then single greedy "done"', () =>
-        execute(
-          context => context.value = 42,
-          context => aeroflow(Promise.resolve(context.value)).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.been.calledOnce;
-            expect(context.next).to.have.been.calledWith(context.value);
-            expect(context.done).to.have.been.calledAfter(context.next);
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(true);
-          }));
-    });
-
-    describe('aeroflow(@source:string)', () => {
-      it('Emits single "next" with @source, then single greedy "done"', () =>
-        execute(
-          context => context.source = 'test',
-          context => aeroflow(context.source).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.been.calledOnce;
-            expect(context.next).to.have.been.calledWith(context.source);
-            expect(context.done).to.have.been.calledAfter(context.next);
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(true);
-          }));
-    });
-
-    describe('aeroflow(@source:undefined)', () => {
-      it('Emits single "next" with @source, then single greedy "done"', () =>
-        execute(
-          context => context.source = undefined,
-          context => aeroflow(context.source).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.been.calledOnce;
-            expect(context.next).to.have.been.calledWith(context.source);
-            expect(context.done).to.have.been.calledAfter(context.next);
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(true);
-          }));
-    });
-
-    describe('aeroflow(...@sources)', () => {
-      it('Emits "next" with each value from @sources, then single greedy "done"', () =>
-        execute(
-          context => {
-            const values = context.values = [true, new Date, null, 42, 'test', Symbol('test'), undefined];
-            context.sources = [
-              values[0],
-              [values[1]],
-              new Set([values[2], values[3]]),
-              () => values[4],
-              Promise.resolve(values[5]),
-              new Promise(resolve => setTimeout(() => resolve(values[6])))
-            ];
-          },
-          context => aeroflow(...context.sources).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.callCount(context.values.length);
-            context.values.forEach((value, index) =>
-              expect(context.next.getCall(index)).to.have.been.calledWith(value));
-            expect(context.done).to.have.been.calledAfter(context.next);
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(true);
-          }));
-    });
-  });
-
-  var emptyTests = (aeroflow, execute, expect) => describe('aeroflow.empty', () => {
-    it('Gets instance of Aeroflow', () =>
-      execute(
-        context => aeroflow.empty,
-        context => expect(context.result).to.be.an('Aeroflow')));
-
-    it('Emits only single greedy "done"', () =>
-      execute(
-        context => aeroflow.empty.run(context.next, context.done),
-        context => {
-          expect(context.next).to.have.not.been.called;
-          expect(context.done).to.have.been.calledOnce;
-          expect(context.done).to.have.been.calledWithExactly(true);
-        }));
-  });
-
-  var adaptersTests = (aeroflow, execute, expect) => describe('aeroflow.adapters', () => {
-    it('Is static property', () =>
-      execute(
-        context => aeroflow.adapters,
-        context => expect(context.result).to.exist));
-
-    describe('aeroflow.adapters.get', () => {
-      it('Is function', () =>
-        execute(
-          context => aeroflow.adapters.get,
-          context => expect(context.result).to.be.a('function')));
-
-      it('Contains indexed iterable adapter', () =>
-        execute(
-          context => aeroflow.adapters[0],
-          context => expect(context.result).to.be.a('function')));
-
-      it('Contains mapped array adapter', () =>
-        execute(
-          context => aeroflow.adapters['Array'],
-          context => expect(context.result).to.be.a('function')));
-
-      it('Contains mapped error adapter', () =>
-        execute(
-          context => aeroflow.adapters['Error'],
-          context => expect(context.result).to.be.a('function')));
-
-      it('Contains mapped function adapter', () =>
-        execute(
-          context => aeroflow.adapters['Function'],
-          context => expect(context.result).to.be.a('function')));
-
-      it('Contains mapped promise adapter', () =>
-        execute(
-          context => aeroflow.adapters['Promise'],
-          context => expect(context.result).to.be.a('function')));
-
-      describe('aeroflow.adapters.get(@source:array)', () => {
-        it('Does not resolve adapter function', () =>
-          execute(
-            context => aeroflow.adapters.get(),
-            context => expect(context.result).to.not.exist));
-      });
-
-      describe('aeroflow.adapters.get(@source:array)', () => {
-        it('Resolves adapter function for @source', () =>
-          execute(
-            context => aeroflow.adapters.get([]),
-            context => expect(context.result).to.be.a('function')));
-      });
-
-      describe('aeroflow.adapters.get(@source:iterable)', () => {
-        it('Resolves adapter function for @source', () =>
-          execute(
-            context => aeroflow.adapters.get(new Set),
-            context => expect(context.result).to.be.a('function')));
-      });
-
-      describe('aeroflow.adapters.get(@source:function)', () => {
-        it('Resolves adapter function for @source', () =>
-          execute(
-            context => aeroflow.adapters.get(Function()),
-            context => expect(context.result).to.be.a('function')));
-      });
-
-      describe('aeroflow.adapters.get(@source:promise)', () => {
-        it('Resolves adapter function for @source', () =>
-          execute(
-            context => aeroflow.adapters.get(Promise.resolve()),
-            context => expect(context.result).to.be.a('function')));
-      });
-    });
-
-    describe('aeroflow.adapters.use', () => {
-      it('Is function', () =>
-        execute(
-          context => aeroflow.adapters.get,
-          context => expect(context.result).to.be.a('function')));
-
-      describe('aeroflow.adapters.use(@adapter:function)', () => {
-        it('Registers indexed @adapter and calls it with source when resolves adapter for not mapped class', () =>
-          execute(
-            context => {
-              context.adapter = context.spy();
-              context.source = {};
-            },
-            context => {
-              aeroflow.adapters.use(context.adapter);
-              aeroflow.adapters.get(context.source);
-            },
-            context => {
-              expect(context.adapter).to.have.been.called;
-              expect(context.adapter).to.have.been.calledWith(context.source);
-            }));
-      });
-
-      describe('aeroflow.adapters.use(@class:string, @adapter:function)', () => {
-        it('Registers mapped @adapter and calls it with @source when resolves adapter for instance of @class', () =>
-          execute(
-            context => {
-              context.adapter = context.spy();
-              context.class = 'test';
-              context.source = {
-                [Symbol.toStringTag]: context.class
-              };
-            },
-            context => {
-              aeroflow.adapters.use(context.class, context.adapter);
-              aeroflow.adapters.get(context.source);
-            },
-            context => {
-              expect(context.adapter).to.have.been.called;
-              expect(context.adapter).to.have.been.calledWith(context.source);
-            }));
-      });
-    });
-  });
-
-  var notifiersTests = (aeroflow, execute, expect) => describe('aeroflow.notifiers', () => {
-    it('Is static property', () =>
-      execute(
-        context => aeroflow.notifiers,
-        context => expect(context.result).to.exist));
-
-    describe('aeroflow.adapters.get', () => {
-      it('Is function', () =>
-        execute(
-          context => aeroflow.adapters.get,
-          context => expect(context.result).to.be.a('function')));
-    });
-
-    describe('aeroflow.adapters.use', () => {
-      it('Is function', () =>
-        execute(
-          context => aeroflow.adapters.use,
-          context => expect(context.result).to.be.a('function')));
-    });
-  });
-
-  var operatorsTests = (aeroflow, execute, expect) => describe('aeroflow.operators', () => {
-    it('Is static property', () =>
-      execute(
-        context => aeroflow.operators,
-        context => expect(context.result).to.exist));
-
-    it('Registers new operator and exposes it as method of aeroflow instance', () =>
-      execute(
-        context => context.operator = Function(),
-        context => {
-          aeroflow.operators.test = context.operator;
-          return aeroflow.empty.test;
-        },
-        context => expect(context.result).to.equal(context.operator)));
-
-    it('When new operator is chained, calls builder function returned by it once with emitter function', () =>
-      execute(
-        context => {
-          context.builder = context.spy();
-          context.operator = function() {
-            return this.chain(context.builder);
-          }
-        },
-        context => {
-          aeroflow.operators.test = context.operator;
-          return aeroflow.empty.test();
-        },
-        context => {
-          expect(context.builder).to.have.been.called;
-          expect(context.builder.getCall(0).args[0]).to.be.a('function');
-        }));
-  });
-
-  var expandGeneratorTests = (aeroflow, execute, expect) => describe('aeroflow.expand', () => {
-    it('Is static method', () =>
-      execute(
-        context => aeroflow.expand,
-        context => expect(context.result).to.be.a('function')));
-
-    describe('aeroflow.expand()', () => {
-      it('Returns instance of Aeroflow', () =>
-        execute(
-          context => aeroflow.expand(),
-          context => expect(context.result).to.be.an('Aeroflow')));
-    });
-
-    describe('aeroflow.expand(@expander:function)', () => {
-      it('Calls @expander with undefined and 0 on first iteration', () =>
-        execute(
-          context => context.expander = context.spy(),
-          context => aeroflow.expand(context.expander).take(1).run(),
-          context => expect(context.expander).to.have.been.calledWith(undefined)));
-
-      it('Calls @expander with value previously returned by @expander, iteration index on subsequent iterations', () =>
-        execute(
-          context => {
-            context.values = [1, 2];
-            context.expander = context.spy((_, index) => context.values[index]);
-          },
-          context => aeroflow.expand(context.expander).take(context.values.length + 1).run(),
-          context => [undefined].concat(context.values).forEach((value, index) =>
-            expect(context.expander.getCall(index)).to.have.been.calledWith(value))));
-
-      it('If @expander throws, emits only single faulty "done" with thrown error', () =>
-        execute(
-          context => context.expander = context.fail,
-          context => aeroflow(context.expander).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.not.been.called;
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(context.error);
-          }));
-
-      it('Emits "next" for each value returned by @expander, then, being limited, lazy "done"', () =>
-        execute(
-          context => {
-            context.values = [1, 2, 3];
-            context.expander = context.spy((_, index) => context.values[index]);
-          },
-          context => aeroflow.expand(context.expander).take(context.values.length).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.callCount(context.values.length);
-            context.values.forEach((value, index) =>
-              expect(context.next.getCall(index)).to.have.been.calledWith(value));
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(false);
-            expect(context.done).to.have.been.calledAfter(context.next);
-          }));
-    });
-
-    describe('aeroflow.expand(@expander:function, @seed)', () => {
-      it('Calls @expander with @seed on first iteration', () =>
-        execute(
-          context => {
-            context.expander = context.spy();
-            context.seed = 'test';
-          },
-          context => aeroflow.expand(context.expander, context.seed).take(1).run(),
-          context => expect(context.expander).to.have.been.calledWith(context.seed)));
-    });
-
-    describe('aeroflow.expand(@expander:string)', () => {
-      it('Emits "next" with @expander', () =>
-        execute(
-          context => context.expander = 'test',
-          context => aeroflow.expand(context.expander).take(1).run(context.next),
-          context => expect(context.next).to.have.been.calledWith(context.expander)));
-    });
-  });
-
-  var justGeneratorTests = (aeroflow, execute, expect) => describe('aeroflow.just', () => {
-    it('Is static method', () =>
-      execute(
-        context => aeroflow.just,
-        context => expect(context.result).to.be.a('function')));
-
-    describe('aeroflow.just()', () => {
-      it('Returns instance of Aeroflow', () =>
-        execute(
-          context => aeroflow.just(),
-          context => expect(context.result).to.be.an('Aeroflow')));
-
-      it('Emits single "next" with undefined, then single greedy "done"', () =>
-        execute(
-          context => aeroflow.just().run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.been.calledOnce;
-            expect(context.next).to.have.been.calledWith(undefined);
-            expect(context.done).to.have.been.calledAfter(context.next);
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(true);
-          }));
-    });
-
-    describe('aeroflow.just(@value:aeroflow)', () => {
-      it('Emits single "next" with @value, then single greedy "done"', () =>
-        execute(
-          context => context.value = aeroflow.empty,
-          context => aeroflow.just(context.value).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.been.calledOnce;
-            expect(context.next).to.have.been.calledWith(context.value);
-            expect(context.done).to.have.been.calledAfter(context.next);
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(true);
-          }));
-    });
-
-    describe('aeroflow.just(@value:array)', () => {
-      it('Emits single "next" with @value, then single greedy "done"', () =>
-        execute(
-          context => context.value = [42],
-          context => aeroflow.just(context.value).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.been.calledOnce;
-            expect(context.next).to.have.been.calledWith(context.value);
-            expect(context.done).to.have.been.calledAfter(context.next);
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(true);
-          }));
-    });
-
-    describe('aeroflow.just(@value:function)', () => {
-      it('Emits single "next" with @value, then single greedy "done"', () =>
-        execute(
-          context => context.value = Function(),
-          context => aeroflow.just(context.value).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.been.calledOnce;
-            expect(context.next).to.have.been.calledWith(context.value);
-            expect(context.done).to.have.been.calledWith(true);
-            expect(context.done).to.have.been.calledAfter(context.next);
-          }));
-    });
-
-    describe('aeroflow.just(@value:iterable)', () => {
-      it('Emits single "next" with @value, then single greedy "done"', () =>
-        execute(
-          context => context.value = new Set,
-          context => aeroflow.just(context.value).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.been.calledOnce;
-            expect(context.next).to.have.been.calledWith(context.value);
-            expect(context.done).to.have.been.calledWith(true);
-            expect(context.done).to.have.been.calledAfter(context.next);
-          }));
-    });
-
-    describe('aeroflow.just(@value:promise)', () => {
-      it('Emits single "next" with @value, then single greedy "done"', () =>
-        execute(
-          context => context.value = Promise.resolve(),
-          context => aeroflow.just(context.value).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.been.calledOnce;
-            expect(context.next).to.have.been.calledWith(context.value);
-            expect(context.done).to.have.been.calledWith(true);
-            expect(context.done).to.have.been.calledAfter(context.next);
-          }));
-    });
-  });
-
-  var randomGeneratorTests = (aeroflow, execute, expect) => describe('aeroflow.random', () => {
-    it('Is static method', () =>
-      execute(
-        context => aeroflow.random,
-        context => expect(context.result).to.be.a('function')));
-
-    describe('aeroflow.random()', () => {
-      it('Returns instance of Aeroflow', () =>
-        execute(
-          context => aeroflow.random(),
-          context => expect(context.result).to.be.an('Aeroflow')));
-
-      it('Emits "next" with each random value in the range [0, 1), then single lazy "done"', () =>
-        execute(
-          context => context.limit = 5,
-          context => aeroflow.random().take(context.limit).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.callCount(context.limit);
-            const results = new Set(Array(context.limit).fill().map((_, index) =>
-              context.next.getCall(index).args[0]));
-            expect(results).to.have.property('size', context.limit);
-            results.forEach(value => expect(value).to.be.within(0, 1));
-            expect(context.done).to.have.been.calledAfter(context.next);
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(false);
-          }));
-    });
-
-    describe('aeroflow.random(@maximum:number)', () => {
-      it('Emits "next" with each random value in the range [0, @maximum), then single lazy "done"', () =>
-        execute(
-          context => {
-            context.limit = 5;
-            context.maximum = 9;
-          },
-          context => aeroflow.random(context.maximum).take(context.limit).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.callCount(context.limit);
-            const results = new Set(Array(context.limit).fill().map((_, index) =>
-              context.next.getCall(index).args[0]));
-            expect(results.size).to.be.above(1);
-            results.forEach(value => expect(value).to.be.within(0, context.maximum));
-            expect(context.done).to.have.been.calledAfter(context.next);
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(false);
-          }));
-    });
-
-    describe('aeroflow.random(@minimum:number, @maximum:number)', () => {
-      it('Emits "next" with each random value in the range [@minimum, @maximum), then single lazy "done"', () =>
-        execute(
-          context => {
-            context.limit = 5;
-            context.minimum = 1;
-            context.maximum = 9;
-          },
-          context => aeroflow.random(context.minimum, context.maximum).take(context.limit).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.callCount(context.limit);
-            const results = new Set(Array(context.limit).fill().map((_, index) =>
-              context.next.getCall(index).args[0]));
-            expect(results.size).to.be.above(1);
-            results.forEach(value => expect(value).to.be.within(context.minimum, context.maximum));
-            expect(context.done).to.have.been.calledAfter(context.next);
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(false);
-          }));
-    });
-  });
-
-  var rangeGeneratorTests = (aeroflow, execute, expect) => describe('aeroflow.range', () => {
-    it('Is static method', () =>
-      execute(
-        context => aeroflow.range,
-        context => expect(context.result).to.be.a('function')));
-
-    describe('aeroflow.range()', () => {
-      it('Returns instance of Aeroflow', () =>
-        execute(
-          context => aeroflow.range(),
-          context => expect(context.result).to.be.an('Aeroflow')));
-
-      it('Infinitely emits "next" for each integer from 0, then single lazy "done"', () =>
-        execute(
-          context => context.limit = 3,
-          context => aeroflow.range().take(context.limit).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.callCount(context.limit);
-            Array(context.limit).fill().forEach((_, index) =>
-              expect(context.next.getCall(index)).to.have.been.calledWith(index));
-            expect(context.done).to.have.been.calledAfter(context.next);
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(false);
-          }));
-    });
-
-    describe('aeroflow.range(@start)', () => {
-      it('Infinitely emits "next" for each integer from @start, then single lazy "done"', () =>
-        execute(
-          context => {
-            context.limit = 3;
-            context.start = -3;
-          },
-          context => aeroflow.range(context.start).take(context.limit).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.callCount(context.limit);
-            Array(context.limit).fill().forEach((_, index) =>
-              expect(context.next.getCall(index)).to.have.been.calledWith(context.start + index));
-            expect(context.done).to.have.been.calledAfter(context.next);
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(false);
-          }));
-    });
-
-    describe('aeroflow.range(@start, @end)', () => {
-      it('When @start equal @end, emits single "next" with @start, then single greedy "done"', () =>
-        execute(
-          context => {
-            context.end = 42;
-            context.start = context.end;
-          },
-          context => aeroflow.range(context.start, context.end).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.callCount(1);
-            expect(context.next).to.have.been.calledWith(context.start);
-            expect(context.done).to.have.been.calledAfter(context.next);
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(true);
-          }));
-
-      it('When @start less than @end, emits "next" for each integer up from @start to @end inclusively, then single greedy "done"', () =>
-        execute(
-          context => {
-            context.end = 3;
-            context.start = -3;
-          },
-          context => aeroflow.range(context.start, context.end).run(context.next, context.done),
-          context => {
-            const count = context.end - context.start + 1;
-            expect(context.next).to.have.callCount(count);
-            Array(count).fill().forEach((_, index) =>
-              expect(context.next.getCall(index)).to.have.been.calledWith(context.start + index));
-            expect(context.done).to.have.been.calledAfter(context.next);
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(true);
-          }));
-
-      it('When @end less than @start, emits "next" for each integer down from @start to @end inclusively, then single greedy "done"', () =>
-        execute(
-          context => {
-            context.end = -3;
-            context.start = 3;
-          },
-          context => aeroflow.range(context.start, context.end).run(context.next, context.done),
-          context => {
-            const count = context.start - context.end + 1;
-            expect(context.next).to.have.callCount(count);
-            Array(count).fill().forEach((_, index) =>
-              expect(context.next.getCall(index)).to.have.been.calledWith(context.start - index));
-            expect(context.done).to.have.been.calledAfter(context.next);
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(true);
-          }));
-    });
-  });
-
-  var repeatGeneratorTests = (aeroflow, execute, expect) => describe('aeroflow.repeat', () => {
-    it('Is static method', () =>
-      execute(
-        context => aeroflow.repeat,
-        context => expect(context.result).to.be.a('function')));
-
-    describe('aeroflow.repeat()', () => {
-      it('Returns instance of Aeroflow', () =>
-        execute(
-          context => aeroflow.repeat(),
-          context => expect(context.result).to.be.an('Aeroflow')));
-
-      it('Infinitely emits "next" with undefined, then single lazy "done"', () =>
-        execute(
-          context => context.limit = 3,
-          context => aeroflow.repeat().take(context.limit).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.callCount(context.limit);
-            Array(context.limit).fill().forEach((_, index) =>
-              expect(context.next.getCall(index)).to.have.been.calledWith(undefined));
-            expect(context.done).to.have.been.calledAfter(context.next);
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(false);
-          }));
-    });
-
-    describe('aeroflow.repeat(@repeater:function)', () => {
-      it('Calls @repeater with index of current iteration', () =>
-        execute(
-          context => {
-            context.limit = 3;
-            context.repeater = context.spy();
-          },
-          context => aeroflow.repeat(context.repeater).take(context.limit).run(),
-          context => {
-            expect(context.repeater).to.have.callCount(context.limit);
-            Array(context.limit).fill(undefined).forEach((_, index) =>
-              expect(context.repeater.getCall(index)).to.have.been.calledWith(index));
-          }));
-
-      it('Infinitely emits "next" with each value returned by @repeater, then single lazy "done"', () =>
-        execute(
-          context => {
-            context.limit = 3;
-            context.repeater = index => index;
-          },
-          context => aeroflow.repeat(context.repeater).take(context.limit).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.callCount(context.limit);
-            Array(context.limit).fill().forEach((_, index) =>
-              expect(context.next.getCall(index)).to.have.been.calledWith(index));
-            expect(context.done).to.have.been.calledAfter(context.next);
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(false);
-          }));
-    });
-
-    describe('aeroflow.repeat(@repeater:function, @delayer:function)', () => {
-      it('Calls @repeater and @delayer with index of iteration', () =>
-        execute(
-          context => {
-            context.limit = 3;
-            context.delayer = context.spy(() => 0);
-            context.repeater = context.spy();
-          },
-          context => aeroflow.repeat(context.repeater, context.delayer).take(context.limit).run(),
-          context => {
-            expect(context.delayer).to.have.callCount(context.limit);
-            expect(context.repeater).to.have.callCount(context.limit);
-            Array(context.limit).fill(undefined).forEach((_, index) => {
-              expect(context.delayer.getCall(index)).to.have.been.calledWith(index);
-              expect(context.repeater.getCall(index)).to.have.been.calledWith(index);
-            });
-          }));
-
-      it('Infinitely emits "next" with each value returned by @repeater delayed to the number of milliseconds returned by @delayer, then single lazy "done"', () =>
-        execute(
-          context => {
-            context.delay = 25;
-            context.limit = 3;
-            context.delayer = index => index * context.delay;
-            context.repeater = index => ({ date: new Date, index });
-          },
-          context => aeroflow.repeat(context.repeater, context.delayer).take(context.limit).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.callCount(context.limit);
-            const results = Array(context.limit).fill().map((_, index) =>
-              context.next.getCall(index).args[0]);
-            results.forEach((result, index) =>
-              expect(result.index).to.equal(index));
-            results.reduce((prev, next) => {
-              expect(next.date - prev.date).to.be.not.below(context.delay);
-              return next;
-            });
-            expect(context.done).to.have.been.calledAfter(context.next);
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(false);
-          }));
-    });
-
-    describe('(@repeater:string)', () => {
-      it('Infinitely eits "next" with @repeater value, then single lazy "done"', () =>
-        execute(
-          context => {
-            context.limit = 3;
-            context.repeater = 42;
-          },
-          context => aeroflow.repeat(context.repeater).take(context.limit).run(context.next, context.done),
-          context => {
-            expect(context.next).to.have.callCount(context.limit);
-            Array(context.limit).fill().forEach((_, index) =>
-              expect(context.next.getCall(index)).to.have.been.calledWith(context.repeater));
-            expect(context.done).to.have.been.calledAfter(context.next);
-            expect(context.done).to.have.been.calledOnce;
-            expect(context.done).to.have.been.calledWith(false);
-          }));
-    });
-  });
-
-  var averageOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().average', () => {
+  var averageTests = (aeroflow, execute, expect) => describe('aeroflow().average', () => {
     it('Is instance method', () =>
       execute(
         context => aeroflow.empty.average,
@@ -940,7 +52,7 @@
     });
   });
 
-  var catchOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().catch', () => {
+  var catchTests = (aeroflow, execute, expect) => describe('aeroflow().catch', () => {
     it('Is instance method', () =>
       execute(
         context => aeroflow.empty.catch,
@@ -1048,7 +160,7 @@
     });
   });
 
-  var coalesceOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().coalesce', () => {
+  var coalesceTests = (aeroflow, execute, expect) => describe('aeroflow().coalesce', () => {
     it('Is instance method', () =>
       execute(
         context => aeroflow.empty.coalesce,
@@ -1148,7 +260,30 @@
     });
   });
 
-  var countOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().count', () => {
+  var concatTests = (aeroflow, execute, expect) => describe('aeroflow().concat', () => {
+    it('Is instance method', () =>
+      execute(
+        context => aeroflow.empty.concat,
+        context => expect(context.result).to.be.a('function')));
+
+    describe('aeroflow().concat()', () => {
+      it('Returns instance of Aeroflow', () =>
+        execute(
+          context => aeroflow.empty.concat(),
+          context => expect(context.result).to.be.an('Aeroflow')));
+
+      it('When flow is empty, emits only single greedy "done"', () =>
+        execute(
+          context => aeroflow.empty.concat().run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.not.been.called;
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+          }));
+    });
+  });
+
+  var countTests = (aeroflow, execute, expect) => describe('aeroflow().count', () => {
     it('Is instance method', () =>
       execute(
         context => aeroflow.empty.count,
@@ -1194,7 +329,111 @@
     });
   });
 
-  var distinctOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().distinct', () => {
+  var delayTests = (aeroflow, execute, expect) => describe('aeroflow().delay', () => {
+    it('Is instance method', () =>
+      execute(
+        context => aeroflow.empty.delay,
+        context => expect(context.result).to.be.a('function')));
+
+    describe('aeroflow().delay()', () => {
+      it('Returns instance of Aeroflow', () =>
+        execute(
+          context => aeroflow.empty.delay(),
+          context => expect(context.result).to.be.an('Aeroflow')));
+
+      it('When flow is empty, emits only single greedy "done"', () =>
+        execute(
+          context => aeroflow.empty.delay().run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.not.been.called;
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+          }));
+    });
+
+    describe('aeroflow().delay(@delayer:date)', () => {
+      it('Delays each "next" emission until @delayer date', () =>
+        execute(
+          context => {
+            context.delayer = new Date(Date.now() + 10);
+            context.limit = 3;
+          },
+          context => aeroflow.range()
+            .take(context.limit)
+            .delay(context.delayer)
+            .map(() => new Date)
+            .run(context.next, context.done),
+          context => Array(context.limit).fill().forEach(date =>
+            expect(date).to.be.not.below(context.delayer))));
+    });
+
+    describe('aeroflow().delay(@delayer:function)', () => {
+      it('Calls @delayer for each emitted value with value and iteration index', () =>
+        execute(
+          context => {
+            context.delayer = context.spy(() => 0);
+            context.limit = 3;
+            context.values = [1, 2, 3];
+          },
+          context => aeroflow(context.values).take(context.limit).delay(context.delayer).run(),
+          context => {
+            expect(context.delayer).to.have.callCount(context.limit);
+            context.values.forEach((value, index) =>
+              expect(context.delayer.getCall(index)).to.have.been.calledWith(value, index));
+          }));
+
+      it('Delays each "next" emission until date returned by @delayer', () =>
+        execute(
+          context => {
+            context.delay = 10;
+            context.delayer = () => new Date(Date.now() + context.delay);
+            context.limit = 3;
+          },
+          context => aeroflow.range()
+            .take(context.limit)
+            .delay(context.delayer)
+            .scan((prev, next) => next - prev)
+            .skip(1)
+            .run(context.next, context.done),
+          context => Array(context.limit - 1).fill().forEach(delay =>
+            expect(delay).to.be.not.below(context.delay))));
+
+      it('Delays each "next" emission by delay returned by @delayer', () =>
+        execute(
+          context => {
+            context.delay = 10;
+            context.delayer = () => context.delay;
+            context.limit = 3;
+          },
+          context => aeroflow.range()
+            .take(context.limit)
+            .delay(context.delayer)
+            .scan((prev, next) => next - prev)
+            .skip(1)
+            .run(context.next, context.done),
+          context => Array(context.limit - 1).fill().forEach(delay =>
+            expect(delay).to.be.not.below(context.delay))));
+    });
+
+    describe('aeroflow().delay(@delayer:number)', () => {
+      it('Delays each "next" emission for @delayer milliseconds', () =>
+        execute(
+          context => {
+            context.delayer = 10;
+            context.limit = 3;
+          },
+          context => aeroflow.range()
+            .take(context.limit)
+            .delay(context.delayer)
+            .scan((prev, next) => next - prev)
+            .skip(1)
+            .run(context.next, context.done),
+          context => Array(context.limit - 1).fill().forEach(delay =>
+            expect(delay).to.be.not.below(context.delayer))));
+    });
+  });
+
+  var distinctTests = (aeroflow, execute, expect) => describe('aeroflow().distinct', () => {
     it('Is instance method', () =>
       execute(
         context => aeroflow.empty.distinct,
@@ -1254,7 +493,7 @@
     });
   });
 
-  var everyOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().every', () => {
+  var everyTests = (aeroflow, execute, expect) => describe('aeroflow().every', () => {
     it('Is instance method', () =>
       execute(
         context => aeroflow.empty.every,
@@ -1418,7 +657,7 @@
     });
   });
 
-  var filterOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().filter', () => {
+  var filterTests = (aeroflow, execute, expect) => describe('aeroflow().filter', () => {
     it('Is instance method', () =>
       execute(
         context => aeroflow.empty.filter,
@@ -1531,7 +770,158 @@
     });
   });
 
-  var mapOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().map', () => {
+  var flattenTests = (aeroflow, execute, expect) => describe('aeroflow().flatten', () => {
+    it('Is instance method', () =>
+      execute(
+        context => aeroflow.empty.flatten,
+        context => expect(context.result).to.be.a('function')));
+
+    describe('aeroflow().flatten()', () => {
+      it('Returns instance of Aeroflow', () =>
+        execute(
+          context => aeroflow.empty.flatten(),
+          context => expect(context.result).to.be.an('Aeroflow')));
+
+      it('When flow is empty, emits only single greedy "done"', () =>
+        execute(
+          context => aeroflow.empty.flatten().run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.not.been.called;
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+          }));
+    });
+  });
+
+  var groupTests = (aeroflow, execute, expect) => describe('aeroflow().group', () => {
+    it('Is instance method', () =>
+      execute(
+        context => aeroflow.empty.group,
+        context => expect(context.result).to.be.a('function')));
+
+    describe('aeroflow().group()', () => {
+      it('Returns instance of Aeroflow', () =>
+        execute(
+          context => aeroflow.empty.group(),
+          context => expect(context.result).to.be.an('Aeroflow')));
+
+      it('When flow is empty, emits only single greedy "done"', () =>
+        execute(
+          context => aeroflow.empty.group().run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.not.been.called;
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+          }));
+    });
+  });
+
+  /*
+  export default (aeroflow, assert) => describe('#group', () => {
+    it('Is instance method', () =>
+      assert.isFunction(aeroflow.empty.group));
+
+    describe('()', () => {
+      it('Returns instance of Aeroflow', () =>
+        assert.typeOf(aeroflow.empty.group(), 'Aeroflow'));
+
+      it('Emits nothing when flow is empty', () =>
+        assert.isFulfilled(new Promise((done, fail) =>
+          aeroflow.empty.group().run(fail, done))));
+    });
+
+    describe('(@selector:function)', () => {
+      it('Does not call @selector when flow is empty', () =>
+        assert.isFulfilled(new Promise((done, fail) =>
+          aeroflow.empty.group(fail).run(fail, done))));
+
+      it('Calls @selector when flow emits several values', () =>
+        assert.isFulfilled(new Promise((done, fail) =>
+          aeroflow(1, 2).group(done).run(fail, fail))));
+
+      it('Emits error thrown by @selector', () => {
+        const error = new Error('test');
+        return assert.eventually.strictEqual(new Promise((done, fail) =>
+          aeroflow(1, 2).group(() => { throw error; }).run(fail, done)),
+          error);
+      });
+
+      it('Passes context data to @selector as third argument', () => {
+        const expectation = {};
+        return assert.eventually.strictEqual(new Promise((done, fail) =>
+          aeroflow('test').group((_, __, data) => done(data)).run(fail, fail, expectation)),
+          expectation);
+      });
+
+      it('Passes zero-based @index of iteration to @condition as second argument', () => {
+        const values = [1, 2, 3, 4], expectation = values.length - 1;
+        return assert.isFulfilled(new Promise((done, fail) =>
+          aeroflow(values).group((_, index) => {
+            if (index === expectation) done();
+          }).run(fail, fail)));
+      });
+
+      it('Emits @values divided into groups by result of @selector', () => {
+        const values = [-1, 6, -3, 4],
+          expectation = [[-1, -3], [6, 4]];
+
+        return assert.eventually.sameDeepMembers(new Promise((done, fail) =>
+          aeroflow(values).group(value => value >= 0).map(group => group[1]).toArray().run(done, fail)),
+          expectation);
+      });
+
+      it('Emits @values divided into named groups by result of @selector', () => {
+        const values = [-1, 6, -3, 4], positive = 'positive', negative = 'positive';
+
+        return assert.eventually.sameDeepMembers(new Promise((done, fail) =>
+          aeroflow(values).group(value => value >= 0 ? positive : negative).map(group => group[0]).toArray().run(done, fail)),
+          [positive, negative]);
+      });
+    });
+
+    describe('(@selectors:array)', () => {
+      it('Emits nested named groups which divide @values by first predicate from @selectors', () => {
+        const values = [{name: 'test1', sex: 'female'}, {name: 'test2', sex: 'male'}],
+          expectation = [values[0].name, values[1].name],
+          selectors = [(value) => value.name, (value) => value.sex];
+
+        return assert.eventually.sameMembers(new Promise((done, fail) =>
+          aeroflow(values).group(...selectors).map(group => group[0]).toArray().run(done, fail)),
+          expectation);
+      });
+
+      it('Use maps to contain nested groups which divided @values by @selectors', () => {
+        const values = [{name: 'test1', sex: 'female'}, {name: 'test2', sex: 'male'}],
+          selectors = [(value) => value.name, (value) => value.sex];
+
+        return assert.eventually.typeOf(new Promise((done, fail) =>
+          aeroflow(values).group(...selectors).toArray().map(group => group[0][1]).run(done, fail)),
+          'Map');
+      });
+
+      it('Emits nested named groups which divide @values by second predicate from @selectors', () => {
+         const values = [{name: 'test1', sex: 'female'}, {name: 'test2', sex: 'male'}],
+           expectation = [[values[0].sex], [values[1].sex]],
+         selectors = [(value) => value.name, (value) => value.sex];
+
+        return assert.eventually.sameDeepMembers(new Promise((done, fail) =>
+          aeroflow(values).group(...selectors).map(group => Array.from(group[1].keys())).toArray().run(done, fail)),
+          expectation);
+      });
+
+      it('Emits @values on the root of nested groups', () => {
+        const values = [{name: 'test1', sex: 'female'}, {name: 'test2', sex: 'male'}],
+           selectors = [(value) => value.name, (value) => value.sex];
+
+        return assert.eventually.sameDeepMembers(new Promise((done, fail) =>
+          aeroflow(values).group(...selectors).map(group => Array.from(group[1].values())[0][0]).toArray().run(done, fail)),
+          values);
+      });
+    });
+  });
+  */
+
+  var mapTests = (aeroflow, execute, expect) => describe('aeroflow().map', () => {
     it('Is instance method', () =>
       execute(
         context => aeroflow.empty.map,
@@ -1622,7 +1012,7 @@
     });
   });
 
-  var maxOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().max', () => {
+  var maxTests = (aeroflow, execute, expect) => describe('aeroflow().max', () => {
     it('Is instance method', () => 
       execute(
         context => aeroflow.empty.max,
@@ -1670,7 +1060,7 @@
     });
   });
 
-  var meanOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().mean', () => {
+  var meanTests = (aeroflow, execute, expect) => describe('aeroflow().mean', () => {
     it('Is instance method', () => 
       execute(
         context => aeroflow.empty.mean,
@@ -1706,7 +1096,7 @@
     });
   });
 
-  var minOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().min', () => {
+  var minTests = (aeroflow, execute, expect) => describe('aeroflow().min', () => {
     it('Is instance method', () => 
       execute(
         context => aeroflow.empty.min,
@@ -1754,7 +1144,7 @@
     });
   });
 
-  var reduceOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().reduce', () => {
+  var reduceTests = (aeroflow, execute, expect) => describe('aeroflow().reduce', () => {
     it('Is instance method', () =>
       execute(
         context => aeroflow.empty.reduce,
@@ -1881,7 +1271,44 @@
     });
   });
 
-  var reverseOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().reverse', () => {
+  var replayTests = (aeroflow, execute, expect) => describe('aeroflow().replay', () => {
+    it('Is instance method', () =>
+      execute(
+        context => aeroflow.empty.replay,
+        context => expect(context.result).to.be.a('function')));
+
+    describe('aeroflow().replay()', () => {
+      it('Returns instance of Aeroflow', () =>
+        execute(
+          context => aeroflow.empty.replay(),
+          context => expect(context.result).to.be.an('Aeroflow')));
+    });
+  });
+
+  var retryTests = (aeroflow, execute, expect) => describe('aeroflow().retry', () => {
+    it('Is instance method', () =>
+      execute(
+        context => aeroflow.empty.retry,
+        context => expect(context.result).to.be.a('function')));
+
+    describe('aeroflow().retry()', () => {
+      it('Returns instance of Aeroflow', () =>
+        execute(
+          context => aeroflow.empty.retry(),
+          context => expect(context.result).to.be.an('Aeroflow')));
+
+      it('When flow is empty, emits only single greedy "done"', () =>
+        execute(
+          context => aeroflow.empty.retry().run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.not.been.called;
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+          }));
+    });
+  });
+
+  var reverseTests = (aeroflow, execute, expect) => describe('aeroflow().reverse', () => {
     it('Is instance method', () => 
       execute(
         context => aeroflow.empty.reverse,
@@ -1917,7 +1344,21 @@
     });
   });
 
-  var skipOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().skip', () => {
+  var shareTests = (aeroflow, execute, expect) => describe('aeroflow().share', () => {
+    it('Is instance method', () =>
+      execute(
+        context => aeroflow.empty.share,
+        context => expect(context.result).to.be.a('function')));
+
+    describe('aeroflow().share()', () => {
+      it('Returns instance of Aeroflow', () =>
+        execute(
+          context => aeroflow.empty.share(),
+          context => expect(context.result).to.be.an('Aeroflow')));
+    });
+  });
+
+  var skipTests = (aeroflow, execute, expect) => describe('aeroflow().skip', () => {
     it('Is instance method', () =>
       execute(
         context => aeroflow.empty.skip,
@@ -2047,7 +1488,7 @@
     });
   });
 
-  var sliceOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().slice', () => {
+  var sliceTests = (aeroflow, execute, expect) => describe('aeroflow().slice', () => {
     it('Is instance method', () =>
       execute(
         context => aeroflow.empty.slice,
@@ -2193,7 +1634,7 @@
     });
   });
 
-  var someOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().some', () => {
+  var someTests = (aeroflow, execute, expect) => describe('aeroflow().some', () => {
     it('Is instance method', () =>
       execute(
         context => aeroflow.empty.some,
@@ -2357,7 +1798,120 @@
     });
   });
 
-  var sumOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().sum', () => {
+  var sortTests = (aeroflow, execute, expect) => describe('aeroflow().sort', () => {
+    it('Is instance method', () =>
+      execute(
+        context => aeroflow.empty.sort,
+        context => expect(context.result).to.be.a('function')));
+
+    describe('aeroflow().sort()', () => {
+      it('Returns instance of Aeroflow', () =>
+        execute(
+          context => aeroflow.empty.sort(),
+          context => expect(context.result).to.be.an('Aeroflow')));
+
+      it('When flow is empty, emits only single greedy "done"', () =>
+        execute(
+          context => aeroflow.empty.sort().run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.not.been.called;
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+          }));
+    });
+  });
+
+  /*
+  export default (aeroflow, assert) => describe('#sort', () => {
+    it('Is instance method', () =>
+      assert.isFunction(aeroflow.empty.sort));
+
+    describe('()', () => {
+      it('Returns instance of Aeroflow', () =>
+        assert.typeOf(aeroflow.empty.sort(), 'Aeroflow'));
+
+      it('Emits nothing when flow is empty', () =>
+        assert.isFulfilled(new Promise((done, fail) =>
+          aeroflow.empty.sort().run(fail, done))));
+
+      it('Emits @values in ascending order when flow is not empty', () => {
+        const values = [6, 5, 3, 8], expectation = values.sort();
+        return assert.eventually.sameMembers(new Promise((done, fail) => 
+          aeroflow(values).sort().toArray().run(done, fail)),
+          expectation);
+      });
+    });
+
+    describe('(@comparer:string)', () => {
+      it('Emits @values in descending order when @comparer equal to desc', () => {
+        const values = ['a', 'c', 'f'], sort = 'desc', expectation = values.sort().reverse();
+        return assert.eventually.sameMembers(new Promise((done, fail) => 
+          aeroflow(values).sort(sort).toArray().run(done, fail)),
+          expectation);
+      });
+
+      it('Emits @values in descending order when @comparer not equal to desc', () => {
+        const values = ['a', 'c', 'f'], sort = 'asc', expectation = values.sort();
+        return assert.eventually.sameMembers(new Promise((done, fail) => 
+          aeroflow(values).sort(sort).toArray().run(done, fail)),
+          expectation);
+      });
+    });
+
+    describe('(@comparer:boolean)', () => {
+      it('Emits @values in descending order when false passed', () => {
+        const values = [2, 7, 4], sort = false, expectation = values.sort().reverse();
+        return assert.eventually.sameMembers(new Promise((done, fail) => 
+          aeroflow(values).sort(sort).toArray().run(done, fail)),
+          expectation);
+      });
+
+      it('Emits @values in descending order when true passed', () => {
+        const values = [4, 8, 1], sort = true, expectation = values.sort();
+        return assert.eventually.sameMembers(new Promise((done, fail) => 
+          aeroflow(values).sort(sort).toArray().run(done, fail)),
+          expectation);
+      });
+    });
+
+    describe('(@comparer:number)', () => {
+      it('Emits @values in descending order when @comparer less than 0', () => {
+        const values = [2, 7, 4], sort = -1, expectation = values.sort().reverse();
+        return assert.eventually.sameMembers(new Promise((done, fail) => 
+          aeroflow(values).sort(sort).toArray().run(done, fail)),
+          expectation);
+      });
+
+      it('Emits @values in descending order when @comparer greatest or equal to 0', () => {
+        const values = [4, 8, 1], sort = 1, expectation = values.sort();
+        return assert.eventually.sameMembers(new Promise((done, fail) => 
+          aeroflow(values).sort(sort).toArray().run(done, fail)),
+          expectation);
+      });
+    });
+
+    describe('(@comparer:function)', () => {
+      it('Emits @values sorted according by result of @comparer', () => {
+        const values = [4, 8, 1], comparer = (a, b) => a - b, expectation = values.sort();
+        return assert.eventually.sameMembers(new Promise((done, fail) => 
+          aeroflow(values).sort(comparer).toArray().run(done, fail)),
+          expectation);
+      });
+    });
+
+    describe('(@comparers:array)', () => {
+      it('Emits @values sorted by applying @comparers in order', () => {
+        const values = [{ prop: 'test1'}, { prop: 'test2'}], comparers = [(value) => value.prop, 'desc'],
+          expectation = values.sort((value) => value.prop).reverse();
+        return assert.eventually.sameDeepMembers(new Promise((done, fail) => 
+          aeroflow(values).sort(comparers).toArray().run(done, fail)),
+          expectation);
+      });
+    });
+  });
+  */
+
+  var sumTests = (aeroflow, execute, expect) => describe('aeroflow().sum', () => {
     it('Is instance method', () => 
       execute(
         context => aeroflow.empty.sum,
@@ -2405,7 +1959,7 @@
     });
   });
 
-  var takeOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().take', () => {
+  var takeTests = (aeroflow, execute, expect) => describe('aeroflow().take', () => {
     it('Is instance method', () =>
       execute(
         context => aeroflow.empty.take,
@@ -2539,7 +2093,7 @@
     });
   });
 
-  var toArrayOperatorTests = (aeroflow, execute, expect) => describe('aeroflow().toArray', () => {
+  var toArrayTests = (aeroflow, execute, expect) => describe('aeroflow().toArray', () => {
     it('Is instance method', () =>
       execute(
         context => aeroflow.empty.toArray,
@@ -2576,7 +2130,97 @@
     });
   });
 
-  var toSetOperatorTests = (aeroflow, execute, expect, sinon) => describe('aeroflow().toSet', () => {
+  var toMapTests = (aeroflow, execute, expect) => describe('aeroflow().toMap', () => {
+    it('Is instance toMap', () =>
+      execute(
+        context => aeroflow.empty.toMap,
+        context => expect(context.result).to.be.a('function')));
+
+    describe('aeroflow().toMap()', () => {
+      it('Returns instance of Aeroflow', () =>
+        execute(
+          context => aeroflow.empty.toMap(),
+          context => expect(context.result).to.be.an('Aeroflow')));
+    });
+  });
+
+  /*
+  export default (aeroflow, assert) => describe('#toMap', () => {
+    it('Is instance method', () =>
+      assert.isFunction(aeroflow.empty.toMap));
+
+    describe('()', () => {
+      it('Returns instance of Aeroflow', () =>
+        assert.typeOf(aeroflow.empty.toMap(), 'Aeroflow'));
+
+      it('Emits "next" notification with map when flow is empty', () =>
+        assert.eventually.typeOf(new Promise((done, fail) =>
+          aeroflow.empty.toMap(noop, noop, true).run(done, fail)),
+          'Map'));
+
+      it('Emits "next" notification with empty map when flow is empty', () =>
+        assert.eventually.propertyVal(new Promise((done, fail) =>
+          aeroflow.empty.toMap(noop, noop, true).run(done, fail)),
+          'size',
+          0));
+
+      it('Emits map containing @values emitted by flow as keys', () => {
+        const values = [1, 2, 3];
+        return assert.eventually.sameMembers(new Promise((done, fail) =>
+          aeroflow(values).toMap().map(map => Array.from(map.keys())).run(done, fail)),
+          values);
+      });
+
+      it('Emits map containing @values emitted by flow as values', () => {
+        const values = [1, 2, 3];
+        return assert.eventually.sameMembers(new Promise((done, fail) =>
+          aeroflow(values).toMap().map(map => Array.from(map.values())).run(done, fail)),
+          values);
+      });
+    });
+
+    describe('(@keySelector:function)', () => {
+      it('Emits map containing @keys returned by @keySelector', () => {
+        const values = [1, 2, 3], keyTransform = key => key++,
+          expectation = values.map(keyTransform);
+        return assert.eventually.sameMembers(new Promise((done, fail) =>
+          aeroflow(values).toMap(keyTransform).map(map => Array.from(map.keys())).run(done, fail)),
+          expectation);
+      });
+
+      it('Emits map containing values emitted by flow', () => {
+        const values = [1, 2, 3], keyTransform = key => key++;
+        return assert.eventually.sameMembers(new Promise((done, fail) =>
+          aeroflow(values).toMap(keyTransform).map(map => Array.from(map.values())).run(done, fail)),
+          values);
+      });
+    });
+
+    describe('(@keySelector:!function)', () => {
+      it('Emits map containing single key', () =>
+        assert.eventually.propertyVal(new Promise((done, fail) =>
+          aeroflow(1, 2, 3).toMap('test').run(done, fail)),
+          'size',
+          1));
+
+      it('Emits map containing single key equal to @keySelector', () => {
+        const keySelector = 'test';
+        return assert.eventually.strictEqual(new Promise((done, fail) =>
+          aeroflow(1, 2, 3).toMap(keySelector).map(map => map.keys()).flatten().run(done, fail)),
+          keySelector);
+      });
+
+      it('Emits map containing single latest @value emitted by flow', () => {
+        const values = [1, 2, 3], expectation = values[values.length - 1];
+        return assert.eventually.strictEqual(new Promise((done, fail) =>
+          aeroflow(values).toMap('test').map(map => map.values()).flatten().run(done, fail)),
+          expectation);
+      });
+    });
+  });
+  */
+
+  var toSetTests = (aeroflow, execute, expect, sinon) => describe('aeroflow().toSet', () => {
     it('Is instance method', () =>
       execute(
         context => aeroflow.empty.toSet,
@@ -2613,7 +2257,7 @@
     });
   });
 
-  var toStringOperatorTests = (aeroflow, execute, expect, sinon) => describe('aeroflow().toString', () => {
+  var toStringTests = (aeroflow, execute, expect, sinon) => describe('aeroflow().toString', () => {
     it('Is instance method', () =>
       execute(
         context => aeroflow.empty.toString,
@@ -2703,44 +2347,775 @@
     });
   });
 
-  const tests = [
-    factoryTests,
+  var instanceTests = [
+    averageTests,
+    catchTests,
+    coalesceTests,
+    concatTests,
+    countTests,
+    delayTests,
+    distinctTests,
+    everyTests,
+    filterTests,
+    flattenTests,
+    groupTests,
+    // joinTests,
+    mapTests,
+    maxTests,
+    meanTests,
+    minTests,
+    reduceTests,
+    replayTests,
+    retryTests,
+    reverseTests,
+    shareTests,
+    skipTests,
+    sliceTests,
+    someTests,
+    sortTests,
+    sumTests,
+    takeTests,
+    toArrayTests,
+    toMapTests,
+    toSetTests,
+    toStringTests
+  ];
 
-    emptyTests,
+  var adaptersTests = (aeroflow, execute, expect) => describe('aeroflow.adapters', () => {
+    it('Is static property', () =>
+      execute(
+        context => aeroflow.adapters,
+        context => expect(context.result).to.exist));
+
+    describe('aeroflow.adapters.get', () => {
+      it('Is function', () =>
+        execute(
+          context => aeroflow.adapters.get,
+          context => expect(context.result).to.be.a('function')));
+
+      it('Contains indexed iterable adapter', () =>
+        execute(
+          context => aeroflow.adapters[0],
+          context => expect(context.result).to.be.a('function')));
+
+      it('Contains mapped array adapter', () =>
+        execute(
+          context => aeroflow.adapters['Array'],
+          context => expect(context.result).to.be.a('function')));
+
+      it('Contains mapped error adapter', () =>
+        execute(
+          context => aeroflow.adapters['Error'],
+          context => expect(context.result).to.be.a('function')));
+
+      it('Contains mapped function adapter', () =>
+        execute(
+          context => aeroflow.adapters['Function'],
+          context => expect(context.result).to.be.a('function')));
+
+      it('Contains mapped promise adapter', () =>
+        execute(
+          context => aeroflow.adapters['Promise'],
+          context => expect(context.result).to.be.a('function')));
+
+      describe('aeroflow.adapters.get(@source:array)', () => {
+        it('Does not resolve adapter function', () =>
+          execute(
+            context => aeroflow.adapters.get(),
+            context => expect(context.result).to.not.exist));
+      });
+
+      describe('aeroflow.adapters.get(@source:array)', () => {
+        it('Resolves adapter function for @source', () =>
+          execute(
+            context => aeroflow.adapters.get([]),
+            context => expect(context.result).to.be.a('function')));
+      });
+
+      describe('aeroflow.adapters.get(@source:iterable)', () => {
+        it('Resolves adapter function for @source', () =>
+          execute(
+            context => aeroflow.adapters.get(new Set),
+            context => expect(context.result).to.be.a('function')));
+      });
+
+      describe('aeroflow.adapters.get(@source:function)', () => {
+        it('Resolves adapter function for @source', () =>
+          execute(
+            context => aeroflow.adapters.get(Function()),
+            context => expect(context.result).to.be.a('function')));
+      });
+
+      describe('aeroflow.adapters.get(@source:promise)', () => {
+        it('Resolves adapter function for @source', () =>
+          execute(
+            context => aeroflow.adapters.get(Promise.resolve()),
+            context => expect(context.result).to.be.a('function')));
+      });
+    });
+
+    describe('aeroflow.adapters.use', () => {
+      it('Is function', () =>
+        execute(
+          context => aeroflow.adapters.get,
+          context => expect(context.result).to.be.a('function')));
+
+      describe('aeroflow.adapters.use(@adapter:function)', () => {
+        it('Registers indexed @adapter and calls it with source when resolves adapter for not mapped class', () =>
+          execute(
+            context => {
+              context.adapter = context.spy();
+              context.source = {};
+            },
+            context => {
+              aeroflow.adapters.use(context.adapter);
+              aeroflow.adapters.get(context.source);
+            },
+            context => {
+              expect(context.adapter).to.have.been.called;
+              expect(context.adapter).to.have.been.calledWith(context.source);
+            }));
+      });
+
+      describe('aeroflow.adapters.use(@class:string, @adapter:function)', () => {
+        it('Registers mapped @adapter and calls it with @source when resolves adapter for instance of @class', () =>
+          execute(
+            context => {
+              context.adapter = context.spy();
+              context.class = 'test';
+              context.source = {
+                [Symbol.toStringTag]: context.class
+              };
+            },
+            context => {
+              aeroflow.adapters.use(context.class, context.adapter);
+              aeroflow.adapters.get(context.source);
+            },
+            context => {
+              expect(context.adapter).to.have.been.called;
+              expect(context.adapter).to.have.been.calledWith(context.source);
+            }));
+      });
+    });
+  });
+
+  var createTests = (aeroflow, execute, expect) => describe('aeroflow.create', () => {
+    it('Is static method', () =>
+      execute(
+        context => aeroflow.create,
+        context => expect(context.result).to.be.a('function')));
+
+    describe('aeroflow.create()', () => {
+      it('Returns instance of Aeroflow', () =>
+        execute(
+          context => aeroflow.create(),
+          context => expect(context.result).to.be.an('Aeroflow')));
+
+      it('Emits only single greedy "done"', () =>
+        execute(
+          context => aeroflow.create().run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.not.been.called;
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWithExactly(true);
+          }));
+    });
+
+    describe('aeroflow.create(@generator:function)', () => {
+      it('Calls @generator once with "next" and "done" callbacks', () =>
+        execute(
+          context => context.generator = context.spy((_, done) => done()),
+          context => aeroflow.create(context.generator).run(context.next, context.done),
+          context => {
+            expect(context.generator).to.have.been.calledOnce;
+            const args = context.generator.getCall(0).args;
+            expect(args[0]).to.be.a('function');
+            expect(args[1]).to.be.a('function');
+          }));
+
+      it('Emits several "next" emitted by @generator until it emits "done"', () =>
+        execute(
+          context => {
+            context.values = [1, 2];
+            context.generator = (next, done) => {
+              context.values.forEach(next);
+              done();
+              next();
+            };
+          },
+          context => aeroflow.create(context.generator).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.callCount(context.values.length);
+            context.values.forEach((value, index) =>
+              expect(context.next.getCall(index)).to.have.been.calledWith(value));
+          }));
+
+      it('Emits "done" emitted by @generator only once', () =>
+        execute(
+          context => {
+            context.value = 42;
+            context.generator = (_, done) => {
+              done(context.value);
+              done();
+            };
+          },
+          context => aeroflow.create(context.generator).run(context.noop, context.done),
+          context => {
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWithExactly(context.value);
+          }));
+    });
+
+    describe('aeroflow.create(@generator:string)', () => {
+      it('Emits single "next" with @generator, then emits single greedy "done"', () =>
+        execute(
+          context => context.generator = 'test',
+          context => aeroflow.create(context.generator).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.been.calledOnce;
+            expect(context.next).to.have.been.calledWith(context.generator);
+            expect(context.done).to.have.been.calledAfter(context.next);
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWithExactly(true);
+          }));
+    });
+  });
+
+  var emptyTests = (aeroflow, execute, expect) => describe('aeroflow.empty', () => {
+    it('Gets instance of Aeroflow', () =>
+      execute(
+        context => aeroflow.empty,
+        context => expect(context.result).to.be.an('Aeroflow')));
+
+    it('Emits only single greedy "done"', () =>
+      execute(
+        context => aeroflow.empty.run(context.next, context.done),
+        context => {
+          expect(context.next).to.have.not.been.called;
+          expect(context.done).to.have.been.calledOnce;
+          expect(context.done).to.have.been.calledWithExactly(true);
+        }));
+  });
+
+  var expandTests = (aeroflow, execute, expect) => describe('aeroflow.expand', () => {
+    it('Is static method', () =>
+      execute(
+        context => aeroflow.expand,
+        context => expect(context.result).to.be.a('function')));
+
+    describe('aeroflow.expand()', () => {
+      it('Returns instance of Aeroflow', () =>
+        execute(
+          context => aeroflow.expand(),
+          context => expect(context.result).to.be.an('Aeroflow')));
+    });
+
+    describe('aeroflow.expand(@expander:function)', () => {
+      it('Calls @expander with undefined and 0 on first iteration', () =>
+        execute(
+          context => context.expander = context.spy(),
+          context => aeroflow.expand(context.expander).take(1).run(),
+          context => expect(context.expander).to.have.been.calledWith(undefined)));
+
+      it('Calls @expander with value previously returned by @expander, iteration index on subsequent iterations', () =>
+        execute(
+          context => {
+            context.values = [1, 2];
+            context.expander = context.spy((_, index) => context.values[index]);
+          },
+          context => aeroflow.expand(context.expander).take(context.values.length + 1).run(),
+          context => [undefined].concat(context.values).forEach((value, index) =>
+            expect(context.expander.getCall(index)).to.have.been.calledWith(value))));
+
+      it('If @expander throws, emits only single faulty "done" with thrown error', () =>
+        execute(
+          context => context.expander = context.fail,
+          context => aeroflow(context.expander).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.not.been.called;
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(context.error);
+          }));
+
+      it('Emits "next" for each value returned by @expander, then, being limited, lazy "done"', () =>
+        execute(
+          context => {
+            context.values = [1, 2, 3];
+            context.expander = context.spy((_, index) => context.values[index]);
+          },
+          context => aeroflow.expand(context.expander).take(context.values.length).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.callCount(context.values.length);
+            context.values.forEach((value, index) =>
+              expect(context.next.getCall(index)).to.have.been.calledWith(value));
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(false);
+            expect(context.done).to.have.been.calledAfter(context.next);
+          }));
+    });
+
+    describe('aeroflow.expand(@expander:function, @seed)', () => {
+      it('Calls @expander with @seed on first iteration', () =>
+        execute(
+          context => {
+            context.expander = context.spy();
+            context.seed = 'test';
+          },
+          context => aeroflow.expand(context.expander, context.seed).take(1).run(),
+          context => expect(context.expander).to.have.been.calledWith(context.seed)));
+    });
+
+    describe('aeroflow.expand(@expander:string)', () => {
+      it('Emits "next" with @expander', () =>
+        execute(
+          context => context.expander = 'test',
+          context => aeroflow.expand(context.expander).take(1).run(context.next),
+          context => expect(context.next).to.have.been.calledWith(context.expander)));
+    });
+  });
+
+  var justTests = (aeroflow, execute, expect) => describe('aeroflow.just', () => {
+    it('Is static method', () =>
+      execute(
+        context => aeroflow.just,
+        context => expect(context.result).to.be.a('function')));
+
+    describe('aeroflow.just()', () => {
+      it('Returns instance of Aeroflow', () =>
+        execute(
+          context => aeroflow.just(),
+          context => expect(context.result).to.be.an('Aeroflow')));
+
+      it('Emits single "next" with undefined, then single greedy "done"', () =>
+        execute(
+          context => aeroflow.just().run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.been.calledOnce;
+            expect(context.next).to.have.been.calledWith(undefined);
+            expect(context.done).to.have.been.calledAfter(context.next);
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+          }));
+    });
+
+    describe('aeroflow.just(@value:aeroflow)', () => {
+      it('Emits single "next" with @value, then single greedy "done"', () =>
+        execute(
+          context => context.value = aeroflow.empty,
+          context => aeroflow.just(context.value).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.been.calledOnce;
+            expect(context.next).to.have.been.calledWith(context.value);
+            expect(context.done).to.have.been.calledAfter(context.next);
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+          }));
+    });
+
+    describe('aeroflow.just(@value:array)', () => {
+      it('Emits single "next" with @value, then single greedy "done"', () =>
+        execute(
+          context => context.value = [42],
+          context => aeroflow.just(context.value).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.been.calledOnce;
+            expect(context.next).to.have.been.calledWith(context.value);
+            expect(context.done).to.have.been.calledAfter(context.next);
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+          }));
+    });
+
+    describe('aeroflow.just(@value:function)', () => {
+      it('Emits single "next" with @value, then single greedy "done"', () =>
+        execute(
+          context => context.value = Function(),
+          context => aeroflow.just(context.value).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.been.calledOnce;
+            expect(context.next).to.have.been.calledWith(context.value);
+            expect(context.done).to.have.been.calledWith(true);
+            expect(context.done).to.have.been.calledAfter(context.next);
+          }));
+    });
+
+    describe('aeroflow.just(@value:iterable)', () => {
+      it('Emits single "next" with @value, then single greedy "done"', () =>
+        execute(
+          context => context.value = new Set,
+          context => aeroflow.just(context.value).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.been.calledOnce;
+            expect(context.next).to.have.been.calledWith(context.value);
+            expect(context.done).to.have.been.calledWith(true);
+            expect(context.done).to.have.been.calledAfter(context.next);
+          }));
+    });
+
+    describe('aeroflow.just(@value:promise)', () => {
+      it('Emits single "next" with @value, then single greedy "done"', () =>
+        execute(
+          context => context.value = Promise.resolve(),
+          context => aeroflow.just(context.value).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.been.calledOnce;
+            expect(context.next).to.have.been.calledWith(context.value);
+            expect(context.done).to.have.been.calledWith(true);
+            expect(context.done).to.have.been.calledAfter(context.next);
+          }));
+    });
+  });
+
+  var notifiersTests = (aeroflow, execute, expect) => describe('aeroflow.notifiers', () => {
+    it('Is static property', () =>
+      execute(
+        context => aeroflow.notifiers,
+        context => expect(context.result).to.exist));
+
+    describe('aeroflow.adapters.get', () => {
+      it('Is function', () =>
+        execute(
+          context => aeroflow.adapters.get,
+          context => expect(context.result).to.be.a('function')));
+    });
+
+    describe('aeroflow.adapters.use', () => {
+      it('Is function', () =>
+        execute(
+          context => aeroflow.adapters.use,
+          context => expect(context.result).to.be.a('function')));
+    });
+  });
+
+  var operatorsTests = (aeroflow, execute, expect) => describe('aeroflow.operators', () => {
+    it('Is static property', () =>
+      execute(
+        context => aeroflow.operators,
+        context => expect(context.result).to.exist));
+
+    it('Registers new operator and exposes it as method of aeroflow instance', () =>
+      execute(
+        context => context.operator = Function(),
+        context => {
+          aeroflow.operators.test = context.operator;
+          return aeroflow.empty.test;
+        },
+        context => expect(context.result).to.equal(context.operator)));
+
+    it('When new operator is chained, calls builder function returned by it once with emitter function', () =>
+      execute(
+        context => {
+          context.builder = context.spy();
+          context.operator = function() {
+            return this.chain(context.builder);
+          }
+        },
+        context => {
+          aeroflow.operators.test = context.operator;
+          return aeroflow.empty.test();
+        },
+        context => {
+          expect(context.builder).to.have.been.called;
+          expect(context.builder.getCall(0).args[0]).to.be.a('function');
+        }));
+  });
+
+  var randomTests = (aeroflow, execute, expect) => describe('aeroflow.random', () => {
+    it('Is static method', () =>
+      execute(
+        context => aeroflow.random,
+        context => expect(context.result).to.be.a('function')));
+
+    describe('aeroflow.random()', () => {
+      it('Returns instance of Aeroflow', () =>
+        execute(
+          context => aeroflow.random(),
+          context => expect(context.result).to.be.an('Aeroflow')));
+
+      it('Emits "next" with each random value in the range [0, 1), then single lazy "done"', () =>
+        execute(
+          context => context.limit = 5,
+          context => aeroflow.random().take(context.limit).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.callCount(context.limit);
+            const results = new Set(Array(context.limit).fill().map((_, index) =>
+              context.next.getCall(index).args[0]));
+            expect(results).to.have.property('size', context.limit);
+            results.forEach(value => expect(value).to.be.within(0, 1));
+            expect(context.done).to.have.been.calledAfter(context.next);
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(false);
+          }));
+    });
+
+    describe('aeroflow.random(@maximum:number)', () => {
+      it('Emits "next" with each random value in the range [0, @maximum), then single lazy "done"', () =>
+        execute(
+          context => {
+            context.limit = 5;
+            context.maximum = 9;
+          },
+          context => aeroflow.random(context.maximum).take(context.limit).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.callCount(context.limit);
+            const results = new Set(Array(context.limit).fill().map((_, index) =>
+              context.next.getCall(index).args[0]));
+            expect(results.size).to.be.above(1);
+            results.forEach(value => expect(value).to.be.within(0, context.maximum));
+            expect(context.done).to.have.been.calledAfter(context.next);
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(false);
+          }));
+    });
+
+    describe('aeroflow.random(@minimum:number, @maximum:number)', () => {
+      it('Emits "next" with each random value in the range [@minimum, @maximum), then single lazy "done"', () =>
+        execute(
+          context => {
+            context.limit = 5;
+            context.minimum = 1;
+            context.maximum = 9;
+          },
+          context => aeroflow.random(context.minimum, context.maximum).take(context.limit).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.callCount(context.limit);
+            const results = new Set(Array(context.limit).fill().map((_, index) =>
+              context.next.getCall(index).args[0]));
+            expect(results.size).to.be.above(1);
+            results.forEach(value => expect(value).to.be.within(context.minimum, context.maximum));
+            expect(context.done).to.have.been.calledAfter(context.next);
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(false);
+          }));
+    });
+  });
+
+  var rangeTests = (aeroflow, execute, expect) => describe('aeroflow.range', () => {
+    it('Is static method', () =>
+      execute(
+        context => aeroflow.range,
+        context => expect(context.result).to.be.a('function')));
+
+    describe('aeroflow.range()', () => {
+      it('Returns instance of Aeroflow', () =>
+        execute(
+          context => aeroflow.range(),
+          context => expect(context.result).to.be.an('Aeroflow')));
+
+      it('Infinitely emits "next" for each integer from 0, then single lazy "done"', () =>
+        execute(
+          context => context.limit = 3,
+          context => aeroflow.range().take(context.limit).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.callCount(context.limit);
+            Array(context.limit).fill().forEach((_, index) =>
+              expect(context.next.getCall(index)).to.have.been.calledWith(index));
+            expect(context.done).to.have.been.calledAfter(context.next);
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(false);
+          }));
+    });
+
+    describe('aeroflow.range(@start)', () => {
+      it('Infinitely emits "next" for each integer from @start, then single lazy "done"', () =>
+        execute(
+          context => {
+            context.limit = 3;
+            context.start = -3;
+          },
+          context => aeroflow.range(context.start).take(context.limit).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.callCount(context.limit);
+            Array(context.limit).fill().forEach((_, index) =>
+              expect(context.next.getCall(index)).to.have.been.calledWith(context.start + index));
+            expect(context.done).to.have.been.calledAfter(context.next);
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(false);
+          }));
+    });
+
+    describe('aeroflow.range(@start, @end)', () => {
+      it('When @start equal @end, emits single "next" with @start, then single greedy "done"', () =>
+        execute(
+          context => {
+            context.end = 42;
+            context.start = context.end;
+          },
+          context => aeroflow.range(context.start, context.end).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.callCount(1);
+            expect(context.next).to.have.been.calledWith(context.start);
+            expect(context.done).to.have.been.calledAfter(context.next);
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+          }));
+
+      it('When @start less than @end, emits "next" for each integer up from @start to @end inclusively, then single greedy "done"', () =>
+        execute(
+          context => {
+            context.end = 3;
+            context.start = -3;
+          },
+          context => aeroflow.range(context.start, context.end).run(context.next, context.done),
+          context => {
+            const count = context.end - context.start + 1;
+            expect(context.next).to.have.callCount(count);
+            Array(count).fill().forEach((_, index) =>
+              expect(context.next.getCall(index)).to.have.been.calledWith(context.start + index));
+            expect(context.done).to.have.been.calledAfter(context.next);
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+          }));
+
+      it('When @end less than @start, emits "next" for each integer down from @start to @end inclusively, then single greedy "done"', () =>
+        execute(
+          context => {
+            context.end = -3;
+            context.start = 3;
+          },
+          context => aeroflow.range(context.start, context.end).run(context.next, context.done),
+          context => {
+            const count = context.start - context.end + 1;
+            expect(context.next).to.have.callCount(count);
+            Array(count).fill().forEach((_, index) =>
+              expect(context.next.getCall(index)).to.have.been.calledWith(context.start - index));
+            expect(context.done).to.have.been.calledAfter(context.next);
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+          }));
+    });
+  });
+
+  var repeatTests = (aeroflow, execute, expect) => describe('aeroflow.repeat', () => {
+    it('Is static method', () =>
+      execute(
+        context => aeroflow.repeat,
+        context => expect(context.result).to.be.a('function')));
+
+    describe('aeroflow.repeat()', () => {
+      it('Returns instance of Aeroflow', () =>
+        execute(
+          context => aeroflow.repeat(),
+          context => expect(context.result).to.be.an('Aeroflow')));
+
+      it('Infinitely emits "next" with undefined, then single lazy "done"', () =>
+        execute(
+          context => context.limit = 3,
+          context => aeroflow.repeat().take(context.limit).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.callCount(context.limit);
+            Array(context.limit).fill().forEach((_, index) =>
+              expect(context.next.getCall(index)).to.have.been.calledWith(undefined));
+            expect(context.done).to.have.been.calledAfter(context.next);
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(false);
+          }));
+    });
+
+    describe('aeroflow.repeat(@repeater:function)', () => {
+      it('Calls @repeater with index of current iteration', () =>
+        execute(
+          context => {
+            context.limit = 3;
+            context.repeater = context.spy();
+          },
+          context => aeroflow.repeat(context.repeater).take(context.limit).run(),
+          context => {
+            expect(context.repeater).to.have.callCount(context.limit);
+            Array(context.limit).fill(undefined).forEach((_, index) =>
+              expect(context.repeater.getCall(index)).to.have.been.calledWith(index));
+          }));
+
+      it('Infinitely emits "next" with each value returned by @repeater, then single lazy "done"', () =>
+        execute(
+          context => {
+            context.limit = 3;
+            context.repeater = index => index;
+          },
+          context => aeroflow.repeat(context.repeater).take(context.limit).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.callCount(context.limit);
+            Array(context.limit).fill().forEach((_, index) =>
+              expect(context.next.getCall(index)).to.have.been.calledWith(index));
+            expect(context.done).to.have.been.calledAfter(context.next);
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(false);
+          }));
+    });
+
+    describe('aeroflow.repeat(@repeater:function, @delayer:function)', () => {
+      it('Calls @repeater and @delayer with index of iteration', () =>
+        execute(
+          context => {
+            context.limit = 3;
+            context.delayer = context.spy(() => 0);
+            context.repeater = context.spy();
+          },
+          context => aeroflow.repeat(context.repeater, context.delayer).take(context.limit).run(),
+          context => {
+            expect(context.delayer).to.have.callCount(context.limit);
+            expect(context.repeater).to.have.callCount(context.limit);
+            Array(context.limit).fill(undefined).forEach((_, index) => {
+              expect(context.delayer.getCall(index)).to.have.been.calledWith(index);
+              expect(context.repeater.getCall(index)).to.have.been.calledWith(index);
+            });
+          }));
+
+      it('Infinitely emits "next" with each value returned by @repeater delayed to the number of milliseconds returned by @delayer, then single lazy "done"', () =>
+        execute(
+          context => {
+            context.delay = 10;
+            context.limit = 3;
+            context.delayer = index => index * context.delay;
+            context.repeater = index => ({ date: new Date, index });
+          },
+          context => aeroflow.repeat(context.repeater, context.delayer).take(context.limit).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.callCount(context.limit);
+            const results = Array(context.limit).fill().map((_, index) =>
+              context.next.getCall(index).args[0]);
+            results.forEach((result, index) =>
+              expect(result.index).to.equal(index));
+            results.reduce((prev, next) => {
+              expect(next.date - prev.date).to.be.not.below(context.delay);
+              return next;
+            });
+            expect(context.done).to.have.been.calledAfter(context.next);
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(false);
+          }));
+    });
+
+    describe('(@repeater:string)', () => {
+      it('Infinitely eits "next" with @repeater value, then single lazy "done"', () =>
+        execute(
+          context => {
+            context.limit = 3;
+            context.repeater = 42;
+          },
+          context => aeroflow.repeat(context.repeater).take(context.limit).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.callCount(context.limit);
+            Array(context.limit).fill().forEach((_, index) =>
+              expect(context.next.getCall(index)).to.have.been.calledWith(context.repeater));
+            expect(context.done).to.have.been.calledAfter(context.next);
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(false);
+          }));
+    });
+  });
+
+  var staticTests = [
     adaptersTests,
+    createTests,
+    emptyTests,
+    expandTests,
+    justTests,
     notifiersTests,
     operatorsTests,
-
-    expandGeneratorTests,
-    justGeneratorTests,
-    randomGeneratorTests,
-    rangeGeneratorTests,
-    repeatGeneratorTests,
-
-    averageOperatorTests,
-    catchOperatorTests,
-    coalesceOperatorTests,
-    countOperatorTests,
-    distinctOperatorTests,
-    everyOperatorTests,
-    filterOperatorTests,
-    // groupOperatorTests,
-    mapOperatorTests,
-    maxOperatorTests,
-    meanOperatorTests,
-    minOperatorTests,
-    reduceOperatorTests,
-    reverseOperatorTests,
-    skipOperatorTests,
-    sliceOperatorTests,
-    someOperatorTests,
-    // sortOperatorTests,
-    sumOperatorTests,
-    takeOperatorTests,
-    toArrayOperatorTests,
-    // toMapOperatorTests,
-    toSetOperatorTests,
-    toStringOperatorTests
+    randomTests,
+    rangeTests,
+    repeatTests
   ];
 
   var index = (aeroflow, expect, sinon) => {
@@ -2788,7 +3163,7 @@
           assert(context);
         });
     }
-    tests.forEach(test => test(aeroflow, execute, expect, sinon));
+    [...staticTests, ...instanceTests].forEach(test => test(aeroflow, execute, expect, sinon));
   }
 
   return index;

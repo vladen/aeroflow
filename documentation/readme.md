@@ -29,7 +29,7 @@ If no data sources provided, creates empty instance emitting &quot;done&quot; ev
     * [.chain([operator])](#Flow+chain) ⇒ <code>[Flow](#Flow)</code>
     * [.coalesce([alternative])](#Flow+coalesce) ⇒ <code>[Flow](#Flow)</code>
     * [.count()](#Flow+count) ⇒ <code>[Flow](#Flow)</code>
-    * [.delay([interval])](#Flow+delay) ⇒ <code>[Flow](#Flow)</code>
+    * [.delay([delayer])](#Flow+delay) ⇒ <code>[Flow](#Flow)</code>
     * [.distinct(untilChanged)](#Flow+distinct) ⇒ <code>[Flow](#Flow)</code>
     * [.every([predicate])](#Flow+every) ⇒ <code>[Flow](#Flow)</code>
     * [.filter([predicate])](#Flow+filter) ⇒ <code>[Flow](#Flow)</code>
@@ -43,7 +43,8 @@ If no data sources provided, creates empty instance emitting &quot;done&quot; ev
     * [.replay(delay, timing)](#Flow+replay) ⇒ <code>[Flow](#Flow)</code>
     * [.retry(attempts)](#Flow+retry) ⇒ <code>[Flow](#Flow)</code>
     * [.reverse()](#Flow+reverse) ⇒ <code>[Flow](#Flow)</code>
-    * [.run([next], [done], [data])](#Flow+run) ⇒ <code>Promise</code>
+    * [.run([next], [done])](#Flow+run) ⇒ <code>Promise</code>
+    * [.scan([scanner])](#Flow+scan)
     * [.skip([condition])](#Flow+skip) ⇒ <code>[Flow](#Flow)</code>
     * [.slice([begin], [end])](#Flow+slice) ⇒ <code>[Flow](#Flow)</code>
     * [.some([predicate])](#Flow+some) ⇒ <code>[Flow](#Flow)</code>
@@ -58,8 +59,6 @@ If no data sources provided, creates empty instance emitting &quot;done&quot; ev
 <a name="Flow+average"></a>
 ### flow.average() ⇒ <code>[Flow](#Flow)</code>
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
-**Params**
-
 **Example**  
 ```js
 aeroflow().average().notify(console).run();
@@ -77,6 +76,7 @@ Returns new flow suppressing error, emitted by this flow, or replacing it with a
 
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Params**
+
 - [alternative] <code>function</code> | <code>any</code> - Optional alternative data source to replace error, emitted by this flow.
 If not passed, the emitted error is supressed.
 If a function passed, it is called with two arguments:
@@ -110,6 +110,7 @@ aeroflow(new Error('test')).catch(() => [[1], [2]]).notify(console).run();
 ### flow.chain([operator]) ⇒ <code>[Flow](#Flow)</code>
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Params**
+
 - [operator] <code>function</code>
 
 <a name="Flow+coalesce"></a>
@@ -118,6 +119,7 @@ Returns new flow emitting values from alternate data source when this flow is em
 
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Params**
+
 - [alternative] <code>any</code> - Optional alternative data source to use when this flow is empty.
 If not passed, this method does nothing.
 If a function passed, it is called with one argument:
@@ -144,11 +146,9 @@ aeroflow.empty.coalesce(() => [[1], [2]]).notify(console).run();
 ```
 <a name="Flow+count"></a>
 ### flow.count() ⇒ <code>[Flow](#Flow)</code>
-Counts the number of values emitted by this flow, returns new flow emitting only this value.
+Counts the number of values emitted by this flow and emits only count value.
 
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
-**Params**
-
 **Example**  
 ```js
 aeroflow().count().notify(console).run();
@@ -159,8 +159,8 @@ aeroflow('a', 'b', 'c').count().notify(console).run();
 // done
 ```
 <a name="Flow+delay"></a>
-### flow.delay([interval]) ⇒ <code>[Flow](#Flow)</code>
-Returns new flow delaying emission of each value accordingly provided condition.
+### flow.delay([delayer]) ⇒ <code>[Flow](#Flow)</code>
+Delays emission of each value by specified amount of time.
 
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Example:**: aeroflow(1, 2).delay(500).notify(console).run();
@@ -179,19 +179,19 @@ aeroflow(1, 2).delay(value => { throw new Error }).notify(console).run();
 // done Error(…)
 // Uncaught (in promise) Error: test(…)  
 **Params**
-- [interval] <code>number</code> | <code>date</code> | <code>function</code> - The condition used to determine delay for each subsequent emission.
-Number is threated as milliseconds interval (negative number is considered as 0).
-Date is threated as is (date in past is considered as now).
-Function is execute for each emitted value, with three arguments:
-  value - The current value emitted by this flow
-  index - The index of the current value
-  context - The context object
-The result of condition function will be converted to number and used as milliseconds interval.
+
+- [delayer] <code>function</code> | <code>number</code> | <code>date</code> - Function, defining dynamic delay, called for each emitted value with three arguments:
+  1) Value being emitted;
+  2) Index of iteration.
+The result returned by delayer function is converted to number and used as delay in milliseconds.
+Or static numeric delay in milliseconds.
+Or date to delay until.
 
 <a name="Flow+distinct"></a>
 ### flow.distinct(untilChanged) ⇒ <code>[Flow](#Flow)</code>
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Params**
+
 - untilChanged <code>boolean</code>
 
 **Example**  
@@ -213,6 +213,7 @@ Tests whether all values emitted by this flow pass the provided test.
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Returns**: <code>[Flow](#Flow)</code> - New flow emitting true if all emitted values pass the test; otherwise, false.  
 **Params**
+
 - [predicate] <code>function</code> | <code>regexp</code> | <code>any</code> - The predicate function or regular expression to test each emitted value with,
 or scalar value to compare emitted values with.
 If omitted, default (truthy) predicate is used.
@@ -239,6 +240,7 @@ Filters values emitted by this flow with the provided test.
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Returns**: <code>[Flow](#Flow)</code> - New flow emitting only values passing the provided test.  
 **Params**
+
 - [predicate] <code>function</code> | <code>regexp</code> | <code>any</code> - The predicate function or regular expression to test each emitted value with,
 or scalar value to compare emitted values with.
 If omitted, default (truthy) predicate is used.
@@ -270,6 +272,7 @@ aeroflow(1, 2).filter(value => { throw new Error }).notify(console).run();
 ### flow.flatten([depth]) ⇒ <code>[Flow](#Flow)</code>
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Params**
+
 - [depth] <code>number</code>
 
 **Example**  
@@ -296,6 +299,7 @@ aeroflow(new Promise(resolve => setTimeout(() => resolve(() => [1, 2]), 500)))
 ### flow.group([...selectors]) ⇒ <code>[Flow](#Flow)</code>
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Params**
+
 - [...selectors] <code>function</code> | <code>Array.&lt;any&gt;</code>
 
 **Example**  
@@ -319,6 +323,7 @@ aeroflow(
 ### flow.map([mapper]) ⇒ <code>[Flow](#Flow)</code>
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Params**
+
 - [mapper] <code>function</code> | <code>any</code>
 
 **Example**  
@@ -344,8 +349,6 @@ Determines the maximum value emitted by this flow.
 
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Returns**: <code>[Flow](#Flow)</code> - New flow emitting the maximum value only.  
-**Params**
-
 **Example**  
 ```js
 aeroflow().max().notify(console).run();
@@ -363,8 +366,6 @@ Determines the mean value emitted by this flow.
 
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Returns**: <code>[Flow](#Flow)</code> - New flow emitting the mean value only.  
-**Params**
-
 **Example**  
 ```js
 aeroflow().mean().notify(console).run();
@@ -382,8 +383,6 @@ Determines the minimum value emitted by this flow.
 
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Returns**: <code>[Flow](#Flow)</code> - New flow emitting the minimum value only.  
-**Params**
-
 **Example**  
 ```js
 aeroflow().min().notify(console).run();
@@ -404,6 +403,7 @@ to reduce it to a single value, returns new flow emitting the reduced value.
 **Returns**: <code>[Flow](#Flow)</code> - New flow emitting reduced result only or no result at all if this flow is empty
 and the 'required' argument is false.  
 **Params**
+
 - [reducer] <code>function</code> | <code>any</code> - Function to execute on each emitted value, taking four arguments:
   result - the value previously returned in the last invocation of the reducer, or seed, if supplied;
   value - the current value emitted by this flow;
@@ -447,6 +447,7 @@ aeroflow(['a', 'b', 'c'])
 ### flow.replay(delay, timing) ⇒ <code>[Flow](#Flow)</code>
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Params**
+
 - delay <code>number</code> | <code>function</code>
 - timing <code>boolean</code>
 
@@ -475,6 +476,7 @@ aeroflow(1, 2).delay(500).replay(1000, true).take(4).notify(console).run();
 ### flow.retry(attempts) ⇒ <code>[Flow](#Flow)</code>
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Params**
+
 - attempts <code>number</code>
 
 **Example**  
@@ -492,8 +494,6 @@ var attempt = 0; aeroflow(() => {
 <a name="Flow+reverse"></a>
 ### flow.reverse() ⇒ <code>[Flow](#Flow)</code>
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
-**Params**
-
 **Example**  
 ```js
 aeroflow().reverse().notify(console).run();
@@ -505,7 +505,7 @@ aeroflow(1, 2, 3).reverse().notify(console).run();
 // done true
 ```
 <a name="Flow+run"></a>
-### flow.run([next], [done], [data]) ⇒ <code>Promise</code>
+### flow.run([next], [done]) ⇒ <code>Promise</code>
 Runs this flow.
 
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
@@ -513,6 +513,7 @@ Runs this flow.
 resolving to the latest value emitted by this flow (for compatibility with ES7 await operator),
 or rejecting to the error thrown within this flow.  
 **Params**
+
 - [next] <code>function</code> | <code>any</code> - Optional callback called for each data value emitted by this flow with 3 arguments:
 1) the emitted value,
 2) zero-based index of emitted value,
@@ -523,7 +524,6 @@ When passed something other than function, it considered as context data.
 or boolean value indicating lazy (false) or eager (true) enumeration of data sources,
 2) context data.
 When passed something other than function, it considered as context data.
-- [data] <code>any</code> - Arbitrary value passed as context data to each callback invoked by this flow as the last argument.
 
 **Example**  
 ```js
@@ -535,22 +535,25 @@ aeroflow('test').notify(console).run();
   console.log(result);
 })();
 // test
-aeroflow('test').run(
-  (result, data) => console.log('next', result, data),
-  (result, data) => console.log('done', result, data),
-  'data');
-// next test data
-// done true data
-aeroflow(data => console.log('source:', data))
-  .map((result, index, data) => console.log('map:', data))
-  .filter((result, index, data) => console.log('filter:', data))
-  .run('data');
-// source: data
-// map: data
-// filter: data
-// done true
 aeroflow(Promise.reject('test')).run();
 // Uncaught (in promise) Error: test(…)
+```
+<a name="Flow+scan"></a>
+### flow.scan([scanner])
+Emits first value emitted by this flow,
+and then values returned by scanner applied to each successive emitted value.
+
+**Kind**: instance method of <code>[Flow](#Flow)</code>  
+**Params**
+
+- [scanner] <code>function</code> | <code>any</code> - Function to apply to each emitted value, called with three arguments:
+1) First value emitted by this flow or value returned by previous call to scanner;
+2) Current value emitted by this flow;
+3) Index of iteration.
+
+**Example**  
+```js
+aeroflow.range(1, 3).scan((prev, next) => prev + next).notify(console).run();
 ```
 <a name="Flow+skip"></a>
 ### flow.skip([condition]) ⇒ <code>[Flow](#Flow)</code>
@@ -560,6 +563,7 @@ returns flow emitting remaining values.
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Returns**: <code>[Flow](#Flow)</code> - New flow emitting remaining values.  
 **Params**
+
 - [condition] <code>number</code> | <code>function</code> | <code>any</code> - The number or predicate function used to determine how many values to skip.
   If omitted, returned flow skips all values emitting done event only.
   If zero, returned flow skips nothing.
@@ -587,6 +591,7 @@ aeroflow(1, 2, 3).skip(value => value < 3).notify(console).run();
 ### flow.slice([begin], [end]) ⇒ <code>[Flow](#Flow)</code>
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Params**
+
 - [begin] <code>number</code>
 - [end] <code>number</code>
 
@@ -621,6 +626,7 @@ returns flow emitting true if the predicate returns true for any emitted value; 
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Returns**: <code>[Flow](#Flow)</code> - New flow that emits true or false.  
 **Params**
+
 - [predicate] <code>function</code> | <code>regexp</code> | <code>any</code> - The predicate function or regular expression object used to test each emitted value.
 Or scalar value to compare emitted values with.
 If omitted, truthy predicate is used.
@@ -644,6 +650,7 @@ aeroflow(1, 2, 3).some(value => { throw new Error }).notify(console).run();
 ### flow.sort([...parameters]) ⇒ <code>[Flow](#Flow)</code> &#124; <code>[Flow](#Flow)</code>
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Params**
+
 - [...parameters] <code>function</code> | <code>boolean</code> | <code>Array.&lt;&#x27;desc&#x27;&gt;</code>
 
 **Example**  
@@ -676,6 +683,7 @@ aeroflow(
 ### flow.sum([required]) ⇒ <code>[Flow](#Flow)</code>
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Params**
+
 - [required] <code>boolean</code> <code> = false</code>
 
 **Example**  
@@ -693,6 +701,7 @@ aeroflow(1, 2, 3).sum().notify(console).run();
 ### flow.take([condition]) ⇒ <code>[Flow](#Flow)</code>
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Params**
+
 - [condition] <code>function</code> | <code>number</code>
 
 **Example**  
@@ -712,8 +721,6 @@ Collects all values emitted by this flow to array, returns flow emitting this ar
 
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Returns**: <code>[Flow](#Flow)</code> - New flow emitting array containing all results emitted by this flow.  
-**Params**
-
 **Example**  
 ```js
 aeroflow().toArray().notify(console).run();
@@ -733,6 +740,7 @@ Collects all values emitted by this flow to ES6 map, returns flow emitting this 
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Returns**: <code>[Flow](#Flow)</code> - New flow emitting map containing all results emitted by this flow.  
 **Params**
+
 - [keySelector] <code>function</code> | <code>any</code> - The mapping function used to transform each emitted value to map key.
 Or scalar value to use as map key.
 - [valueSelector] <code>function</code> | <code>any</code> - The mapping function used to transform each emitted value to map value,
@@ -759,8 +767,6 @@ Collects all values emitted by this flow to ES6 set, returns flow emitting this 
 
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Returns**: <code>[Flow](#Flow)</code> - New flow emitting set containing all results emitted by this flow.  
-**Params**
-
 **Example**  
 ```js
 aeroflow().toSet().notify(console).run();
@@ -778,6 +784,7 @@ and emitting this string.
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Returns**: <code>[Flow](#Flow)</code> - New flow emitting string representation of this flow.  
 **Params**
+
 - [separator] <code>string</code> | <code>function</code> | <code>boolean</code> - Optional. Specifies a string to separate each value emitted by this flow.
 The separator is converted to a string if necessary.
 If omitted, the array elements are separated with a comma.
@@ -809,6 +816,7 @@ If no data sources provided, creates empty instance emitting "done" event only.
 
 **Kind**: global function  
 **Params**
+
 - [sources] <code>any</code> - Data sources to extract values from.
 
 **Properties**
@@ -893,6 +901,7 @@ Creates programmatically controlled instance.
 **Kind**: static method of <code>[aeroflow](#aeroflow)</code>  
 **Returns**: <code>[Flow](#Flow)</code> - The new instance emitting values generated by emitter function.  
 **Params**
+
 - emitter <code>function</code> | <code>any</code> - The emitter function taking three arguments:
 next - the function emitting 'next' event,
 done - the function emitting 'done' event,
@@ -918,6 +927,7 @@ aeroflow.create((next, done, context) => {
 ### aeroflow.expand(expander, [seed]) ⇒ <code>[Flow](#Flow)</code>
 **Kind**: static method of <code>[aeroflow](#aeroflow)</code>  
 **Params**
+
 - expander <code>function</code>
 - [seed] <code>any</code>
 
@@ -936,6 +946,7 @@ Returns new instance emitting the provided source as is.
 **Kind**: static method of <code>[aeroflow](#aeroflow)</code>  
 **Returns**: <code>[Flow](#Flow)</code> - The new instance emitting provided value.  
 **Params**
+
 - source <code>any</code> - The source to emit as is.
 
 **Example**  
@@ -947,8 +958,6 @@ aeroflow.just([1, 2, 3]).notify(console).run();
 <a name="aeroflow.listen"></a>
 ### aeroflow.listen()
 **Kind**: static method of <code>[aeroflow](#aeroflow)</code>  
-**Params**
-
 **Example**  
 ```js
 aeroflow
@@ -969,6 +978,7 @@ Creates new instance emitting infinite sequence of random numbers.
 **Kind**: static method of <code>[aeroflow](#aeroflow)</code>  
 **Returns**: <code>[Flow](#Flow)</code> - The new instance emitting random numbers.  
 **Params**
+
 - [minimum] <code>number</code>
 - [maximum] <code>number</code>
 
@@ -991,6 +1001,7 @@ aeroflow.random(1.1, 8.9).take(2).notify(console).run();
 ### aeroflow.range([start], [end], [step]) ⇒ <code>[Flow](#Flow)</code>
 **Kind**: static method of <code>[aeroflow](#aeroflow)</code>  
 **Params**
+
 - [start] <code>number</code>
 - [end] <code>number</code>
 - [step] <code>number</code>
@@ -1028,6 +1039,7 @@ Creates infinite flow, repeating static/dynamic value immediately or with static
 **Kind**: static method of <code>[aeroflow](#aeroflow)</code>  
 **Returns**: <code>[Flow](#Flow)</code> - New flow emitting repeated values.  
 **Params**
+
 - [repeater] <code>function</code> | <code>any</code> - Optional static value to repeat;
 or function providing dynamic value and called with one argument:
 1) index of current iteration.

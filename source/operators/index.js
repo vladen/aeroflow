@@ -18,6 +18,7 @@ import reduceOperator from './reduce';
 import replayOperator from './replay';
 import retryOperator from './retry';
 import reverseOperator from './reverse';
+import scanOperator from './scan';
 import shareOperator from './share';
 import skipOperator from './skip';
 import sliceOperator from './slice';
@@ -51,6 +52,7 @@ export {
   replayOperator,
   retryOperator,
   reverseOperator,
+  scanOperator,
   shareOperator,
   skipOperator,
   sliceOperator,

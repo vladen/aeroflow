@@ -20,32 +20,28 @@
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">44.44% </span>
+        <span class="strong">88.89% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>8/18</span>
+        <span class='fraction'>16/18</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">0% </span>
+        <span class="strong">66.67% </span>
         <span class="quiet">Branches</span>
-        <span class='fraction'>0/6</span>
+        <span class='fraction'>4/6</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">0% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Functions</span>
-        <span class='fraction'>0/5</span>
+        <span class='fraction'>5/5</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">33.33% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>4/12</span>
-      </div>
-      <div class='fl pad1y'>
-        <span class="strong">1 statement</span>
-        <span class="quiet">Ignored</span>  &nbsp;&nbsp;&nbsp;&nbsp;
+        <span class='fraction'>12/12</span>
       </div>
     </div>
   </div>
-  <div class='status-line low'></div>
+  <div class='status-line high'></div>
 <pre><table class="coverage">
 <tr><td class="line-count quiet">1
 2
@@ -67,34 +63,34 @@
 18</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-yes">2×</span>
 <span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { isError, identity, toNumber } from '../utilites';
 &nbsp;
-export default <span class="fstat-no" title="function not covered" >function retryOperator(attempts) {</span>
-<span class="cstat-no" title="statement not covered" >  attempts = toNumber(attempts, 1);</span>
-<span class="cstat-no" title="statement not covered" >  i</span></span>f (!attempts) <span class="cstat-no" title="statement not covered" >return identity;
-<span class="cstat-no" title="statement not covered" >  return <span class="fstat-no" title="function not covered" >e</span>mitter =&gt; <span class="fstat-no" title="function not covered" >(next, done, context) =&gt; {</span></span>
-<span class="cstat-no" title="statement not covered" >    let attempt = 0;</span>
-<span class="cstat-no" title="statement not covered" >    proceed();</span>
-<span class="fstat-no" title="function not covered" >    function proceed() {</span>
-<span class="cstat-no" title="statement not covered" >      emitter(next, retry, context);</span>
+export default function retryOperator(attempts) {
+  attempts = toNumber(attempts, 1);
+  <span class="missing-if-branch" title="if path not taken" >I</span>i</span>f (!attempts) <span class="cstat-no" title="statement not covered" >return identity;
+  return emitter =&gt; (next, done, context) =&gt; {
+    let attempt = 0;
+    proceed();
+    function proceed() {
+      emitter(next, retry, context);
     }
-<span class="fstat-no" title="function not covered" >    function retry(result) {</span>
-<span class="cstat-no" title="statement not covered" >      i</span></span>f (++attempt &lt;= attempts &amp;&amp; isError(result)) <span class="cstat-no" title="statement not covered" >proceed();
-      else <span class="cstat-no" title="statement not covered" >done(result);</span>
+    function retry(result) {
+      <span class="missing-if-branch" title="if path not taken" >I</span>i</span>f (++attempt &lt;= attempts &amp;&amp; isError(result)) <span class="cstat-no" title="statement not covered" >proceed();
+      else done(result);
     }
   }
 } 
@@ -104,7 +100,7 @@ export default <span class="fstat-no" title="function not covered" >function ret
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Sat Mar 05 2016 01:05:06 GMT+0200 (E. Europe Standard Time)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Sat Mar 05 2016 15:25:56 GMT+0300 (Belarus Standard Time)
 </div>
 </div>
 <script src="../../../prettify.js"></script>

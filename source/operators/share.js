@@ -1,5 +1,5 @@
 import { NEXT, DONE } from '../symbols';
-import retard from '../retard';
+import resync from '../resync';
 
 export default function shareOperator() {
   return emitter => {
@@ -8,20 +8,20 @@ export default function shareOperator() {
       let share = shares.get(context);
       if (share)
         if (share.result) done(share.result);
-        else share.retarded.push(retard(next, done));
+        else share.callbacks.push(resync(next, done));
       else {
-        shares.set(context, share = { retarded: [retard(next, done)] });
+        shares.set(context, share = { callbacks: [resync(next, done)] });
         emitter(
           result => {
-            const retarded = share.retarded;
-            for (let i = -1, l = retarded.length; ++i < l;)
-              retarded[i][NEXT](result);
+            const callbacks = share.callbacks;
+            for (let i = -1, l = callbacks.length; ++i < l;)
+              callbacks[i][NEXT](result);
           },
           result => {
             share.result = result;
-            const retarded = share.retarded;
-            for (let i = -1, l = retarded.length; ++i < l;)
-              retarded[i][DONE](result);
+            const callbacks = share.callbacks;
+            for (let i = -1, l = callbacks.length; ++i < l;)
+              callbacks[i][DONE](result);
           },
           context);
       }

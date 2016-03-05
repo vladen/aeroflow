@@ -24,7 +24,6 @@ const mathRandom = Math.random;
 const mathMax = Math.max;
 const mathMin = Math.min;
 const maxInteger = Number.MAX_SAFE_INTEGER;
-const nothing = undefined;
 const objectCreate = Object.create;
 const objectDefineProperties = Object.defineProperties;
 const objectDefineProperty = Object.defineProperty;
@@ -43,13 +42,13 @@ const classOf = value => objectToString.call(value).slice(8, -1);
 const classIs = className => value => classOf(value) === className;
 
 const isBoolean = value => value === true || value === false;
-const isDefined = value => value !== nothing;
+const isDefined = value => value !== undefined;
 const isError = classIs(ERROR);
 const isFunction = value => typeof value == 'function';
 const isInteger = Number.isInteger;
 const isObject = value => value != null && typeof value === 'object';
 const isPromise = classIs(PROMISE);
-const isUndefined = value => value === nothing;
+const isUndefined = value => value === undefined;
 
 const tie = (func, ...args) => () => func(...args);
 
@@ -214,61 +213,58 @@ function adapter(sources) {
   }
 }
 
-function emptyGenerator(result) {
-  return (next, done) => done(result);
-}
-
-function impede(next, done) {
-  let busy = false, idle = false, queue = [], signal;
-  function convey() {
+function resync(next, done) {
+  let busy = false, idle = false, queue = [], signal = true;
+  function resend() {
     busy = false;
     while (queue.length) {
-      signal = unsync(queue.pop()(), convey, finish);
-      switch (signal) {
+      const state = unsync(queue.pop()(), resend, redone);
+      switch (state) {
         case false:
           signal = true;
           continue;
         case true:
-          return signal = false;
+          signal = false;
+          return;
         default:
+          busy = true;
+          signal = state;
           return;
       }
     }
-    if (idle) queue = nothing;
   }
-  function finish(result) {
+  function redone(result) {
+    if (idle) return false;
     idle = true;
-    signal = false;
-    queue = nothing;
-    done(result);
+    queue.push(tie(done, result));
+    if (!busy) resend();
+  }
+  function renext(result) {
+    if (idle) return false;
+    queue.push(tie(next, result));
+    if (!busy) resend();
+    return signal;
   }
   return {
-    [DONE]: result => {
-      if (idle) return false;
-      idle = true;
-      queue.push(tie(done, result));
-      if (!busy) convey();
-    },
-    [NEXT]: result => {
-      if (idle) return false;
-      queue.push(tie(next, result));
-      if (!busy) convey();
-      return signal;
-    }
+    [DONE]: redone,
+    [NEXT]: renext
   }
+}
+
+function emptyGenerator(result) {
+  return (next, done) => done(result);
 }
 
 function customGenerator(generator) {
   if (isUndefined(generator)) return emptyGenerator(true);
   if (!isFunction(generator)) return valueAdapter(generator);
   return (next, done, context) => {
-    const finalizer = generator(impede(
-      next,
+    const { [DONE]: redone, [NEXT]: renext } = resync(next, done, context), end = toFunction(generator(
+      renext,
       result => {
-        if (isFunction(finalizer)) setImmediate(finalizer);
-        done(result);
-      },
-      context));
+        redone(isUndefined(result) ? true : result);
+        end();
+      }));
   };
 }
 
@@ -372,15 +368,16 @@ function listener(source, parameters) {
   const instance = listeners.get(source, ...parameters);
   return isFunction(instance)
     ? (next, done, context) => {
-        const { [DONE]: retardedDone, [NEXT]: retardedNext } = impede(next, done),
-              finalizer = toFunction(instance(onNext, onDone));
-        function onDone(result) {
-          setImmediate(finalizer);
-          retardedDone(false);
-        }
-        function onNext(result) {
-          if (false === retardedNext(result)) onDone(false);
-        }
+        const { [DONE]: redone, [NEXT]: renext } = resync(next, done), end = toFunction(instance(
+          result => {
+            if (false !== renext(result)) return;
+            redone(false);
+            end();
+          },
+          result => {
+            redone(false);
+            end();
+          }));
       }
     : emptyGenerator(true);
 }
@@ -542,7 +539,7 @@ function delayOperator(interval) {
           catch (error) {
             reject(error);
           }
-        }, toDelay(delayer(result, index++), 1000));
+        }, toDelay(delayer(result, index++), 0));
       }),
       done,
       context);
@@ -798,6 +795,19 @@ function reverseOperator() {
     context);
 }
 
+function scanOperator(scanner) {
+  scanner = toFunction(scanner);
+  return emitter => (next, done, context) => {
+    let accumulator, index = -1;
+    emitter(
+      result => ++index
+        ? next(accumulator = scanner(accumulator, result, index))
+        : next(accumulator = result),
+      done,
+      context);
+  };
+}
+
 function shareOperator() {
   return emitter => {
     const shares = new WeakMap;
@@ -805,20 +815,20 @@ function shareOperator() {
       let share = shares.get(context);
       if (share)
         if (share.result) done(share.result);
-        else share.retarded.push(impede(next, done));
+        else share.callbacks.push(resync(next, done));
       else {
-        shares.set(context, share = { retarded: [impede(next, done)] });
+        shares.set(context, share = { callbacks: [resync(next, done)] });
         emitter(
           result => {
-            const retarded = share.retarded;
-            for (let i = -1, l = retarded.length; ++i < l;)
-              retarded[i][NEXT](result);
+            const callbacks = share.callbacks;
+            for (let i = -1, l = callbacks.length; ++i < l;)
+              callbacks[i][NEXT](result);
           },
           result => {
             share.result = result;
-            const retarded = share.retarded;
-            for (let i = -1, l = retarded.length; ++i < l;)
-              retarded[i][DONE](result);
+            const callbacks = share.callbacks;
+            for (let i = -1, l = callbacks.length; ++i < l;)
+              callbacks[i][DONE](result);
           },
           context);
       }
@@ -1145,6 +1155,7 @@ const operators = objectCreate(Object[PROTOTYPE], [
   replay,
   retry,
   reverse,
+  scan,
   share,
   skip,
   slice,
@@ -1274,8 +1285,7 @@ function coalesce(alternative) {
 }
 
 /*
-Returns new flow emitting values from this flow first 
-and then from all provided sources in series.
+Concatenates all provided data source to the end of this flow.
 
 @alias Flow#concat
 
@@ -1309,7 +1319,7 @@ function concat(...sources) {
 
 
 /**
-Counts the number of values emitted by this flow, returns new flow emitting only this value.
+Counts the number of values emitted by this flow and emits only count value.
 
 @alias Flow#count
 
@@ -1328,19 +1338,17 @@ function count() {
 }
 
 /**
-Returns new flow delaying emission of each value accordingly provided condition.
+Delays emission of each value by specified amount of time.
 
 @alias Flow#delay
 
-@param {number|date|function} [interval]
-The condition used to determine delay for each subsequent emission.
-Number is threated as milliseconds interval (negative number is considered as 0).
-Date is threated as is (date in past is considered as now).
-Function is execute for each emitted value, with three arguments:
-  value - The current value emitted by this flow
-  index - The index of the current value
-  context - The context object
-The result of condition function will be converted to number and used as milliseconds interval.
+@param {function|number|date} [delayer]
+Function, defining dynamic delay, called for each emitted value with three arguments:
+  1) Value being emitted;
+  2) Index of iteration.
+The result returned by delayer function is converted to number and used as delay in milliseconds.
+Or static numeric delay in milliseconds.
+Or date to delay until.
 
 @return {Flow}
 
@@ -1361,8 +1369,8 @@ aeroflow(1, 2).delay(value => { throw new Error }).notify(console).run();
 // done Error(…)
 // Uncaught (in promise) Error: test(…)
 */
-function delay(interval) {
-  return this.chain(delayOperator(interval));
+function delay(delayer) {
+  return this.chain(delayOperator(delayer));
 }
 
 /**
@@ -1799,8 +1807,6 @@ Optional callback called after this flow has finished emission of data with 2 ar
 or boolean value indicating lazy (false) or eager (true) enumeration of data sources,
 2) context data.
 When passed something other than function, it considered as context data.
-@param {any} [data]
-Arbitrary value passed as context data to each callback invoked by this flow as the last argument.
 
 @return {Promise}
 New promise,
@@ -1816,20 +1822,6 @@ aeroflow('test').notify(console).run();
   console.log(result);
 })();
 // test
-aeroflow('test').run(
-  (result, data) => console.log('next', result, data),
-  (result, data) => console.log('done', result, data),
-  'data');
-// next test data
-// done true data
-aeroflow(data => console.log('source:', data))
-  .map((result, index, data) => console.log('map:', data))
-  .filter((result, index, data) => console.log('filter:', data))
-  .run('data');
-// source: data
-// map: data
-// filter: data
-// done true
 aeroflow(Promise.reject('test')).run();
 // Uncaught (in promise) Error: test(…)
 */
@@ -1852,6 +1844,26 @@ function run(next, done) {
       },
       this.context);
   });
+}
+
+/**
+Emits first value emitted by this flow,
+and then values returned by scanner applied to each successive emitted value.
+
+@alias Flow#scan
+
+@param {function|any} [scanner]
+Function to apply to each emitted value, called with three arguments:
+1) First value emitted by this flow or value returned by previous call to scanner;
+2) Current value emitted by this flow;
+3) Index of iteration.
+
+@example
+aeroflow.range(1, 3).scan((prev, next) => prev + next).notify(console).run();
+
+*/
+function scan(scanner) {
+  return this.chain(scanOperator(scanner));
 }
 
 function share() {

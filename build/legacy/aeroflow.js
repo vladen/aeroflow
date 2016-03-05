@@ -77,7 +77,6 @@
   var mathMax = Math.max;
   var mathMin = Math.min;
   var maxInteger = Number.MAX_SAFE_INTEGER;
-  var nothing = undefined;
   var objectCreate = Object.create;
   var objectDefineProperties = Object.defineProperties;
   var objectDefineProperty = Object.defineProperty;
@@ -114,7 +113,7 @@
   };
 
   var isDefined = function isDefined(value) {
-    return value !== nothing;
+    return value !== undefined;
   };
 
   var isError = classIs(ERROR);
@@ -132,7 +131,7 @@
   var isPromise = classIs(PROMISE);
 
   var isUndefined = function isUndefined(value) {
-    return value === nothing;
+    return value === undefined;
   };
 
   var tie = function tie(func) {
@@ -325,70 +324,72 @@
     };
   }
 
+  function resync(next, done) {
+    var _ref;
+
+    var busy = false,
+        idle = false,
+        queue = [],
+        signal = true;
+
+    function resend() {
+      busy = false;
+
+      while (queue.length) {
+        var state = unsync(queue.pop()(), resend, redone);
+
+        switch (state) {
+          case false:
+            signal = true;
+            continue;
+
+          case true:
+            signal = false;
+            return;
+
+          default:
+            busy = true;
+            signal = state;
+            return;
+        }
+      }
+    }
+
+    function redone(result) {
+      if (idle) return false;
+      idle = true;
+      queue.push(tie(done, result));
+      if (!busy) resend();
+    }
+
+    function renext(result) {
+      if (idle) return false;
+      queue.push(tie(next, result));
+      if (!busy) resend();
+      return signal;
+    }
+
+    return _ref = {}, _defineProperty(_ref, DONE, redone), _defineProperty(_ref, NEXT, renext), _ref;
+  }
+
   function emptyGenerator(result) {
     return function (next, done) {
       return done(result);
     };
   }
 
-  function impede(next, done) {
-    var _ref;
-
-    var busy = false,
-        idle = false,
-        queue = [],
-        signal = undefined;
-
-    function convey() {
-      busy = false;
-
-      while (queue.length) {
-        signal = unsync(queue.pop()(), convey, finish);
-
-        switch (signal) {
-          case false:
-            signal = true;
-            continue;
-
-          case true:
-            return signal = false;
-
-          default:
-            return;
-        }
-      }
-
-      if (idle) queue = nothing;
-    }
-
-    function finish(result) {
-      idle = true;
-      signal = false;
-      queue = nothing;
-      done(result);
-    }
-
-    return _ref = {}, _defineProperty(_ref, DONE, function (result) {
-      if (idle) return false;
-      idle = true;
-      queue.push(tie(done, result));
-      if (!busy) convey();
-    }), _defineProperty(_ref, NEXT, function (result) {
-      if (idle) return false;
-      queue.push(tie(next, result));
-      if (!busy) convey();
-      return signal;
-    }), _ref;
-  }
-
   function customGenerator(generator) {
     if (isUndefined(generator)) return emptyGenerator(true);
     if (!isFunction(generator)) return valueAdapter(generator);
     return function (next, done, context) {
-      var finalizer = generator(impede(next, function (result) {
-        if (isFunction(finalizer)) setImmediate(finalizer);
-        done(result);
-      }, context));
+      var _resync = resync(next, done, context);
+
+      var redone = _resync[DONE];
+      var renext = _resync[NEXT];
+      var end = toFunction(generator(renext, function (result) {
+        redone(isUndefined(result) ? true : result);
+        end();
+      }));
     };
   }
 
@@ -497,20 +498,18 @@
   function listener(source, parameters) {
     var instance = listeners.get.apply(listeners, [source].concat(_toConsumableArray(parameters)));
     return isFunction(instance) ? function (next, done, context) {
-      var _impede = impede(next, done);
+      var _resync2 = resync(next, done);
 
-      var retardedDone = _impede[DONE];
-      var retardedNext = _impede[NEXT];
-      var finalizer = toFunction(instance(onNext, onDone));
-
-      function onDone(result) {
-        setImmediate(finalizer);
-        retardedDone(false);
-      }
-
-      function onNext(result) {
-        if (false === retardedNext(result)) onDone(false);
-      }
+      var redone = _resync2[DONE];
+      var renext = _resync2[NEXT];
+      var end = toFunction(instance(function (result) {
+        if (false !== renext(result)) return;
+        redone(false);
+        end();
+      }, function (result) {
+        redone(false);
+        end();
+      }));
     } : emptyGenerator(true);
   }
 
@@ -701,7 +700,7 @@
               } catch (error) {
                 reject(error);
               }
-            }, toDelay(delayer(result, index++), 1000));
+            }, toDelay(delayer(result, index++), 0));
           });
         }, done, context);
       };
@@ -1005,29 +1004,42 @@
     };
   }
 
+  function scanOperator(scanner) {
+    scanner = toFunction(scanner);
+    return function (emitter) {
+      return function (next, done, context) {
+        var accumulator = undefined,
+            index = -1;
+        emitter(function (result) {
+          return ++index ? next(accumulator = scanner(accumulator, result, index)) : next(accumulator = result);
+        }, done, context);
+      };
+    };
+  }
+
   function shareOperator() {
     return function (emitter) {
       var shares = new WeakMap();
       return function (next, done, context) {
         var share = shares.get(context);
         if (share) {
-          if (share.result) done(share.result);else share.retarded.push(impede(next, done));
+          if (share.result) done(share.result);else share.callbacks.push(resync(next, done));
         } else {
           shares.set(context, share = {
-            retarded: [impede(next, done)]
+            callbacks: [resync(next, done)]
           });
           emitter(function (result) {
-            var retarded = share.retarded;
+            var callbacks = share.callbacks;
 
-            for (var i = -1, l = retarded.length; ++i < l;) {
-              retarded[i][NEXT](result);
+            for (var i = -1, l = callbacks.length; ++i < l;) {
+              callbacks[i][NEXT](result);
             }
           }, function (result) {
             share.result = result;
-            var retarded = share.retarded;
+            var callbacks = share.callbacks;
 
-            for (var i = -1, l = retarded.length; ++i < l;) {
-              retarded[i][DONE](result);
+            for (var i = -1, l = callbacks.length; ++i < l;) {
+              callbacks[i][DONE](result);
             }
           }, context);
         }
@@ -1344,7 +1356,7 @@
     return defintion;
   }
 
-  var operators = objectCreate(Object[PROTOTYPE], [average, _catch, coalesce, concat, count, delay, distinct, every, filter, flatten, group, map, max, mean, min, notify, reduce, replay, retry, reverse, share, skip, slice, some, sort, sum, take, toArray, toMap, toSet, toString].reduce(defineOperator, {}));
+  var operators = objectCreate(Object[PROTOTYPE], [average, _catch, coalesce, concat, count, delay, distinct, every, filter, flatten, group, map, max, mean, min, notify, reduce, replay, retry, reverse, scan, share, skip, slice, some, sort, sum, take, toArray, toMap, toSet, toString].reduce(defineOperator, {}));
   Flow[PROTOTYPE] = objectCreate(operators, (_objectCreate = {}, _defineProperty(_objectCreate, CLASS, {
     value: AEROFLOW
   }), _defineProperty(_objectCreate, 'chain', {
@@ -1387,8 +1399,8 @@
     return this.chain(countOperator());
   }
 
-  function delay(interval) {
-    return this.chain(delayOperator(interval));
+  function delay(delayer) {
+    return this.chain(delayOperator(delayer));
   }
 
   function distinct(untilChanged) {
@@ -1474,6 +1486,10 @@
         isError(result) ? reject(result) : resolve(last);
       }, _this.context);
     });
+  }
+
+  function scan(scanner) {
+    return this.chain(scanOperator(scanner));
   }
 
   function share() {

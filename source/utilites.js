@@ -8,7 +8,6 @@ export const mathMax = Math.max;
 export const mathMin = Math.min;
 export const maxInteger = Number.MAX_SAFE_INTEGER;
 export const minInteger = Number.MIN_SAFE_INTEGER;
-export const nothing = undefined;
 export const objectCreate = Object.create;
 export const objectDefineProperties = Object.defineProperties;
 export const objectDefineProperty = Object.defineProperty;
@@ -27,13 +26,13 @@ export const classOf = value => objectToString.call(value).slice(8, -1);
 export const classIs = className => value => classOf(value) === className;
 
 export const isBoolean = value => value === true || value === false;
-export const isDefined = value => value !== nothing;
+export const isDefined = value => value !== undefined;
 export const isError = classIs(ERROR);
 export const isFunction = value => typeof value == 'function';
 export const isInteger = Number.isInteger;
 export const isObject = value => value != null && typeof value === 'object';
 export const isPromise = classIs(PROMISE);
-export const isUndefined = value => value === nothing;
+export const isUndefined = value => value === undefined;
 
 export const tie = (func, ...args) => () => func(...args);
 

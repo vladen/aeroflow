@@ -1,5 +1,18 @@
-const noop = () => {};
+export default (aeroflow, execute, expect) => describe('aeroflow().toMap', () => {
+  it('Is instance toMap', () =>
+    execute(
+      context => aeroflow.empty.toMap,
+      context => expect(context.result).to.be.a('function')));
 
+  describe('aeroflow().toMap()', () => {
+    it('Returns instance of Aeroflow', () =>
+      execute(
+        context => aeroflow.empty.toMap(),
+        context => expect(context.result).to.be.an('Aeroflow')));
+  });
+});
+
+/*
 export default (aeroflow, assert) => describe('#toMap', () => {
   it('Is instance method', () =>
     assert.isFunction(aeroflow.empty.toMap));
@@ -73,3 +86,4 @@ export default (aeroflow, assert) => describe('#toMap', () => {
     });
   });
 });
+*/

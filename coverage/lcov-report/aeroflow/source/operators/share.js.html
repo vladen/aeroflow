@@ -20,9 +20,9 @@
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">34.62% </span>
+        <span class="strong">46.15% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>9/26</span>
+        <span class='fraction'>12/26</span>
       </div>
       <div class='fl pad1y space-right2'>
         <span class="strong">50% </span>
@@ -30,14 +30,14 @@
         <span class='fraction'>4/8</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">16.67% </span>
+        <span class="strong">50% </span>
         <span class="quiet">Functions</span>
-        <span class='fraction'>1/6</span>
+        <span class='fraction'>3/6</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">11.11% </span>
+        <span class="strong">27.78% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>2/18</span>
+        <span class='fraction'>5/18</span>
       </div>
       <div class='fl pad1y'>
         <span class="strong">1 branch</span>
@@ -81,9 +81,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -108,29 +108,29 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { NEXT, DONE } from '../symbols';
-import retard from '../retard';
+import resync from '../resync';
 &nbsp;
-export default <span class="fstat-no" title="function not covered" >function shareOperator() {</span>
-<span class="cstat-no" title="statement not covered" >  return <span class="fstat-no" title="function not covered" >emitter =&gt; {</span></span>
-<span class="cstat-no" title="statement not covered" >    const shares = new WeakMap;</span>
-<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >(next, done, context) =&gt; {</span></span>
+export default function shareOperator() {
+  return emitter =&gt; {
+    const shares = new WeakMap;
+    return <span class="fstat-no" title="function not covered" >(next, done, context) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >      let share = shares.get(context);</span>
 <span class="cstat-no" title="statement not covered" >      i</span>f (share)
 <span class="cstat-no" title="statement not covered" >        i</span></span>f (share.result) <span class="cstat-no" title="statement not covered" >done(share.result);
-        else <span class="cstat-no" title="statement not covered" >share.retarded.push(retard(next, done));</span>
+        else <span class="cstat-no" title="statement not covered" >share.callbacks.push(resync(next, done));</span>
       else {
-<span class="cstat-no" title="statement not covered" >        shares.set(context, share = { retarded: [retard(next, done)] });</span>
+<span class="cstat-no" title="statement not covered" >        shares.set(context, share = { callbacks: [resync(next, done)] });</span>
 <span class="cstat-no" title="statement not covered" >        emitter(</span>
 <span class="fstat-no" title="function not covered" >          result =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >            const retarded = share.retarded;</span>
-<span class="cstat-no" title="statement not covered" >            f</span>or (let i = -1, l = retarded.length; ++i &lt; l;)
-<span class="cstat-no" title="statement not covered" >              r</span>etarded[i][NEXT](result);
+<span class="cstat-no" title="statement not covered" >            const callbacks = share.callbacks;</span>
+<span class="cstat-no" title="statement not covered" >            f</span>or (let i = -1, l = callbacks.length; ++i &lt; l;)
+<span class="cstat-no" title="statement not covered" >              c</span>allbacks[i][NEXT](result);
           },
 <span class="fstat-no" title="function not covered" >          result =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >            share.result = result;</span>
-<span class="cstat-no" title="statement not covered" >            const retarded = share.retarded;</span>
-<span class="cstat-no" title="statement not covered" >            f</span>or (let i = -1, l = retarded.length; ++i &lt; l;)
-<span class="cstat-no" title="statement not covered" >              r</span>etarded[i][DONE](result);
+<span class="cstat-no" title="statement not covered" >            const callbacks = share.callbacks;</span>
+<span class="cstat-no" title="statement not covered" >            f</span>or (let i = -1, l = callbacks.length; ++i &lt; l;)
+<span class="cstat-no" title="statement not covered" >              c</span>allbacks[i][DONE](result);
           },
           context);
       }
@@ -143,7 +143,7 @@ export default <span class="fstat-no" title="function not covered" >function sha
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Sat Mar 05 2016 01:05:06 GMT+0200 (E. Europe Standard Time)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Sat Mar 05 2016 15:25:56 GMT+0300 (Belarus Standard Time)
 </div>
 </div>
 <script src="../../../prettify.js"></script>

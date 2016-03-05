@@ -76,7 +76,7 @@ export default (aeroflow, execute, expect) => describe('aeroflow.repeat', () => 
     it('Infinitely emits "next" with each value returned by @repeater delayed to the number of milliseconds returned by @delayer, then single lazy "done"', () =>
       execute(
         context => {
-          context.delay = 25;
+          context.delay = 10;
           context.limit = 3;
           context.delayer = index => index * context.delay;
           context.repeater = index => ({ date: new Date, index });
