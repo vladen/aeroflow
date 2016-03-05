@@ -5,6 +5,7 @@ language: node_js
 node_js:
   - "node"
 script:
+  - npm run clean
   - npm run test
   - npm run cover
   - npm run report

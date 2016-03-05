@@ -12,8 +12,8 @@ ratings:
 exclude_paths:
 - "index.js"
 - "test.js"
-- "build/**"
-- "coverage/**"
-- "documentation/**"
+- "build/**/*"
+- "coverage/**/*"
+- "documentation/**/*"
 - "node_modules/**/*"
-- "specifications/**"
+- "specifications/**/*"
