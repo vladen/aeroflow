@@ -1,4 +1,17 @@
 # TOC
+   - [aeroflow](#aeroflow)
+     - [aeroflow()](#aeroflow-aeroflow)
+     - [aeroflow(@source:aeroflow)](#aeroflow-aeroflowsourceaeroflow)
+     - [aeroflow(@source:array)](#aeroflow-aeroflowsourcearray)
+     - [aeroflow(@source:date)](#aeroflow-aeroflowsourcedate)
+     - [aeroflow(@source:error)](#aeroflow-aeroflowsourceerror)
+     - [aeroflow(@source:function)](#aeroflow-aeroflowsourcefunction)
+     - [aeroflow(@source:iterable)](#aeroflow-aeroflowsourceiterable)
+     - [aeroflow(@source:null)](#aeroflow-aeroflowsourcenull)
+     - [aeroflow(@source:promise)](#aeroflow-aeroflowsourcepromise)
+     - [aeroflow(@source:string)](#aeroflow-aeroflowsourcestring)
+     - [aeroflow(@source:undefined)](#aeroflow-aeroflowsourceundefined)
+     - [aeroflow(...@sources)](#aeroflow-aeroflowsources)
    - [aeroflow.adapters](#aeroflowadapters)
      - [aeroflow.adapters.get](#aeroflowadapters-aeroflowadaptersget)
        - [aeroflow.adapters.get(@source:array)](#aeroflowadapters-aeroflowadaptersget-aeroflowadaptersgetsourcearray)
@@ -141,6 +154,332 @@
      - [aeroflow().toString(@seperator:string)](#aeroflowtostring-aeroflowtostringseperatorstring)
 <a name=""></a>
  
+<a name="aeroflow"></a>
+# aeroflow
+Is function.
+
+```js
+return execute(
+/* arrange (optional) */
+function (context) {},
+/* act */
+function (context) {
+  return aeroflow;
+},
+/* assert */
+function (context) {
+  return expect(context.result).to.be.a('function');
+});
+```
+
+<a name="aeroflow-aeroflow"></a>
+## aeroflow()
+Returns instance of Aeroflow.
+
+```js
+return execute(function (context) {
+  return aeroflow();
+}, function (context) {
+  return expect(context.result).to.be.an('Aeroflow');
+});
+```
+
+Emits only single greedy "done".
+
+```js
+return execute(function (context) {
+  return aeroflow().run(context.next, context.done);
+}, function (context) {
+  expect(context.next).to.have.not.been.called;
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(true);
+});
+```
+
+<a name="aeroflow-aeroflowsourceaeroflow"></a>
+## aeroflow(@source:aeroflow)
+When @source is empty, emits only single greedy "done".
+
+```js
+return execute(function (context) {
+  return aeroflow(aeroflow.empty).run(context.next, context.done);
+}, function (context) {
+  expect(context.next).to.have.not.been.called;
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(true);
+});
+```
+
+When @source is not empty, emits "next" for each value from @source, then single greedy "done".
+
+```js
+return execute(function (context) {
+  return context.values = [1, 2];
+}, function (context) {
+  return aeroflow(aeroflow(context.values)).run(context.next, context.done);
+}, function (context) {
+  expect(context.next).to.have.callCount(context.values.length);
+  context.values.forEach(function (value, index) {
+    return expect(context.next.getCall(index)).to.have.been.calledWith(value);
+  });
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(true);
+  expect(context.done).to.have.been.calledAfter(context.next);
+});
+```
+
+<a name="aeroflow-aeroflowsourcearray"></a>
+## aeroflow(@source:array)
+When @source is empty, emits only single greedy "done".
+
+```js
+return execute(function (context) {
+  return aeroflow([]).run(context.next, context.done);
+}, function (context) {
+  expect(context.next).to.have.not.been.called;
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(true);
+});
+```
+
+When @source is not empty, emits "next" for each value from @source, then single greedy "done".
+
+```js
+return execute(function (context) {
+  return context.values = [1, 2];
+}, function (context) {
+  return aeroflow(context.values).run(context.next, context.done);
+}, function (context) {
+  expect(context.next).to.have.callCount(context.values.length);
+  context.values.forEach(function (value, index) {
+    return expect(context.next.getCall(index)).to.have.been.calledWith(value);
+  });
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(true);
+  expect(context.done).to.have.been.calledAfter(context.next);
+});
+```
+
+<a name="aeroflow-aeroflowsourcedate"></a>
+## aeroflow(@source:date)
+Emits single "next" with @source, then single greedy "done".
+
+```js
+return execute(function (context) {
+  return context.source = new Date();
+}, function (context) {
+  return aeroflow(context.source).run(context.next, context.done);
+}, function (context) {
+  expect(context.next).to.have.been.calledOnce;
+  expect(context.next).to.have.been.calledWith(context.source);
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(true);
+  expect(context.done).to.have.been.calledAfter(context.next);
+});
+```
+
+<a name="aeroflow-aeroflowsourceerror"></a>
+## aeroflow(@source:error)
+Emits only single faulty "done" with @source.
+
+```js
+return execute(function (context) {
+  return aeroflow(context.error).run(context.next, context.done);
+}, function (context) {
+  expect(context.next).to.have.not.been.called;
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(context.error);
+});
+```
+
+<a name="aeroflow-aeroflowsourcefunction"></a>
+## aeroflow(@source:function)
+Calls @source once.
+
+```js
+return execute(function (context) {
+  return context.source = context.spy();
+}, function (context) {
+  return aeroflow(context.source).run();
+}, function (context) {
+  return expect(context.source).to.have.been.calledOnce;
+});
+```
+
+If @source returns value, emits single "next" with returned value, then single greedy "done".
+
+```js
+return execute(function (context) {
+  context.value = 42;
+  context.source = function () {
+    return context.value;
+  };
+}, function (context) {
+  return aeroflow(context.source).run(context.next, context.done);
+}, function (context) {
+  expect(context.next).to.have.been.calledOnce;
+  expect(context.next).to.have.been.calledWith(context.value);
+  expect(context.done).to.have.been.calledAfter(context.next);
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(true);
+});
+```
+
+If @source throws, emits only single faulty "done" with thrown error.
+
+```js
+return execute(function (context) {
+  return aeroflow(context.fail).run(context.next, context.done);
+}, function (context) {
+  expect(context.next).to.have.not.been.called;
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(context.error);
+});
+```
+
+<a name="aeroflow-aeroflowsourceiterable"></a>
+## aeroflow(@source:iterable)
+When @source is empty, emits only single greedy "done".
+
+```js
+return execute(function (context) {
+  return aeroflow(new Set()).run(context.next, context.done);
+}, function (context) {
+  expect(context.next).to.have.not.been.called;
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(true);
+});
+```
+
+When @source is not empty, emits "next" for each value from @source, then single greedy "done".
+
+```js
+return execute(function (context) {
+  return context.values = [1, 2];
+}, function (context) {
+  return aeroflow(new Set(context.values)).run(context.next, context.done);
+}, function (context) {
+  expect(context.next).to.have.callCount(context.values.length);
+  context.values.forEach(function (value, index) {
+    return expect(context.next.getCall(index)).to.have.been.calledWith(value);
+  });
+  expect(context.done).to.have.been.calledAfter(context.next);
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(true);
+});
+```
+
+<a name="aeroflow-aeroflowsourcenull"></a>
+## aeroflow(@source:null)
+Emits single "next" with @source, then single greedy "done".
+
+```js
+return execute(function (context) {
+  return context.source = null;
+}, function (context) {
+  return aeroflow(context.source).run(context.next, context.done);
+}, function (context) {
+  expect(context.next).to.have.been.calledOnce;
+  expect(context.next).to.have.been.calledWith(context.source);
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(true);
+  expect(context.done).to.have.been.calledAfter(context.next);
+});
+```
+
+<a name="aeroflow-aeroflowsourcepromise"></a>
+## aeroflow(@source:promise)
+When @source rejects, emits single faulty "done" with rejected error.
+
+```js
+return execute(function (context) {
+  return aeroflow(Promise.reject(context.error)).run(context.next, context.done);
+}, function (context) {
+  expect(context.next).to.have.not.been.called;
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(context.error);
+});
+```
+
+When @source resolves, emits single "next" with resolved value, then single greedy "done".
+
+```js
+return execute(function (context) {
+  return context.value = 42;
+}, function (context) {
+  return aeroflow(Promise.resolve(context.value)).run(context.next, context.done);
+}, function (context) {
+  expect(context.next).to.have.been.calledOnce;
+  expect(context.next).to.have.been.calledWith(context.value);
+  expect(context.done).to.have.been.calledAfter(context.next);
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(true);
+});
+```
+
+<a name="aeroflow-aeroflowsourcestring"></a>
+## aeroflow(@source:string)
+Emits single "next" with @source, then single greedy "done".
+
+```js
+return execute(function (context) {
+  return context.source = 'test';
+}, function (context) {
+  return aeroflow(context.source).run(context.next, context.done);
+}, function (context) {
+  expect(context.next).to.have.been.calledOnce;
+  expect(context.next).to.have.been.calledWith(context.source);
+  expect(context.done).to.have.been.calledAfter(context.next);
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(true);
+});
+```
+
+<a name="aeroflow-aeroflowsourceundefined"></a>
+## aeroflow(@source:undefined)
+Emits single "next" with @source, then single greedy "done".
+
+```js
+return execute(function (context) {
+  return context.source = undefined;
+}, function (context) {
+  return aeroflow(context.source).run(context.next, context.done);
+}, function (context) {
+  expect(context.next).to.have.been.calledOnce;
+  expect(context.next).to.have.been.calledWith(context.source);
+  expect(context.done).to.have.been.calledAfter(context.next);
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(true);
+});
+```
+
+<a name="aeroflow-aeroflowsources"></a>
+## aeroflow(...@sources)
+Emits "next" with each value from @sources, then single greedy "done".
+
+```js
+return execute(function (context) {
+  var values = context.values = [true, new Date(), null, 42, 'test', Symbol('test'), undefined];
+  context.sources = [values[0], [values[1]], new Set([values[2], values[3]]), function () {
+    return values[4];
+  }, Promise.resolve(values[5]), new Promise(function (resolve) {
+    return setTimeout(function () {
+      return resolve(values[6]);
+    });
+  })];
+}, function (context) {
+  return aeroflow.apply(undefined, _toConsumableArray(context.sources)).run(context.next, context.done);
+}, function (context) {
+  expect(context.next).to.have.callCount(context.values.length);
+  context.values.forEach(function (value, index) {
+    return expect(context.next.getCall(index)).to.have.been.calledWith(value);
+  });
+  expect(context.done).to.have.been.calledAfter(context.next);
+  expect(context.done).to.have.been.calledOnce;
+  expect(context.done).to.have.been.calledWith(true);
+});
+```
+
 <a name="aeroflowadapters"></a>
 # aeroflow.adapters
 Is static property.
@@ -1820,7 +2159,7 @@ return execute(function (context) {
 }, function (context) {
   return aeroflow(context.values).distinct().run(context.next, context.done);
 }, function (context) {
-  var last = undefined;
+  var last = void 0;
   var unique = context.values.reduce(function (array, value) {
     if (value !== last) array.push(last = value);
     return array;
@@ -2446,9 +2785,8 @@ return execute(function (context) {
 }, function (context) {
   return aeroflow(context.values).max().run(context.next, context.done);
 }, function (context) {
-  var _Math;
   expect(context.next).to.have.been.calledOnce;
-  expect(context.next).to.have.been.calledWith((_Math = Math).max.apply(_Math, _toConsumableArray(context.values)));
+  expect(context.next).to.have.been.calledWith(Math.max.apply(Math, _toConsumableArray(context.values)));
   expect(context.done).to.have.been.calledAfter(context.next);
   expect(context.done).to.have.been.calledOnce;
   expect(context.done).to.have.been.calledWith(true);
@@ -2569,9 +2907,8 @@ return execute(function (context) {
 }, function (context) {
   return aeroflow(context.values).min().run(context.next, context.done);
 }, function (context) {
-  var _Math;
   expect(context.next).to.have.been.calledOnce;
-  expect(context.next).to.have.been.calledWith((_Math = Math).min.apply(_Math, _toConsumableArray(context.values)));
+  expect(context.next).to.have.been.calledWith(Math.min.apply(Math, _toConsumableArray(context.values)));
   expect(context.done).to.have.been.calledAfter(context.next);
   expect(context.done).to.have.been.calledOnce;
   expect(context.done).to.have.been.calledWith(true);

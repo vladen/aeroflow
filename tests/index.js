@@ -1,3 +1,4 @@
+import factoryTests from './factory';
 import instanceTests from './instance/index';
 import staticTests from './static/index';
 
@@ -46,5 +47,6 @@ export default (aeroflow, expect, sinon) => {
         assert(context);
       });
   }
-  [...staticTests, ...instanceTests].forEach(test => test(aeroflow, execute, expect, sinon));
+  [factoryTests, ...staticTests, ...instanceTests]
+    .forEach(test => test(aeroflow, execute, expect, sinon));
 }

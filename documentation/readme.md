@@ -15,6 +15,7 @@ If no data sources provided, creates empty instance emitting &quot;done&quot; ev
 </dl>
 
 <a name="Flow"></a>
+
 ## Flow
 **Kind**: global class  
 **Properties**
@@ -57,6 +58,7 @@ If no data sources provided, creates empty instance emitting &quot;done&quot; ev
     * [.toString([separator])](#Flow+toString) ⇒ <code>[Flow](#Flow)</code>
 
 <a name="Flow+average"></a>
+
 ### flow.average() ⇒ <code>[Flow](#Flow)</code>
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Example**  
@@ -71,6 +73,7 @@ aeroflow(1, 2, 6).average().notify(console).run();
 // done true
 ```
 <a name="Flow+catch"></a>
+
 ### flow.catch([alternative]) ⇒ <code>[Flow](#Flow)</code>
 Returns new flow suppressing error, emitted by this flow, or replacing it with alternative data source.
 
@@ -107,6 +110,7 @@ aeroflow(new Error('test')).catch(() => [[1], [2]]).notify(console).run();
 // done false
 ```
 <a name="Flow+chain"></a>
+
 ### flow.chain([operator]) ⇒ <code>[Flow](#Flow)</code>
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Params**
@@ -114,6 +118,7 @@ aeroflow(new Error('test')).catch(() => [[1], [2]]).notify(console).run();
 - [operator] <code>function</code>
 
 <a name="Flow+coalesce"></a>
+
 ### flow.coalesce([alternative]) ⇒ <code>[Flow](#Flow)</code>
 Returns new flow emitting values from alternate data source when this flow is empty.
 
@@ -145,6 +150,7 @@ aeroflow.empty.coalesce(() => [[1], [2]]).notify(console).run();
 // done true
 ```
 <a name="Flow+count"></a>
+
 ### flow.count() ⇒ <code>[Flow](#Flow)</code>
 Counts the number of values emitted by this flow and emits only count value.
 
@@ -159,6 +165,7 @@ aeroflow('a', 'b', 'c').count().notify(console).run();
 // done
 ```
 <a name="Flow+delay"></a>
+
 ### flow.delay([delayer]) ⇒ <code>[Flow](#Flow)</code>
 Delays emission of each value by specified amount of time.
 
@@ -188,6 +195,7 @@ Or static numeric delay in milliseconds.
 Or date to delay until.
 
 <a name="Flow+distinct"></a>
+
 ### flow.distinct(untilChanged) ⇒ <code>[Flow](#Flow)</code>
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Params**
@@ -207,6 +215,7 @@ aeroflow(1, 1, 2, 2, 1, 1).distinct(true).notify(console).run();
 // done true
 ```
 <a name="Flow+every"></a>
+
 ### flow.every([predicate]) ⇒ <code>[Flow](#Flow)</code>
 Tests whether all values emitted by this flow pass the provided test.
 
@@ -234,6 +243,7 @@ aeroflow(1, 2).every(value => { throw new Error }).notify(console).run();
 // Uncaught (in promise) Error: test(…)
 ```
 <a name="Flow+filter"></a>
+
 ### flow.filter([predicate]) ⇒ <code>[Flow](#Flow)</code>
 Filters values emitted by this flow with the provided test.
 
@@ -269,6 +279,7 @@ aeroflow(1, 2).filter(value => { throw new Error }).notify(console).run();
 // Uncaught (in promise) Error: test(…)
 ```
 <a name="Flow+flatten"></a>
+
 ### flow.flatten([depth]) ⇒ <code>[Flow](#Flow)</code>
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Params**
@@ -296,6 +307,7 @@ aeroflow(new Promise(resolve => setTimeout(() => resolve(() => [1, 2]), 500)))
 // done true
 ```
 <a name="Flow+group"></a>
+
 ### flow.group([...selectors]) ⇒ <code>[Flow](#Flow)</code>
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Params**
@@ -320,6 +332,7 @@ aeroflow(
 // done
 ```
 <a name="Flow+map"></a>
+
 ### flow.map([mapper]) ⇒ <code>[Flow](#Flow)</code>
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Params**
@@ -344,6 +357,7 @@ aeroflow(1, 2).map(value => value * 10).notify(console).run();
 // done true
 ```
 <a name="Flow+max"></a>
+
 ### flow.max() ⇒ <code>[Flow](#Flow)</code>
 Determines the maximum value emitted by this flow.
 
@@ -361,6 +375,7 @@ aeroflow('b', 'a', 'c').max().notify(console).run();
 // done true
 ```
 <a name="Flow+mean"></a>
+
 ### flow.mean() ⇒ <code>[Flow](#Flow)</code>
 Determines the mean value emitted by this flow.
 
@@ -378,6 +393,7 @@ aeroflow('a', 'd', 'f', 'm').mean().notify(console).run();
 // done true
 ```
 <a name="Flow+min"></a>
+
 ### flow.min() ⇒ <code>[Flow](#Flow)</code>
 Determines the minimum value emitted by this flow.
 
@@ -395,6 +411,7 @@ aeroflow('b', 'a', 'c').min().notify(console).run();
 // done true
 ```
 <a name="Flow+reduce"></a>
+
 ### flow.reduce([reducer], [accumulator], [required]) ⇒ <code>[Flow](#Flow)</code>
 Applies a function against an accumulator and each value emitted by this flow
 to reduce it to a single value, returns new flow emitting the reduced value.
@@ -444,6 +461,7 @@ aeroflow(['a', 'b', 'c'])
 // done
 ```
 <a name="Flow+replay"></a>
+
 ### flow.replay(delay, timing) ⇒ <code>[Flow](#Flow)</code>
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Params**
@@ -473,6 +491,7 @@ aeroflow(1, 2).delay(500).replay(1000, true).take(4).notify(console).run();
 // done false
 ```
 <a name="Flow+retry"></a>
+
 ### flow.retry(attempts) ⇒ <code>[Flow](#Flow)</code>
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Params**
@@ -492,6 +511,7 @@ var attempt = 0; aeroflow(() => {
 // after done true
 ```
 <a name="Flow+reverse"></a>
+
 ### flow.reverse() ⇒ <code>[Flow](#Flow)</code>
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Example**  
@@ -505,6 +525,7 @@ aeroflow(1, 2, 3).reverse().notify(console).run();
 // done true
 ```
 <a name="Flow+run"></a>
+
 ### flow.run([next], [done]) ⇒ <code>Promise</code>
 Runs this flow.
 
@@ -539,6 +560,7 @@ aeroflow(Promise.reject('test')).run();
 // Uncaught (in promise) Error: test(…)
 ```
 <a name="Flow+scan"></a>
+
 ### flow.scan([scanner])
 Emits first value emitted by this flow,
 and then values returned by scanner applied to each successive emitted value.
@@ -556,6 +578,7 @@ and then values returned by scanner applied to each successive emitted value.
 aeroflow.range(1, 3).scan((prev, next) => prev + next).notify(console).run();
 ```
 <a name="Flow+skip"></a>
+
 ### flow.skip([condition]) ⇒ <code>[Flow](#Flow)</code>
 Skips some of the values emitted by this flow,
 returns flow emitting remaining values.
@@ -588,6 +611,7 @@ aeroflow(1, 2, 3).skip(value => value < 3).notify(console).run();
 // done true
 ```
 <a name="Flow+slice"></a>
+
 ### flow.slice([begin], [end]) ⇒ <code>[Flow](#Flow)</code>
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Params**
@@ -619,6 +643,7 @@ aeroflow(1, 2, 3).slice(-3, -1).notify(console).run();
 // done true
 ```
 <a name="Flow+some"></a>
+
 ### flow.some([predicate]) ⇒ <code>[Flow](#Flow)</code>
 Tests whether some value emitted by this flow passes the predicate test,
 returns flow emitting true if the predicate returns true for any emitted value; otherwise, false.
@@ -647,6 +672,7 @@ aeroflow(1, 2, 3).some(value => { throw new Error }).notify(console).run();
 // Uncaught (in promise) Error: test(…)
 ```
 <a name="Flow+sort"></a>
+
 ### flow.sort([...parameters]) ⇒ <code>[Flow](#Flow)</code> &#124; <code>[Flow](#Flow)</code>
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Params**
@@ -680,6 +706,7 @@ aeroflow(
 // done true
 ```
 <a name="Flow+sum"></a>
+
 ### flow.sum([required]) ⇒ <code>[Flow](#Flow)</code>
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Params**
@@ -698,6 +725,7 @@ aeroflow(1, 2, 3).sum().notify(console).run();
 // done true
 ```
 <a name="Flow+take"></a>
+
 ### flow.take([condition]) ⇒ <code>[Flow](#Flow)</code>
 **Kind**: instance method of <code>[Flow](#Flow)</code>  
 **Params**
@@ -716,6 +744,7 @@ aeroflow(1, 2, 3).take(-1).notify(console).run();
 // done true
 ```
 <a name="Flow+toArray"></a>
+
 ### flow.toArray() ⇒ <code>[Flow](#Flow)</code>
 Collects all values emitted by this flow to array, returns flow emitting this array.
 
@@ -734,6 +763,7 @@ aeroflow(1, 2, 3).toArray().notify(console).run();
 // done true
 ```
 <a name="Flow+toMap"></a>
+
 ### flow.toMap([keySelector], [valueSelector]) ⇒ <code>[Flow](#Flow)</code>
 Collects all values emitted by this flow to ES6 map, returns flow emitting this map.
 
@@ -762,6 +792,7 @@ aeroflow(1, 2, 3).toMap(v => 'key' + v, v => 10 * v).notify(console).run();
 // done true
 ```
 <a name="Flow+toSet"></a>
+
 ### flow.toSet() ⇒ <code>[Flow](#Flow)</code>
 Collects all values emitted by this flow to ES6 set, returns flow emitting this set.
 
@@ -777,6 +808,7 @@ aeroflow(1, 2, 3).toSet().notify(console).run();
 // done true
 ```
 <a name="Flow+toString"></a>
+
 ### flow.toString([separator]) ⇒ <code>[Flow](#Flow)</code>
 Returns new flow joining all values emitted by this flow into a string
 and emitting this string.
@@ -810,6 +842,7 @@ aeroflow(1, 2, 3).toString((value, index) => '-'.repeat(index + 1)).notify(conso
 // done true
 ```
 <a name="aeroflow"></a>
+
 ## aeroflow([sources]) ⇒ <code>[Flow](#Flow)</code>
 Creates new instance emitting values extracted from every provided data source in series.
 If no data sources provided, creates empty instance emitting "done" event only.
@@ -895,6 +928,7 @@ aeroflow(42).test().notify(console).run();
     * [.repeat([repeater], [delayer])](#aeroflow.repeat) ⇒ <code>[Flow](#Flow)</code>
 
 <a name="aeroflow.create"></a>
+
 ### aeroflow.create(emitter) ⇒ <code>[Flow](#Flow)</code>
 Creates programmatically controlled instance.
 
@@ -924,6 +958,7 @@ aeroflow.create((next, done, context) => {
 // done false
 ```
 <a name="aeroflow.expand"></a>
+
 ### aeroflow.expand(expander, [seed]) ⇒ <code>[Flow](#Flow)</code>
 **Kind**: static method of <code>[aeroflow](#aeroflow)</code>  
 **Params**
@@ -940,6 +975,7 @@ aeroflow.expand(value => value * 2, 1).take(3).notify(console).run();
 // done false
 ```
 <a name="aeroflow.just"></a>
+
 ### aeroflow.just(source) ⇒ <code>[Flow](#Flow)</code>
 Returns new instance emitting the provided source as is.
 
@@ -956,6 +992,7 @@ aeroflow.just([1, 2, 3]).notify(console).run();
 // done
 ```
 <a name="aeroflow.listen"></a>
+
 ### aeroflow.listen()
 **Kind**: static method of <code>[aeroflow](#aeroflow)</code>  
 **Example**  
@@ -972,6 +1009,7 @@ aeroflow
 // done false
 ```
 <a name="aeroflow.random"></a>
+
 ### aeroflow.random([minimum], [maximum]) ⇒ <code>[Flow](#Flow)</code>
 Creates new instance emitting infinite sequence of random numbers.
 
@@ -998,6 +1036,7 @@ aeroflow.random(1.1, 8.9).take(2).notify(console).run();
 // done false
 ```
 <a name="aeroflow.range"></a>
+
 ### aeroflow.range([start], [end], [step]) ⇒ <code>[Flow](#Flow)</code>
 **Kind**: static method of <code>[aeroflow](#aeroflow)</code>  
 **Params**
@@ -1033,6 +1072,7 @@ aeroflow.range(5, 0, -2).notify(console).run();
 // done true
 ```
 <a name="aeroflow.repeat"></a>
+
 ### aeroflow.repeat([repeater], [delayer]) ⇒ <code>[Flow](#Flow)</code>
 Creates infinite flow, repeating static/dynamic value immediately or with static/dynamic delay.
 

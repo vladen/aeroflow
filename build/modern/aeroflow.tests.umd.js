@@ -4,6 +4,252 @@
   (global.aeroflowTests = factory());
 }(this, function () { 'use strict';
 
+  var factoryTests = (aeroflow, execute, expect) => describe('aeroflow', () => {
+    it('Is function', () =>
+      execute(
+        /* arrange (optional) */
+        context => {},
+        /* act */
+        context => aeroflow,
+        /* assert */
+        context => expect(context.result).to.be.a('function')));
+
+    describe('aeroflow()', () => {
+      it('Returns instance of Aeroflow', () =>
+        execute(
+          context => aeroflow(),
+          context => expect(context.result).to.be.an('Aeroflow')));
+
+      it('Emits only single greedy "done"', () =>
+        execute(
+          context => aeroflow().run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.not.been.called;
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+          }));
+    });
+
+    describe('aeroflow(@source:aeroflow)', () => {
+      it('When @source is empty, emits only single greedy "done"', () =>
+        execute(
+          context => aeroflow(aeroflow.empty).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.not.been.called;
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+          }));
+
+      it('When @source is not empty, emits "next" for each value from @source, then single greedy "done"', () =>
+        execute(
+          context => context.values = [1, 2],
+          context => aeroflow(aeroflow(context.values)).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.callCount(context.values.length);
+            context.values.forEach(
+              (value, index) => expect(context.next.getCall(index)).to.have.been.calledWith(value));
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+            expect(context.done).to.have.been.calledAfter(context.next);
+          }));
+    });
+
+    describe('aeroflow(@source:array)', () => {
+      it('When @source is empty, emits only single greedy "done"', () =>
+        execute(
+          context => aeroflow([]).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.not.been.called;
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+          }));
+
+      it('When @source is not empty, emits "next" for each value from @source, then single greedy "done"', () =>
+        execute(
+          context => context.values = [1, 2],
+          context => aeroflow(context.values).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.callCount(context.values.length);
+            context.values.forEach(
+              (value, index) => expect(context.next.getCall(index)).to.have.been.calledWith(value));
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+            expect(context.done).to.have.been.calledAfter(context.next);
+          }));
+    });
+
+    describe('aeroflow(@source:date)', () => {
+      it('Emits single "next" with @source, then single greedy "done"', () =>
+        execute(
+          context => context.source = new Date,
+          context => aeroflow(context.source).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.been.calledOnce;
+            expect(context.next).to.have.been.calledWith(context.source);
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+            expect(context.done).to.have.been.calledAfter(context.next);
+          }));
+    });
+
+    describe('aeroflow(@source:error)', () => {
+      it('Emits only single faulty "done" with @source', () =>
+        execute(
+          context => aeroflow(context.error).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.not.been.called;
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(context.error);
+          }));
+    });
+
+    describe('aeroflow(@source:function)', () => {
+      it('Calls @source once', () =>
+        execute(
+          context => context.source = context.spy(),
+          context => aeroflow(context.source).run(),
+          context => expect(context.source).to.have.been.calledOnce));
+
+      it('If @source returns value, emits single "next" with returned value, then single greedy "done"', () =>
+        execute(
+          context => {
+            context.value = 42;
+            context.source = () => context.value;
+          },
+          context => aeroflow(context.source).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.been.calledOnce;
+            expect(context.next).to.have.been.calledWith(context.value);
+            expect(context.done).to.have.been.calledAfter(context.next);
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+          }));
+
+      it('If @source throws, emits only single faulty "done" with thrown error', () =>
+        execute(
+          context => aeroflow(context.fail).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.not.been.called;
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(context.error);
+          }));
+    });
+
+    describe('aeroflow(@source:iterable)', () => {
+      it('When @source is empty, emits only single greedy "done"', () =>
+        execute(
+          context => aeroflow(new Set).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.not.been.called;
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+          }));
+
+      it('When @source is not empty, emits "next" for each value from @source, then single greedy "done"', () =>
+        execute(
+          context => context.values = [1, 2],
+          context => aeroflow(new Set(context.values)).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.callCount(context.values.length);
+            context.values.forEach(
+              (value, index) => expect(context.next.getCall(index)).to.have.been.calledWith(value));
+            expect(context.done).to.have.been.calledAfter(context.next);
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+          }));
+    });
+
+    describe('aeroflow(@source:null)', () => {
+      it('Emits single "next" with @source, then single greedy "done"', () =>
+        execute(
+          context => context.source = null,
+          context => aeroflow(context.source).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.been.calledOnce;
+            expect(context.next).to.have.been.calledWith(context.source);
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+            expect(context.done).to.have.been.calledAfter(context.next);
+          }));
+    });
+
+    describe('aeroflow(@source:promise)', () => {
+      it('When @source rejects, emits single faulty "done" with rejected error', () =>
+        execute(
+          context => aeroflow(Promise.reject(context.error)).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.not.been.called;
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(context.error);
+          }));
+
+      it('When @source resolves, emits single "next" with resolved value, then single greedy "done"', () =>
+        execute(
+          context => context.value = 42,
+          context => aeroflow(Promise.resolve(context.value)).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.been.calledOnce;
+            expect(context.next).to.have.been.calledWith(context.value);
+            expect(context.done).to.have.been.calledAfter(context.next);
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+          }));
+    });
+
+    describe('aeroflow(@source:string)', () => {
+      it('Emits single "next" with @source, then single greedy "done"', () =>
+        execute(
+          context => context.source = 'test',
+          context => aeroflow(context.source).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.been.calledOnce;
+            expect(context.next).to.have.been.calledWith(context.source);
+            expect(context.done).to.have.been.calledAfter(context.next);
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+          }));
+    });
+
+    describe('aeroflow(@source:undefined)', () => {
+      it('Emits single "next" with @source, then single greedy "done"', () =>
+        execute(
+          context => context.source = undefined,
+          context => aeroflow(context.source).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.been.calledOnce;
+            expect(context.next).to.have.been.calledWith(context.source);
+            expect(context.done).to.have.been.calledAfter(context.next);
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+          }));
+    });
+
+    describe('aeroflow(...@sources)', () => {
+      it('Emits "next" with each value from @sources, then single greedy "done"', () =>
+        execute(
+          context => {
+            const values = context.values = [true, new Date, null, 42, 'test', Symbol('test'), undefined];
+            context.sources = [
+              values[0],
+              [values[1]],
+              new Set([values[2], values[3]]),
+              () => values[4],
+              Promise.resolve(values[5]),
+              new Promise(resolve => setTimeout(() => resolve(values[6])))
+            ];
+          },
+          context => aeroflow(...context.sources).run(context.next, context.done),
+          context => {
+            expect(context.next).to.have.callCount(context.values.length);
+            context.values.forEach((value, index) =>
+              expect(context.next.getCall(index)).to.have.been.calledWith(value));
+            expect(context.done).to.have.been.calledAfter(context.next);
+            expect(context.done).to.have.been.calledOnce;
+            expect(context.done).to.have.been.calledWith(true);
+          }));
+    });
+  });
+
   var averageTests = (aeroflow, execute, expect) => describe('aeroflow().average', () => {
     it('Is instance method', () =>
       execute(
@@ -3163,7 +3409,8 @@
           assert(context);
         });
     }
-    [...staticTests, ...instanceTests].forEach(test => test(aeroflow, execute, expect, sinon));
+    [factoryTests, ...staticTests, ...instanceTests]
+      .forEach(test => test(aeroflow, execute, expect, sinon));
   }
 
   return index;
